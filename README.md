@@ -131,7 +131,16 @@ Run the installer — it takes about 10 seconds, no reboot required.
 
 ### Linux
 
-Download from [Releases](https://github.com/AnInsomniacy/motrix-next/releases):
+**Flatpak via FlatPark (x64 only):**
+
+```bash
+flatpak remote-add --user --if-not-exists flatpark https://dl.flatpark.org/flatpark.flatpakrepo
+flatpak install --user flatpark com.motrix.next
+```
+
+FlatPark maintains this community package independently with permission from the Motrix Next developer. It uses official release binaries and receives updates through `flatpak update`. See the [FlatPark app page](https://flatpark.org/apps/com.motrix.next/) for details.
+
+Or download directly from [Releases](https://github.com/AnInsomniacy/motrix-next/releases):
 
 **Debian / Ubuntu:**
 
