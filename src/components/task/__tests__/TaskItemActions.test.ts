@@ -221,15 +221,17 @@ describe('TaskItemActions', () => {
     })
   })
 
-  describe('press animation', () => {
-    it('adds pressed class on pointerdown and removes on pointerup', async () => {
+  describe('button semantics', () => {
+    it('renders stable native buttons with accessible names', async () => {
       const wrapper = createWrapper(TASK_STATUS.ACTIVE)
-      const action = wrapper.find('.task-item-action')
-      await action.trigger('pointerdown')
-      expect(action.classes()).toContain('pressed')
-      await action.trigger('pointerup')
-      // Note: pressed class removal is timer-based (asynchronous), but the
-      // pointerup handler schedules removal — we verify the class was added
+      const actions = wrapper.findAll('.task-item-action')
+
+      expect(actions.every((action) => action.element.tagName === 'BUTTON')).toBe(true)
+      expect(actions.every((action) => Boolean(action.attributes('aria-label')))).toBe(true)
+      expect(wrapper.findAll('.task-action-visual')).toHaveLength(actions.length)
+
+      await actions[0].trigger('pointerdown')
+      expect(actions[0].classes()).not.toContain('pressed')
     })
   })
 

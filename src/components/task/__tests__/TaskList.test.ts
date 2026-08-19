@@ -122,6 +122,7 @@ describe('TaskList', () => {
     await wrapper.vm.$nextTick()
 
     const sortableOptions = sortableCreateMock.mock.calls[sortableCreateMock.mock.calls.length - 1]?.[1]
+    expect(sortableOptions?.handle).toBe('.task-drag-handle')
     await sortableOptions?.onEnd?.({} as SortableEvent)
 
     expect(saveSpy).toHaveBeenCalledWith([expect.objectContaining({ gid: 'c' }), expect.objectContaining({ gid: 'd' })])

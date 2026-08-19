@@ -47,6 +47,7 @@ vi.mock('../TaskItemActions.vue', () => ({
 }))
 
 import TaskItem from '../TaskItem.vue'
+import TaskCompactItem from '../TaskCompactItem.vue'
 
 function createTask(path: string): Aria2Task {
   return {
@@ -215,5 +216,39 @@ describe('TaskItem', () => {
     })
 
     expect(wrapper.text().match(/task\.bt-metadata-fetching/g)).toHaveLength(1)
+  })
+
+  it('keeps the full card surface non-interactive', async () => {
+    const wrapper = mount(TaskItem, {
+      props: {
+        task: { ...createTask('/downloads/active.bin'), status: 'active' },
+      },
+    })
+
+    await wrapper.trigger('pointerdown')
+    await wrapper.trigger('click')
+    await wrapper.trigger('dblclick')
+
+    expect(wrapper.classes()).not.toContain('pressed')
+    expect(wrapper.emitted('pause')).toBeUndefined()
+    expect(wrapper.emitted('resume')).toBeUndefined()
+    expect(wrapper.emitted('open-file')).toBeUndefined()
+  })
+
+  it('keeps the compact card surface non-interactive', async () => {
+    const wrapper = mount(TaskCompactItem, {
+      props: {
+        task: createTask('/downloads/complete.bin'),
+      },
+    })
+
+    await wrapper.trigger('pointerdown')
+    await wrapper.trigger('click')
+    await wrapper.trigger('dblclick')
+
+    expect(wrapper.classes()).not.toContain('pressed')
+    expect(wrapper.emitted('pause')).toBeUndefined()
+    expect(wrapper.emitted('resume')).toBeUndefined()
+    expect(wrapper.emitted('open-file')).toBeUndefined()
   })
 })

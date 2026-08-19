@@ -97,7 +97,6 @@ function createDeps() {
   })
   const taskStore = reactive({
     taskList: [] as unknown[],
-    selectedGidList: [] as string[],
     hasPausedTasks: vi.fn().mockResolvedValue(false),
     hasActiveTasks: vi.fn().mockResolvedValue(false),
     resumeAllTask: vi.fn().mockResolvedValue(undefined),
@@ -245,7 +244,6 @@ describe('useAppEvents', () => {
   it('keeps task data intact while task route tabs switch', async () => {
     const { deps, taskStore } = createDeps()
     taskStore.taskList = [{ gid: 'old-1' }, { gid: 'old-2' }]
-    taskStore.selectedGidList = ['old-1']
     const { setupListeners } = mountComposable(deps)
 
     await setupListeners()
@@ -264,7 +262,6 @@ describe('useAppEvents', () => {
     )
 
     expect(taskStore.taskList).toEqual([{ gid: 'old-1' }, { gid: 'old-2' }])
-    expect(taskStore.selectedGidList).toEqual(['old-1'])
   })
 
   it('does not process external input when the Rust pending queue is empty', async () => {

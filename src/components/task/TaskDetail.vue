@@ -813,12 +813,7 @@ function handleClose() {
 }
 
 .detail-footer :deep(.task-item-actions) {
-  position: static;
-  width: auto;
-  height: auto;
-  overflow: visible;
   direction: ltr;
-  text-align: center;
 }
 
 .tab-slide-left-enter-active,

@@ -166,12 +166,6 @@ describe('TaskStore', () => {
     expect(saveSpy).toHaveBeenCalledTimes(2)
   })
 
-  it('fetchList prunes selectedGidList to valid gids only', async () => {
-    store.selectTasks(['gid1', 'gid_invalid'])
-    await store.fetchList()
-    expect(store.selectedGidList).toEqual(['gid1'])
-  })
-
   // ─── fetchList: 'all' branch — 3-source merge ──────────────────
 
   describe('fetchList all branch', () => {
@@ -421,26 +415,6 @@ describe('TaskStore', () => {
     })
   })
 
-  it('fetchList prunes selectedGidList to valid gids only', async () => {
-    store.selectTasks(['gid1', 'gid_invalid'])
-    await store.fetchList()
-    expect(store.selectedGidList).toEqual(['gid1'])
-  })
-
-  // ─── selectTasks / selectAllTask ────────────────────────
-
-  it('selectAllTask selects all gids in current list', async () => {
-    await store.fetchList()
-    store.selectAllTask()
-    // Order matches added-at DESC sort (gid2 first)
-    expect(store.selectedGidList).toEqual(['gid2', 'gid1'])
-  })
-
-  it('selectTasks sets arbitrary gid list', () => {
-    store.selectTasks(['a', 'b', 'c'])
-    expect(store.selectedGidList).toEqual(['a', 'b', 'c'])
-  })
-
   // ─── pagination ────────────────────────────────────────
 
   it('keeps independent task page state per tab and clamps overflowing pages', async () => {
@@ -620,13 +594,6 @@ describe('TaskStore', () => {
     expect(store.taskList.map((task) => task.gid)).toEqual(['fresh'])
   })
 
-  it('changeCurrentList clears selectedGidList', async () => {
-    store.selectTasks(['gid1'])
-    await store.changeCurrentList('waiting')
-    // After reset, selectedGidList is cleared then pruned by fetchList
-    expect(store.selectedGidList).toEqual([])
-  })
-
   // ─── removeTask ─────────────────────────────────────────
 
   it('removeTask calls API and refreshes list', async () => {
@@ -703,42 +670,6 @@ describe('TaskStore', () => {
     await store.batchRemoveTask(['gid1', 'gid2'])
     expect(mockApi.batchRemoveTask).toHaveBeenCalledWith({ gids: ['gid1', 'gid2'] })
     expect(mockApi.saveSession).toHaveBeenCalled()
-  })
-
-  it('batchPauseSelectedTasks does nothing when selection is empty', async () => {
-    store.selectTasks([])
-    await store.batchPauseSelectedTasks()
-    expect(mockApi.batchPauseTask).not.toHaveBeenCalled()
-  })
-
-  it('batchPauseSelectedTasks only submits active and waiting gids', async () => {
-    store.taskList = [
-      makeMockTask('gid1', 'active'),
-      makeMockTask('gid2', 'waiting'),
-      makeMockTask('gid3', 'paused'),
-      makeMockTask('gid4', 'complete'),
-    ]
-    store.selectTasks(['gid1', 'gid2', 'gid3', 'gid4'])
-    await store.batchPauseSelectedTasks()
-    expect(mockApi.batchPauseTask).toHaveBeenCalledWith({ gids: ['gid1', 'gid2'] })
-  })
-
-  it('batchResumeSelectedTasks does nothing when selection is empty', async () => {
-    store.selectTasks([])
-    await store.batchResumeSelectedTasks()
-    expect(mockApi.batchResumeTask).not.toHaveBeenCalled()
-  })
-
-  it('batchResumeSelectedTasks only submits paused gids', async () => {
-    store.taskList = [
-      makeMockTask('gid1', 'paused'),
-      makeMockTask('gid2', 'waiting'),
-      makeMockTask('gid3', 'active'),
-      makeMockTask('gid4', 'error'),
-    ]
-    store.selectTasks(['gid1', 'gid2', 'gid3', 'gid4'])
-    await store.batchResumeSelectedTasks()
-    expect(mockApi.batchResumeTask).toHaveBeenCalledWith({ gids: ['gid1'] })
   })
 
   // ─── updateCurrentTaskItem ──────────────────────────────

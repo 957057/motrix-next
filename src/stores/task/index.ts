@@ -1,8 +1,8 @@
 /** @fileoverview Pinia store for download task management: list, add, pause, resume, remove. */
 import { defineStore } from 'pinia'
 import { reactive, ref, watch } from 'vue'
-import { EMPTY_STRING, TASK_STATUS } from '@shared/constants'
-import { checkTaskIsEd2kSearch, intersection } from '@shared/utils'
+import { EMPTY_STRING } from '@shared/constants'
+import { checkTaskIsEd2kSearch } from '@shared/utils'
 import { logger } from '@shared/logger'
 import type { Aria2Task, Aria2File, Aria2Peer, Aria2EngineOptions, TaskApi } from '@shared/types'
 
@@ -54,7 +54,6 @@ export const useTaskStore = defineStore('task', () => {
   const currentTaskPeers = ref<Aria2Peer[]>([])
   const sharingList = ref<string[]>([])
   const taskList = ref<Aria2Task[]>([])
-  const selectedGidList = ref<string[]>([])
   const taskListTransitionRevision = ref(0)
   const taskPagination = reactive({
     active: { page: 1, total: 0, loaded: false },
@@ -92,7 +91,6 @@ export const useTaskStore = defineStore('task', () => {
     const sameList = currentList.value === list
     currentList.value = list
     if (!sameList) {
-      selectedGidList.value = []
       const tab = currentTaskTab()
       if (taskPagination[tab].loaded) refreshCurrentTaskPageCount()
     }
@@ -246,8 +244,6 @@ export const useTaskStore = defineStore('task', () => {
       updateCurrentTaskTotal(data.length)
       clampCurrentTaskPage()
       if (currentTaskTab() === tabAtFetchStart) refreshCurrentTaskPageCount()
-      const gids = data.map((task: Aria2Task) => task.gid)
-      selectedGidList.value = intersection(selectedGidList.value, gids)
       if (taskDetailVisible.value && currentTaskGid.value) {
         try {
           const fresh = await api.fetchTaskItemWithPeers({ gid: currentTaskGid.value })
@@ -261,10 +257,6 @@ export const useTaskStore = defineStore('task', () => {
     } catch (e) {
       logger.debug('TaskStore.fetchList', e instanceof Error ? e.message : String(e))
     }
-  }
-
-  function selectTasks(list: string[]) {
-    selectedGidList.value = list
   }
 
   async function saveManualOrder(gids: string[]) {
@@ -320,10 +312,6 @@ export const useTaskStore = defineStore('task', () => {
     taskListTransitionRevision.value += 1
     await fetchList()
     preferenceStore.updateAndSave(nextConfig).catch((e: unknown) => logger.error('TaskStore.changeCurrentSort', e))
-  }
-
-  function selectAllTask() {
-    selectedGidList.value = taskList.value.map((task) => task.gid)
   }
 
   async function fetchItem(gid: string) {
@@ -502,25 +490,6 @@ export const useTaskStore = defineStore('task', () => {
   // The ops object is populated when setApi() is called.
   const taskOps = {} as ReturnType<typeof createTaskOperations>
 
-  async function batchResumeSelectedTasks() {
-    const selected = new Set(selectedGidList.value)
-    const tasks = taskList.value.filter((task) => selected.has(task.gid) && task.status === TASK_STATUS.PAUSED)
-    if (tasks.length === 0) return { resumed: 0, blocked: 0 }
-    return taskOps.resumeTasks(tasks)
-  }
-
-  async function batchPauseSelectedTasks() {
-    const selected = new Set(selectedGidList.value)
-    const gids = taskList.value
-      .filter((task) => {
-        if (!selected.has(task.gid)) return false
-        return task.status === TASK_STATUS.ACTIVE || task.status === TASK_STATUS.WAITING
-      })
-      .map((task) => task.gid)
-    if (gids.length === 0) return
-    return api.batchPauseTask({ gids })
-  }
-
   function addToSharingList(gid: string) {
     if (sharingList.value.includes(gid)) return
     sharingList.value = [...sharingList.value, gid]
@@ -547,14 +516,12 @@ export const useTaskStore = defineStore('task', () => {
     currentTaskPeers,
     sharingList,
     taskList,
-    selectedGidList,
     taskListTransitionRevision,
     taskPagination,
     currentTaskPageCount,
     setApi,
     changeCurrentList,
     fetchList,
-    selectTasks,
     saveManualOrder,
     saveCurrentManualOrder,
     saveVisiblePageManualOrder,
@@ -563,7 +530,6 @@ export const useTaskStore = defineStore('task', () => {
     setTaskPageSize,
     clampCurrentTaskPage,
     changeCurrentSort,
-    selectAllTask,
     fetchItem,
     showTaskDetail,
     showTaskDetailByGid,
@@ -594,8 +560,6 @@ export const useTaskStore = defineStore('task', () => {
     removeTaskRecord: (task: Aria2Task) => taskOps.removeTaskRecord(task),
     purgeTaskRecord: () => taskOps.purgeTaskRecord(),
     saveSession: () => taskOps.saveSession(),
-    batchResumeSelectedTasks,
-    batchPauseSelectedTasks,
     batchRemoveTask: (gids: string[]) => taskOps.batchRemoveTask(gids),
     restartTask,
 

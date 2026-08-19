@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** @fileoverview Individual task row in the task list with progress and controls. */
-import { computed, ref, watch, onBeforeUnmount } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TASK_STATUS } from '@shared/constants'
 import { NProgress, NIcon } from 'naive-ui'
@@ -101,17 +101,6 @@ const statusBadgeIcon = computed(() => {
   }
 })
 
-function onDblClick() {
-  if (isSharing.value) return
-  const s = props.task.status
-  if (s === TASK_STATUS.COMPLETE) {
-    emit('open-file', props.task)
-    return
-  }
-  if (s === TASK_STATUS.ACTIVE || s === TASK_STATUS.WAITING) emit('pause', props.task)
-  else if (s === TASK_STATUS.PAUSED) emit('resume', props.task)
-}
-
 const { fileMissing } = useTaskFileMissing(taskRef)
 
 // ── M3 sharing state entrance animation ───────────────────────────
@@ -127,51 +116,15 @@ watch(isSharing, (now, was) => {
     sharingEnter.value = true
   }
 })
-
-// ── Card press-hold interaction ─────────────────────────────────────
-// Mirrors the pointerdown/pointerup pattern from TaskItemActions.
-// Card stays pressed (scale down) while pointer is held, then springs
-// back on release with a minimum visual duration for quick clicks.
-const CARD_PRESS_MS = 180
-let cardPressStart = 0
-let cardPressTimer: ReturnType<typeof setTimeout> | null = null
-const cardRef = ref<HTMLElement | null>(null)
-
-function onCardPress() {
-  if (cardPressTimer) clearTimeout(cardPressTimer)
-  cardPressStart = Date.now()
-  cardRef.value?.classList.add('pressed')
-}
-
-function onCardRelease() {
-  const elapsed = Date.now() - cardPressStart
-  const remaining = Math.max(0, CARD_PRESS_MS - elapsed)
-  cardPressTimer = setTimeout(() => {
-    cardRef.value?.classList.remove('pressed')
-    cardPressTimer = null
-  }, remaining)
-}
-
-onBeforeUnmount(() => {
-  if (cardPressTimer) {
-    clearTimeout(cardPressTimer)
-    cardPressTimer = null
-  }
-})
 </script>
 
 <template>
   <div
-    ref="cardRef"
     class="task-item"
     :class="{
       'is-sharing': isSharing,
       'sharing-enter': sharingEnter,
     }"
-    @dblclick="onDblClick"
-    @pointerdown="onCardPress"
-    @pointerup="onCardRelease"
-    @pointerleave="onCardRelease"
     @animationend="sharingEnter = false"
   >
     <TaskDragHandle class="task-drag-rail" />
@@ -323,9 +276,6 @@ onBeforeUnmount(() => {
 .task-item.sharing-enter::before {
   animation: sharing-overlay-enter 1.2s cubic-bezier(0.05, 0.7, 0.1, 1) forwards;
 }
-.task-item:hover {
-  border-color: var(--task-item-hover-border);
-}
 .task-item:hover .task-drag-rail {
   opacity: 0.64;
 }
@@ -339,22 +289,6 @@ onBeforeUnmount(() => {
   grid-template-rows: auto auto auto;
   min-width: 0;
   padding: 16px 12px;
-}
-/* ── Card press-hold state ──────────────────────────────────────────── */
-/* Asymmetric timing: fast press-in (0.15s), springy release (0.35s).   */
-/* The release uses M3 emphasized-decelerate for organic overshoot.     */
-.task-item.pressed {
-  transform: scale(0.98);
-  border-color: var(--m3-primary);
-  transition:
-    transform 0.15s cubic-bezier(0.2, 0, 0, 1),
-    border-color 0.15s;
-}
-/* Spring-back on release — overshoots slightly via emphasized easing */
-.task-item:not(.pressed) {
-  transition:
-    transform 0.35s cubic-bezier(0.05, 0.7, 0.1, 1),
-    border-color 0.3s;
 }
 .task-header {
   display: grid;

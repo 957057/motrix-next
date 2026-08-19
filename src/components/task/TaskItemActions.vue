@@ -143,33 +143,6 @@ function onAction(event: string) {
       break
   }
 }
-
-/** Minimum press visual duration (ms) so quick clicks still show the animation. */
-const MIN_PRESS_MS = 200
-const pressTimers = new WeakMap<HTMLElement, { start: number; timer: ReturnType<typeof setTimeout> | null }>()
-
-function onPress(ev: PointerEvent) {
-  const el = ev.currentTarget as HTMLElement
-  const prev = pressTimers.get(el)
-  if (prev?.timer) clearTimeout(prev.timer)
-  el.classList.add('pressed')
-  pressTimers.set(el, { start: Date.now(), timer: null })
-}
-
-function onRelease(ev: PointerEvent) {
-  const el = ev.currentTarget as HTMLElement
-  const state = pressTimers.get(el)
-  if (!state) {
-    el.classList.remove('pressed')
-    return
-  }
-  const elapsed = Date.now() - state.start
-  const remaining = Math.max(0, MIN_PRESS_MS - elapsed)
-  state.timer = setTimeout(() => {
-    el.classList.remove('pressed')
-    pressTimers.delete(el)
-  }, remaining)
-}
 </script>
 
 <template>
@@ -178,36 +151,37 @@ function onRelease(ev: PointerEvent) {
     name="action-item"
     class="task-item-actions"
     :class="{ 'task-item-actions--compact': props.density === 'compact' }"
-    @dblclick.stop
   >
-    <li
-      v-for="action in actions"
-      :key="action.key"
-      class="task-item-action"
-      :class="[
-        action.cls,
-        {
-          'is-stopping': action.event === 'stop-sharing' && isStopping,
-        },
-      ]"
-      @pointerdown="onPress"
-      @pointerup="onRelease"
-      @pointerleave="onRelease"
-      @click.stop="onAction(action.event)"
-    >
+    <li v-for="action in actions" :key="action.key" class="task-item-action-slot">
       <MTooltip :style="action.tooltip ? 'max-width: 220px' : ''">
         <template #trigger>
-          <span v-if="action.event === 'stop-sharing'" class="stop-icon-wrapper">
-            <span class="stop-icon-static" :class="{ 'fade-out': isStopping }">
-              <NIcon class="task-action-icon"><StopOutline /></NIcon>
+          <button
+            type="button"
+            class="task-item-action"
+            :class="[
+              action.cls,
+              {
+                'is-stopping': action.event === 'stop-sharing' && isStopping,
+              },
+            ]"
+            :disabled="action.event === 'stop-sharing' && isStopping"
+            :aria-label="action.label"
+            @click="onAction(action.event)"
+          >
+            <span class="task-action-visual" aria-hidden="true">
+              <span v-if="action.event === 'stop-sharing'" class="stop-icon-wrapper">
+                <span class="stop-icon-static" :class="{ 'fade-out': isStopping }">
+                  <NIcon class="task-action-icon"><StopOutline /></NIcon>
+                </span>
+                <span class="stop-icon-spin" :class="{ 'fade-in': isStopping }">
+                  <NIcon class="task-action-icon"><SyncOutline /></NIcon>
+                </span>
+              </span>
+              <Transition v-else name="icon-swap" mode="out-in">
+                <NIcon :key="action.event" class="task-action-icon"><component :is="action.icon" /></NIcon>
+              </Transition>
             </span>
-            <span class="stop-icon-spin" :class="{ 'fade-in': isStopping }">
-              <NIcon class="task-action-icon"><SyncOutline /></NIcon>
-            </span>
-          </span>
-          <Transition v-else name="icon-swap" mode="out-in">
-            <NIcon :key="action.event" class="task-action-icon"><component :is="action.icon" /></NIcon>
-          </Transition>
+          </button>
         </template>
         <template v-if="action.event === 'stop-sharing' && isStopping">
           {{ t('task.stopping-sharing') || 'Stopping…' }}
@@ -224,17 +198,18 @@ function onRelease(ev: PointerEvent) {
 .task-item-actions {
   --task-action-height: 32px;
   --task-action-padding-x: 12px;
-  --task-action-item-padding: 6px;
   --task-action-item-margin: 3px;
   --task-action-icon-size: 20px;
   --task-action-item-max-width: 38px;
+  --task-action-button-size: 32px;
+  display: flex;
+  align-items: center;
   height: var(--task-action-height);
   padding: 0 var(--task-action-padding-x);
   margin: 0;
   overflow: hidden;
   user-select: none;
   cursor: default;
-  text-align: right;
   direction: rtl;
   border: 1px solid var(--m3-surface-container-highest);
   color: var(--m3-outline);
@@ -246,53 +221,81 @@ function onRelease(ev: PointerEvent) {
 .task-item-actions:hover {
   border-color: var(--m3-outline);
   background-color: var(--m3-surface-container-high);
-  width: auto;
 }
-.task-item-action {
-  display: inline-block;
-  padding: var(--task-action-item-padding);
+.task-item-action-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--task-action-button-size);
+  width: var(--task-action-button-size);
+  height: var(--task-action-button-size);
   margin: 0 var(--task-action-item-margin);
   max-width: var(--task-action-item-max-width);
-  font-size: 0;
-  cursor: pointer;
-  line-height: var(--task-action-icon-size);
   direction: ltr;
-  border-radius: 50%;
   transition:
-    color 0.15s,
-    background-color 0.15s,
-    transform 0.25s cubic-bezier(0.05, 0.7, 0.1, 1),
     max-width 0.2s ease-out,
     margin 0.2s ease-out,
-    padding 0.2s ease-out,
     opacity 0.2s ease-out;
-  transform-origin: center;
+}
+.task-item-action {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--task-action-button-size);
+  height: var(--task-action-button-size);
+  min-width: var(--task-action-button-size);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: 0;
+  line-height: var(--task-action-icon-size);
+  cursor: pointer;
+  transition: color 0.15s;
 }
 .task-item-actions--compact {
   --task-action-height: 24px;
   --task-action-padding-x: 10px;
-  --task-action-item-padding: 3px;
   --task-action-item-margin: 3px;
   --task-action-icon-size: 16px;
   --task-action-item-max-width: 28px;
+  --task-action-button-size: 22px;
   border-radius: 13px;
 }
-.task-item-action:hover {
+.task-item-action:hover,
+.task-item-action:active,
+.task-item-action:focus-visible {
   color: var(--m3-primary);
-}
-.task-item-action.pressed {
-  transform: scale(0.85);
-  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 .task-item-action.stop-sharing {
   color: var(--m3-success);
 }
-.task-item-action.stop-sharing:hover {
+.task-item-action.stop-sharing:hover,
+.task-item-action.stop-sharing:active,
+.task-item-action.stop-sharing:focus-visible {
   color: var(--m3-success);
 }
-.task-item-action.is-stopping {
+.task-item-action.is-stopping,
+.task-item-action.is-stopping:hover {
   color: var(--m3-warning);
-  pointer-events: none;
+  cursor: default;
+}
+.task-action-visual {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--task-action-icon-size);
+  height: var(--task-action-icon-size);
+  transform: scale(1);
+  transform-origin: center;
+  transition: transform 0.18s cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+.task-item-action:active .task-action-visual {
+  transform: scale(0.9);
+  transition: transform 0.09s cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* Icon crossfade wrapper */
@@ -366,8 +369,7 @@ function onRelease(ev: PointerEvent) {
   transition:
     opacity 0.2s ease-out,
     max-width 0.2s ease-out,
-    margin 0.2s ease-out,
-    padding 0.2s ease-out;
+    margin 0.2s ease-out;
 }
 
 /* Leave: button collapses out horizontally (width full → 0) */
@@ -375,8 +377,7 @@ function onRelease(ev: PointerEvent) {
   transition:
     opacity 0.15s ease-in,
     max-width 0.15s ease-in,
-    margin 0.15s ease-in,
-    padding 0.15s ease-in;
+    margin 0.15s ease-in;
   position: absolute;
 }
 
@@ -384,7 +385,6 @@ function onRelease(ev: PointerEvent) {
   opacity: 0;
   max-width: 0 !important;
   margin: 0 !important;
-  padding: 0 !important;
   overflow: hidden;
 }
 
@@ -392,7 +392,6 @@ function onRelease(ev: PointerEvent) {
   opacity: 0;
   max-width: 0 !important;
   margin: 0 !important;
-  padding: 0 !important;
   overflow: hidden;
 }
 

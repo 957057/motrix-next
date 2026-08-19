@@ -35,7 +35,6 @@ let lastFloatingRect: DOMRect | null = null
 let floatingRectFrame = 0
 let sortable: Sortable | null = null
 let renderedTransitionRevision = taskStore.taskListTransitionRevision
-const selectedGidList = computed(() => taskStore.selectedGidList)
 const taskCardComponent = computed(() =>
   preferenceStore.config.taskCardMode === 'compact' ? TaskCompactItem : TaskItem,
 )
@@ -221,25 +220,6 @@ function mountSortable() {
   sortable = Sortable.create(element, sortableOptions)
 }
 
-function isSelected(gid: string) {
-  return selectedGidList.value.includes(gid)
-}
-
-function handleItemClick(task: Aria2Task, event: MouseEvent) {
-  if (sorting.value) return
-  const gid = task.gid
-  const list = [...selectedGidList.value]
-  if (event.metaKey || event.ctrlKey) {
-    const idx = list.indexOf(gid)
-    if (idx === -1) list.push(gid)
-    else list.splice(idx, 1)
-  } else {
-    list.length = 0
-    list.push(gid)
-  }
-  taskStore.selectTasks(list)
-}
-
 function handlePageSwapBeforeLeave() {
   containerTransitioning.value = true
   destroySortable()
@@ -279,13 +259,7 @@ function handleCardBeforeLeave(element: Element) {
         class="task-list-inner"
         @before-leave="handleCardBeforeLeave"
       >
-        <div
-          v-for="item in visibleTaskList"
-          :key="item.gid"
-          :class="{ selected: isSelected(item.gid) }"
-          class="task-list-item"
-          @click="handleItemClick(item, $event)"
-        >
+        <div v-for="item in visibleTaskList" :key="item.gid" class="task-list-item">
           <component
             :is="taskCardComponent"
             :task="item"
@@ -348,9 +322,6 @@ function handleCardBeforeLeave(element: Element) {
   opacity: 0;
   transform: scale(0.98);
 }
-.selected :deep(.task-item) {
-  border-color: var(--task-item-hover-border);
-}
 .task-list-item {
   position: relative;
   margin-bottom: 16px;
@@ -410,12 +381,5 @@ function handleCardBeforeLeave(element: Element) {
 .task-list-item--settling.task-list-item--settled {
   transform: translate3d(0, 0, 0);
   transition: transform 300ms ease;
-}
-.task-list-item :deep(button),
-.task-list-item :deep(a),
-.task-list-item :deep(input),
-.task-list-item :deep(textarea),
-.task-list-item :deep(select) {
-  cursor: auto;
 }
 </style>

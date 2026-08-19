@@ -401,48 +401,13 @@ function purgeRecord() {
     },
   })
 }
-
-/** M3 press/release animation for toolbar buttons */
-const MIN_PRESS_MS = 200
-const pressTimers = new WeakMap<HTMLElement, { start: number; timer: ReturnType<typeof setTimeout> | null }>()
-
-function onBtnPress(ev: PointerEvent) {
-  const el = ev.currentTarget as HTMLElement
-  const prev = pressTimers.get(el)
-  if (prev?.timer) clearTimeout(prev.timer)
-  el.classList.add('pressed')
-  pressTimers.set(el, { start: Date.now(), timer: null })
-}
-
-function onBtnRelease(ev: PointerEvent) {
-  const el = ev.currentTarget as HTMLElement
-  const state = pressTimers.get(el)
-  if (!state) {
-    el.classList.remove('pressed')
-    return
-  }
-  const elapsed = Date.now() - state.start
-  const remaining = Math.max(0, MIN_PRESS_MS - elapsed)
-  state.timer = setTimeout(() => {
-    el.classList.remove('pressed')
-    pressTimers.delete(el)
-  }, remaining)
-}
 </script>
 
 <template>
   <div class="task-actions">
     <MTooltip>
       <template #trigger>
-        <NButton
-          type="primary"
-          circle
-          size="small"
-          @pointerdown="onBtnPress"
-          @pointerup="onBtnRelease"
-          @pointerleave="onBtnRelease"
-          @click="showAddTask"
-        >
+        <NButton type="primary" circle size="small" @click="showAddTask">
           <template #icon>
             <NIcon><AddOutline /></NIcon>
           </template>
@@ -459,14 +424,7 @@ function onBtnRelease(ev: PointerEvent) {
       style="padding: 0"
     >
       <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          @pointerdown="onBtnPress"
-          @pointerup="onBtnRelease"
-          @pointerleave="onBtnRelease"
-        >
+        <NButton quaternary circle size="small">
           <template #icon>
             <NIcon><SwapVerticalOutline /></NIcon>
           </template>
@@ -494,15 +452,7 @@ function onBtnRelease(ev: PointerEvent) {
     </NPopover>
     <MTooltip>
       <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          @pointerdown="onBtnPress"
-          @pointerup="onBtnRelease"
-          @pointerleave="onBtnRelease"
-          @click="onRefresh"
-        >
+        <NButton quaternary circle size="small" @click="onRefresh">
           <template #icon>
             <NIcon :class="{ spinning: refreshing }"><RefreshOutline /></NIcon>
           </template>
@@ -512,16 +462,7 @@ function onBtnRelease(ev: PointerEvent) {
     </MTooltip>
     <MTooltip v-if="showActiveActions">
       <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :disabled="!hasPausedTasks"
-          @pointerdown="onBtnPress"
-          @pointerup="onBtnRelease"
-          @pointerleave="onBtnRelease"
-          @click="resumeAll"
-        >
+        <NButton quaternary circle size="small" :disabled="!hasPausedTasks" @click="resumeAll">
           <template #icon>
             <NIcon><PlayOutline /></NIcon>
           </template>
@@ -531,16 +472,7 @@ function onBtnRelease(ev: PointerEvent) {
     </MTooltip>
     <MTooltip v-if="showActiveActions">
       <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :disabled="!hasActiveTasks"
-          @pointerdown="onBtnPress"
-          @pointerup="onBtnRelease"
-          @pointerleave="onBtnRelease"
-          @click="pauseAll"
-        >
+        <NButton quaternary circle size="small" :disabled="!hasActiveTasks" @click="pauseAll">
           <template #icon>
             <NIcon><PauseOutline /></NIcon>
           </template>
@@ -555,9 +487,6 @@ function onBtnRelease(ev: PointerEvent) {
           circle
           size="small"
           :disabled="!hasSharingTasks || stoppingAllSharing"
-          @pointerdown="onBtnPress"
-          @pointerup="onBtnRelease"
-          @pointerleave="onBtnRelease"
           @click="stopAllSharing"
         >
           <template #icon>
@@ -572,16 +501,7 @@ function onBtnRelease(ev: PointerEvent) {
     </MTooltip>
     <MTooltip v-if="showActiveActions">
       <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :disabled="deleteAllDisabled"
-          @pointerdown="onBtnPress"
-          @pointerup="onBtnRelease"
-          @pointerleave="onBtnRelease"
-          @click="onDeleteAll"
-        >
+        <NButton quaternary circle size="small" :disabled="deleteAllDisabled" @click="onDeleteAll">
           <template #icon>
             <NIcon><CloseOutline /></NIcon>
           </template>
@@ -591,15 +511,7 @@ function onBtnRelease(ev: PointerEvent) {
     </MTooltip>
     <MTooltip v-if="showStoppedActions">
       <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          @pointerdown="onBtnPress"
-          @pointerup="onBtnRelease"
-          @pointerleave="onBtnRelease"
-          @click="purgeRecord"
-        >
+        <NButton quaternary circle size="small" @click="purgeRecord">
           <template #icon>
             <NIcon><TrashOutline /></NIcon>
           </template>
@@ -615,16 +527,6 @@ function onBtnRelease(ev: PointerEvent) {
   display: flex;
   gap: 4px;
   align-items: center;
-}
-.task-actions :deep(.n-button) {
-  transition:
-    transform 0.25s cubic-bezier(0.05, 0.7, 0.1, 1),
-    opacity 0.3s ease;
-  transform-origin: center;
-}
-.task-actions :deep(.n-button.pressed) {
-  transform: scale(0.85);
-  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 @keyframes spin {
   from {
