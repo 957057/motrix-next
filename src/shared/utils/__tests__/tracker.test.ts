@@ -1,7 +1,7 @@
 /** @fileoverview Tests for tracker data conversion utilities. */
 import { describe, it, expect } from 'vitest'
 import { DEFAULT_TRACKER_SOURCE, TRACKER_SOURCE_OPTIONS } from '@shared/constants'
-import { convertTrackerDataToLine, convertTrackerDataToComma, reduceTrackerString } from '../tracker'
+import { convertTrackerDataToLine, convertTrackerDataToComma } from '../tracker'
 
 describe('tracker source defaults', () => {
   it('uses only the two official curated sources', () => {
@@ -86,49 +86,5 @@ describe('convertTrackerDataToComma', () => {
     const trackers = result.split(',')
     expect(trackers.filter((t) => t === 'udp://shared:5678')).toHaveLength(1)
     expect(trackers).toHaveLength(3)
-  })
-})
-
-// ─── reduceTrackerString ────────────────────────────────────
-
-describe('reduceTrackerString', () => {
-  it('returns full string when under MAX_BT_TRACKER_LENGTH (6144)', () => {
-    expect(reduceTrackerString('short')).toBe('short')
-  })
-
-  it('returns empty for empty string', () => {
-    expect(reduceTrackerString('')).toBe('')
-  })
-
-  it('returns empty for no argument (default parameter)', () => {
-    expect(reduceTrackerString()).toBe('')
-  })
-
-  it('truncates at last comma when exceeding 6144 characters', () => {
-    // Build a string that exceeds 6144 chars
-    const items = Array.from(
-      { length: 200 },
-      (_, i) => `http://tracker${String(i).padStart(3, '0')}.example.com/announce`,
-    )
-    const longStr = items.join(',')
-    expect(longStr.length).toBeGreaterThan(6144)
-
-    const result = reduceTrackerString(longStr)
-    expect(result.length).toBeLessThanOrEqual(6144)
-    // Must end at a clean boundary — no partial URL
-    expect(result.endsWith(',')).toBe(false)
-    const parts = result.split(',')
-    parts.forEach((part) => {
-      expect(part).toContain('http://')
-      expect(part).toContain('/announce')
-    })
-  })
-
-  it('returns full substring when no comma in prefix', () => {
-    // A single very long tracker URL with no commas
-    const longUrl = 'http://' + 'a'.repeat(6200) + '.com/announce'
-    const result = reduceTrackerString(longUrl)
-    // No comma found, returns substring(0, 6144)
-    expect(result.length).toBe(6144)
   })
 })

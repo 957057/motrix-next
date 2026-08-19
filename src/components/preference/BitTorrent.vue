@@ -9,7 +9,7 @@ import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
 import { useEngineRestart } from '@/composables/useEngineRestart'
 import { changeGlobalOption, isEngineReady } from '@/api/aria2'
-import { convertTrackerDataToComma, convertTrackerDataToLine, reduceTrackerString } from '@shared/utils/tracker'
+import { convertTrackerDataToComma, convertTrackerDataToLine } from '@shared/utils/tracker'
 import { diffConfig, checkIsNeedRestart } from '@shared/utils/config'
 import { SYNC_MIN_DURATION } from '@shared/timing'
 import {
@@ -402,14 +402,13 @@ async function handleSyncTracker() {
 async function applySyncedTrackers(text: string, data: string[]) {
   const now = Date.now()
   const comma = convertTrackerDataToComma(data)
-  const reduced = reduceTrackerString(comma)
   form.value.btTracker = text
   form.value.lastSyncTrackerTime = now
   await preferenceStore.updateAndSave({ btTracker: comma, lastSyncTrackerTime: now })
   patchSnapshot({ btTracker: text, lastSyncTrackerTime: now } as Partial<typeof form.value>)
-  await invoke('save_system_config', { config: { 'bt-tracker': reduced } })
+  await invoke('save_system_config', { config: { 'bt-tracker': comma } })
   if (isEngineReady()) {
-    await changeGlobalOption({ 'bt-tracker': reduced } as Partial<typeof preferenceStore.config>)
+    await changeGlobalOption({ 'bt-tracker': comma } as Partial<typeof preferenceStore.config>)
   }
 }
 

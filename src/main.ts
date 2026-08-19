@@ -16,7 +16,7 @@ import {
   ENGINE_RPC_PORT,
   PROXY_SCOPES,
 } from '@shared/constants'
-import { convertTrackerDataToLine, convertTrackerDataToComma, reduceTrackerString } from '@shared/utils/tracker'
+import { convertTrackerDataToLine, convertTrackerDataToComma } from '@shared/utils/tracker'
 import { logger } from '@shared/logger'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { resolveUserVisibleDownloadDir, shouldPersistResolvedDownloadDir } from '@shared/utils/userVisibleDirectory'
@@ -138,10 +138,9 @@ if (import.meta.env.PROD) {
       })
 
       const { invoke } = await import('@tauri-apps/api/core')
-      const reduced = reduceTrackerString(comma)
-      await invoke('save_system_config', { config: { 'bt-tracker': reduced } })
+      await invoke('save_system_config', { config: { 'bt-tracker': comma } })
       if (appStore.engineReady) {
-        await aria2Api.changeGlobalOption({ 'bt-tracker': reduced } as Partial<AppConfig>)
+        await aria2Api.changeGlobalOption({ 'bt-tracker': comma } as Partial<AppConfig>)
       }
       logger.info('Tracker', `Auto-synced: ${result.data.length}/${sources.length} source(s) succeeded`)
       emitAppToast({ type: 'success', key: 'preferences.bt-tracker-sync-succeed' })

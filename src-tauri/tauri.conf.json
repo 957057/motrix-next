@@ -37,7 +37,6 @@
     "createUpdaterArtifacts": true,
     "externalBin": ["binaries/motrix-next-engine"],
     "resources": [
-      "binaries/aria2.conf",
       "data/ed2k-bootstrap/server.met",
       "data/ed2k-bootstrap/nodes.dat",
       "data/bt-peer-blocklist.txt",

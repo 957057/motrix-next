@@ -81,7 +81,7 @@ src-tauri/
 │   ├── engine/
 │   │   ├── mod.rs              # Module re-exports
 │   │   ├── lifecycle.rs        # aria2 sidecar start/stop/restart
-│   │   ├── args.rs             # aria2 command-line argument builder
+│   │   ├── config.rs           # Managed runtime aria2.conf generation
 │   │   ├── cleanup.rs          # Engine cleanup utilities
 │   │   └── state.rs            # Engine state management
 │   ├── services/

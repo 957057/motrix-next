@@ -4,8 +4,6 @@ use crate::error::AppError;
 use crate::services;
 use tauri::AppHandle;
 
-use super::config::get_system_config;
-
 /// Starts the bundled Motrix Next engine process with current system configuration.
 /// Runs on a background thread to avoid blocking the WebView main thread.
 ///
@@ -16,12 +14,9 @@ use super::config::get_system_config;
 pub async fn start_engine_command(app: AppHandle) -> Result<(), AppError> {
     log::info!("engine:start-command");
     let app2 = app.clone();
-    tokio::task::spawn_blocking(move || {
-        let config = get_system_config(app2.clone())?;
-        engine::start_engine(&app2, &config).map_err(AppError::Engine)
-    })
-    .await
-    .map_err(|e| AppError::Engine(e.to_string()))?
+    tokio::task::spawn_blocking(move || engine::start_engine(&app2).map_err(AppError::Engine))
+        .await
+        .map_err(|e| AppError::Engine(e.to_string()))?
 }
 
 /// Gracefully stops the running bundled engine process.
@@ -44,12 +39,9 @@ pub async fn stop_engine_command(app: AppHandle) -> Result<(), AppError> {
 pub async fn restart_engine_command(app: AppHandle) -> Result<(), AppError> {
     log::info!("engine:restart-command");
     let app2 = app.clone();
-    tokio::task::spawn_blocking(move || {
-        let config = get_system_config(app2.clone())?;
-        engine::restart_engine(&app2, &config).map_err(AppError::Engine)
-    })
-    .await
-    .map_err(|e| AppError::Engine(e.to_string()))?
+    tokio::task::spawn_blocking(move || engine::restart_engine(&app2).map_err(AppError::Engine))
+        .await
+        .map_err(|e| AppError::Engine(e.to_string()))?
 }
 
 /// Validates a requested BitTorrent listen port and returns an available port.

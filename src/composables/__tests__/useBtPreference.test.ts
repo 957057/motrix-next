@@ -281,6 +281,16 @@ describe('buildBtSystemConfig', () => {
     expect(config['bt-tracker']).toBe('udp://t1.org:6969,udp://t2.org:6969')
   })
 
+  it('preserves complete large tracker lists for runtime configuration', () => {
+    const trackers = Array.from({ length: 4000 }, (_, index) => `udp://tracker${index}.example:6969/announce`).join(
+      '\n',
+    )
+    const config = buildBtSystemConfig({ ...baseForm, btTracker: trackers })
+
+    expect(config['bt-tracker']).toBe(trackers.replaceAll('\n', ','))
+    expect(config['bt-tracker'].length).toBeGreaterThan(100_000)
+  })
+
   // ── force-save isolation ────────────────────────────────────────
   // aria2's SessionSerializer.cc:288 saves FINISHED tasks only when
   // force-save=true is set per-download. Setting it globally causes

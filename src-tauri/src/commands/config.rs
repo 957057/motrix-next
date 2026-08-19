@@ -95,17 +95,9 @@ fn clear_session_file_inner(app: &AppHandle) -> Result<(), AppError> {
     Ok(())
 }
 
-/// Returns the absolute path to the bundled aria2.conf file.
-///
-/// Resolves via Tauri's resource directory so the path is correct in both
-/// dev mode (`target/debug/`) and production bundles where resources live
-/// in a platform-specific location (macOS `Contents/Resources/`, Linux
-/// `/usr/lib/{app}/`, Windows beside the executable).
+/// Returns the managed runtime aria2.conf path.
 #[tauri::command]
 pub fn get_engine_conf_path(app: AppHandle) -> Result<String, AppError> {
-    let conf_path = app
-        .path()
-        .resolve("binaries/aria2.conf", tauri::path::BaseDirectory::Resource)
-        .map_err(|e| AppError::Io(e.to_string()))?;
+    let conf_path = engine::runtime_config_path(&app).map_err(AppError::Io)?;
     Ok(engine::path_to_safe_string(&conf_path))
 }

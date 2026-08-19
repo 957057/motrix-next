@@ -70,6 +70,7 @@ describe('buildSystemConfigFromAppConfig', () => {
       rpcListenPort: 29199,
       rpcSecret: 'imported-rpc',
       extensionApiSecret: 'imported-api',
+      btTracker: 'udp://tracker.example:6969/announce,'.repeat(4000).slice(0, -1),
     } as AppConfig
 
     const system = buildSystemConfigFromAppConfig(config, '/Fallback')
@@ -82,5 +83,7 @@ describe('buildSystemConfigFromAppConfig', () => {
     expect(system['async-dns']).toBe('true')
     expect(system['rpc-listen-port']).toBe('29199')
     expect(system['rpc-secret']).toBe('imported-rpc')
+    expect(system['bt-tracker']).toBe(config.btTracker)
+    expect(system['bt-tracker'].length).toBeGreaterThan(100_000)
   })
 })

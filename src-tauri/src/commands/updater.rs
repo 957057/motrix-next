@@ -611,9 +611,7 @@ pub async fn apply_update(
 
         let app_for_restart = app.clone();
         let recovery = tokio::task::spawn_blocking(move || -> Result<(), String> {
-            let config = super::config::get_system_config(app_for_restart.clone())
-                .map_err(|ce| format!("config read failed: {ce}"))?;
-            crate::engine::restart_engine(&app_for_restart, &config)
+            crate::engine::restart_engine(&app_for_restart)
         })
         .await;
 

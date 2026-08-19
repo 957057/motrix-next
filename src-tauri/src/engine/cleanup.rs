@@ -169,7 +169,7 @@ mod tests {
             "/Applications/MotrixNext.app/Contents/Resources/motrix-next-engine"
         ));
         assert!(is_supported_engine_process(
-            "/usr/bin/motrix-next-engine --conf-path=/usr/lib/MotrixNext/binaries/aria2.conf"
+            "/usr/bin/motrix-next-engine --conf-path=/home/user/.local/share/com.motrix.next/engine/aria2.conf"
         ));
     }
 

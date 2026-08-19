@@ -194,7 +194,9 @@ mod tests {
 
     #[test]
     fn safe_string_strips_extended_length_prefix() {
-        let p = std::path::Path::new(r"\\?\D:\Program Files\MotrixNext\binaries\aria2.conf");
+        let p = std::path::Path::new(
+            r"\\?\C:\Users\test\AppData\Roaming\com.motrix.next\engine\aria2.conf",
+        );
         let result = path_to_safe_string(p);
         // On Windows: \\?\ prefix must be stripped for aria2c compatibility.
         // On non-Windows: \\?\ has no special meaning — dunce is a no-op.
@@ -225,16 +227,21 @@ mod tests {
 
     #[test]
     fn safe_string_preserves_normal_windows_path() {
-        let p = std::path::Path::new(r"D:\Program Files\MotrixNext\binaries\aria2.conf");
+        let p = std::path::Path::new(
+            r"C:\Users\test\AppData\Roaming\com.motrix.next\engine\aria2.conf",
+        );
         let result = path_to_safe_string(p);
         assert_eq!(result, p.to_string_lossy().to_string());
     }
 
     #[test]
     fn safe_string_preserves_unix_path() {
-        let p = std::path::Path::new("/usr/local/share/motrix-next/binaries/aria2.conf");
+        let p = std::path::Path::new("/home/test/.local/share/com.motrix.next/engine/aria2.conf");
         let result = path_to_safe_string(p);
-        assert_eq!(result, "/usr/local/share/motrix-next/binaries/aria2.conf");
+        assert_eq!(
+            result,
+            "/home/test/.local/share/com.motrix.next/engine/aria2.conf"
+        );
     }
 
     #[test]

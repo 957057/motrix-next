@@ -407,8 +407,6 @@ export const DEFAULT_APP_CONFIG = {
 
 export const FILE_ALLOCATION_OPTIONS = ['none', 'trunc', 'prealloc', 'falloc'] as const
 
-export const MAX_BT_TRACKER_LENGTH = 6144
-
 export const PROXY_SCOPES = {
   DOWNLOAD: 'download',
   UPDATE_APP: 'update-app',

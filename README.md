@@ -292,7 +292,7 @@ motrix-next/
 │   ├── src/
 │   │   ├── aria2/              #   Native Rust aria2 JSON-RPC client
 │   │   ├── commands/           #   Tauri invoke handlers (config, engine, fs, etc.)
-│   │   ├── engine/             #   Aria2 Next sidecar lifecycle (args, state, cleanup)
+│   │   ├── engine/             #   Aria2 Next sidecar lifecycle, runtime config, state, cleanup
 │   │   ├── services/           #   Runtime services (stat, speed, monitor, HTTP API, deep links)
 │   │   ├── db_guard.rs         #   SQLite health checks and rebuild guard
 │   │   ├── error.rs            #   AppError enum

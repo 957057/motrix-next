@@ -1,10 +1,11 @@
 use std::sync::atomic::Ordering;
+use tauri::async_runtime::Receiver;
 use tauri::{Emitter, Manager};
-use tauri_plugin_shell::process::CommandEvent;
+use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
-use super::args::{build_start_args_with_managed_paths, ManagedEnginePaths};
 use super::cleanup::cleanup_port;
+use super::config::{generate_runtime_config, runtime_config_args, ManagedEngineConfig};
 use super::state::{path_to_safe_string, strip_ansi, EngineState};
 use super::{valid_aria2_log_level, DEFAULT_ARIA2_LOG_LEVEL};
 use crate::services::port_guard;
@@ -74,10 +75,7 @@ fn recover_runtime_port_conflict(app: &tauri::AppHandle, kind: port_guard::PortK
                 log::warn!("port_guard: recovering runtime bind failure switches={switches:?}");
                 let app_for_restart = app_handle.clone();
                 match tokio::task::spawn_blocking(move || {
-                    let config =
-                        crate::commands::config::get_system_config(app_for_restart.clone())?;
-                    restart_engine(&app_for_restart, &config)
-                        .map_err(crate::error::AppError::Engine)
+                    restart_engine(&app_for_restart).map_err(crate::error::AppError::Engine)
                 })
                 .await
                 {
@@ -161,21 +159,135 @@ fn wait_for_engine_ports_release(app: &tauri::AppHandle) {
     }
 }
 
-/// Spawns the Aria2 Next engine process with the given configuration.
-/// Creates the download directory, cleans up stale port listeners, and passes
-/// whitelisted config keys as CLI arguments.
-pub fn start_engine(app: &tauri::AppHandle, config: &serde_json::Value) -> Result<(), String> {
+fn prepare_engine_args(
+    app: &tauri::AppHandle,
+    config: &serde_json::Value,
+) -> Result<Vec<String>, String> {
+    if let Some(directory) = config.get("dir").and_then(serde_json::Value::as_str) {
+        std::fs::create_dir_all(directory).map_err(|error| {
+            format!("Failed to create download directory '{directory}': {error}")
+        })?;
+    }
+
+    let data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|error| format!("Failed to get app data dir: {error}"))?;
+    std::fs::create_dir_all(&data_dir)
+        .map_err(|error| format!("Failed to create app data directory: {error}"))?;
+    let session_path = data_dir.join("download.session");
+    let session_path_string = path_to_safe_string(&session_path);
+
+    let (log_file_path, log_level) = engine_log_config(app)?;
+    let ed2k_bootstrap = crate::commands::ed2k::ensure_ed2k_bootstrap_cache(app)
+        .map_err(|error| format!("Failed to prepare ED2K bootstrap cache: {error}"))?;
+    let bt_peer_blocklist = crate::commands::bt_blocklist::startup_blocklist_path(app)
+        .map_err(|error| format!("Failed to prepare BT peer blocklist: {error}"))?;
+    let runtime_config = generate_runtime_config(
+        app,
+        config,
+        ManagedEngineConfig {
+            session_path: &session_path_string,
+            load_session: session_path.exists(),
+            log_file_path: &log_file_path,
+            log_level: &log_level,
+            ed2k_server_list: &ed2k_bootstrap.0,
+            ed2k_node_list: &ed2k_bootstrap.1,
+            bt_peer_blocklist: bt_peer_blocklist.as_deref(),
+        },
+    )?;
+    Ok(runtime_config_args(&runtime_config))
+}
+
+fn spawn_engine(
+    app: &tauri::AppHandle,
+    args: &[String],
+) -> Result<(Receiver<CommandEvent>, CommandChild), String> {
+    log::info!("spawning engine process: argument_count={}", args.len());
+    app.shell()
+        .sidecar(ENGINE_SIDECAR_NAME)
+        .map_err(|error| format!("Failed to create sidecar: {error}"))?
+        .envs(sanitized_engine_proxy_env())
+        .args(args)
+        .spawn()
+        .map_err(|error| format!("Failed to spawn Aria2 Next: {error}"))
+}
+
+fn monitor_engine(
+    app: tauri::AppHandle,
+    mut receiver: Receiver<CommandEvent>,
+    process_id: u32,
+    generation: u32,
+) {
+    tauri::async_runtime::spawn(async move {
+        while let Some(event) = receiver.recv().await {
+            match event {
+                CommandEvent::Stdout(line) => {
+                    let text = strip_ansi(&String::from_utf8_lossy(&line));
+                    if let Some(kind) = port_guard::aria2_runtime_bind_error_kind(&text) {
+                        recover_runtime_port_conflict(&app, kind);
+                    }
+                }
+                CommandEvent::Stderr(line) => {
+                    let text = String::from_utf8_lossy(&line);
+                    let trimmed = text.trim();
+                    if !trimmed.is_empty() {
+                        log::warn!("engine stderr: {trimmed}");
+                    }
+                }
+                CommandEvent::Terminated(payload) => {
+                    let exit_code = payload.code.unwrap_or(-1);
+                    log::warn!("engine terminated: exit_code={exit_code}");
+
+                    let is_stale = app
+                        .try_state::<EngineState>()
+                        .is_none_or(|state| !state.is_current_generation(generation));
+                    if is_stale {
+                        log::debug!("stale monitor (generation={generation}) ignored termination");
+                        break;
+                    }
+
+                    let was_intentional = app
+                        .try_state::<EngineState>()
+                        .is_some_and(|state| state.intentional_stop.swap(false, Ordering::SeqCst));
+                    if was_intentional {
+                        let _ = app.emit("engine-stopped", ());
+                    } else {
+                        let _ = app.emit(
+                            "engine-crashed",
+                            serde_json::json!({
+                                "code": exit_code,
+                                "signal": payload.signal
+                            }),
+                        );
+                    }
+
+                    if let Some(state) = app.try_state::<EngineState>() {
+                        if let Ok(mut child) = state.child.lock() {
+                            if child
+                                .as_ref()
+                                .map(tauri_plugin_shell::process::CommandChild::pid)
+                                == Some(process_id)
+                            {
+                                *child = None;
+                            }
+                        }
+                    }
+                    break;
+                }
+                _ => {}
+            }
+        }
+    });
+}
+
+/// Spawns Aria2 Next from the current persisted system configuration.
+pub fn start_engine(app: &tauri::AppHandle) -> Result<(), String> {
     let state = app.state::<EngineState>();
     let mut child_lock = state.child.lock().map_err(|e| e.to_string())?;
 
     if child_lock.is_some() {
         return Ok(());
-    }
-
-    // Ensure the download directory exists
-    if let Some(dir) = config.get("dir").and_then(|v| v.as_str()) {
-        std::fs::create_dir_all(dir)
-            .map_err(|e| format!("Failed to create download directory '{}': {}", dir, e))?;
     }
 
     if let Err(e) = port_guard::reconcile_engine_ports(app) {
@@ -192,65 +304,8 @@ pub fn start_engine(app: &tauri::AppHandle, config: &serde_json::Value) -> Resul
         .unwrap_or(DEFAULT_RPC_PORT_STR);
     cleanup_port(port);
 
-    // Resolve aria2.conf via Tauri's resource directory — correct for all
-    // platforms, including macOS .app bundles where resources live in
-    // Contents/Resources/ rather than next to the executable.
-    let conf_path = app
-        .path()
-        .resolve("binaries/aria2.conf", tauri::path::BaseDirectory::Resource)
-        .map_err(|e| format!("Failed to resolve conf path: {}", e))?;
-    let conf_str = path_to_safe_string(&conf_path);
-
-    // Session file for persisting active/paused downloads across restarts
-    let session_path = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| format!("Failed to get app data dir: {}", e))?
-        .join("download.session");
-    let session_str = path_to_safe_string(&session_path);
-
-    // Ensure the app data directory exists
-    if let Some(parent) = session_path.parent() {
-        let _ = std::fs::create_dir_all(parent);
-    }
-
-    let (log_file_path, log_level) = engine_log_config(app)?;
-    let ed2k_bootstrap = crate::commands::ed2k::ensure_ed2k_bootstrap_cache(app)
-        .map_err(|e| format!("Failed to prepare ED2K bootstrap cache: {e}"))?;
-    let bt_peer_blocklist = crate::commands::bt_blocklist::startup_blocklist_path(app)
-        .map_err(|e| format!("Failed to prepare BT peer blocklist: {e}"))?;
-    let args = build_start_args_with_managed_paths(
-        &config,
-        if conf_path.exists() {
-            log::info!("loading engine config: {}", conf_str);
-            Some(&conf_str)
-        } else {
-            log::warn!(
-                "engine config not found: {}, starting with defaults",
-                conf_str
-            );
-            None
-        },
-        &session_str,
-        session_path.exists(),
-        &log_file_path,
-        &log_level,
-        ManagedEnginePaths {
-            ed2k_bootstrap: Some((ed2k_bootstrap.0.as_str(), ed2k_bootstrap.1.as_str())),
-            bt_peer_blocklist: bt_peer_blocklist.as_deref(),
-        },
-    );
-
-    let sidecar = app
-        .shell()
-        .sidecar(ENGINE_SIDECAR_NAME)
-        .map_err(|e| format!("Failed to create sidecar: {}", e))?
-        .envs(sanitized_engine_proxy_env())
-        .args(&args);
-
-    let (mut rx, child) = sidecar
-        .spawn()
-        .map_err(|e| format!("Failed to spawn Aria2 Next: {}", e))?;
+    let args = prepare_engine_args(app, &config)?;
+    let (receiver, child) = spawn_engine(app, &args)?;
 
     log::info!("started engine process: PID {}", child.pid());
 
@@ -258,79 +313,7 @@ pub fn start_engine(app: &tauri::AppHandle, config: &serde_json::Value) -> Resul
     *child_lock = Some(child);
     state.intentional_stop.store(false, Ordering::SeqCst);
     let my_gen = state.next_generation();
-
-    let app_handle = app.clone();
-    tauri::async_runtime::spawn(async move {
-        while let Some(event) = rx.recv().await {
-            match event {
-                CommandEvent::Stdout(line) => {
-                    let text = String::from_utf8_lossy(&line);
-                    let text = strip_ansi(&text);
-                    if let Some(kind) = port_guard::aria2_runtime_bind_error_kind(&text) {
-                        recover_runtime_port_conflict(&app_handle, kind);
-                    }
-                }
-                CommandEvent::Stderr(line) => {
-                    let text = String::from_utf8_lossy(&line);
-                    let trimmed = text.trim();
-                    if !trimmed.is_empty() {
-                        log::warn!("stderr: {}", trimmed);
-                    }
-                }
-                CommandEvent::Terminated(payload) => {
-                    let exit_code = payload.code.unwrap_or(-1);
-                    log::warn!("terminated with exit code: {}", exit_code);
-
-                    // Generation guard: if a newer engine was spawned since this
-                    // monitor started, this is a stale handler — ignore silently.
-                    let is_stale = app_handle
-                        .try_state::<EngineState>()
-                        .is_none_or(|s| !s.is_current_generation(my_gen));
-                    if is_stale {
-                        log::debug!("stale monitor (gen {}) ignoring termination", my_gen);
-                        break;
-                    }
-
-                    // Only notify frontend of UNEXPECTED termination.
-                    // Intentional stops (restart, update, relaunch) set the flag
-                    // before kill() — swap(false) atomically reads and resets.
-                    let was_intentional = if let Some(state) = app_handle.try_state::<EngineState>()
-                    {
-                        state.intentional_stop.swap(false, Ordering::SeqCst)
-                    } else {
-                        false
-                    };
-
-                    if !was_intentional {
-                        // Any non-intentional exit is a crash — including kill -9
-                        // which produces exit_code 0.  Frontend drives recovery.
-                        let _ = app_handle.emit(
-                            "engine-crashed",
-                            serde_json::json!({
-                                "code": exit_code,
-                                "signal": payload.signal
-                            }),
-                        );
-                    } else {
-                        let _ = app_handle.emit("engine-stopped", ());
-                    }
-
-                    if let Some(state) = app_handle.try_state::<EngineState>() {
-                        if let Ok(mut lock) = state.child.lock() {
-                            if lock
-                                .as_ref()
-                                .map(tauri_plugin_shell::process::CommandChild::pid)
-                                == Some(spawned_pid)
-                            {
-                                *lock = None;
-                            }
-                        }
-                    }
-                }
-                _ => {}
-            }
-        }
-    });
+    monitor_engine(app.clone(), receiver, spawned_pid, my_gen);
 
     Ok(())
 }
@@ -393,7 +376,7 @@ pub fn stop_engine(app: &tauri::AppHandle, for_exit: bool) -> Result<(), String>
 ///
 /// This is the fix for: rapid "Save & Apply" → "Restart Engine" creating
 /// orphaned engine processes on all platforms.
-pub fn restart_engine(app: &tauri::AppHandle, _config: &serde_json::Value) -> Result<(), String> {
+pub fn restart_engine(app: &tauri::AppHandle) -> Result<(), String> {
     let state = app.state::<EngineState>();
     // Signal intentional stop BEFORE kill so the old process's Terminated
     // handler suppresses engine-error.
@@ -423,66 +406,9 @@ pub fn restart_engine(app: &tauri::AppHandle, _config: &serde_json::Value) -> Re
         .unwrap_or(DEFAULT_RPC_PORT_STR);
     cleanup_port(port);
 
-    // Step 3: Spawn new Aria2 Next (inlined from start_engine to keep lock held)
-    if let Some(dir) = config.get("dir").and_then(|v| v.as_str()) {
-        std::fs::create_dir_all(dir)
-            .map_err(|e| format!("Failed to create download directory '{}': {}", dir, e))?;
-    }
-
-    let conf_path = app
-        .path()
-        .resolve("binaries/aria2.conf", tauri::path::BaseDirectory::Resource)
-        .map_err(|e| format!("Failed to resolve conf path: {}", e))?;
-    let conf_str = path_to_safe_string(&conf_path);
-
-    let session_path = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| format!("Failed to get app data dir: {}", e))?
-        .join("download.session");
-    let session_str = path_to_safe_string(&session_path);
-
-    if let Some(parent) = session_path.parent() {
-        let _ = std::fs::create_dir_all(parent);
-    }
-
-    let (log_file_path, log_level) = engine_log_config(app)?;
-    let ed2k_bootstrap = crate::commands::ed2k::ensure_ed2k_bootstrap_cache(app)
-        .map_err(|e| format!("Failed to prepare ED2K bootstrap cache: {e}"))?;
-    let bt_peer_blocklist = crate::commands::bt_blocklist::startup_blocklist_path(app)
-        .map_err(|e| format!("Failed to prepare BT peer blocklist: {e}"))?;
-    let args = build_start_args_with_managed_paths(
-        &config,
-        if conf_path.exists() {
-            log::info!("restart: loading engine config: {}", conf_str);
-            Some(&conf_str)
-        } else {
-            log::warn!(
-                "restart: engine config not found: {}, starting with defaults",
-                conf_str
-            );
-            None
-        },
-        &session_str,
-        session_path.exists(),
-        &log_file_path,
-        &log_level,
-        ManagedEnginePaths {
-            ed2k_bootstrap: Some((ed2k_bootstrap.0.as_str(), ed2k_bootstrap.1.as_str())),
-            bt_peer_blocklist: bt_peer_blocklist.as_deref(),
-        },
-    );
-
-    let sidecar = app
-        .shell()
-        .sidecar(ENGINE_SIDECAR_NAME)
-        .map_err(|e| format!("Failed to create sidecar: {}", e))?
-        .envs(sanitized_engine_proxy_env())
-        .args(&args);
-
-    let (mut rx, child) = sidecar
-        .spawn()
-        .map_err(|e| format!("Failed to spawn Aria2 Next: {}", e))?;
+    // Step 3: Rebuild the runtime config and spawn a new engine.
+    let args = prepare_engine_args(app, &config)?;
+    let (receiver, child) = spawn_engine(app, &args)?;
 
     log::info!("restart: started new engine process: PID {}", child.pid());
     let spawned_pid = child.pid();
@@ -496,74 +422,7 @@ pub fn restart_engine(app: &tauri::AppHandle, _config: &serde_json::Value) -> Re
     // intentional (suppressing crash detection AND blocking app exit).
     state.intentional_stop.store(false, Ordering::SeqCst);
 
-    // Monitor for process termination (PID-guarded clear)
-    let app_handle = app.clone();
-    tauri::async_runtime::spawn(async move {
-        while let Some(event) = rx.recv().await {
-            match event {
-                CommandEvent::Stdout(line) => {
-                    let text = String::from_utf8_lossy(&line);
-                    let text = strip_ansi(&text);
-                    if let Some(kind) = port_guard::aria2_runtime_bind_error_kind(&text) {
-                        recover_runtime_port_conflict(&app_handle, kind);
-                    }
-                }
-                CommandEvent::Stderr(line) => {
-                    let text = String::from_utf8_lossy(&line);
-                    let trimmed = text.trim();
-                    if !trimmed.is_empty() {
-                        log::warn!("stderr: {}", trimmed);
-                    }
-                }
-                CommandEvent::Terminated(payload) => {
-                    let exit_code = payload.code.unwrap_or(-1);
-                    log::warn!("restart: terminated with exit code: {}", exit_code);
-
-                    // Generation guard: stale monitor → ignore silently.
-                    let is_stale = app_handle
-                        .try_state::<EngineState>()
-                        .is_none_or(|s| !s.is_current_generation(my_gen));
-                    if is_stale {
-                        log::debug!("stale monitor (gen {}) ignoring termination", my_gen);
-                        break;
-                    }
-
-                    // Only notify frontend of UNEXPECTED termination.
-                    let was_intentional = if let Some(state) = app_handle.try_state::<EngineState>()
-                    {
-                        state.intentional_stop.swap(false, Ordering::SeqCst)
-                    } else {
-                        false
-                    };
-
-                    if !was_intentional {
-                        let _ = app_handle.emit(
-                            "engine-crashed",
-                            serde_json::json!({
-                                "code": exit_code,
-                                "signal": payload.signal
-                            }),
-                        );
-                    } else {
-                        let _ = app_handle.emit("engine-stopped", ());
-                    }
-
-                    if let Some(state) = app_handle.try_state::<EngineState>() {
-                        if let Ok(mut lock) = state.child.lock() {
-                            if lock
-                                .as_ref()
-                                .map(tauri_plugin_shell::process::CommandChild::pid)
-                                == Some(spawned_pid)
-                            {
-                                *lock = None;
-                            }
-                        }
-                    }
-                }
-                _ => {}
-            }
-        }
-    });
+    monitor_engine(app.clone(), receiver, spawned_pid, my_gen);
 
     Ok(())
 }
