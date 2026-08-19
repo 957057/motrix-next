@@ -365,6 +365,7 @@ export default {
   'copied-to-clipboard': '{label} skopiowano',
   'color-scheme': 'Schemat kolorów',
   'task-card-mode': 'Karta zadania',
+  'reduce-motion': 'Ogranicz ruch',
   'sidebar-task-counts': 'Liczniki zadań na pasku bocznym',
   'task-list-watermark': 'Znak wodny listy zadań',
   'task-card-mode-full': 'Pełna',

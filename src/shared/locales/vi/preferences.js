@@ -358,6 +358,7 @@ export default {
   'copied-to-clipboard': 'Đã sao chép {label}',
   'color-scheme': 'Bảng màu',
   'task-card-mode': 'Thẻ tác vụ',
+  'reduce-motion': 'Giảm chuyển động',
   'sidebar-task-counts': 'Bộ đếm tác vụ ở thanh bên',
   'task-list-watermark': 'Hình mờ danh sách tác vụ',
   'task-card-mode-full': 'Đầy đủ',

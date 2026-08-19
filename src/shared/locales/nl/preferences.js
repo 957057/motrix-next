@@ -365,6 +365,7 @@ export default {
   'copied-to-clipboard': '{label} gekopieerd',
   'color-scheme': 'Kleurenschema',
   'task-card-mode': 'Taakkaart',
+  'reduce-motion': 'Verminder beweging',
   'sidebar-task-counts': 'Taaktellers in de zijbalk',
   'task-list-watermark': 'Watermerk van takenlijst',
   'task-card-mode-full': 'Volledig',

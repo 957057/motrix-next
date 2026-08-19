@@ -368,6 +368,7 @@ export default {
   'copied-to-clipboard': '{label} αντιγράφηκε',
   'color-scheme': 'Χρωματικό σχήμα',
   'task-card-mode': 'Κάρτα εργασίας',
+  'reduce-motion': 'Μείωση κίνησης',
   'sidebar-task-counts': 'Μετρητές εργασιών πλευρικής γραμμής',
   'task-list-watermark': 'Υδατογράφημα λίστας εργασιών',
   'task-card-mode-full': 'Πλήρης',

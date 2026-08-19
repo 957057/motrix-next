@@ -74,6 +74,16 @@ describe('buildGeneralForm', () => {
     expect(form.taskCardMode).toBe(DEFAULT_APP_CONFIG.taskCardMode)
   })
 
+  it('keeps motion enabled by default', () => {
+    const form = buildGeneralForm(emptyConfig)
+    expect(form.reduceMotion).toBe(false)
+  })
+
+  it('reads reduced motion from config', () => {
+    const form = buildGeneralForm({ reduceMotion: true } as AppConfig)
+    expect(form.reduceMotion).toBe(true)
+  })
+
   it('defaults taskListWatermark from DEFAULT_APP_CONFIG', () => {
     const form = buildGeneralForm(emptyConfig)
     expect(form.taskListWatermark).toBe(DEFAULT_APP_CONFIG.taskListWatermark)
@@ -220,9 +230,9 @@ describe('buildGeneralForm', () => {
     expect(form.lightweightMode).toBe(true)
   })
 
-  // ── Completeness: all 18 fields are present ─────────────────────
+  // ── Completeness ────────────────────────────────────────────────
 
-  it('returns all 20 form fields', () => {
+  it('returns all 21 form fields', () => {
     const form = buildGeneralForm(emptyConfig)
     const keys = Object.keys(form)
     expect(keys).toContain('locale')
@@ -230,6 +240,7 @@ describe('buildGeneralForm', () => {
     expect(keys).toContain('colorScheme')
     expect(keys).toContain('customColorScheme')
     expect(keys).toContain('taskCardMode')
+    expect(keys).toContain('reduceMotion')
     expect(keys).toContain('taskListWatermark')
     expect(keys).toContain('sidebarTaskCounts')
     expect(keys).toContain('autoCheckUpdate')
@@ -245,7 +256,7 @@ describe('buildGeneralForm', () => {
     expect(keys).toContain('hideDockOnMinimize')
     expect(keys).toContain('traySpeedometer')
     expect(keys).toContain('lightweightMode')
-    expect(keys).toHaveLength(20)
+    expect(keys).toHaveLength(21)
   })
 })
 
@@ -258,6 +269,7 @@ describe('buildGeneralSystemConfig', () => {
     colorScheme: 'amber',
     customColorScheme: '#737373',
     taskCardMode: 'full',
+    reduceMotion: false,
     taskListWatermark: true,
     sidebarTaskCounts: true,
     autoCheckUpdate: true,
@@ -303,6 +315,7 @@ describe('transformGeneralForStore', () => {
     colorScheme: 'amber',
     customColorScheme: '#737373',
     taskCardMode: 'full',
+    reduceMotion: false,
     taskListWatermark: true,
     sidebarTaskCounts: true,
     autoCheckUpdate: true,
@@ -327,6 +340,7 @@ describe('transformGeneralForStore', () => {
     expect(result.colorScheme).toBe('amber')
     expect(result.customColorScheme).toBe('#737373')
     expect(result.taskCardMode).toBe('full')
+    expect(result.reduceMotion).toBe(false)
     expect(result.taskListWatermark).toBe(true)
     expect(result.sidebarTaskCounts).toBe(true)
     expect(result.autoCheckUpdate).toBe(true)

@@ -360,6 +360,7 @@ export default {
   'copied-to-clipboard': '{label} کپی شد',
   'color-scheme': 'طرح رنگ',
   'task-card-mode': 'کارت وظیفه',
+  'reduce-motion': 'کاهش حرکت',
   'sidebar-task-counts': 'شمارنده‌های وظیفه در نوار کناری',
   'task-list-watermark': 'واترمارک فهرست وظایف',
   'task-card-mode-full': 'کامل',

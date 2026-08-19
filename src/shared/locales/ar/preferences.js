@@ -355,6 +355,7 @@ export default {
   'copied-to-clipboard': '{label} تم النسخ',
   'color-scheme': 'نظام الألوان',
   'task-card-mode': 'بطاقة المهمة',
+  'reduce-motion': 'تقليل الحركة',
   'sidebar-task-counts': 'عداد مهام الشريط الجانبي',
   'task-list-watermark': 'علامة مائية لقائمة المهام',
   'task-card-mode-full': 'كامل',

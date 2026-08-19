@@ -3,7 +3,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NButton, NCard, NCheckbox, NEmpty, NIcon, NInput, NModal, NSelect, NSpace, NText } from 'naive-ui'
-import { vAutoAnimate } from '@formkit/auto-animate'
+import { vMotionAutoAnimate } from '@/directives/motionAutoAnimate'
 import { AddOutline } from '@vicons/ionicons5'
 import type { UserAgentProfile, UserAgentRule } from '@shared/types'
 import { sanitizeHeaderValue } from '@shared/utils/headerSanitize'
@@ -286,7 +286,7 @@ watch(
                 </template>
               </NButton>
             </div>
-            <div v-auto-animate="{ duration: 220, easing: 'ease-out' }" class="ua-manager-list">
+            <div v-motion-auto-animate="{ duration: 220, easing: 'ease-out' }" class="ua-manager-list">
               <button
                 v-for="profile in draftProfiles"
                 :key="profile.id"
@@ -318,7 +318,7 @@ watch(
                 </template>
               </NButton>
             </div>
-            <div v-auto-animate="{ duration: 220, easing: 'ease-out' }" class="ua-manager-list">
+            <div v-motion-auto-animate="{ duration: 220, easing: 'ease-out' }" class="ua-manager-list">
               <button
                 v-for="rule in draftRules"
                 :key="rule.id"

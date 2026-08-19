@@ -358,6 +358,7 @@ export default {
   'copied-to-clipboard': '{label} 복사됨',
   'color-scheme': '색상 테마',
   'task-card-mode': '작업 카드',
+  'reduce-motion': '동작 줄이기',
   'sidebar-task-counts': '사이드바 작업 수',
   'task-list-watermark': '작업 목록 워터마크',
   'task-card-mode-full': '전체',

@@ -368,6 +368,7 @@ export default {
   'copied-to-clipboard': '{label} copiato',
   'color-scheme': 'Schema colori',
   'task-card-mode': 'Scheda attività',
+  'reduce-motion': 'Riduci movimento',
   'sidebar-task-counts': 'Conteggi attività nella barra laterale',
   'task-list-watermark': 'Filigrana elenco attività',
   'task-card-mode-full': 'Completa',

@@ -31,6 +31,7 @@ import './styles/base.css'
 import './styles/transitions.css'
 import './styles/preferences.css'
 import './styles/naive-overrides.css'
+import './styles/reduced-motion.css'
 
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { getLocale } from 'tauri-plugin-locale-api'

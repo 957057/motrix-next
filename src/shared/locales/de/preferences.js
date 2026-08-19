@@ -365,6 +365,7 @@ export default {
   'copied-to-clipboard': '{label} kopiert',
   'color-scheme': 'Farbschema',
   'task-card-mode': 'Aufgabenkarte',
+  'reduce-motion': 'Bewegungen reduzieren',
   'sidebar-task-counts': 'Aufgabenzähler in der Seitenleiste',
   'task-list-watermark': 'Wasserzeichen der Aufgabenliste',
   'task-card-mode-full': 'Vollständig',

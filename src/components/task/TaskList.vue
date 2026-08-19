@@ -4,6 +4,7 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import Sortable from 'sortablejs'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceStore } from '@/stores/preference'
+import { useReducedMotion } from '@/composables/useReducedMotion'
 import TaskItem from './TaskItem.vue'
 import TaskCompactItem from './TaskCompactItem.vue'
 import type { ComponentPublicInstance } from 'vue'
@@ -24,6 +25,7 @@ const emit = defineEmits<{
 
 const taskStore = useTaskStore()
 const preferenceStore = usePreferenceStore()
+const reduceMotion = useReducedMotion()
 
 type ListRefTarget = HTMLElement | ComponentPublicInstance | null
 
@@ -100,6 +102,11 @@ function animateDropSettle(event: SortableEvent | undefined): Promise<void> {
   const item = event?.item
   if (!lastFloatingRect || !item?.isConnected) return Promise.resolve()
 
+  if (reduceMotion.value) {
+    lastFloatingRect = null
+    return Promise.resolve()
+  }
+
   const targetRect = item.getBoundingClientRect()
   const deltaX = lastFloatingRect.left - targetRect.left
   const deltaY = lastFloatingRect.top - targetRect.top
@@ -162,7 +169,7 @@ watch(
 )
 
 const sortableOptions: SortableOptions = {
-  animation: 240,
+  animation: reduceMotion.value ? 0 : 240,
   handle: '.task-drag-handle',
   draggable: '.task-list-item',
   filter: '.task-item-actions, button, a, input, textarea, select, [data-no-drag]',
@@ -180,7 +187,7 @@ const sortableOptions: SortableOptions = {
   preventOnFilter: false,
   onStart: () => {
     sorting.value = true
-    startFloatingRectTracking()
+    if (!reduceMotion.value) startFloatingRectTracking()
   },
   onUpdate: (event) => {
     if (event.oldIndex === undefined || event.newIndex === undefined || event.oldIndex === event.newIndex) return
@@ -200,6 +207,12 @@ const sortableOptions: SortableOptions = {
     }, 0)
   },
 }
+
+watch(reduceMotion, (enabled) => {
+  const duration = enabled ? 0 : 240
+  sortableOptions.animation = duration
+  sortable?.option('animation', duration)
+})
 
 function destroySortable() {
   sortable?.destroy()

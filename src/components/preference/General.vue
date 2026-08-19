@@ -476,6 +476,9 @@ onMounted(async () => {
             </NRadioButton>
           </NRadioGroup>
         </NFormItem>
+        <NFormItem :label="t('preferences.reduce-motion')">
+          <NSwitch v-model:value="form.reduceMotion" />
+        </NFormItem>
         <NFormItem :label="t('preferences.sidebar-task-counts')">
           <NSwitch v-model:value="form.sidebarTaskCounts" />
         </NFormItem>

@@ -368,6 +368,7 @@ export default {
   'copied-to-clipboard': '{label} copiat',
   'color-scheme': 'Esquema de colors',
   'task-card-mode': 'Targeta de tasca',
+  'reduce-motion': 'Redueix el moviment',
   'sidebar-task-counts': 'Comptadors de tasques a la barra lateral',
   'task-list-watermark': "Marca d'aigua de la llista de tasques",
   'task-card-mode-full': 'Complet',

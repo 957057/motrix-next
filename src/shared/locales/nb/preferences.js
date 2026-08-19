@@ -362,6 +362,7 @@ export default {
   'copied-to-clipboard': '{label} kopiert',
   'color-scheme': 'Fargevalg',
   'task-card-mode': 'Oppgavekort',
+  'reduce-motion': 'Reduser bevegelse',
   'sidebar-task-counts': 'Oppgavetellere i sidepanelet',
   'task-list-watermark': 'Vannmerke for oppgaveliste',
   'task-card-mode-full': 'Full',

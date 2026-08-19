@@ -49,6 +49,7 @@ import {
   dateNbNO,
 } from 'naive-ui'
 import { useTheme } from './composables/useTheme'
+import { useReducedMotionClass } from './composables/useReducedMotion'
 import { useVisibilityPause } from './composables/useVisibilityPause'
 
 import { APP_COLOR_TOKENS_KEY, useColorScheme } from './composables/useColorScheme'
@@ -58,6 +59,7 @@ const { isDark } = useTheme()
 const { colorTokens, themeOverrides } = useColorScheme()
 provide(APP_COLOR_TOKENS_KEY, colorTokens)
 useVisibilityPause()
+useReducedMotionClass()
 
 const theme = computed(() => (isDark.value ? darkTheme : null))
 

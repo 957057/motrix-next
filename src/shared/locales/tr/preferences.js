@@ -361,6 +361,7 @@ export default {
   'copied-to-clipboard': '{label} kopyalandı',
   'color-scheme': 'Renk şeması',
   'task-card-mode': 'Görev kartı',
+  'reduce-motion': 'Hareketi azalt',
   'sidebar-task-counts': 'Kenar çubuğu görev sayıları',
   'task-list-watermark': 'Görev listesi filigranı',
   'task-card-mode-full': 'Tam',

@@ -17,6 +17,7 @@ export interface GeneralForm {
   colorScheme: string
   customColorScheme: string
   taskCardMode: AppConfig['taskCardMode']
+  reduceMotion: boolean
   taskListWatermark: boolean
   sidebarTaskCounts: boolean
   autoCheckUpdate: boolean
@@ -47,6 +48,7 @@ export function buildGeneralForm(config: AppConfig): GeneralForm {
     colorScheme: config.colorScheme ?? D.colorScheme,
     customColorScheme: config.customColorScheme ?? D.customColorScheme,
     taskCardMode: config.taskCardMode ?? D.taskCardMode,
+    reduceMotion: config.reduceMotion ?? D.reduceMotion,
     taskListWatermark: config.taskListWatermark ?? D.taskListWatermark,
     sidebarTaskCounts: config.sidebarTaskCounts ?? D.sidebarTaskCounts,
     autoCheckUpdate: config.autoCheckUpdate ?? D.autoCheckUpdate,

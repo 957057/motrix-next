@@ -364,6 +364,7 @@ export default {
   'copied-to-clipboard': '{label} copiat',
   'color-scheme': 'Schemă de culori',
   'task-card-mode': 'Card de sarcină',
+  'reduce-motion': 'Reduceți mișcarea',
   'sidebar-task-counts': 'Contoare de sarcini în bara laterală',
   'task-list-watermark': 'Filigran listă de sarcini',
   'task-card-mode-full': 'Complet',

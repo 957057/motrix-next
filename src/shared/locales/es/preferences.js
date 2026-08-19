@@ -371,6 +371,7 @@ export default {
   'copied-to-clipboard': '{label} copiado',
   'color-scheme': 'Esquema de colores',
   'task-card-mode': 'Tarjeta de tarea',
+  'reduce-motion': 'Reducir movimiento',
   'sidebar-task-counts': 'Contadores de tareas en la barra lateral',
   'task-list-watermark': 'Marca de agua de la lista de tareas',
   'task-card-mode-full': 'Completa',

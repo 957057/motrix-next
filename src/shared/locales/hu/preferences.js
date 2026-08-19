@@ -365,6 +365,7 @@ export default {
   'copied-to-clipboard': '{label} másolva',
   'color-scheme': 'Színséma',
   'task-card-mode': 'Feladatkártya',
+  'reduce-motion': 'Mozgás csökkentése',
   'sidebar-task-counts': 'Oldalsáv feladatszámlálói',
   'task-list-watermark': 'Feladatlista vízjel',
   'task-card-mode-full': 'Teljes',

@@ -58,7 +58,7 @@ import { useAppMessage } from '@/composables/useAppMessage'
 import type { DataTableColumns } from 'naive-ui'
 import type { BatchItem, UserAgentProfile } from '@shared/types'
 import { FolderOpenOutline, CloudUploadOutline } from '@vicons/ionicons5'
-import { vAutoAnimate } from '@formkit/auto-animate'
+import { vMotionAutoAnimate } from '@/directives/motionAutoAnimate'
 import AdvancedOptions from './addtask/AdvancedOptions.vue'
 import DirectoryPopover from '@/components/common/DirectoryPopover.vue'
 
@@ -723,11 +723,11 @@ async function handleSubmit() {
 
           <!-- ── Torrent Tab ─────────────────────────────────── -->
           <NTabPane :name="ADD_TASK_TYPE.TORRENT" :tab="t('task.torrent-task') || 'Torrent'">
-            <div v-auto-animate="{ duration: 200, easing: 'ease-out' }" class="tab-pane-content">
+            <div v-motion-auto-animate="{ duration: 200, easing: 'ease-out' }" class="tab-pane-content">
               <!-- Torrent panel: animated batch list + file detail -->
               <div v-if="fileItems.length > 0" class="torrent-panel">
                 <!-- Batch list with AutoAnimate transitions -->
-                <div v-auto-animate="{ duration: 200, easing: 'ease-out' }" class="batch-list">
+                <div v-motion-auto-animate="{ duration: 200, easing: 'ease-out' }" class="batch-list">
                   <div
                     v-for="(item, idx) in fileItems"
                     :key="item.id"

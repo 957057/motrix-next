@@ -355,6 +355,7 @@ export default {
   'copied-to-clipboard': 'คัดลอก {label} แล้ว',
   'color-scheme': 'ชุดสี',
   'task-card-mode': 'การ์ดงาน',
+  'reduce-motion': 'ลดการเคลื่อนไหว',
   'sidebar-task-counts': 'จำนวนงานในแถบด้านข้าง',
   'task-list-watermark': 'ลายน้ำรายการงาน',
   'task-card-mode-full': 'เต็ม',

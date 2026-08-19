@@ -358,6 +358,7 @@ export default {
   'copied-to-clipboard': '{label} copied',
   'color-scheme': 'Color Scheme',
   'task-card-mode': 'Task Card',
+  'reduce-motion': 'Reduce motion',
   'sidebar-task-counts': 'Sidebar task counts',
   'task-list-watermark': 'Task list watermark',
   'task-card-mode-full': 'Full',

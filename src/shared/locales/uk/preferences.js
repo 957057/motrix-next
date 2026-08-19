@@ -363,6 +363,7 @@ export default {
   'copied-to-clipboard': '{label} скопійовано',
   'color-scheme': 'Колірна схема',
   'task-card-mode': 'Картка завдання',
+  'reduce-motion': 'Зменшення руху',
   'sidebar-task-counts': 'Лічильники завдань на бічній панелі',
   'task-list-watermark': 'Водяний знак списку завдань',
   'task-card-mode-full': 'Повна',

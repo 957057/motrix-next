@@ -349,6 +349,7 @@ export default {
   'copied-to-clipboard': '{label} 已复制',
   'color-scheme': '配色方案',
   'task-card-mode': '任务卡片',
+  'reduce-motion': '减弱动态效果',
   'sidebar-task-counts': '侧边栏任务计数',
   'task-list-watermark': '任务列表水印',
   'task-card-mode-full': '完整',
