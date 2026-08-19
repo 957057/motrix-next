@@ -195,7 +195,7 @@ mod tests {
     #[test]
     fn safe_string_strips_extended_length_prefix() {
         let p = std::path::Path::new(
-            r"\\?\C:\Users\test\AppData\Roaming\com.motrix.next\engine\aria2.conf",
+            r"\\?\C:\Users\test\AppData\Local\com.motrix.next\engine\aria2.conf",
         );
         let result = path_to_safe_string(p);
         // On Windows: \\?\ prefix must be stripped for aria2c compatibility.
@@ -227,9 +227,8 @@ mod tests {
 
     #[test]
     fn safe_string_preserves_normal_windows_path() {
-        let p = std::path::Path::new(
-            r"C:\Users\test\AppData\Roaming\com.motrix.next\engine\aria2.conf",
-        );
+        let p =
+            std::path::Path::new(r"C:\Users\test\AppData\Local\com.motrix.next\engine\aria2.conf");
         let result = path_to_safe_string(p);
         assert_eq!(result, p.to_string_lossy().to_string());
     }

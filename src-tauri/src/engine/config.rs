@@ -256,8 +256,8 @@ pub(crate) fn build_runtime_config(
 pub(crate) fn runtime_config_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     Ok(app
         .path()
-        .app_data_dir()
-        .map_err(|error| format!("Failed to get app data dir: {error}"))?
+        .app_local_data_dir()
+        .map_err(|error| format!("Failed to get app local data dir: {error}"))?
         .join(RUNTIME_CONFIG_DIR)
         .join(RUNTIME_CONFIG_FILE))
 }
@@ -390,7 +390,7 @@ mod tests {
 
         assert_eq!(option_value(&content, "bt-tracker"), Some(tracker.as_str()));
         let args = runtime_config_args(Path::new(
-            r"C:\Users\test\AppData\Roaming\com.motrix.next\engine\aria2.conf",
+            r"C:\Users\test\AppData\Local\com.motrix.next\engine\aria2.conf",
         ));
         assert_eq!(args.len(), 1);
         assert!(args[0].len() < 260);
