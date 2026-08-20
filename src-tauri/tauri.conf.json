@@ -33,7 +33,7 @@
     "active": true,
     "targets": "all",
     "publisher": "AnInsomniacy",
-    "copyright": "Copyright © 2025 AnInsomniacy. All rights reserved.",
+    "copyright": "Copyright © 2025–present AnInsomniacy",
     "createUpdaterArtifacts": true,
     "externalBin": ["binaries/motrix-next-engine"],
     "resources": [

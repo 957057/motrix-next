@@ -3,6 +3,7 @@ name = "motrix-next"
 version = "3.9.8-beta.2"
 description = "A full-featured download manager"
 authors = ["AnInsomniacy"]
+license = "MIT"
 edition = "2021"
 
 [lib]
