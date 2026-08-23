@@ -9,6 +9,7 @@ import {
 } from '@/composables/useMagnetFlow'
 import type { Aria2Task } from '@shared/types'
 import { getErrorMessage } from '@shared/utils/errorMessage'
+import { getTaskDisplayName } from '@shared/utils/task'
 
 export interface MagnetMetadataState {
   pendingGids: string[]
@@ -75,7 +76,7 @@ export async function resolvePendingMagnetMetadata(
     const parsed = parseFilesForSelection(realFiles)
     state.files = parsed
     state.session = { gid }
-    state.name = task.bittorrent?.info?.name || parsed[0]?.name || deps.fallbackName()
+    state.name = getTaskDisplayName(task, { defaultName: parsed[0]?.name || deps.fallbackName() })
     state.visible = true
     return true
   } catch (error) {

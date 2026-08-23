@@ -21,7 +21,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   confirm: [selectedIndices: number[]]
-  cancel: []
   dismiss: []
   afterLeave: []
 }>()
@@ -101,16 +100,10 @@ watch(totalSize, (cur, prev) => {
 const hasSelection = computed(() => checkedKeys.value.length > 0)
 const submitting = computed(() => props.submission !== null)
 const confirming = computed(() => props.submission === 'confirm')
-const cancelling = computed(() => props.submission === 'cancel')
 
 function handleConfirm() {
   if (submitting.value) return
   emit('confirm', checkedKeys.value as number[])
-}
-
-function handleCancel() {
-  if (submitting.value) return
-  emit('cancel')
 }
 
 function handleDismiss() {
@@ -177,8 +170,8 @@ function handleDismiss() {
             </Transition>
           </span>
           <NSpace>
-            <NButton :loading="cancelling" :disabled="submitting" @click="handleCancel">
-              {{ t('task.magnet-cancel-download') || 'Cancel Download' }}
+            <NButton :disabled="submitting" @click="handleDismiss">
+              {{ t('task.magnet-choose-later') || 'Choose Later' }}
             </NButton>
             <NButton
               type="primary"

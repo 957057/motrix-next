@@ -145,6 +145,22 @@ describe('getTaskName', () => {
     expect(getTaskName(task)).toBe('My Torrent')
   })
 
+  it('returns BT info name before file metadata is populated', () => {
+    const task = createMockTask({
+      files: [],
+      bittorrent: { info: { name: 'My Torrent' } },
+    })
+    expect(getTaskName(task)).toBe('My Torrent')
+  })
+
+  it('uses the magnet display name while torrent metadata is pending', () => {
+    const task = createMockTask({
+      files: [],
+      bittorrent: { magnetLink: 'magnet:?xt=urn:btih:abc&dn=Ubuntu%20ISO' },
+    })
+    expect(getTaskName(task)).toBe('Ubuntu ISO')
+  })
+
   it('returns filename for single-file HTTP task', () => {
     const task = createMockTask({
       files: [createMockFile({ path: '/downloads/movie.mp4' })],

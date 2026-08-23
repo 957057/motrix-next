@@ -84,6 +84,10 @@ const transportOptions = computed(() => [
   { label: 'TCP', value: 'tcp' },
   { label: 'uTP', value: 'utp' },
 ])
+const magnetFileSelectionOptions = computed(() => [
+  { label: t('preferences.magnet-file-selection-auto'), value: 'auto' },
+  { label: t('preferences.magnet-file-selection-manual'), value: 'manual' },
+])
 const blocklistScopeOptions = computed(() => [
   { label: t('preferences.bt-blocklist-scope-peers'), value: 'peers' },
   { label: t('preferences.bt-blocklist-scope-trackers'), value: 'peers-and-trackers' },
@@ -428,8 +432,12 @@ onMounted(() => {
         <!-- BT Settings -->
         <NDivider title-placement="left">{{ t('preferences.bt-settings') }}</NDivider>
 
-        <NFormItem :label="t('preferences.bt-auto-download-content')">
-          <NSwitch v-model:value="form.btAutoDownloadContent" />
+        <NFormItem :label="t('preferences.magnet-file-selection')">
+          <NSelect
+            v-model:value="form.magnetFileSelectionMode"
+            :options="magnetFileSelectionOptions"
+            class="pref-control-auto"
+          />
         </NFormItem>
         <NFormItem :label="t('preferences.bt-encryption')">
           <NSelect v-model:value="form.btEncryption" :options="encryptionOptions" class="pref-control-auto" />

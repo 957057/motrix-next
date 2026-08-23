@@ -386,15 +386,6 @@ watch(protocolHandlers.lastError, (error) => {
           <NFormItem :label="t('preferences.silent-auto-submit-from-extension')">
             <NSwitch v-model:value="form.silentAutoSubmitFromExtension" />
           </NFormItem>
-          <NFormItem>
-            <template #label>
-              <PreferenceHintLabel
-                :label="t('preferences.auto-select-all-bt-files-from-extension')"
-                :hint="t('preferences.auto-select-all-bt-files-from-extension-hint')"
-              />
-            </template>
-            <NSwitch v-model:value="form.autoSelectAllBtFilesFromExtension" />
-          </NFormItem>
         </NCollapseTransition>
         <NFormItem :label="t('preferences.extension-api-port')">
           <NInputNumber v-model:value="form.extensionApiPort" :min="1024" :max="65535" class="pref-port" />

@@ -14,10 +14,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { restartTask } from '../task/restart'
 import type { Aria2Task, TaskStatus } from '@shared/types'
 
-vi.mock('@/stores/preference', () => ({
-  usePreferenceStore: () => ({ config: { pauseMetadata: false } }),
-}))
-
 const makeMockTask = (gid: string, status: TaskStatus = 'active', extra: Partial<Aria2Task> = {}): Aria2Task => ({
   gid,
   status,
@@ -264,7 +260,12 @@ describe('restartTask', () => {
 
     const call = api.addUriAtomic.mock.calls[0][0]
     expect(call.uris[0]).toContain('xt=urn:btih:0123456789abcdef0123456789abcdef01234567')
-    expect(call.options).toEqual({ dir: '/dl', 'check-integrity': 'true', 'force-save': 'true' })
+    expect(call.options).toEqual({
+      dir: '/dl',
+      'check-integrity': 'true',
+      'force-save': 'true',
+      'pause-metadata': 'true',
+    })
   })
 
   it('falls back to task.dir when getOption fails', async () => {

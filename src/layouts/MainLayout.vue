@@ -212,6 +212,7 @@ const magnetSelectName = ref('')
 const magnetSelectSubmission = ref<MagnetSelectionSubmission>(null)
 const magnetSelectClosing = ref(false)
 const deferredMagnetGids = ref<string[]>([])
+const autoOpenMagnetFileSelection = computed(() => preferenceStore.config.magnetFileSelectionMode === 'auto')
 
 const { setupListeners } = useAppEvents({
   t,
@@ -306,7 +307,9 @@ const magnetMetadataResolver = createMagnetMetadataResolver(magnetMetadataDeps)
 
 async function startAria2DownloadPauseListener() {
   stopAria2DownloadPauseListener()
-  unlistenAria2DownloadPause = await listenForAria2DownloadPause((gid) => magnetMetadataResolver.request(gid))
+  unlistenAria2DownloadPause = await listenForAria2DownloadPause((gid) => {
+    if (autoOpenMagnetFileSelection.value) return magnetMetadataResolver.request(gid)
+  })
 }
 
 function stopAria2DownloadPauseListener() {
@@ -397,25 +400,6 @@ async function handleMagnetConfirm(selectedIndices: number[]) {
   }
 }
 
-async function handleMagnetCancel() {
-  if (magnetSelectSubmission.value !== null) return
-  const session = magnetSelectionSession.value
-  if (!session) return
-
-  magnetSelectSubmission.value = 'cancel'
-  try {
-    await taskStore.cancelMagnetSelectionDownload(session)
-    appStore.pendingMagnetGids = appStore.pendingMagnetGids.filter((gid) => gid !== session.gid)
-    deferredMagnetGids.value = deferredMagnetGids.value.filter((gid) => gid !== session.gid)
-    closeMagnetSelection()
-    message.info(t('task.magnet-download-cancelled') || 'Download cancelled')
-  } catch (e) {
-    logger.error('MainLayout.magnetCancel', e)
-  } finally {
-    magnetSelectSubmission.value = null
-  }
-}
-
 function closeMagnetSelection() {
   magnetSelectClosing.value = true
   magnetSelectVisible.value = false
@@ -437,7 +421,9 @@ function handleMagnetDismiss() {
 function handleMagnetSelectAfterLeave() {
   if (!magnetSelectClosing.value) return
   magnetSelectClosing.value = false
-  if (appStore.pendingMagnetGids.length > 0) void magnetMetadataResolver.request()
+  if (autoOpenMagnetFileSelection.value && appStore.pendingMagnetGids.length > 0) {
+    void magnetMetadataResolver.request()
+  }
 }
 
 watch(
@@ -875,9 +861,11 @@ onMounted(async () => {
   // metadata that resolved before the listener was ready.
   await restorePendingMagnetSelections()
   stopPendingMagnetWatch = watch(
-    () => appStore.pendingMagnetGids,
-    (gids) => {
-      if (gids.length > 0 && !magnetSelectClosing.value) void magnetMetadataResolver.request()
+    [() => appStore.pendingMagnetGids, autoOpenMagnetFileSelection],
+    ([gids, autoOpen]) => {
+      if (autoOpen && gids.length > 0 && !magnetSelectClosing.value) {
+        void magnetMetadataResolver.request()
+      }
     },
     { immediate: true },
   )
@@ -1061,7 +1049,6 @@ onUnmounted(() => {
       :task-name="magnetSelectName"
       :submission="magnetSelectSubmission"
       @confirm="handleMagnetConfirm"
-      @cancel="handleMagnetCancel"
       @dismiss="handleMagnetDismiss"
       @after-leave="handleMagnetSelectAfterLeave"
     />

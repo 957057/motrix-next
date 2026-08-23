@@ -1,15 +1,21 @@
 /**
  * @fileoverview Pure functions for the BitTorrent preference tab.
  *
- * Manages BT-specific config: auto-download content, encryption,
+ * Manages BT-specific config: magnet file selection, encryption,
  * connection, discovery, seeding, max peers, and tracker management. Key business logic:
- * - btAutoDownloadContent ↔ pauseMetadata
+ * - Magnet file-selection presentation
  * - Tracker comma ↔ newline format conversion
  *
  * Tracker source URL validation (isValidTrackerSourceUrl) is co-located
  * here since it is only used in the BT tab's tracker source management.
  */
-import type { AppConfig, BtBlocklistScope, BtEncryptionMode, BtTransportMode } from '@shared/types'
+import type {
+  AppConfig,
+  BtBlocklistScope,
+  BtEncryptionMode,
+  BtTransportMode,
+  MagnetFileSelectionMode,
+} from '@shared/types'
 import { DEFAULT_APP_CONFIG as D } from '@shared/constants'
 import { PORT_RECOVERY_RANGE_END, PORT_RECOVERY_RANGE_START } from '@shared/constants'
 import { convertCommaToLine, convertLineToComma, generateRandomInt } from '@shared/utils'
@@ -37,7 +43,7 @@ export function isValidTrackerSourceUrl(input: string): boolean {
 
 export interface BtForm {
   [key: string]: unknown
-  btAutoDownloadContent: boolean
+  magnetFileSelectionMode: MagnetFileSelectionMode
   btEncryption: BtEncryptionMode
   btTransport: BtTransportMode
   btMaxConnections: number
@@ -73,14 +79,10 @@ export interface BtForm {
 
 /**
  * Builds the BT form state from the preference store config.
- * Maps pauseMetadata into btAutoDownloadContent.
  */
 export function buildBtForm(config: AppConfig): BtForm {
-  const pauseMetadata = config.pauseMetadata ?? D.pauseMetadata
-  const btAutoDownloadContent = !pauseMetadata
-
   return {
-    btAutoDownloadContent,
+    magnetFileSelectionMode: config.magnetFileSelectionMode ?? D.magnetFileSelectionMode,
     btEncryption: config.btEncryption ?? D.btEncryption,
     btTransport: config.btTransport ?? D.btTransport,
     btMaxConnections: config.btMaxConnections ?? D.btMaxConnections,
@@ -117,14 +119,13 @@ export function buildBtForm(config: AppConfig): BtForm {
 
 /**
  * Converts the BT form into aria2 system config key-value pairs.
- * Handles btAutoDownloadContent → pause-metadata.
+ * Magnet downloads always pause after metadata so users retain file control.
  *
  * IMPORTANT: force-save is intentionally excluded from global config.
  * It must only be set per-download on BT tasks to prevent aria2 from
  * re-downloading completed HTTP tasks on restart.
  */
 export function buildBtSystemConfig(f: BtForm): Record<string, string> {
-  const autoContent = !!f.btAutoDownloadContent
   const keepSharing = f.sharingMode === 'manual-stop'
   return {
     'detach-share-only': 'true',
@@ -147,7 +148,7 @@ export function buildBtSystemConfig(f: BtForm): Record<string, string> {
     'enable-dht': String(!!f.btDhtEnabled),
     'enable-peer-exchange': String(!!f.btPeerExchangeEnabled),
     'bt-enable-lpd': String(!!f.btLocalPeerDiscoveryEnabled),
-    'pause-metadata': String(!autoContent),
+    'pause-metadata': 'true',
     'bt-tracker': convertLineToComma(f.btTracker),
   }
 }
@@ -171,20 +172,12 @@ export function randomBtPort(): number {
 
 /**
  * Transforms the BT form for store persistence.
- * Expands btAutoDownloadContent back into pauseMetadata.
  * Converts tracker newline format back to comma-separated for storage.
  */
 export function transformBtForStore(f: BtForm): Partial<AppConfig> {
   const data = { ...f } as Partial<AppConfig> & Record<string, unknown>
 
-  delete data.btAutoDownloadContent
   delete data.sharingMode
-
-  if (f.btAutoDownloadContent) {
-    data.pauseMetadata = false
-  } else {
-    data.pauseMetadata = true
-  }
 
   data.btTracker = convertLineToComma(f.btTracker)
   data.keepSharing = f.sharingMode === 'manual-stop'

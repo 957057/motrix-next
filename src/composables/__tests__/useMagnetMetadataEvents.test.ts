@@ -105,6 +105,48 @@ describe('useMagnetMetadataEvents', () => {
     expect(getFiles).toHaveBeenCalledWith('metadata-gid')
   })
 
+  it('opens selection when task-list metadata is sparse but getFiles is ready', async () => {
+    const state: MagnetMetadataState = {
+      deferredGids: [],
+      pendingGids: ['metadata-gid'],
+      visible: false,
+      files: [],
+      session: null,
+      name: '',
+    }
+    const sparseTask = makeTask('metadata-gid', {
+      status: 'paused',
+      bittorrent: {
+        state: 'awaitingFileSelection',
+        magnetLink: 'magnet:?xt=urn:btih:abc&dn=Recovered%20Torrent',
+      },
+      files: [],
+    })
+
+    const resolved = await resolvePendingMagnetMetadata(
+      {
+        state,
+        fetchTaskStatus: vi.fn().mockResolvedValue(sparseTask),
+        fetchPendingTasks: vi.fn().mockResolvedValue([]),
+        getFiles: vi.fn().mockResolvedValue([
+          {
+            index: '1',
+            path: '/downloads/recovered.iso',
+            length: '1024',
+            completedLength: '0',
+            selected: 'true',
+            uris: [],
+          },
+        ]),
+        fallbackName: () => 'Magnet task',
+      },
+      'metadata-gid',
+    )
+
+    expect(resolved).toBe(true)
+    expect(state.name).toBe('Recovered Torrent')
+  })
+
   it('ignores completion events for non-pending gids', async () => {
     const state: MagnetMetadataState = {
       deferredGids: [],

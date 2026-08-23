@@ -93,7 +93,7 @@ pub struct TaskEvent {
 }
 
 impl TaskEvent {
-    fn from_aria2(task: &Aria2Task) -> Self {
+    pub(crate) fn from_aria2(task: &Aria2Task) -> Self {
         let name = Self::extract_name(task);
         let info_hash = task.info_hash.clone().filter(|h| !h.is_empty());
         let is_bt = task.bittorrent.is_some();

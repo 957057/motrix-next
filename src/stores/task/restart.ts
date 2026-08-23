@@ -7,7 +7,6 @@
  */
 import { TASK_STATUS } from '@shared/constants'
 import { checkTaskIsBT, getRestartDescriptors } from '@shared/utils'
-import { shouldShowFileSelection } from '@/composables/useMagnetFlow'
 import { logger } from '@shared/logger'
 import type { Aria2Task } from '@shared/types'
 
@@ -38,7 +37,12 @@ const NON_PORTABLE_KEYS = new Set(['pauseMetadata', 'gid'])
  *   created downloads are removed so no orphan tasks remain.
  * - The old stopped record is only deleted after ALL new downloads succeed.
  */
-export async function restartTask(task: Aria2Task, api: RestartTaskApi, historyApi: RestartHistoryApi): Promise<void> {
+export async function restartTask(
+  task: Aria2Task,
+  api: RestartTaskApi,
+  historyApi: RestartHistoryApi,
+  registerPendingMagnet: (gid: string) => void | Promise<void> = () => undefined,
+): Promise<void> {
   const { status, gid, dir } = task
   const { ERROR, COMPLETE, REMOVED } = TASK_STATUS
   if (status !== ERROR && status !== COMPLETE && status !== REMOVED) return
@@ -69,22 +73,16 @@ export async function restartTask(task: Aria2Task, api: RestartTaskApi, historyA
   if (isBT) {
     options['check-integrity'] = options['check-integrity'] ?? 'true'
     options['force-save'] = options['force-save'] ?? 'true'
+    options['pause-metadata'] = 'true'
   }
   const createdGids: string[] = []
   try {
     for (const mirrorGroup of descriptors) {
       const newGid = await api.addUriAtomic({ uris: mirrorGroup, options })
       createdGids.push(newGid)
-      // BT restarts produce magnet URIs — register with the metadata poller
-      // only when pause-metadata is enabled (file selection mode).
+      // BT restarts produce magnet URIs and always require file selection.
       if (isBT) {
-        const { usePreferenceStore } = await import('@/stores/preference')
-        const preferenceStore = usePreferenceStore()
-        if (shouldShowFileSelection(preferenceStore.config)) {
-          const { useAppStore } = await import('@/stores/app')
-          const appStore = useAppStore()
-          appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, newGid]
-        }
+        await registerPendingMagnet(newGid)
       }
     }
   } catch (e) {

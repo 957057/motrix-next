@@ -8,6 +8,7 @@ import MTooltip from '@/components/common/MTooltip.vue'
 import {
   PauseOutline,
   PlayOutline,
+  StopCircleOutline,
   RefreshOutline,
   CloseOutline,
   TrashOutline,
@@ -27,6 +28,7 @@ const props = withDefaults(defineProps<{ task: Aria2Task; fileMissing?: boolean;
 const emit = defineEmits<{
   pause: []
   resume: []
+  'finish-seeding': []
   delete: []
   'delete-record': []
   'copy-link': []
@@ -43,8 +45,6 @@ interface ActionDef {
   icon: Component
   label: string
   event: string
-  tooltip?: string
-  cls?: string
 }
 
 const actions = computed(() => {
@@ -57,18 +57,19 @@ const actions = computed(() => {
         icon: ListOutline,
         label: t('task.select-files'),
         event: 'select-files',
-        cls: 'select-files',
       },
       { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
   } else if (lifecycle === 'seeding') {
     primary = [
       { key: 'toggle', icon: PauseOutline, label: t('task.pause-seeding'), event: 'pause' },
+      { key: 'finish-seeding', icon: StopCircleOutline, label: t('task.finish-seeding'), event: 'finish-seeding' },
       { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
   } else if (lifecycle === 'paused-seeding') {
     primary = [
       { key: 'toggle', icon: PlayOutline, label: t('task.resume-seeding'), event: 'resume' },
+      { key: 'finish-seeding', icon: StopCircleOutline, label: t('task.finish-seeding'), event: 'finish-seeding' },
       { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
   } else {
@@ -130,6 +131,9 @@ function onAction(event: string) {
     case 'resume':
       emit('resume')
       break
+    case 'finish-seeding':
+      emit('finish-seeding')
+      break
     case 'delete':
       emit('delete')
       break
@@ -162,25 +166,18 @@ function onAction(event: string) {
     class="task-item-actions"
     :class="{ 'task-item-actions--compact': props.density === 'compact' }"
   >
-    <li v-for="action in actions" :key="action.key" class="task-item-action-slot" :class="action.cls">
-      <MTooltip :style="action.tooltip ? 'max-width: 220px' : ''">
+    <li v-for="action in actions" :key="action.key" class="task-item-action-slot">
+      <MTooltip>
         <template #trigger>
-          <button
-            type="button"
-            class="task-item-action"
-            :class="action.cls"
-            :aria-label="action.label"
-            @click="onAction(action.event)"
-          >
+          <button type="button" class="task-item-action" :aria-label="action.label" @click="onAction(action.event)">
             <span class="task-action-visual" aria-hidden="true">
               <Transition name="icon-swap" mode="out-in">
                 <NIcon :key="action.event" class="task-action-icon"><component :is="action.icon" /></NIcon>
               </Transition>
-              <span v-if="action.event === 'select-files'" class="task-action-label">{{ action.label }}</span>
             </span>
           </button>
         </template>
-        {{ action.tooltip || action.label }}
+        {{ action.label }}
       </MTooltip>
     </li>
   </TransitionGroup>
@@ -261,38 +258,6 @@ function onAction(event: string) {
 .task-item-action:active,
 .task-item-action:focus-visible {
   color: var(--m3-primary);
-}
-.task-item-action-slot.select-files {
-  --task-action-item-max-width: 124px;
-  flex-basis: auto;
-  width: auto;
-}
-.task-item-action.select-files {
-  width: auto;
-  padding: 0 8px;
-  gap: 5px;
-  color: var(--m3-primary);
-}
-.task-action-label {
-  display: inline;
-  font-size: 12px;
-  line-height: 1;
-  white-space: nowrap;
-}
-.task-item-action.select-files .task-action-visual {
-  width: auto;
-}
-.task-item-actions--compact .task-item-action-slot.select-files {
-  --task-action-item-max-width: var(--task-action-button-size);
-  flex-basis: var(--task-action-button-size);
-  width: var(--task-action-button-size);
-}
-.task-item-actions--compact .task-item-action.select-files {
-  width: var(--task-action-button-size);
-  padding: 0;
-}
-.task-item-actions--compact .task-action-label {
-  display: none;
 }
 .task-action-visual {
   display: inline-flex;

@@ -14,6 +14,7 @@ import type { Aria2Task } from '@shared/types'
 const emit = defineEmits<{
   pause: [task: Aria2Task]
   resume: [task: Aria2Task]
+  'finish-seeding': [task: Aria2Task]
   delete: [task: Aria2Task]
   'delete-record': [task: Aria2Task]
   'copy-link': [task: Aria2Task]
@@ -278,6 +279,7 @@ function handleCardBeforeLeave(element: Element) {
             :task="item"
             @pause="emit('pause', item)"
             @resume="emit('resume', item)"
+            @finish-seeding="emit('finish-seeding', item)"
             @delete="emit('delete', item)"
             @delete-record="emit('delete-record', item)"
             @copy-link="emit('copy-link', item)"

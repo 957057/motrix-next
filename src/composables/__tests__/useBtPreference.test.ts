@@ -1,9 +1,9 @@
 /**
  * @fileoverview Tests for useBtPreference pure functions.
  *
- * The BT tab manages BitTorrent-specific config: auto-download, encryption,
+ * The BT tab manages BitTorrent-specific config: file selection, encryption,
  * connection, discovery, seeding, max peers, and tracker management. Key business logic:
- * - btAutoDownloadContent ↔ pauseMetadata mapping
+ * - Magnet selection presentation
  * - Tracker comma ↔ newline conversion
  * - force-save must NOT appear in global config (per-download only)
  */
@@ -25,25 +25,18 @@ import { DEFAULT_APP_CONFIG, ENGINE_DEFAULT_BT_MAX_PEERS } from '@shared/constan
 describe('buildBtForm', () => {
   const emptyConfig = {} as AppConfig
 
-  // ── btAutoDownloadContent toggle ────────────────────────────────
+  // Magnet file selection
 
-  it('defaults btAutoDownloadContent to false (pause-metadata=true for file selection)', () => {
+  it('defaults magnet file selection to automatic presentation', () => {
     const form = buildBtForm(emptyConfig)
-    expect(form.btAutoDownloadContent).toBe(false)
+    expect(form.magnetFileSelectionMode).toBe('auto')
   })
 
-  it('sets btAutoDownloadContent=true when pauseMetadata=false', () => {
+  it('reads manual magnet file selection from config', () => {
     const form = buildBtForm({
-      pauseMetadata: false,
+      magnetFileSelectionMode: 'manual',
     } as unknown as AppConfig)
-    expect(form.btAutoDownloadContent).toBe(true)
-  })
-
-  it('sets btAutoDownloadContent=false when pauseMetadata=true', () => {
-    const form = buildBtForm({
-      pauseMetadata: true,
-    } as unknown as AppConfig)
-    expect(form.btAutoDownloadContent).toBe(false)
+    expect(form.magnetFileSelectionMode).toBe('manual')
   })
 
   // ── BT settings ────────────────────────────────────────────────
@@ -144,7 +137,7 @@ describe('buildBtForm', () => {
   it('returns every BT form field', () => {
     const form = buildBtForm(emptyConfig)
     const expectedFields = [
-      'btAutoDownloadContent',
+      'magnetFileSelectionMode',
       'btEncryption',
       'btTransport',
       'btMaxConnections',
@@ -186,7 +179,7 @@ describe('buildBtForm', () => {
 
 describe('buildBtSystemConfig', () => {
   const baseForm: BtForm = {
-    btAutoDownloadContent: true,
+    magnetFileSelectionMode: 'auto',
     btEncryption: 'preferred',
     btTransport: 'both',
     btMaxConnections: 500,
@@ -275,13 +268,8 @@ describe('buildBtSystemConfig', () => {
     expect(config['bt-encryption']).toBe('required')
   })
 
-  it('sets pause-metadata=false when auto-content ON', () => {
-    const config = buildBtSystemConfig({ ...baseForm, btAutoDownloadContent: true })
-    expect(config['pause-metadata']).toBe('false')
-  })
-
-  it('sets pause-metadata=true when auto-content OFF', () => {
-    const config = buildBtSystemConfig({ ...baseForm, btAutoDownloadContent: false })
+  it('always pauses magnet downloads for file selection', () => {
+    const config = buildBtSystemConfig(baseForm)
     expect(config['pause-metadata']).toBe('true')
   })
 
@@ -334,7 +322,7 @@ describe('buildBtSystemConfig', () => {
 
 describe('transformBtForStore', () => {
   const baseForm: BtForm = {
-    btAutoDownloadContent: true,
+    magnetFileSelectionMode: 'auto',
     btEncryption: 'preferred',
     btTransport: 'both',
     btMaxConnections: 500,
@@ -366,21 +354,9 @@ describe('transformBtForStore', () => {
     lastSyncTrackerTime: 0,
   }
 
-  it('expands btAutoDownloadContent=true into pauseMetadata=false', () => {
-    const result = transformBtForStore({ ...baseForm, btAutoDownloadContent: true })
-    expect(result.pauseMetadata).toBe(false)
-    expect((result as Record<string, unknown>).btAutoDownloadContent).toBeUndefined()
-  })
-
-  it('expands btAutoDownloadContent=false into pauseMetadata=true', () => {
-    const result = transformBtForStore({ ...baseForm, btAutoDownloadContent: false })
-    expect(result.pauseMetadata).toBe(true)
-    expect((result as Record<string, unknown>).btAutoDownloadContent).toBeUndefined()
-  })
-
-  it('removes btAutoDownloadContent from output', () => {
-    const result = transformBtForStore(baseForm)
-    expect('btAutoDownloadContent' in result).toBe(false)
+  it('preserves magnet file selection mode', () => {
+    const result = transformBtForStore({ ...baseForm, magnetFileSelectionMode: 'manual' })
+    expect(result.magnetFileSelectionMode).toBe('manual')
   })
 
   it('converts newline trackers back to comma format', () => {

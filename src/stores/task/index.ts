@@ -7,7 +7,7 @@ import { logger } from '@shared/logger'
 import type { Aria2Task, Aria2File, Aria2Peer, Aria2EngineOptions, TaskApi } from '@shared/types'
 
 import { historyRecordToTask, mergeHistoryIntoTasks, isMetadataTask } from '@/composables/useTaskLifecycle'
-import { buildMetadataOnlyOptions, shouldShowFileSelection } from '@/composables/useMagnetFlow'
+import { buildMetadataOnlyOptions } from '@/composables/useMagnetFlow'
 import {
   registerAddedAt,
   trackFirstSeen,
@@ -52,7 +52,7 @@ export const useTaskStore = defineStore('task', () => {
   const currentTaskFiles = ref<Aria2File[]>([])
   const currentTaskPeers = ref<Aria2Peer[]>([])
   const taskList = ref<Aria2Task[]>([])
-  const deletingGids = ref<string[]>([])
+  const removingGids = ref<string[]>([])
   const taskListTransitionRevision = ref(0)
   const taskPagination = reactive({
     active: { page: 1, total: 0, loaded: false },
@@ -82,7 +82,7 @@ export const useTaskStore = defineStore('task', () => {
       currentTaskGid,
       hideTaskDetail,
       fetchList,
-      setTaskDeleting,
+      setTaskRemoving,
       requestMagnetSelection: (gid) => {
         void import('@/stores/app').then(({ useAppStore }) => useAppStore().requestMagnetSelection(gid))
       },
@@ -232,8 +232,8 @@ export const useTaskStore = defineStore('task', () => {
         }
       }
 
-      const deleting = new Set(deletingGids.value)
-      data = data.filter((task) => !deleting.has(task.gid))
+      const removing = new Set(removingGids.value)
+      data = data.filter((task) => !removing.has(task.gid))
       taskList.value = data
       updateCurrentTaskTotal(data.length)
       clampCurrentTaskPage()
@@ -253,16 +253,16 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
-  function setTaskDeleting(gid: string, deleting: boolean) {
-    if (deleting) {
-      if (!deletingGids.value.includes(gid)) deletingGids.value = [...deletingGids.value, gid]
+  function setTaskRemoving(gid: string, removing: boolean) {
+    if (removing) {
+      if (!removingGids.value.includes(gid)) removingGids.value = [...removingGids.value, gid]
       taskList.value = taskList.value.filter((task) => task.gid !== gid)
       updateCurrentTaskTotal(taskList.value.length)
       clampCurrentTaskPage()
       refreshCurrentTaskPageCount()
       return
     }
-    deletingGids.value = deletingGids.value.filter((candidate) => candidate !== gid)
+    removingGids.value = removingGids.value.filter((candidate) => candidate !== gid)
   }
 
   async function saveManualOrder(gids: string[]) {
@@ -421,23 +421,12 @@ export const useTaskStore = defineStore('task', () => {
    * Adds a magnet URI as a normal download. The returned GID owns the complete
    * metadata, file-selection, download, and seeding lifecycle.
    *
-   * The global `pause-metadata` setting (controlled by btAutoDownloadContent)
-   * determines what happens after metadata resolves:
-   * - pause-metadata=true  → the task pauses until selection
-   * - pause-metadata=false → the task starts downloading immediately
+   * The task always pauses after metadata so users retain file-level control.
    *
    * Directly registers the GID for monitoring to avoid caller-chain breaks.
    */
   async function addMagnetUri(data: { uri: string; options: Aria2EngineOptions }): Promise<string> {
-    const { usePreferenceStore } = await import('@/stores/preference')
-    const preferenceStore = usePreferenceStore()
-    const pauseMetadataOption = data.options['pause-metadata']
-    const pauseMetadata =
-      typeof pauseMetadataOption === 'string' ? pauseMetadataOption : preferenceStore.config.pauseMetadata
-    const showFileSelection = shouldShowFileSelection({ pauseMetadata })
-    const options = showFileSelection
-      ? { ...buildMetadataOnlyOptions(data.options), 'check-integrity': 'true', 'force-save': 'true' }
-      : { ...data.options, 'pause-metadata': 'false', 'check-integrity': 'true', 'force-save': 'true' }
+    const options = { ...buildMetadataOnlyOptions(data.options), 'check-integrity': 'true', 'force-save': 'true' }
 
     const gids = await api.addUri({
       uris: [data.uri],
@@ -453,12 +442,9 @@ export const useTaskStore = defineStore('task', () => {
     historyStore.recordTaskBirth(gid, now).catch((e) => logger.debug('taskBirth.write', e))
 
     // Register the GID for the event-driven file-selection queue.
-    // When btAutoDownloadContent=true, file selection is not needed.
-    if (showFileSelection) {
-      const { useAppStore } = await import('@/stores/app')
-      const appStore = useAppStore()
-      appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, gid]
-    }
+    const { useAppStore } = await import('@/stores/app')
+    const appStore = useAppStore()
+    appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, gid]
 
     await fetchList()
     return gid
@@ -498,7 +484,16 @@ export const useTaskStore = defineStore('task', () => {
 
   async function restartTask(task: Aria2Task) {
     const historyStore = useHistoryStore()
-    await restartTaskImpl(task, { ...api, fetchList, saveSession: () => api.saveSession() }, historyStore)
+    await restartTaskImpl(
+      task,
+      { ...api, fetchList, saveSession: () => api.saveSession() },
+      historyStore,
+      async (gid) => {
+        const { useAppStore } = await import('@/stores/app')
+        const appStore = useAppStore()
+        appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, gid]
+      },
+    )
   }
 
   return {
@@ -510,7 +505,7 @@ export const useTaskStore = defineStore('task', () => {
     currentTaskFiles,
     currentTaskPeers,
     taskList,
-    deletingGids,
+    removingGids,
     taskListTransitionRevision,
     taskPagination,
     currentTaskPageCount,
@@ -539,8 +534,8 @@ export const useTaskStore = defineStore('task', () => {
     getTaskOption,
     changeTaskOption,
     removeTask: (task: Aria2Task) => taskOps.removeTask(task),
-    cancelMagnetSelectionDownload: (target: { gid: string }) => taskOps.cancelMagnetSelectionDownload(target),
     pauseTask: (task: Aria2Task) => taskOps.pauseTask(task),
+    finishSeeding: (task: Aria2Task) => taskOps.finishSeeding(task),
     resumeTask: (task: Aria2Task) => taskOps.resumeTask(task),
     applyMagnetFileSelection: (task: Aria2Task, selectFile: string) =>
       taskOps.applyMagnetFileSelection(task, selectFile),

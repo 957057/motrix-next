@@ -32,33 +32,7 @@ vi.mock('@/stores/history', () => ({
 }))
 
 // ── Mock cleanupAria2ControlFiles + cleanupAria2MetadataFiles ───────
-const mockCleanupAria2ControlFiles = vi.fn().mockResolvedValue(undefined)
-const mockDeleteTaskFiles = vi.fn().mockResolvedValue(undefined)
-const mockCleanupAria2MetadataFiles = vi.fn().mockResolvedValue(false)
-
-vi.mock('@/composables/useFileDelete', () => ({
-  cleanupAria2ControlFiles: (...args: unknown[]) => mockCleanupAria2ControlFiles(...args),
-  deleteTaskFiles: (...args: unknown[]) => mockDeleteTaskFiles(...args),
-}))
-
-vi.mock('@/composables/useDownloadCleanup', () => ({
-  cleanupAria2MetadataFiles: (...args: unknown[]) => mockCleanupAria2MetadataFiles(...args),
-}))
-
 // ── Mock buildSharingCompletionRecord ───────────────────────────────
-vi.mock('@/composables/useTaskLifecycle', () => ({
-  buildSharingCompletionRecord: (task: Aria2Task) => ({
-    gid: task.gid,
-    status: 'complete',
-    dir: '',
-    totalLength: '0',
-    completedLength: '0',
-    files: [],
-    bittorrent: undefined,
-    timestamp: Date.now(),
-  }),
-}))
-
 // ── Helpers ────────────────────────────────────────────────────────
 
 function createMockApi(): TaskApi {
@@ -75,6 +49,7 @@ function createMockApi(): TaskApi {
     getFiles: vi.fn().mockResolvedValue([]),
     removeTask: vi.fn().mockResolvedValue('OK'),
     deleteTask: vi.fn().mockResolvedValue(undefined),
+    finishSeeding: vi.fn().mockResolvedValue(undefined),
     forcePauseTask: vi.fn().mockResolvedValue('OK'),
     pauseTask: vi.fn().mockResolvedValue('OK'),
     resumeTask: vi.fn().mockResolvedValue('OK'),
@@ -137,24 +112,25 @@ describe('removeTask', () => {
 })
 
 // ═══════════════════════════════════════════════════════════════════
-// cancelMagnetSelectionDownload
 // ═══════════════════════════════════════════════════════════════════
 
-describe('cancelMagnetSelectionDownload', () => {
-  it('deletes the magnet transaction and cleans downloaded metadata', async () => {
+// ═══════════════════════════════════════════════════════════════════
+describe('finishSeeding', () => {
+  it('finishes seeding without deleting the completed record', async () => {
     const api = createMockApi()
-    const task = makeTask({ gid: 'magnet-gid', infoHash: 'hash' })
-    ;(api.fetchTaskItem as Mock).mockResolvedValue(task)
     const deps = createDeps(api)
     const ops = createTaskOperations(deps)
-    await ops.cancelMagnetSelectionDownload({ gid: 'magnet-gid' })
-    expect(api.deleteTask).toHaveBeenCalledWith({ gid: 'magnet-gid', infoHash: 'hash' })
-    expect(mockCleanupAria2ControlFiles).toHaveBeenCalledWith(task)
+    const task = makeTask({ gid: 'seed-1', seeder: 'true', bittorrent: { state: 'seeding' } })
+
+    await ops.finishSeeding(task)
+
+    expect(api.finishSeeding).toHaveBeenCalledWith({ gid: 'seed-1' })
+    expect(api.deleteTask).not.toHaveBeenCalled()
+    expect(deps.fetchList).toHaveBeenCalledOnce()
     expect(api.saveSession).toHaveBeenCalledOnce()
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════
 // pauseTask
 // ═══════════════════════════════════════════════════════════════════
 

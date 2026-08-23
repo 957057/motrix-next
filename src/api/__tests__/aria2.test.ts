@@ -67,6 +67,7 @@ import {
   addTorrent,
   removeTask,
   deleteTask,
+  finishSeeding,
   pauseTask,
   resumeTask,
   forcePauseTask,
@@ -555,6 +556,11 @@ describe('aria2 API (invoke transport)', () => {
     it('deleteTask invokes the state-independent deletion command', async () => {
       await deleteTask({ gid: 'abc', infoHash: 'hash' })
       expect(mockInvoke).toHaveBeenCalledWith('aria2_delete_task', { gid: 'abc', infoHash: 'hash' })
+    })
+
+    it('finishSeeding invokes the terminal seeding command', async () => {
+      await finishSeeding({ gid: 'abc' })
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_finish_seeding', { gid: 'abc' })
     })
 
     it('pauseTask invokes aria2_pause', async () => {

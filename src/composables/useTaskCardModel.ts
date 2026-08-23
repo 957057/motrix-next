@@ -114,7 +114,12 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
     }
   })
   const isActive = computed(() => task.value.status === TASK_STATUS.ACTIVE)
-  const completedLengthValue = computed(() => getTaskCompletedLength(task.value))
+  const completedLengthValue = computed(() => {
+    if (btLifecycle.value === 'seeding' || btLifecycle.value === 'paused-seeding') {
+      return Number(task.value.totalLength)
+    }
+    return getTaskCompletedLength(task.value)
+  })
   const percent = computed(() => calcProgress(task.value.totalLength, completedLengthValue.value))
   const completedSize = computed(() => bytesToSize(completedLengthValue.value, 2))
   const totalSize = computed(() => bytesToSize(task.value.totalLength, 2))

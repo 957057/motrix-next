@@ -310,6 +310,7 @@ export interface PortConflictRecoveryConfig {
 export type BtEncryptionMode = 'preferred' | 'required' | 'disabled'
 export type BtTransportMode = 'tcp' | 'utp' | 'both'
 export type BtBlocklistScope = 'peers' | 'peers-and-trackers' | 'all'
+export type MagnetFileSelectionMode = 'auto' | 'manual'
 export type BtFilePriority = 'off' | 'normal' | 'high' | 'top'
 
 /** A file category rule mapping extensions to a download directory. */
@@ -445,7 +446,6 @@ export interface AppConfig {
   /** When true, extension-intercepted URI downloads bypass the AddTask dialog. */
   autoSubmitFromExtension: boolean
   /** When true, extension-intercepted BT tasks skip file selection and download every file. */
-  autoSelectAllBtFilesFromExtension: boolean
   /** When true, auto-submitted extension downloads are handled in the
    *  background without raising the main window. Only applies when
    *  autoSubmitFromExtension is enabled. */
@@ -493,7 +493,7 @@ export interface AppConfig {
   ed2kSearchTimeout: number
   btTracker: string
   btEncryption: BtEncryptionMode
-  pauseMetadata: boolean
+  magnetFileSelectionMode: MagnetFileSelectionMode
   continue: boolean
   /** When true, aria2 applies the remote server's Last-Modified timestamp
    *  to the local file instead of using the download-completion time. */
@@ -718,6 +718,7 @@ export interface TaskApi {
   getFiles: (params: { gid: string }) => Promise<Aria2File[]>
   removeTask: (params: { gid: string }) => Promise<string>
   deleteTask: (params: { gid: string; infoHash?: string }) => Promise<void>
+  finishSeeding: (params: { gid: string }) => Promise<void>
   forcePauseTask: (params: { gid: string }) => Promise<string>
   pauseTask: (params: { gid: string }) => Promise<string>
   resumeTask: (params: { gid: string }) => Promise<string>

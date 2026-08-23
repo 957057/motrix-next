@@ -11,16 +11,10 @@
 import { TASK_STATUS } from '@shared/constants'
 import { checkTaskIsBT, checkTaskIsSharing } from '@shared/utils'
 import { logger } from '@shared/logger'
-import { cleanupAria2ControlFiles, deleteTaskFiles } from '@/composables/useFileDelete'
-import { cleanupAria2MetadataFiles } from '@/composables/useDownloadCleanup'
 import { isAwaitingBtFileSelection } from '@/composables/useBtLifecycle'
 import { useHistoryStore } from '@/stores/history'
 import type { Aria2Task, TaskApi } from '@shared/types'
 import type { Ref } from 'vue'
-
-export interface MagnetSelectionCleanupTarget {
-  gid: string
-}
 
 interface TaskOperationsDeps {
   api: TaskApi
@@ -28,13 +22,13 @@ interface TaskOperationsDeps {
   currentTaskGid: Ref<string>
   hideTaskDetail: () => void
   fetchList: () => Promise<void>
-  setTaskDeleting?: (gid: string, deleting: boolean) => void
+  setTaskRemoving?: (gid: string, removing: boolean) => void
   requestMagnetSelection?: (gid: string) => void
 }
 
 export function createTaskOperations(deps: TaskOperationsDeps) {
   const { api, taskList, currentTaskGid, hideTaskDetail, fetchList } = deps
-  const setTaskDeleting = deps.setTaskDeleting ?? (() => undefined)
+  const setTaskRemoving = deps.setTaskRemoving ?? (() => undefined)
 
   async function requiresMagnetFileSelection(task: Aria2Task): Promise<boolean> {
     if (!isAwaitingBtFileSelection(task)) return false
@@ -63,68 +57,17 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
 
   async function removeTask(task: Aria2Task) {
     if (task.gid === currentTaskGid.value) hideTaskDetail()
-    setTaskDeleting(task.gid, true)
+    setTaskRemoving(task.gid, true)
     try {
       await api.deleteTask({ gid: task.gid, infoHash: task.infoHash })
       logger.info('TaskOps.removeTask', `gid=${task.gid}`)
-      setTaskDeleting(task.gid, false)
+      setTaskRemoving(task.gid, false)
       await fetchList()
       await api.saveSession()
     } catch (error) {
-      setTaskDeleting(task.gid, false)
+      setTaskRemoving(task.gid, false)
       await fetchList()
       throw error
-    }
-  }
-
-  async function fetchTaskForCleanup(gid: string): Promise<Aria2Task | null> {
-    try {
-      return await api.fetchTaskItem({ gid })
-    } catch (e) {
-      logger.debug('TaskOps.cancelMagnetSelection', `fetchTaskItem gid=${gid} skipped: ${e}`)
-      return null
-    }
-  }
-
-  async function cleanupMagnetSelectionFiles(task: Aria2Task): Promise<void> {
-    try {
-      await cleanupAria2ControlFiles(task)
-    } catch (e) {
-      logger.debug('TaskOps.cancelMagnetSelection', `cleanupControlFile gid=${task.gid} skipped: ${e}`)
-    }
-
-    try {
-      await deleteTaskFiles(task, 'trash')
-    } catch (e) {
-      logger.debug('TaskOps.cancelMagnetSelection', `deleteTaskFiles gid=${task.gid} skipped: ${e}`)
-    }
-
-    if (task.dir && task.infoHash) {
-      try {
-        await cleanupAria2MetadataFiles(task.dir, task.infoHash)
-      } catch (e) {
-        logger.debug('TaskOps.cancelMagnetSelection', `cleanupMetadata gid=${task.gid} skipped: ${e}`)
-      }
-    }
-  }
-
-  async function cancelMagnetSelectionDownload(target: MagnetSelectionCleanupTarget) {
-    const { gid } = target
-    if (gid === currentTaskGid.value) hideTaskDetail()
-
-    try {
-      const task = await fetchTaskForCleanup(gid)
-
-      setTaskDeleting(gid, true)
-      await api.deleteTask({ gid, infoHash: task?.infoHash })
-
-      if (task) await cleanupMagnetSelectionFiles(task)
-
-      logger.info('TaskOps.cancelMagnetSelection', `gid=${gid}`)
-    } finally {
-      setTaskDeleting(gid, false)
-      await fetchList()
-      await api.saveSession()
     }
   }
 
@@ -135,6 +78,19 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       await promise
       logger.info('TaskOps.pauseTask', `gid=${task.gid} bt=${isBT}`)
     } finally {
+      await fetchList()
+      await api.saveSession()
+    }
+  }
+
+  async function finishSeeding(task: Aria2Task): Promise<void> {
+    if (task.gid === currentTaskGid.value) hideTaskDetail()
+    setTaskRemoving(task.gid, true)
+    try {
+      await api.finishSeeding({ gid: task.gid })
+      logger.info('TaskOps.finishSeeding', `gid=${task.gid}`)
+    } finally {
+      setTaskRemoving(task.gid, false)
       await fetchList()
       await api.saveSession()
     }
@@ -230,12 +186,12 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
 
   async function batchRemoveTask(gids: string[]) {
     const tasks = new Map(taskList.value.map((task) => [task.gid, task]))
-    gids.forEach((gid) => setTaskDeleting(gid, true))
+    gids.forEach((gid) => setTaskRemoving(gid, true))
     try {
       await Promise.all(gids.map((gid) => api.deleteTask({ gid, infoHash: tasks.get(gid)?.infoHash })))
       logger.info('TaskOps.batchRemoveTask', `removed ${gids.length} task(s) gids=[${gids.join(',')}]`)
     } finally {
-      gids.forEach((gid) => setTaskDeleting(gid, false))
+      gids.forEach((gid) => setTaskRemoving(gid, false))
       await fetchList()
       await api.saveSession()
     }
@@ -267,8 +223,8 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
 
   return {
     removeTask,
-    cancelMagnetSelectionDownload,
     pauseTask,
+    finishSeeding,
     resumeTask,
     applyMagnetFileSelection,
     resumeTasks,

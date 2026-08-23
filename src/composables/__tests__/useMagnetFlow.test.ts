@@ -15,7 +15,6 @@ const {
   buildMetadataOnlyOptions,
   buildSelectFileOption,
   parseFilesForSelection,
-  shouldShowFileSelection,
   getPendingMagnetSelectionGids,
 } = await import('@/composables/useMagnetFlow')
 
@@ -157,26 +156,6 @@ describe('useMagnetFlow', () => {
 
     it('returns empty string for empty selection', () => {
       expect(buildSelectFileOption([])).toBe('')
-    })
-  })
-
-  // ── shouldShowFileSelection ───────────────────────────────────────
-
-  describe('shouldShowFileSelection', () => {
-    it('returns true when pauseMetadata is true (user wants file selection)', () => {
-      expect(shouldShowFileSelection({ pauseMetadata: true })).toBe(true)
-    })
-
-    it('returns false when pauseMetadata is false (auto-download mode)', () => {
-      expect(shouldShowFileSelection({ pauseMetadata: false })).toBe(false)
-    })
-
-    it('returns true when pauseMetadata is undefined (safe default)', () => {
-      expect(shouldShowFileSelection({ pauseMetadata: undefined })).toBe(true)
-    })
-
-    it('returns true when config object has no pauseMetadata key', () => {
-      expect(shouldShowFileSelection({})).toBe(true)
     })
   })
 

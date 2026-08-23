@@ -36,7 +36,6 @@ export interface AdvancedForm {
   extensionApiSecret: string
   allowRemoteAccess: boolean
   autoSubmitFromExtension: boolean
-  autoSelectAllBtFilesFromExtension: boolean
   silentAutoSubmitFromExtension: boolean
   autoChangeConflictingPorts: boolean
   enableUpnp: boolean
@@ -93,8 +92,6 @@ export function buildAdvancedForm(config: AppConfig): {
       extensionApiSecret: config.extensionApiSecret,
       allowRemoteAccess: config.allowRemoteAccess ?? D.allowRemoteAccess,
       autoSubmitFromExtension: config.autoSubmitFromExtension ?? D.autoSubmitFromExtension,
-      autoSelectAllBtFilesFromExtension:
-        config.autoSelectAllBtFilesFromExtension ?? D.autoSelectAllBtFilesFromExtension,
       silentAutoSubmitFromExtension: config.silentAutoSubmitFromExtension ?? D.silentAutoSubmitFromExtension,
       autoChangeConflictingPorts: config.autoChangeConflictingPorts ?? D.autoChangeConflictingPorts,
       enableUpnp: config.enableUpnp ?? D.enableUpnp,

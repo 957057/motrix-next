@@ -3,7 +3,7 @@
 //! These commands serve as the invoke() transport layer. Each command maps
 //! to one or more aria2 RPC methods.
 
-use crate::aria2::client::Aria2State;
+use crate::aria2::client::{Aria2Client, Aria2State};
 use crate::aria2::types::{Aria2BtPeerAddResult, Aria2BtTrackerConfig, Aria2File, Aria2Task};
 use crate::commands::net::decode_filename_encoding;
 use crate::error::AppError;
@@ -493,27 +493,19 @@ fn is_download_result_transitioning(error: &AppError) -> bool {
         .contains("could not remove download result")
 }
 
-/// Delete a task regardless of whether it is live, transitioning, or stopped.
-#[tauri::command]
-pub async fn aria2_delete_task(
-    state: State<'_, Aria2State>,
-    history: State<'_, HistoryDbState>,
-    gid: String,
-    info_hash: Option<String>,
-) -> Result<(), AppError> {
+async fn remove_engine_task(client: &Aria2Client, gid: &str) -> Result<(), AppError> {
     const RESULT_ATTEMPTS: usize = 100;
     const RESULT_DELAY: std::time::Duration = std::time::Duration::from_millis(50);
 
-    log::info!("aria2:delete gid={gid}");
-    let force_result = state.0.force_remove(&gid).await;
+    let force_result = client.force_remove(gid).await;
     let mut result_removed = false;
 
     for _ in 0..RESULT_ATTEMPTS {
-        match state.0.tell_status(&gid).await {
+        match client.tell_status(gid).await {
             Err(error) if is_missing_download(&error) => break,
             Err(error) => return Err(error),
             Ok(task) if is_terminal_download_status(&task.status) => {
-                match state.0.remove_download_result(&gid).await {
+                match client.remove_download_result(gid).await {
                     Ok(_) => {
                         result_removed = true;
                         break;
@@ -528,23 +520,66 @@ pub async fn aria2_delete_task(
         tokio::time::sleep(RESULT_DELAY).await;
     }
 
-    if !result_removed {
-        match state.0.tell_status(&gid).await {
-            Err(error) if is_missing_download(&error) => {}
-            Err(error) => return Err(error),
-            Ok(_) => {
-                return Err(force_result.err().unwrap_or_else(|| {
-                    AppError::Aria2(format!("GID {gid} did not reach the removed state"))
-                }));
-            }
-        }
+    if result_removed {
+        return Ok(());
     }
 
+    match client.tell_status(gid).await {
+        Err(error) if is_missing_download(&error) => Ok(()),
+        Err(error) => Err(error),
+        Ok(_) => Err(force_result.err().unwrap_or_else(|| {
+            AppError::Aria2(format!("GID {gid} did not reach the removed state"))
+        })),
+    }
+}
+
+fn is_bt_seeding_task(task: &Aria2Task) -> bool {
+    task.bittorrent.is_some()
+        && (task.seeder.as_deref() == Some("true")
+            || task.bittorrent.as_ref().and_then(|bt| bt.state.as_deref()) == Some("seeding"))
+}
+
+/// Delete a task regardless of whether it is live, transitioning, or stopped.
+#[tauri::command]
+pub async fn aria2_delete_task(
+    state: State<'_, Aria2State>,
+    history: State<'_, HistoryDbState>,
+    gid: String,
+    info_hash: Option<String>,
+) -> Result<(), AppError> {
+    log::info!("aria2:delete gid={gid}");
+    remove_engine_task(&state.0, &gid).await?;
     history
         .0
         .remove_task_records(&gid, info_hash.as_deref())
         .await?;
     Ok(())
+}
+
+/// End seeding while preserving downloaded files and the completed history record.
+#[tauri::command]
+pub async fn aria2_finish_seeding(
+    state: State<'_, Aria2State>,
+    history: State<'_, HistoryDbState>,
+    gid: String,
+) -> Result<(), AppError> {
+    let task = state.0.tell_status(&gid).await?;
+    if !is_bt_seeding_task(&task) {
+        return Err(AppError::Aria2(format!(
+            "GID {gid} is not a BitTorrent seeding task"
+        )));
+    }
+
+    log::info!("aria2:finish-seeding gid={gid}");
+    let event = crate::services::monitor::TaskEvent::from_aria2(&task);
+    let added_at = history.0.get_task_birth(&gid).await?;
+    let record = crate::services::monitor::build_history_record_with_added_at(
+        &event,
+        crate::services::monitor::events::SHARING_COMPLETE,
+        added_at,
+    );
+    history.0.add_record(&record).await?;
+    remove_engine_task(&state.0, &gid).await
 }
 
 /// Forcefully pause a task by GID.
@@ -648,9 +683,10 @@ pub async fn aria2_batch_force_remove(
 #[cfg(test)]
 mod tests {
     use super::{
-        ed2k_search_temp_paths, is_download_result_transitioning, is_missing_download,
-        is_terminal_download_status, sanitize_out_option, AppError,
+        ed2k_search_temp_paths, is_bt_seeding_task, is_download_result_transitioning,
+        is_missing_download, is_terminal_download_status, sanitize_out_option, AppError,
     };
+    use crate::aria2::types::{Aria2BtInfo, Aria2Task};
     use std::path::{Path, PathBuf};
 
     // ── Existing #261 tests (updated for String return) ─────────────
@@ -956,5 +992,24 @@ mod tests {
         assert!(!is_download_result_transitioning(&AppError::Aria2(
             "connection reset".to_string()
         )));
+    }
+
+    #[test]
+    fn finish_seeding_accepts_active_and_paused_bt_seeders() {
+        let active = Aria2Task {
+            seeder: Some("true".to_string()),
+            bittorrent: Some(Aria2BtInfo::default()),
+            ..Aria2Task::default()
+        };
+        let paused = Aria2Task {
+            bittorrent: Some(Aria2BtInfo {
+                state: Some("seeding".to_string()),
+                ..Aria2BtInfo::default()
+            }),
+            ..Aria2Task::default()
+        };
+        assert!(is_bt_seeding_task(&active));
+        assert!(is_bt_seeding_task(&paused));
+        assert!(!is_bt_seeding_task(&Aria2Task::default()));
     }
 }

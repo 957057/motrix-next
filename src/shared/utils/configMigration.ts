@@ -25,7 +25,7 @@ import { logger } from '@shared/logger'
 import type { AppConfig } from '@shared/types'
 
 /** Current schema version. Must equal `migrations.length`. */
-export const CONFIG_VERSION = 6
+export const CONFIG_VERSION = 7
 
 /** Result returned by runMigrations for callers to act on (e.g. toast). */
 export interface MigrationResult {
@@ -193,6 +193,16 @@ const migrations: Migration[] = [
       delete (config.portConflictRecovery as unknown as Record<string, unknown>).dht
     }
     logger.info('ConfigMigration', 'v6: adopted native BitTorrent encryption and unified DHT settings')
+  },
+
+  // ── v6 → v7 ──────────────────────────────────────────────
+  // Replace automatic BT content selection with presentation-only control.
+  function migrateV7(config: Partial<AppConfig>): void {
+    const retired = config as Partial<AppConfig> & Record<string, unknown>
+    delete retired.pauseMetadata
+    delete retired.autoSelectAllBtFilesFromExtension
+    config.magnetFileSelectionMode = 'auto'
+    logger.info('ConfigMigration', 'v7: replaced automatic BT content selection with magnet dialog presentation')
   },
 ]
 

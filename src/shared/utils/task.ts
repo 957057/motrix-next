@@ -64,11 +64,18 @@ export const getTaskName = (task: Aria2Task | null, options: { defaultName?: str
   if (!task) return result
 
   const { files, bittorrent } = task
+  if (bittorrent?.info?.name) return bittorrent.info.name
+  if (bittorrent?.magnetLink) {
+    try {
+      const displayName = new URL(bittorrent.magnetLink).searchParams.get('dn')?.trim()
+      if (displayName) return displayName
+    } catch {
+      // Continue through file-based fallbacks.
+    }
+  }
   if (!files || files.length === 0) return result
 
-  if (bittorrent && bittorrent.info && bittorrent.info.name) {
-    result = bittorrent.info.name
-  } else if (files.length === 1) {
+  if (files.length === 1) {
     const name = getFileNameFromFile(files[0])
     result = name || result
   } else {

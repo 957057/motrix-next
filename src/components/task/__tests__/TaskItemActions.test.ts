@@ -12,6 +12,7 @@ vi.mock('@vicons/ionicons5', () => {
   return {
     PauseOutline: icon,
     PlayOutline: icon,
+    StopCircleOutline: icon,
     RefreshOutline: icon,
     CloseOutline: icon,
     TrashOutline: icon,
@@ -56,21 +57,21 @@ describe('TaskItemActions', () => {
     expect(paused.emitted('resume')).toBeTruthy()
   })
 
-  it('renders a labeled file-selection action for pending magnets', async () => {
+  it('renders an icon-only file-selection action for pending magnets', async () => {
     const wrapper = mountActions(
       makeTask('paused', {
         bittorrent: { state: 'awaitingFileSelection', info: { name: 'Torrent' } },
       }),
     )
 
-    const action = wrapper.find('.task-item-action.select-files')
-    expect(action.text()).toContain('task.select-files')
+    const action = wrapper.find('[aria-label="task.select-files"]')
+    expect(action.text()).toBe('')
     await action.trigger('click')
     expect(wrapper.emitted('select-files')).toBeTruthy()
     expect(wrapper.emitted('resume')).toBeFalsy()
   })
 
-  it('pauses and resumes seeding without a destructive stop action', async () => {
+  it('supports pause, resume, and terminal seeding actions', async () => {
     const seeding = mountActions(
       makeTask('active', {
         completedLength: '1024',
@@ -80,6 +81,8 @@ describe('TaskItemActions', () => {
     )
     await seeding.find('[aria-label="task.pause-seeding"]').trigger('click')
     expect(seeding.emitted('pause')).toBeTruthy()
+    await seeding.find('[aria-label="task.finish-seeding"]').trigger('click')
+    expect(seeding.emitted('finish-seeding')).toBeTruthy()
 
     const paused = mountActions(
       makeTask('paused', {
@@ -90,7 +93,7 @@ describe('TaskItemActions', () => {
     )
     await paused.find('[aria-label="task.resume-seeding"]').trigger('click')
     expect(paused.emitted('resume')).toBeTruthy()
-    expect(paused.find('.stop-sharing').exists()).toBe(false)
+    expect(paused.find('[aria-label="task.finish-seeding"]').exists()).toBe(true)
   })
 
   it('keeps terminal actions accessible', () => {

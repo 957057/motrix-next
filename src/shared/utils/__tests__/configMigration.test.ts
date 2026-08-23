@@ -510,6 +510,22 @@ describe('v5 migration — ED2K clipboard backfill', () => {
   })
 })
 
+describe('v7 migration — magnet file selection presentation', () => {
+  it('removes content auto-selection and defaults to automatic dialog presentation', () => {
+    const config = {
+      configVersion: 6,
+      pauseMetadata: false,
+      autoSelectAllBtFilesFromExtension: true,
+    } as unknown as Partial<AppConfig>
+
+    runMigrations(config)
+
+    expect(config.magnetFileSelectionMode).toBe('auto')
+    expect((config as Record<string, unknown>).pauseMetadata).toBeUndefined()
+    expect((config as Record<string, unknown>).autoSelectAllBtFilesFromExtension).toBeUndefined()
+  })
+})
+
 // ── Full v0 → v5 integration ──────────────────────────────────────
 
 describe('v0 → v5 full migration path', () => {

@@ -20,6 +20,7 @@ interface TaskActionsDeps {
   taskStore: {
     pauseTask: (task: Aria2Task) => Promise<unknown>
     resumeTask: (task: Aria2Task) => Promise<unknown>
+    finishSeeding: (task: Aria2Task) => Promise<unknown>
     removeTask: (task: Aria2Task) => Promise<unknown>
     removeTaskRecord: (task: Aria2Task) => Promise<unknown>
     restartTask: (task: Aria2Task) => Promise<unknown>
@@ -86,6 +87,24 @@ export function useTaskActions(deps: TaskActionsDeps) {
           message.error(t('task.resume-task-fail', { taskName }))
         })
     }
+  }
+
+  function handleFinishSeeding(task: Aria2Task) {
+    const taskName = getTaskDisplayName(task, { defaultName: 'Unknown' })
+    dialog.warning({
+      title: t('task.finish-seeding'),
+      content: t('task.finish-seeding-confirm', { taskName }),
+      positiveText: t('task.finish-seeding'),
+      negativeText: t('app.cancel'),
+      onPositiveClick: () =>
+        taskStore
+          .finishSeeding(task)
+          .then(() => message.success(t('task.finish-seeding-success', { taskName })))
+          .catch((error) => {
+            logger.warn('TaskView.finishSeeding', getErrorMessage(error))
+            message.error(t('task.finish-seeding-fail', { taskName }))
+          }),
+    })
   }
 
   function handleDeleteTask(task: Aria2Task) {
@@ -306,6 +325,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
   return {
     handlePauseTask,
     handleResumeTask,
+    handleFinishSeeding,
     handleDeleteTask,
     handleDeleteRecord,
     handleCopyLink,

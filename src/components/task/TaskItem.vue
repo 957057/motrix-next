@@ -27,6 +27,7 @@ const props = defineProps<{ task: Aria2Task }>()
 const emit = defineEmits<{
   pause: [task: Aria2Task]
   resume: [task: Aria2Task]
+  'finish-seeding': [task: Aria2Task]
   delete: [task: Aria2Task]
   'delete-record': [task: Aria2Task]
   'copy-link': [task: Aria2Task]
@@ -148,6 +149,7 @@ watch(isSharing, (now, was) => {
           :file-missing="fileMissing"
           @pause="emit('pause', task)"
           @resume="emit('resume', task)"
+          @finish-seeding="emit('finish-seeding', task)"
           @delete="emit('delete', task)"
           @delete-record="emit('delete-record', task)"
           @copy-link="emit('copy-link', task)"

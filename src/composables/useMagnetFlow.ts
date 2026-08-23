@@ -29,7 +29,7 @@ export interface MagnetFileItem {
   length: number
 }
 
-export type MagnetSelectionSubmission = 'confirm' | 'cancel' | null
+export type MagnetSelectionSubmission = 'confirm' | null
 
 /** Convert raw Aria2File array into UI-friendly selection items. */
 export function parseFilesForSelection(files: Aria2File[]): MagnetFileItem[] {
@@ -50,30 +50,8 @@ export function buildSelectFileOption(indices: number[]): string {
   return [...indices].sort((a, b) => a - b).join(',')
 }
 
-/**
- * Determines whether the file selection dialog should be shown for a magnet download.
- *
- * When pauseMetadata=true, aria2 pauses the same GID after metadata resolves
- * so the UI can show the file selection dialog.
- *
- * When pauseMetadata=false (btAutoDownloadContent checked), aria2 starts the
- * same GID immediately — no file selection needed.
- *
- * Defaults to true (show dialog) when the config value is missing,
- * aligning with the industry standard of giving users control over file selection.
- */
-export function shouldShowFileSelection(config: { pauseMetadata?: boolean | string }): boolean {
-  return config.pauseMetadata !== false && config.pauseMetadata !== 'false'
-}
-
 export function isPendingMagnetSelectionTask(task: Aria2Task): boolean {
-  return Boolean(
-    task.bittorrent &&
-    task.status === 'paused' &&
-    task.bittorrent.state === 'awaitingFileSelection' &&
-    task.bittorrent.info?.name &&
-    task.files.some((file) => Number(file.length) > 0),
-  )
+  return Boolean(task.bittorrent && task.status === 'paused' && task.bittorrent.state === 'awaitingFileSelection')
 }
 
 export function getPendingMagnetSelectionGids(tasks: Aria2Task[]): string[] {

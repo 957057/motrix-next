@@ -640,12 +640,11 @@ describe('useAppStore', () => {
       expect(store.addTaskVisible).toBe(true)
     })
 
-    it('shows AddTask for remote .torrent URLs when BT auto-select is disabled', async () => {
+    it('shows AddTask for remote .torrent URLs', async () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
       prefStore.config.autoSubmitFromExtension = true
-      prefStore.config.autoSelectAllBtFilesFromExtension = false
 
       store.handleDeepLinkUrls([buildDeepLink('https://example.com/linux.torrent')])
 
@@ -657,34 +656,17 @@ describe('useAppStore', () => {
       expect(submitBatchItemsMock).not.toHaveBeenCalled()
     })
 
-    it('auto-submits remote .torrent URLs when BT auto-select is enabled', async () => {
+    it('auto-submits magnet URLs without bypassing file selection', async () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
       prefStore.config.autoSubmitFromExtension = true
-      prefStore.config.autoSelectAllBtFilesFromExtension = true
-
-      store.handleDeepLinkUrls([buildDeepLink('https://example.com/linux.torrent')])
-      await new Promise((resolve) => setTimeout(resolve, 0))
-
-      expect(store.pendingBatch).toHaveLength(0)
-      expect(store.addTaskVisible).toBe(false)
-      expect(resolveUnresolvedItemsMock).toHaveBeenCalledTimes(1)
-      expect(submitBatchItemsMock).toHaveBeenCalledTimes(1)
-    })
-
-    it('auto-submits magnet URLs with metadata pause disabled when file auto-select is enabled', async () => {
-      const store = useAppStore()
-      const { usePreferenceStore } = await import('@/stores/preference')
-      const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
-      prefStore.config.autoSelectAllBtFilesFromExtension = true
 
       store.handleDeepLinkUrls([buildDeepLink('magnet:?xt=urn:btih:abc123')])
       await new Promise((resolve) => setTimeout(resolve, 0))
 
       expect(submitManualUrisMock).toHaveBeenCalledTimes(1)
-      expect(submitManualUrisMock.mock.calls[0][1]).toMatchObject({ 'pause-metadata': 'false' })
+      expect(submitManualUrisMock.mock.calls[0][1]).not.toMatchObject({ 'pause-metadata': 'false' })
       expect(store.addTaskVisible).toBe(false)
     })
 
@@ -693,7 +675,6 @@ describe('useAppStore', () => {
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
       prefStore.config.autoSubmitFromExtension = true
-      prefStore.config.autoSelectAllBtFilesFromExtension = false
 
       store.handleDeepLinkUrls([
         buildDeepLink('https://example.com/file.zip'),

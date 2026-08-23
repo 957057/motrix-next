@@ -22,9 +22,8 @@ import {
 } from '@shared/utils/batchHelpers'
 import { summarizeExternalInput } from '@shared/utils/externalInputDiagnostics'
 import { parseMotrixDeepLink } from '@shared/utils/motrixDeepLink'
-import { buildEngineOptions, submitBatchItems, submitManualUris } from '@/composables/useAddTaskSubmit'
+import { buildEngineOptions, submitManualUris } from '@/composables/useAddTaskSubmit'
 import { getDownloadProxy } from '@/composables/useAddTaskSubmit'
-import { resolveUnresolvedItems } from '@/composables/useAddTaskFileOps'
 import { usePreferenceStore } from '@/stores/preference'
 import { useTaskStore } from '@/stores/task'
 import type {
@@ -372,7 +371,6 @@ export const useAppStore = defineStore('app', () => {
 
     const preferenceStore = usePreferenceStore()
     const autoSubmit = preferenceStore.config.autoSubmitFromExtension
-    const autoSelectAllBt = preferenceStore.config.autoSelectAllBtFilesFromExtension === true
     logger.info(
       'ExternalInput.new',
       formatLogFields({
@@ -389,14 +387,6 @@ export const useAppStore = defineStore('app', () => {
       }),
     )
 
-    if (autoSubmit && autoSelectAllBt && kind === 'uri' && downloadUrl.toLowerCase().startsWith('magnet:')) {
-      void autoSubmitExtensionUrl(downloadUrl, context, resolvedHint, true)
-      return { autoSubmitted: 1, ignored: 0 }
-    }
-    if (autoSubmit && autoSelectAllBt && kind === 'torrent') {
-      void autoSubmitExtensionFile(downloadUrl, context)
-      return { autoSubmitted: 1, ignored: 0 }
-    }
     if (autoSubmit && kind === 'uri') {
       void autoSubmitExtensionUrl(downloadUrl, context, resolvedHint)
       return { autoSubmitted: 1, ignored: 0 }
@@ -418,16 +408,12 @@ export const useAppStore = defineStore('app', () => {
     url: string,
     context: ExternalDownloadContext,
     filenameHint: string,
-    autoSelectAllFiles = false,
   ): Promise<void> {
     const preferenceStore = usePreferenceStore()
     const taskStore = useTaskStore()
 
     const form = buildExtensionSubmitForm(url, preferenceStore, context, filenameHint)
     const options = buildEngineOptions(form)
-    if (autoSelectAllFiles) {
-      options['pause-metadata'] = 'false'
-    }
     externalInputSubmitCount += 1
     externalInputSubmitting.value = true
     try {
@@ -491,39 +477,6 @@ export const useAppStore = defineStore('app', () => {
       uriRequestContexts: {
         [url]: context,
       },
-    }
-  }
-
-  async function autoSubmitExtensionFile(url: string, context: ExternalDownloadContext): Promise<void> {
-    const preferenceStore = usePreferenceStore()
-    const taskStore = useTaskStore()
-    const form = buildExtensionSubmitForm(url, preferenceStore, context, '')
-    const options = buildEngineOptions(form)
-    const item = createBatchItem('torrent', url)
-    item.browserContext = context
-    externalInputSubmitCount += 1
-    externalInputSubmitting.value = true
-    try {
-      await resolveUnresolvedItems([item], (key) => key, getDownloadProxy(preferenceStore.config.proxy))
-      if (item.status === 'failed') throw new Error(item.error || 'Failed to load torrent')
-      const failures = await submitBatchItems([item], options, taskStore)
-      if (failures > 0) throw new Error(item.error || 'Failed to submit torrent')
-      externalInputStartHandler?.([item.displayName])
-      preferenceStore.recordHistoryDirectory(form.dir || preferenceStore.config.dir)
-      logger.info(
-        'autoSubmit',
-        formatLogFields({
-          traceId: context.traceId ?? 'none',
-          url: summarizeExternalInput(url),
-          result: 'submitted-file',
-        }),
-      )
-    } catch (e) {
-      logger.error('autoSubmit', e)
-      externalInputErrorHandler?.(e)
-    } finally {
-      externalInputSubmitCount = Math.max(0, externalInputSubmitCount - 1)
-      externalInputSubmitting.value = externalInputSubmitCount > 0
     }
   }
 
