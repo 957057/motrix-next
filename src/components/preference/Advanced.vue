@@ -59,7 +59,7 @@ import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 
 const engineStore = useEngineStore()
-const { confirmManualRestart: handleManualRestart, restartEngine } = useEngineRestart()
+const { restartEngine } = useEngineRestart()
 
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
@@ -720,7 +720,7 @@ watch(protocolHandlers.lastError, (error) => {
         </NDataTable>
       </NCard>
     </NModal>
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" @restart="handleManualRestart" />
+    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 

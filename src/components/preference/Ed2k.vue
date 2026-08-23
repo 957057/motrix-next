@@ -47,7 +47,7 @@ const preferenceStore = usePreferenceStore()
 const taskStore = useTaskStore()
 const dialog = useDialog()
 const message = useAppMessage()
-const { confirmManualRestart: handleManualRestart, restartEngine } = useEngineRestart()
+const { restartEngine } = useEngineRestart()
 
 const needsRestart = ref(false)
 const bootstrapSyncing = ref(false)
@@ -436,7 +436,7 @@ onMounted(() => {
         </NFormItem>
       </NForm>
     </div>
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" @restart="handleManualRestart" />
+    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 

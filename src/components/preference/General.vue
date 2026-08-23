@@ -46,7 +46,6 @@ import { CloudDownloadOutline } from '@vicons/ionicons5'
 import UpdateDialog from '@/components/preference/UpdateDialog.vue'
 import type { UpdateChannel } from '@shared/types'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
-import { useEngineRestart } from '@/composables/useEngineRestart'
 
 const { t, locale } = useI18n()
 const preferenceStore = usePreferenceStore()
@@ -256,7 +255,6 @@ function handleCheckUpdate() {
 }
 
 const engineStore = useEngineStore()
-const { confirmManualRestart: handleManualRestart } = useEngineRestart()
 
 onMounted(async () => {
   try {
@@ -510,7 +508,7 @@ onMounted(async () => {
         </NFormItem>
       </NForm>
     </div>
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" @restart="handleManualRestart" />
+    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 

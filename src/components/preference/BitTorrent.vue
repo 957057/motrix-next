@@ -48,13 +48,11 @@ import {
 } from 'naive-ui'
 import PreferenceActionBar from './PreferenceActionBar.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
-import { useEngineRestart } from '@/composables/useEngineRestart'
 import { SyncOutline, AddCircleOutline, CloseCircleOutline, DiceOutline } from '@vicons/ionicons5'
 
 const { t, locale } = useI18n()
 const preferenceStore = usePreferenceStore()
 const dialog = useDialog()
-const { confirmManualRestart: handleManualRestart } = useEngineRestart()
 const message = useAppMessage()
 const syncingTracker = ref(false)
 const syncingBlocklist = ref(false)
@@ -695,7 +693,7 @@ onMounted(() => {
         </NFormItem>
       </NForm>
     </div>
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" @restart="handleManualRestart" />
+    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 

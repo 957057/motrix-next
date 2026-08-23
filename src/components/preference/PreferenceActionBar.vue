@@ -3,11 +3,13 @@
 import { useI18n } from 'vue-i18n'
 import { NButton, NSpace, NIcon } from 'naive-ui'
 import { RefreshOutline } from '@vicons/ionicons5'
+import { useEngineRestart } from '@/composables/useEngineRestart'
 
 defineProps<{ isDirty: boolean }>()
-defineEmits<{ save: []; discard: []; restart: [] }>()
+defineEmits<{ save: []; discard: [] }>()
 
 const { t } = useI18n()
+const { confirmManualRestart } = useEngineRestart()
 </script>
 
 <template>
@@ -20,7 +22,7 @@ const { t } = useI18n()
         {{ t('preferences.discard') }}
       </NButton>
     </NSpace>
-    <NButton type="info" ghost @click="$emit('restart')">
+    <NButton type="info" ghost @click="confirmManualRestart">
       <template #icon>
         <NIcon :size="16"><RefreshOutline /></NIcon>
       </template>

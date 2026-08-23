@@ -48,13 +48,11 @@ import PreferenceHintLabel from './PreferenceHintLabel.vue'
 import DirectoryPopover from '@/components/common/DirectoryPopover.vue'
 import FileCategoryManager from './FileCategoryManager.vue'
 import { FolderOpenOutline } from '@vicons/ionicons5'
-import { useEngineRestart } from '@/composables/useEngineRestart'
 
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
 const dialog = useDialog()
 const message = useAppMessage()
-const { confirmManualRestart: handleManualRestart } = useEngineRestart()
 const defaultDownloadDir = ref('')
 
 // ── File timestamp strategy ─────────────────────────────────────────
@@ -545,7 +543,7 @@ onMounted(async () => {
         </NCollapseTransition>
       </NForm>
     </div>
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" @restart="handleManualRestart" />
+    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
     <FileCategoryManager
       v-model:show="showCategoryManager"
       :categories="form.fileCategories"

@@ -41,7 +41,6 @@ import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 import UserAgentManager from './UserAgentManager.vue'
 import { SearchOutline } from '@vicons/ionicons5'
-import { useEngineRestart } from '@/composables/useEngineRestart'
 
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
@@ -100,8 +99,6 @@ const { detecting: detectingProxy, detect: detectProxy } = useSystemProxyDetect(
 function buildForm() {
   return buildNetworkForm(preferenceStore.config)
 }
-
-const { confirmManualRestart: handleManualRestart } = useEngineRestart()
 
 const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } = usePreferenceForm({
   buildForm,
@@ -374,7 +371,7 @@ onMounted(() => {
       :recent-profile-ids="form.recentUserAgentProfileIds"
       @save="handleUserAgentManagerSave"
     />
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" @restart="handleManualRestart" />
+    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 

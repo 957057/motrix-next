@@ -4,8 +4,13 @@ import { mount } from '@vue/test-utils'
 import { NButton } from 'naive-ui'
 import PreferenceActionBar from '../PreferenceActionBar.vue'
 
+const { confirmManualRestartMock } = vi.hoisted(() => ({ confirmManualRestartMock: vi.fn() }))
+
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
+}))
+vi.mock('@/composables/useEngineRestart', () => ({
+  useEngineRestart: () => ({ confirmManualRestart: confirmManualRestartMock }),
 }))
 
 describe('PreferenceActionBar', () => {
@@ -33,5 +38,15 @@ describe('PreferenceActionBar', () => {
     expect(discard.props('type')).toBe('error')
     expect(discard.props('ghost')).toBe(true)
     expect(discard.props('disabled')).toBe(false)
+  })
+
+  it('owns the engine restart confirmation without forwarding a page event', async () => {
+    const wrapper = mount(PreferenceActionBar, { props: { isDirty: false } })
+    const restart = wrapper.findAllComponents(NButton)[2]
+
+    await restart.trigger('click')
+
+    expect(confirmManualRestartMock).toHaveBeenCalledOnce()
+    expect(wrapper.emitted('restart')).toBeUndefined()
   })
 })
