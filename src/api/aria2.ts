@@ -13,6 +13,8 @@ import type {
   Aria2EngineOptions,
   Aria2File,
   Aria2BtTracker,
+  Aria2BtTrackerConfig,
+  Aria2BtPeerAddResult,
   AppConfig,
   Ed2kSearchOptions,
   Ed2kSearchResults,
@@ -82,6 +84,22 @@ export async function getFiles(params: { gid: string }): Promise<Aria2File[]> {
 
 export async function getBtTrackers(params: { gid: string }): Promise<Aria2BtTracker[]> {
   return invoke<Aria2BtTracker[]>('aria2_get_bt_trackers', { gid: params.gid })
+}
+
+export async function forceBtRecheck(params: { gid: string }): Promise<void> {
+  await invoke<string>('aria2_force_bt_recheck', params)
+}
+
+export async function replaceBtTrackers(params: { gid: string; trackers: Aria2BtTrackerConfig[] }): Promise<void> {
+  await invoke<string>('aria2_replace_bt_trackers', params)
+}
+
+export async function replaceBtWebSeeds(params: { gid: string; webSeeds: string[] }): Promise<void> {
+  await invoke<string>('aria2_replace_bt_web_seeds', params)
+}
+
+export async function addBtPeers(params: { gid: string; peers: string[] }): Promise<Aria2BtPeerAddResult> {
+  return invoke<Aria2BtPeerAddResult>('aria2_add_bt_peers', params)
 }
 
 /** Fetches only active tasks (no waiting). */

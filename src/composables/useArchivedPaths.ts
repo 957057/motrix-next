@@ -118,6 +118,6 @@ export function resolveTaskFilePath(task: Aria2Task): string | null {
   const files = task.files
   if (!files || files.length === 0) return null
 
-  const selected = files.filter((f) => f.selected === 'true')
+  const selected = files.filter((f) => f.selected)
   return (selected.length > 0 ? selected[0] : files[0])?.path ?? null
 }

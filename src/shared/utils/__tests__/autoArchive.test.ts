@@ -38,7 +38,7 @@ function makeTask(filePath: string, dir: string): Aria2Task {
         path: filePath,
         length: '1000',
         completedLength: '1000',
-        selected: 'true',
+        selected: true,
         uris: [],
       },
     ],
@@ -196,7 +196,7 @@ describe('resolveArchiveAction', () => {
       path: '/Users/test/Downloads/part2.mp4',
       length: '1000',
       completedLength: '1000',
-      selected: 'true',
+      selected: true,
       uris: [],
     })
     // Should still return action for first file only

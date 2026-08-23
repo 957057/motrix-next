@@ -146,6 +146,14 @@ describe('buildBtForm', () => {
     const expectedFields = [
       'btAutoDownloadContent',
       'btEncryption',
+      'btTransport',
+      'btMaxConnections',
+      'btMaxUploads',
+      'btMaxUploadsPerTorrent',
+      'btFirstLastPieceFirst',
+      'btRateLimitOverhead',
+      'btAnonymousMode',
+      'btBlocklistScope',
       'btDhtEnabled',
       'btPeerExchangeEnabled',
       'btLocalPeerDiscoveryEnabled',
@@ -180,6 +188,14 @@ describe('buildBtSystemConfig', () => {
   const baseForm: BtForm = {
     btAutoDownloadContent: true,
     btEncryption: 'preferred',
+    btTransport: 'both',
+    btMaxConnections: 500,
+    btMaxUploads: 20,
+    btMaxUploadsPerTorrent: 4,
+    btFirstLastPieceFirst: false,
+    btRateLimitOverhead: false,
+    btAnonymousMode: false,
+    btBlocklistScope: 'peers',
     btDhtEnabled: true,
     btPeerExchangeEnabled: true,
     btLocalPeerDiscoveryEnabled: true,
@@ -206,6 +222,14 @@ describe('buildBtSystemConfig', () => {
     const config = buildBtSystemConfig(baseForm)
     expect(config['bt-max-peers']).toBe('128')
     expect(config['bt-encryption']).toBe('preferred')
+    expect(config['bt-transport']).toBe('both')
+    expect(config['bt-max-connections']).toBe('500')
+    expect(config['bt-max-uploads']).toBe('20')
+    expect(config['bt-max-uploads-per-torrent']).toBe('4')
+    expect(config['bt-first-last-piece-first']).toBe('false')
+    expect(config['bt-rate-limit-overhead']).toBe('false')
+    expect(config['bt-anonymous-mode']).toBe('false')
+    expect(config['bt-blocklist-scope']).toBe('peers')
     expect(config['listen-port']).toBe('29120')
     expect(config['bt-external-ip']).toBe('')
     expect(config['bt-external-port']).toBe('0')
@@ -312,6 +336,14 @@ describe('transformBtForStore', () => {
   const baseForm: BtForm = {
     btAutoDownloadContent: true,
     btEncryption: 'preferred',
+    btTransport: 'both',
+    btMaxConnections: 500,
+    btMaxUploads: 20,
+    btMaxUploadsPerTorrent: 4,
+    btFirstLastPieceFirst: false,
+    btRateLimitOverhead: false,
+    btAnonymousMode: false,
+    btBlocklistScope: 'peers',
     btDhtEnabled: true,
     btPeerExchangeEnabled: true,
     btLocalPeerDiscoveryEnabled: true,

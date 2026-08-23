@@ -60,6 +60,8 @@ import TaskDetailFiles from './detail/TaskDetailFiles.vue'
 import TaskDetailPeers from './detail/TaskDetailPeers.vue'
 import TaskDetailSources from './detail/TaskDetailSources.vue'
 import TaskDetailTrackers from './detail/TaskDetailTrackers.vue'
+import { forceBtRecheck } from '@/api/aria2'
+import { getErrorMessage } from '@shared/utils/errorMessage'
 
 const props = defineProps<{
   show: boolean
@@ -75,6 +77,22 @@ const historyStore = useHistoryStore()
 const message = useAppMessage()
 const taskRef = computed(() => props.task)
 const taskPrimaryUrl = computed(() => props.task?.files?.[0]?.uris?.[0]?.uri ?? '')
+const rechecking = ref(false)
+
+async function recheckTask() {
+  const gid = props.task?.gid
+  if (!gid || rechecking.value) return
+  rechecking.value = true
+  try {
+    await forceBtRecheck({ gid })
+    message.success(t('task.options-applied'))
+  } catch (error) {
+    logger.warn('TaskDetail.recheck', getErrorMessage(error))
+    message.error(t('task.options-apply-failed'))
+  } finally {
+    rechecking.value = false
+  }
+}
 
 const {
   form: optForm,
@@ -170,7 +188,7 @@ const allTabs: TabDef[] = [
   { key: 'general', labelKey: 'task.task-tab-general', icon: InformationCircleOutline },
   { key: 'activity', labelKey: 'task.task-tab-activity', icon: PulseOutline },
   { key: 'files', labelKey: 'task.task-tab-files', icon: DocumentOutline },
-  { key: 'options', labelKey: 'task.task-tab-options', icon: SettingsOutline },
+  { key: 'options', labelKey: 'task.task-tab-options', icon: SettingsOutline, uriOnly: true },
   { key: 'sources', labelKey: 'task.task-tab-sources', icon: ServerOutline, uriOnly: true },
   { key: 'status', labelKey: 'task.task-tab-status', icon: PulseOutline, protocolOnly: true },
   { key: 'peers', labelKey: 'task.task-tab-peers', icon: PeopleOutline, btOnly: true },
@@ -425,6 +443,11 @@ function handleClose() {
 
           <div v-else-if="activeTab === 'status' && isBT" key="bt-status" class="tab-content">
             <template v-if="task && isBT">
+              <div class="status-actions">
+                <NButton size="small" :loading="rechecking" :disabled="!optCanModify" @click="recheckTask">
+                  {{ t('task.bt-recheck') }}
+                </NButton>
+              </div>
               <NDescriptions
                 :column="1"
                 label-placement="left"
@@ -466,7 +489,13 @@ function handleClose() {
           </div>
 
           <div v-else-if="activeTab === 'files'" key="files" class="tab-content">
-            <TaskDetailFiles :files="files" :tooltip="t('about.click-to-copy')" :on-copy="copyDetailValue" />
+            <TaskDetailFiles
+              :files="files"
+              :gid="task?.gid"
+              :editable="optCanModify && isBT"
+              :tooltip="t('about.click-to-copy')"
+              :on-copy="copyDetailValue"
+            />
           </div>
 
           <div v-else-if="activeTab === 'sources'" key="sources" class="tab-content">
@@ -676,6 +705,8 @@ function handleClose() {
 
           <div v-else-if="activeTab === 'peers'" key="peers" class="tab-content">
             <TaskDetailPeers
+              :gid="task?.gid ?? ''"
+              :editable="optCanModify"
               :peers="task?.peers"
               :locale="locale"
               :tooltip="t('about.click-to-copy')"
@@ -684,7 +715,13 @@ function handleClose() {
           </div>
 
           <div v-else-if="activeTab === 'trackers'" key="trackers" class="tab-content">
-            <TaskDetailTrackers :gid="task?.gid ?? ''" :tooltip="t('about.click-to-copy')" :on-copy="copyDetailValue" />
+            <TaskDetailTrackers
+              :gid="task?.gid ?? ''"
+              :web-seeds="task?.bittorrent?.webSeeds"
+              :editable="optCanModify"
+              :tooltip="t('about.click-to-copy')"
+              :on-copy="copyDetailValue"
+            />
           </div>
         </Transition>
       </div>
@@ -811,6 +848,12 @@ function handleClose() {
 
 .detail-footer :deep(.task-item-actions) {
   direction: ltr;
+}
+
+.status-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
 }
 
 .tab-slide-left-enter-active,

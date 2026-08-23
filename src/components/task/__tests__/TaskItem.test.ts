@@ -66,7 +66,7 @@ function createTask(path: string): Aria2Task {
         path: '/downloads/ignored.bin',
         length: '10',
         completedLength: '0',
-        selected: 'false',
+        selected: false,
         uris: [],
       },
       {
@@ -74,7 +74,7 @@ function createTask(path: string): Aria2Task {
         path,
         length: '90',
         completedLength: '90',
-        selected: 'true',
+        selected: true,
         uris: [],
       },
     ],

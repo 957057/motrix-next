@@ -41,7 +41,7 @@ function mockTask(gid: string, overrides: Partial<Aria2Task> = {}): Aria2Task {
         path: `/downloads/${gid}.txt`,
         length: '1000',
         completedLength: '500',
-        selected: 'true',
+        selected: true,
         uris: [],
       },
     ],
@@ -139,10 +139,10 @@ describe('sortTasks', () => {
 
     it('falls back to file path when no BT name', () => {
       const t1 = mockTask('a', {
-        files: [{ index: '1', path: '/dl/zebra.iso', length: '0', completedLength: '0', selected: 'true', uris: [] }],
+        files: [{ index: '1', path: '/dl/zebra.iso', length: '0', completedLength: '0', selected: true, uris: [] }],
       })
       const t2 = mockTask('b', {
-        files: [{ index: '1', path: '/dl/alpha.iso', length: '0', completedLength: '0', selected: 'true', uris: [] }],
+        files: [{ index: '1', path: '/dl/alpha.iso', length: '0', completedLength: '0', selected: true, uris: [] }],
       })
       const tasks = [t1, t2]
       sortTasks(tasks, 'name', 'asc', new Map())

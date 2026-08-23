@@ -4,7 +4,7 @@
 //! to one or more aria2 RPC methods.
 
 use crate::aria2::client::Aria2State;
-use crate::aria2::types::{Aria2File, Aria2Task};
+use crate::aria2::types::{Aria2BtPeerAddResult, Aria2BtTrackerConfig, Aria2File, Aria2Task};
 use crate::commands::net::decode_filename_encoding;
 use crate::error::AppError;
 use std::collections::HashMap;
@@ -153,6 +153,41 @@ pub async fn aria2_get_bt_trackers(
 ) -> Result<serde_json::Value, AppError> {
     let trackers = state.0.get_bt_trackers(&gid).await?;
     serde_json::to_value(trackers).map_err(|e| AppError::Aria2(format!("serialize trackers: {e}")))
+}
+
+#[tauri::command]
+pub async fn aria2_force_bt_recheck(
+    state: State<'_, Aria2State>,
+    gid: String,
+) -> Result<String, AppError> {
+    state.0.force_bt_recheck(&gid).await
+}
+
+#[tauri::command]
+pub async fn aria2_replace_bt_trackers(
+    state: State<'_, Aria2State>,
+    gid: String,
+    trackers: Vec<Aria2BtTrackerConfig>,
+) -> Result<String, AppError> {
+    state.0.replace_bt_trackers(&gid, trackers).await
+}
+
+#[tauri::command]
+pub async fn aria2_replace_bt_web_seeds(
+    state: State<'_, Aria2State>,
+    gid: String,
+    web_seeds: Vec<String>,
+) -> Result<String, AppError> {
+    state.0.replace_bt_web_seeds(&gid, web_seeds).await
+}
+
+#[tauri::command]
+pub async fn aria2_add_bt_peers(
+    state: State<'_, Aria2State>,
+    gid: String,
+    peers: Vec<String>,
+) -> Result<Aria2BtPeerAddResult, AppError> {
+    state.0.add_bt_peers(&gid, peers).await
 }
 
 // ── `out` option sanitization ────────────────────────────────────────

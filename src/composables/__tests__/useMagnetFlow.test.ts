@@ -68,7 +68,7 @@ describe('useMagnetFlow', () => {
         path: '/downloads/movie/video.mkv',
         length: '1500000000',
         completedLength: '0',
-        selected: 'true',
+        selected: true,
         uris: [],
       },
       {
@@ -76,7 +76,7 @@ describe('useMagnetFlow', () => {
         path: '/downloads/movie/subtitle.srt',
         length: '50000',
         completedLength: '0',
-        selected: 'true',
+        selected: true,
         uris: [],
       },
       {
@@ -84,7 +84,7 @@ describe('useMagnetFlow', () => {
         path: '/downloads/movie/nfo.txt',
         length: '500',
         completedLength: '0',
-        selected: 'true',
+        selected: true,
         uris: [],
       },
     ]
@@ -116,7 +116,7 @@ describe('useMagnetFlow', () => {
           path: 'C:\\Users\\test\\Downloads\\movie.mkv',
           length: '1000',
           completedLength: '0',
-          selected: 'true',
+          selected: true,
           uris: [],
         },
       ]
@@ -131,7 +131,7 @@ describe('useMagnetFlow', () => {
           path: 'C:\\Users\\test/Downloads/movie.mkv',
           length: '1000',
           completedLength: '0',
-          selected: 'true',
+          selected: true,
           uris: [],
         },
       ]
@@ -199,7 +199,7 @@ describe('useMagnetFlow', () => {
               path: '/downloads/Movie/video.mkv',
               length: '1000',
               completedLength: '0',
-              selected: 'true',
+              selected: true,
               uris: [],
             },
           ],

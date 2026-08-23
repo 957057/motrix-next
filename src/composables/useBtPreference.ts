@@ -9,7 +9,7 @@
  * Tracker source URL validation (isValidTrackerSourceUrl) is co-located
  * here since it is only used in the BT tab's tracker source management.
  */
-import type { AppConfig, BtEncryptionMode } from '@shared/types'
+import type { AppConfig, BtBlocklistScope, BtEncryptionMode, BtTransportMode } from '@shared/types'
 import { DEFAULT_APP_CONFIG as D } from '@shared/constants'
 import { PORT_RECOVERY_RANGE_END, PORT_RECOVERY_RANGE_START } from '@shared/constants'
 import { convertCommaToLine, convertLineToComma, generateRandomInt } from '@shared/utils'
@@ -39,6 +39,14 @@ export interface BtForm {
   [key: string]: unknown
   btAutoDownloadContent: boolean
   btEncryption: BtEncryptionMode
+  btTransport: BtTransportMode
+  btMaxConnections: number
+  btMaxUploads: number
+  btMaxUploadsPerTorrent: number
+  btFirstLastPieceFirst: boolean
+  btRateLimitOverhead: boolean
+  btAnonymousMode: boolean
+  btBlocklistScope: BtBlocklistScope
   btDhtEnabled: boolean
   btPeerExchangeEnabled: boolean
   btLocalPeerDiscoveryEnabled: boolean
@@ -74,6 +82,14 @@ export function buildBtForm(config: AppConfig): BtForm {
   return {
     btAutoDownloadContent,
     btEncryption: config.btEncryption ?? D.btEncryption,
+    btTransport: config.btTransport ?? D.btTransport,
+    btMaxConnections: config.btMaxConnections ?? D.btMaxConnections,
+    btMaxUploads: config.btMaxUploads ?? D.btMaxUploads,
+    btMaxUploadsPerTorrent: config.btMaxUploadsPerTorrent ?? D.btMaxUploadsPerTorrent,
+    btFirstLastPieceFirst: config.btFirstLastPieceFirst ?? D.btFirstLastPieceFirst,
+    btRateLimitOverhead: config.btRateLimitOverhead ?? D.btRateLimitOverhead,
+    btAnonymousMode: config.btAnonymousMode ?? D.btAnonymousMode,
+    btBlocklistScope: config.btBlocklistScope ?? D.btBlocklistScope,
     btDhtEnabled: config.btDhtEnabled ?? D.btDhtEnabled,
     btPeerExchangeEnabled: config.btPeerExchangeEnabled ?? D.btPeerExchangeEnabled,
     btLocalPeerDiscoveryEnabled: config.btLocalPeerDiscoveryEnabled ?? D.btLocalPeerDiscoveryEnabled,
@@ -120,6 +136,14 @@ export function buildBtSystemConfig(f: BtForm): Record<string, string> {
     'bt-external-ip': f.btExternalIp.trim(),
     'bt-external-port': String(f.btExternalPort),
     'bt-encryption': f.btEncryption,
+    'bt-transport': f.btTransport,
+    'bt-max-connections': String(f.btMaxConnections),
+    'bt-max-uploads': String(f.btMaxUploads),
+    'bt-max-uploads-per-torrent': String(f.btMaxUploadsPerTorrent),
+    'bt-first-last-piece-first': String(!!f.btFirstLastPieceFirst),
+    'bt-rate-limit-overhead': String(!!f.btRateLimitOverhead),
+    'bt-anonymous-mode': String(!!f.btAnonymousMode),
+    'bt-blocklist-scope': f.btBlocklistScope,
     'enable-dht': String(!!f.btDhtEnabled),
     'enable-peer-exchange': String(!!f.btPeerExchangeEnabled),
     'bt-enable-lpd': String(!!f.btLocalPeerDiscoveryEnabled),

@@ -164,7 +164,7 @@ describe('removeTask', () => {
     const task = makeTask({
       gid: 'seed-1',
       status: TASK_STATUS.ACTIVE,
-      seeder: 'true',
+      seeder: true,
       infoHash: 'abcdef1234567890',
       bittorrent: { info: { name: 'seed' } },
     })
@@ -209,9 +209,7 @@ describe('cancelMagnetSelectionDownload', () => {
       dir: '/downloads',
       infoHash: 'abcdef1234567890abcdef1234567890abcdef12',
       bittorrent: { info: { name: 'Movie' }, state: 'awaitingFileSelection' },
-      files: [
-        { index: '1', path: '/downloads/Movie/video.mkv', length: '1024', completedLength: '0', selected: 'true' },
-      ],
+      files: [{ index: '1', path: '/downloads/Movie/video.mkv', length: '1024', completedLength: '0', selected: true }],
     })
     ;(api.fetchTaskItem as Mock).mockResolvedValueOnce(childTask)
     ;(api.removeTaskRecord as Mock)
@@ -383,7 +381,7 @@ describe('pauseAllTask', () => {
         gid: 'seed-1',
         status: TASK_STATUS.ACTIVE,
         bittorrent: { info: { name: 'movie.mkv' } },
-        seeder: 'true',
+        seeder: true,
       }),
     ] as Aria2Task[]
     const ops = createTaskOperations(deps)
@@ -401,7 +399,7 @@ describe('pauseAllTask', () => {
         gid: 'seed-only',
         status: TASK_STATUS.ACTIVE,
         bittorrent: { info: { name: 'iso.torrent' } },
-        seeder: 'true',
+        seeder: true,
       }),
     ] as Aria2Task[]
     const ops = createTaskOperations(deps)
@@ -477,7 +475,7 @@ describe('toggleTask', () => {
     const task = makeTask({
       status: TASK_STATUS.ACTIVE,
       bittorrent: { info: { name: 'movie.mkv' } },
-      seeder: 'true',
+      seeder: true,
     })
     const result = ops.toggleTask(task)
     expect(result).toBeUndefined()
@@ -607,7 +605,7 @@ describe('stopSharing', () => {
           path: '/downloads/movie.mkv',
           length: '1000',
           completedLength: '1000',
-          selected: 'true',
+          selected: true,
           uris: [],
         },
       ],
@@ -646,7 +644,7 @@ describe('stopSharing', () => {
       gid: 'ed2k-share',
       status: TASK_STATUS.ACTIVE,
       ed2k: { name: 'linux.iso', hash: 'ed2khash' },
-      seeder: 'true',
+      seeder: true,
     } as Partial<Aria2Task>)
 
     await ops.stopSharing(task)
@@ -712,13 +710,13 @@ describe('stopAllSharing', () => {
         gid: 'bt-share',
         status: TASK_STATUS.ACTIVE,
         bittorrent: { info: { name: 'file.torrent' } },
-        seeder: 'true',
+        seeder: true,
       } as Partial<Aria2Task>),
       makeTask({
         gid: 'ed2k-share',
         status: TASK_STATUS.ACTIVE,
         ed2k: { name: 'file.bin', hash: 'ed2khash' },
-        seeder: 'true',
+        seeder: true,
       } as Partial<Aria2Task>),
       makeTask({ gid: 'normal', status: TASK_STATUS.ACTIVE }),
     ]
@@ -914,7 +912,7 @@ describe('hasActiveTasks', () => {
       makeTask({
         status: TASK_STATUS.ACTIVE,
         bittorrent: { info: { name: 'seed' } },
-        seeder: 'true',
+        seeder: true,
       }),
     ])
     const deps = createDeps(api)

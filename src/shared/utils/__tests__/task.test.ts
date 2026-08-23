@@ -49,7 +49,7 @@ function createMockFile(overrides: Partial<Aria2File> = {}): Aria2File {
     path: '/tmp/test.txt',
     length: '1000',
     completedLength: '500',
-    selected: 'true',
+    selected: true,
     uris: [],
     ...overrides,
   }
@@ -420,7 +420,7 @@ describe('task sharing state', () => {
   it('identifies BT seeding without treating the helper as BT-only', () => {
     const task = createMockTask({
       bittorrent: { info: { name: 'test' } },
-      seeder: 'true',
+      seeder: true,
     })
     expect(getTaskSharingKind(task)).toBe('bt')
     expect(checkTaskIsSharing(task)).toBe(true)
@@ -429,7 +429,7 @@ describe('task sharing state', () => {
   it('identifies ED2K sharing from the common seeder flag', () => {
     const task = createMockTask({
       ed2k: { name: 'sample.bin', hash: 'abcdef' },
-      seeder: 'true',
+      seeder: true,
     })
 
     expect(getTaskSharingKind(task)).toBe('ed2k')
@@ -444,7 +444,7 @@ describe('task sharing state', () => {
   it('returns false when seeder is false string', () => {
     const task = createMockTask({
       bittorrent: { info: { name: 'test' } },
-      seeder: 'false',
+      seeder: false,
     })
     expect(getTaskSharingKind(task)).toBeNull()
   })
@@ -453,7 +453,7 @@ describe('task sharing state', () => {
     const task = createMockTask({
       status: 'paused',
       bittorrent: { info: { name: 'test' } },
-      seeder: 'true',
+      seeder: true,
     })
     expect(getTaskSharingKind(task)).toBeNull()
   })
@@ -578,7 +578,7 @@ describe('resolveOpenTarget', () => {
           path: '/downloads/MyTorrent/file1.mkv',
           length: '1000',
           completedLength: '1000',
-          selected: 'true',
+          selected: true,
           uris: [],
         },
         {
@@ -586,7 +586,7 @@ describe('resolveOpenTarget', () => {
           path: '/downloads/MyTorrent/file2.srt',
           length: '500',
           completedLength: '500',
-          selected: 'true',
+          selected: true,
           uris: [],
         },
       ],
@@ -604,7 +604,7 @@ describe('resolveOpenTarget', () => {
           path: '/downloads/movie.mp4',
           length: '1000',
           completedLength: '1000',
-          selected: 'true',
+          selected: true,
           uris: [],
         },
       ],
@@ -621,7 +621,7 @@ describe('resolveOpenTarget', () => {
           path: '/downloads/file.zip',
           length: '1000',
           completedLength: '1000',
-          selected: 'true',
+          selected: true,
           uris: [{ uri: 'http://example.com/file.zip', status: 'used' }],
         },
       ],
@@ -638,7 +638,7 @@ describe('resolveOpenTarget', () => {
           path: '/downloads/unwanted.txt',
           length: '100',
           completedLength: '100',
-          selected: 'false',
+          selected: false,
           uris: [],
         },
         {
@@ -646,7 +646,7 @@ describe('resolveOpenTarget', () => {
           path: '/downloads/wanted.mkv',
           length: '1000',
           completedLength: '1000',
-          selected: 'true',
+          selected: true,
           uris: [],
         },
       ],
@@ -665,7 +665,7 @@ describe('resolveOpenTarget', () => {
   it('falls back to task.dir when no file path available', async () => {
     const task = createMockTask({
       dir: '/downloads',
-      files: [{ index: '1', path: '', length: '0', completedLength: '0', selected: 'true', uris: [] }],
+      files: [{ index: '1', path: '', length: '0', completedLength: '0', selected: true, uris: [] }],
     })
     expect(await resolveOpenTarget(task)).toBe('/downloads')
   })

@@ -33,7 +33,7 @@ function makeTask(overrides: Partial<Aria2Task> = {}): Aria2Task {
         path: '/downloads/file.zip',
         length: '1024',
         completedLength: '1024',
-        selected: 'true',
+        selected: true,
         uris: [],
       },
     ],
@@ -95,8 +95,8 @@ describe('resolveTaskFilePath', () => {
   it('prefers selected file over first file', () => {
     const task = makeTask({
       files: [
-        { index: '1', path: '/downloads/a.txt', length: '100', completedLength: '100', selected: 'false', uris: [] },
-        { index: '2', path: '/downloads/b.txt', length: '200', completedLength: '200', selected: 'true', uris: [] },
+        { index: '1', path: '/downloads/a.txt', length: '100', completedLength: '100', selected: false, uris: [] },
+        { index: '2', path: '/downloads/b.txt', length: '200', completedLength: '200', selected: true, uris: [] },
       ],
     })
     expect(resolveTaskFilePath(task)).toBe('/downloads/b.txt')
@@ -123,7 +123,7 @@ describe('resolveTaskFilePath', () => {
           path: '/downloads/movie.mp4',
           length: '5000',
           completedLength: '5000',
-          selected: 'true',
+          selected: true,
           uris: [],
         },
       ],
@@ -141,7 +141,7 @@ describe('resolveTaskFilePath', () => {
           path: 'C:/Users/test/Downloads/file.7z',
           length: '1024',
           completedLength: '1024',
-          selected: 'true',
+          selected: true,
           uris: [],
         },
       ],

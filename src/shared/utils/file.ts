@@ -12,12 +12,12 @@ import {
 
 /** Returns the selected file indices as a comma-separated string for aria2 select-file option. */
 export const getFileSelection = (files: Aria2File[] = []): string => {
-  const selectedFiles = files.filter((file) => file.selected === 'true')
+  const selectedFiles = files.filter((file) => file.selected)
   if (files.length === 0 || selectedFiles.length === 0) return NONE_SELECTED_FILES
   if (files.length === selectedFiles.length) return SELECTED_ALL_FILES
   const indexArr: number[] = []
   files.forEach((file, index) => {
-    if (file.selected === 'true') {
+    if (file.selected) {
       indexArr.push(index + 1) // aria2 uses 1-based file indices
     }
   })

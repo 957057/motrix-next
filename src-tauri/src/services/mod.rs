@@ -36,24 +36,6 @@ use port_guard::DEFAULT_RPC_PORT;
 use tauri::Manager;
 use tauri_plugin_store::StoreExt;
 
-const REQUIRED_ENGINE_METHODS: [&str; 2] = ["aria2.getBtSessionStatus", "aria2.getBtTrackers"];
-
-fn validate_engine_methods(methods: &[String]) -> Result<(), AppError> {
-    let missing = REQUIRED_ENGINE_METHODS
-        .iter()
-        .filter(|required| !methods.iter().any(|method| method == *required))
-        .copied()
-        .collect::<Vec<_>>();
-    if missing.is_empty() {
-        Ok(())
-    } else {
-        Err(AppError::Engine(format!(
-            "Bundled Aria2 Next does not satisfy the required RPC contract: {}",
-            missing.join(", ")
-        )))
-    }
-}
-
 /// Reads the `system.json` store and returns its key-value pairs as a
 /// flat `Map<String, String>`, filtered to only hot-reloadable keys.
 ///
@@ -105,7 +87,6 @@ pub async fn on_engine_ready(app: &tauri::AppHandle) -> Result<(), AppError> {
     let (port, secret) = read_engine_credentials(app)?;
     if let Some(aria2) = app.try_state::<Aria2State>() {
         aria2.0.update_credentials(port, secret).await;
-        validate_engine_methods(&aria2.0.list_methods().await?)?;
     }
 
     // 2. Refresh RuntimeConfig
@@ -578,20 +559,5 @@ mod tests {
         assert!(!keys.contains("enable-peer-exchange"));
         assert!(!keys.contains("bt-enable-lpd"));
         assert!(!keys.contains("bt-max-peers"));
-    }
-
-    #[test]
-    fn engine_contract_accepts_the_required_native_bt_methods() {
-        let methods = REQUIRED_ENGINE_METHODS
-            .iter()
-            .map(ToString::to_string)
-            .collect::<Vec<_>>();
-        assert!(validate_engine_methods(&methods).is_ok());
-    }
-
-    #[test]
-    fn engine_contract_rejects_legacy_bt_rpc_surfaces() {
-        let methods = vec!["aria2.getBtEndpoint".to_string()];
-        assert!(validate_engine_methods(&methods).is_err());
     }
 }

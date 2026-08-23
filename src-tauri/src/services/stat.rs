@@ -746,7 +746,8 @@ mod tests {
                 path: "/tmp/test.zip".to_string(),
                 length: "1024".to_string(),
                 completed_length: "1024".to_string(),
-                selected: "true".to_string(),
+                selected: true,
+                priority: None,
                 uris: vec![],
             }],
             ..Aria2Task::default()

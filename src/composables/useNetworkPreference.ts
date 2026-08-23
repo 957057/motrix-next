@@ -9,8 +9,14 @@
  */
 import type { AppConfig, PortConflictRecoveryConfig, UserAgentProfile, UserAgentRule } from '@shared/types'
 import { PROXY_SCOPE_OPTIONS, DEFAULT_APP_CONFIG as D } from '@shared/constants'
-import { isValidAria2ProxyUrl, UNSUPPORTED_PROXY_SCHEME_RE } from '@shared/utils/proxy'
+import {
+  hasProxyScope,
+  isValidAria2ProxyUrl,
+  isValidBtProxyUrl,
+  UNSUPPORTED_PROXY_SCHEME_RE,
+} from '@shared/utils/proxy'
 import { buildDownloadProxyOptions, normalizeProxyMode, type EngineProxyMode } from '@shared/utils/proxy'
+import { PROXY_SCOPES } from '@shared/constants'
 
 export { isValidAria2ProxyUrl } from '@shared/utils/proxy'
 
@@ -134,10 +140,15 @@ export function validateNetworkForm(f: NetworkForm): string | null {
     return 'preferences.port-conflict-recovery-invalid-range'
   }
   if (f.proxy.mode === 'manual' && f.proxy.server) {
-    if (!isValidAria2ProxyUrl(f.proxy.server)) {
+    const regularDownloads = hasProxyScope(f.proxy, PROXY_SCOPES.DOWNLOAD)
+    const bittorrent = hasProxyScope(f.proxy, PROXY_SCOPES.BITTORRENT)
+    if ((!bittorrent || regularDownloads) && !isValidAria2ProxyUrl(f.proxy.server)) {
       return UNSUPPORTED_PROXY_SCHEME_RE.test(f.proxy.server.trim())
         ? 'preferences.proxy-unsupported-protocol'
         : 'preferences.invalid-proxy-url'
+    }
+    if (bittorrent && !isValidBtProxyUrl(f.proxy.server)) {
+      return 'preferences.bt-proxy-unsupported-protocol'
     }
   }
   return null

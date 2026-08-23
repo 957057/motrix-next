@@ -82,14 +82,9 @@ impl Aria2Client {
         &self,
         method: &str,
         extra_params: Vec<serde_json::Value>,
-        authenticate: bool,
     ) -> Result<T, AppError> {
         let port = *self.port.read().await;
-        let params = if authenticate {
-            self.build_params(extra_params).await
-        } else {
-            extra_params
-        };
+        let params = self.build_params(extra_params).await;
         let id = self.request_id.fetch_add(1, Ordering::Relaxed);
 
         let req = JsonRpcRequest {
@@ -130,7 +125,7 @@ impl Aria2Client {
         method: &str,
         extra_params: Vec<serde_json::Value>,
     ) -> Result<T, AppError> {
-        self.call_rpc(&format!("aria2.{method}"), extra_params, true)
+        self.call_rpc(&format!("aria2.{method}"), extra_params)
             .await
     }
 
@@ -143,10 +138,6 @@ impl Aria2Client {
 
     pub async fn shutdown(&self) -> Result<String, AppError> {
         self.call("shutdown", vec![]).await
-    }
-
-    pub async fn list_methods(&self) -> Result<Vec<String>, AppError> {
-        self.call_rpc("system.listMethods", vec![], false).await
     }
 
     /// Returns global download/upload statistics.
@@ -249,6 +240,43 @@ impl Aria2Client {
 
     pub async fn get_bt_trackers(&self, gid: &str) -> Result<Vec<Aria2BtTracker>, AppError> {
         self.call("getBtTrackers", vec![gid.into()]).await
+    }
+
+    pub async fn force_bt_recheck(&self, gid: &str) -> Result<String, AppError> {
+        self.call("forceBtRecheck", vec![gid.into()]).await
+    }
+
+    pub async fn replace_bt_trackers(
+        &self,
+        gid: &str,
+        trackers: Vec<Aria2BtTrackerConfig>,
+    ) -> Result<String, AppError> {
+        self.call(
+            "replaceBtTrackers",
+            vec![gid.into(), serde_json::json!(trackers)],
+        )
+        .await
+    }
+
+    pub async fn replace_bt_web_seeds(
+        &self,
+        gid: &str,
+        web_seeds: Vec<String>,
+    ) -> Result<String, AppError> {
+        self.call(
+            "replaceBtWebSeeds",
+            vec![gid.into(), serde_json::json!(web_seeds)],
+        )
+        .await
+    }
+
+    pub async fn add_bt_peers(
+        &self,
+        gid: &str,
+        peers: Vec<String>,
+    ) -> Result<Aria2BtPeerAddResult, AppError> {
+        self.call("addBtPeers", vec![gid.into(), serde_json::json!(peers)])
+            .await
     }
 
     /// Adds a URI-based download.

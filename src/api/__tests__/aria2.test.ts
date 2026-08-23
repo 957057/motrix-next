@@ -54,6 +54,10 @@ import {
   getOption,
   changeOption,
   getFiles,
+  forceBtRecheck,
+  replaceBtTrackers,
+  replaceBtWebSeeds,
+  addBtPeers,
   fetchTaskList,
   fetchTaskItem,
   fetchTaskItemWithPeers,
@@ -154,7 +158,7 @@ describe('aria2 API (invoke transport)', () => {
           path: '/downloads/movie.mkv',
           length: '1500000000',
           'completed-length': '0',
-          selected: 'true',
+          selected: true,
           uris: [{ uri: 'magnet:?xt=urn:btih:abc', status: 'used' }],
         },
         {
@@ -162,7 +166,7 @@ describe('aria2 API (invoke transport)', () => {
           path: '/downloads/subtitle.srt',
           length: '50000',
           'completed-length': '0',
-          selected: 'true',
+          selected: true,
           uris: [],
         },
       ]
@@ -172,6 +176,28 @@ describe('aria2 API (invoke transport)', () => {
       expect(result).toHaveLength(2)
       expect(result[0].path).toBe('/downloads/movie.mkv')
       expect(result[0].completedLength).toBe('0')
+    })
+
+    it('delegates native BitTorrent task controls', async () => {
+      mockInvoke.mockResolvedValue('OK')
+      await forceBtRecheck({ gid: 'bt1' })
+      await replaceBtTrackers({ gid: 'bt1', trackers: [{ url: 'udp://tracker.example:6969', tier: 0 }] })
+      await replaceBtWebSeeds({ gid: 'bt1', webSeeds: ['https://seed.example/file'] })
+      await addBtPeers({ gid: 'bt1', peers: ['192.0.2.1:6881'] })
+
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_force_bt_recheck', { gid: 'bt1' })
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_replace_bt_trackers', {
+        gid: 'bt1',
+        trackers: [{ url: 'udp://tracker.example:6969', tier: 0 }],
+      })
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_replace_bt_web_seeds', {
+        gid: 'bt1',
+        webSeeds: ['https://seed.example/file'],
+      })
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_add_bt_peers', {
+        gid: 'bt1',
+        peers: ['192.0.2.1:6881'],
+      })
     })
   })
 

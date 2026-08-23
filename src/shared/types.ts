@@ -19,8 +19,8 @@ export interface Aria2File {
   path: string
   length: string
   completedLength: string
-  /** Whether the file is selected for download ("true" or "false" as string). */
-  selected: string
+  selected: boolean
+  priority?: BtFilePriority
   uris: Aria2FileUri[]
 }
 
@@ -45,7 +45,7 @@ export interface Aria2BtInfo {
   creationDate?: number
   comment?: string
   mode?: string
-  privateTorrent?: string
+  privateTorrent?: boolean
   state?: Aria2BtState
   infoHashV1?: string
   infoHashV2?: string
@@ -63,6 +63,9 @@ export interface Aria2BtInfo {
   seedingTime?: string
   connectCandidates?: string
   uploadingPeers?: string
+  webSeeds?: string[]
+  numComplete?: string
+  numIncomplete?: string
 }
 
 /** ED2K metadata attached to a task when the download is an ED2K file link. */
@@ -130,18 +133,18 @@ export interface Aria2Peer {
   ip: string
   port: string
   bitfield: string
-  amChoking: string
-  peerChoking: string
+  amChoking: boolean
+  peerChoking: boolean
   downloadSpeed: string
   uploadSpeed: string
-  seeder: string
+  seeder: boolean
   state: 'connecting' | 'handshaking' | 'connected'
   transport: 'tcp' | 'utp'
   encryption: 'plain' | 'encryptedHandshake' | 'rc4' | 'tls'
   sources: string[]
   progress: string
   flags: string
-  incoming: string
+  incoming: boolean
   downloaded: string
   uploaded: string
   completedLength: string
@@ -179,6 +182,16 @@ export interface Aria2BtTracker {
   endpoints: Aria2BtTrackerEndpoint[]
 }
 
+export interface Aria2BtTrackerConfig {
+  url: string
+  tier: number
+}
+
+export interface Aria2BtPeerAddResult {
+  added: number
+  failed: number
+}
+
 /**
  * Complete aria2 task object returned by tellStatus, tellActive, tellWaiting, or tellStopped.
  * All numeric values are represented as strings per the aria2 JSON-RPC protocol.
@@ -198,7 +211,7 @@ export interface Aria2Task {
   ed2k?: Aria2Ed2kInfo
   infoHash?: string
   numSeeders?: string
-  seeder?: string
+  seeder?: boolean
   bitfield?: string
   errorCode?: string
   errorMessage?: string
@@ -295,6 +308,9 @@ export interface PortConflictRecoveryConfig {
 }
 
 export type BtEncryptionMode = 'preferred' | 'required' | 'disabled'
+export type BtTransportMode = 'tcp' | 'utp' | 'both'
+export type BtBlocklistScope = 'peers' | 'peers-and-trackers' | 'all'
+export type BtFilePriority = 'off' | 'normal' | 'high' | 'top'
 
 /** A file category rule mapping extensions to a download directory. */
 export type FileCategoryUrlPatternMode = 'wildcard' | 'regex'
@@ -379,6 +395,14 @@ export interface AppConfig {
   shareTime: number
   shareRatio: number
   btMaxPeers: number
+  btMaxConnections: number
+  btMaxUploads: number
+  btMaxUploadsPerTorrent: number
+  btTransport: BtTransportMode
+  btFirstLastPieceFirst: boolean
+  btRateLimitOverhead: boolean
+  btAnonymousMode: boolean
+  btBlocklistScope: BtBlocklistScope
   btDhtEnabled: boolean
   btPeerExchangeEnabled: boolean
   btLocalPeerDiscoveryEnabled: boolean
@@ -624,8 +648,7 @@ export interface HistoryFileSnapshot {
   path: string
   /** File size as string (aria2 convention). */
   length?: string
-  /** Whether the file was selected for download ("true"/"false"). */
-  selected?: string
+  selected?: boolean
   /** All download URIs for this file — preserving mirrors, not just the first. */
   uris: string[]
 }

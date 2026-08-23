@@ -79,6 +79,16 @@ const encryptionOptions = computed(() => [
   { label: t('preferences.bt-encryption-required'), value: 'required' },
   { label: t('preferences.bt-encryption-disabled'), value: 'disabled' },
 ])
+const transportOptions = computed(() => [
+  { label: t('preferences.bt-transport-both'), value: 'both' },
+  { label: 'TCP', value: 'tcp' },
+  { label: 'uTP', value: 'utp' },
+])
+const blocklistScopeOptions = computed(() => [
+  { label: t('preferences.bt-blocklist-scope-peers'), value: 'peers' },
+  { label: t('preferences.bt-blocklist-scope-trackers'), value: 'peers-and-trackers' },
+  { label: t('preferences.bt-blocklist-scope-all'), value: 'all' },
+])
 const blocklistStatusText = computed(() => {
   const status = blocklistStatus.value
   if (!status) return t('preferences.bt-peer-blocklist-unavailable')
@@ -424,11 +434,29 @@ onMounted(() => {
         <NFormItem :label="t('preferences.bt-encryption')">
           <NSelect v-model:value="form.btEncryption" :options="encryptionOptions" class="pref-control-auto" />
         </NFormItem>
-        <NFormItem :label="t('preferences.bt-max-peers')">
-          <NInputNumber v-model:value="form.btMaxPeers" :min="0" :max="ENGINE_MAX_BT_MAX_PEERS" class="pref-number" />
+        <NFormItem :label="t('preferences.bt-transport')">
+          <NSelect v-model:value="form.btTransport" :options="transportOptions" class="pref-control-auto" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-first-last-piece-first')">
+          <NSwitch v-model:value="form.btFirstLastPieceFirst" />
         </NFormItem>
 
         <NDivider title-placement="left">{{ t('preferences.bt-connection-section') }}</NDivider>
+        <NFormItem :label="t('preferences.bt-max-peers')">
+          <NInputNumber v-model:value="form.btMaxPeers" :min="0" :max="ENGINE_MAX_BT_MAX_PEERS" class="pref-number" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-max-connections')">
+          <NInputNumber v-model:value="form.btMaxConnections" :min="2" class="pref-number" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-max-uploads')">
+          <NInputNumber v-model:value="form.btMaxUploads" :min="1" class="pref-number" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-max-uploads-per-torrent')">
+          <NInputNumber v-model:value="form.btMaxUploadsPerTorrent" :min="1" class="pref-number" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-rate-limit-overhead')">
+          <NSwitch v-model:value="form.btRateLimitOverhead" />
+        </NFormItem>
         <NFormItem :label="t('preferences.bt-port')">
           <NInputGroup>
             <NInputNumber v-model:value="form.listenPort" :min="1024" :max="65535" class="pref-port" />
@@ -473,6 +501,17 @@ onMounted(() => {
         </NFormItem>
         <NFormItem :label="t('preferences.bt-dht')">
           <NSwitch v-model:value="form.btDhtEnabled" />
+        </NFormItem>
+
+        <NDivider title-placement="left">{{ t('preferences.bt-privacy-section') }}</NDivider>
+        <NFormItem>
+          <template #label>
+            <PreferenceHintLabel
+              :label="t('preferences.bt-anonymous-mode')"
+              :hint="t('preferences.bt-anonymous-mode-hint')"
+            />
+          </template>
+          <NSwitch v-model:value="form.btAnonymousMode" />
         </NFormItem>
 
         <NDivider title-placement="left">{{ t('preferences.p2p-sharing-section') }}</NDivider>
@@ -520,6 +559,13 @@ onMounted(() => {
                 v-model:value="form.btPeerBlocklistUrl"
                 :placeholder="t('preferences.bt-peer-blocklist-url-placeholder')"
                 clearable
+              />
+            </NFormItem>
+            <NFormItem :label="t('preferences.bt-blocklist-scope')">
+              <NSelect
+                v-model:value="form.btBlocklistScope"
+                :options="blocklistScopeOptions"
+                class="pref-control-auto"
               />
             </NFormItem>
             <NFormItem label=" ">

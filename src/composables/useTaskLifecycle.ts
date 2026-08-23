@@ -147,7 +147,7 @@ export function historyRecordToTask(record: HistoryRecord): Aria2Task {
   const meta = parseHistoryMeta(record)
 
   // Build files array: prefer multi-file snapshot from meta.files,
-  // fall back to legacy single-file synthesis for old records.
+  // fall back to a single-file synthesis when no snapshot is available.
   let files: Aria2File[]
   if (meta.files && meta.files.length > 0) {
     // Full restoration from snapshot — preserves all paths, lengths, and mirror URIs.
@@ -156,15 +156,15 @@ export function historyRecordToTask(record: HistoryRecord): Aria2Task {
       path: f.path,
       length: f.length ?? '0',
       completedLength: record.status === 'complete' ? (f.length ?? '0') : '0',
-      selected: f.selected ?? 'true',
+      selected: f.selected ?? true,
       uris: f.uris.map((uri) => ({ uri, status: 'used' as const })),
     }))
   } else {
-    // Legacy single-file fallback — path is dir + separator + name.
+    // Single-file fallback — path is dir + separator + name.
     // dir may end with `\\` (Windows) or `/` (Unix); avoid double separators.
     const filePath = dir && record.name ? `${dir.replace(/[\\/]+$/, '')}/${record.name}` : record.name
     const uris = record.uri ? [{ uri: record.uri, status: 'used' as const }] : []
-    files = [{ index: '1', path: filePath, length: totalLength, completedLength, selected: 'true', uris }]
+    files = [{ index: '1', path: filePath, length: totalLength, completedLength, selected: true, uris }]
   }
 
   const task: Aria2Task = {

@@ -112,7 +112,7 @@ export type TaskSharingKind = 'bt' | 'ed2k'
 
 /** Returns the protocol-specific shared-upload state, if the task is upload-only and active. */
 export const getTaskSharingKind = (task: Aria2Task): TaskSharingKind | null => {
-  if (task.status !== 'active' || task.seeder !== 'true') return null
+  if (task.status !== 'active' || task.seeder !== true) return null
   if (task.bittorrent) return 'bt'
   if (task.ed2k) return 'ed2k'
   return null

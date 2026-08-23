@@ -21,7 +21,9 @@ pub struct Aria2File {
     pub path: String,
     pub length: String,
     pub completed_length: String,
-    pub selected: String,
+    pub selected: bool,
+    #[serde(default)]
+    pub priority: Option<String>,
     #[serde(default)]
     pub uris: Vec<Aria2FileUri>,
 }
@@ -42,7 +44,7 @@ pub struct Aria2BtInfo {
     #[serde(default)]
     pub mode: Option<String>,
     #[serde(default, rename = "privateTorrent")]
-    pub private_torrent: Option<String>,
+    pub private_torrent: Option<bool>,
     #[serde(default)]
     pub state: Option<String>,
     #[serde(default, rename = "infoHashV1")]
@@ -77,28 +79,18 @@ pub struct Aria2BtInfo {
     pub connect_candidates: Option<String>,
     #[serde(default, rename = "uploadingPeers")]
     pub uploading_peers: Option<String>,
+    #[serde(default, rename = "webSeeds")]
+    pub web_seeds: Vec<String>,
+    #[serde(default, rename = "numComplete")]
+    pub num_complete: Option<String>,
+    #[serde(default, rename = "numIncomplete")]
+    pub num_incomplete: Option<String>,
 }
 
 /// Name sub-object within `Aria2BtInfo.info`.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Aria2BtName {
     pub name: String,
-}
-
-fn bool_from_json_bool_or_string<'de, D>(deserializer: D) -> Result<Option<bool>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let value = Option::<serde_json::Value>::deserialize(deserializer)?;
-    Ok(match value {
-        Some(serde_json::Value::Bool(value)) => Some(value),
-        Some(serde_json::Value::String(value)) => match value.as_str() {
-            "true" => Some(true),
-            "false" => Some(false),
-            _ => None,
-        },
-        _ => None,
-    })
 }
 
 /// ED2K metadata attached to a task when the download is an ED2K file link or search request.
@@ -139,13 +131,13 @@ pub struct Aria2Ed2kInfo {
     pub kad_node_count: Option<String>,
     #[serde(default)]
     pub kad_router_count: Option<String>,
-    #[serde(default, deserialize_with = "bool_from_json_bool_or_string")]
+    #[serde(default)]
     pub kad_firewalled: Option<bool>,
     #[serde(default)]
     pub kad_observed_address_count: Option<String>,
-    #[serde(default, deserialize_with = "bool_from_json_bool_or_string")]
+    #[serde(default)]
     pub search_active: Option<bool>,
-    #[serde(default, deserialize_with = "bool_from_json_bool_or_string")]
+    #[serde(default)]
     pub search_more_results: Option<bool>,
     #[serde(default)]
     pub search_result_count: Option<String>,
@@ -184,7 +176,7 @@ pub struct Aria2Task {
     #[serde(default)]
     pub num_seeders: Option<String>,
     #[serde(default)]
-    pub seeder: Option<String>,
+    pub seeder: Option<bool>,
     #[serde(default)]
     pub bitfield: Option<String>,
     #[serde(default)]
@@ -244,11 +236,47 @@ pub struct Aria2BtSessionStatus {
     pub payload_uploaded: String,
     pub tracker_downloaded: String,
     pub tracker_uploaded: String,
-    pub dht_state_healthy: String,
+    #[serde(default)]
+    pub ip_overhead_downloaded: String,
+    #[serde(default)]
+    pub ip_overhead_uploaded: String,
+    #[serde(default)]
+    pub dht_downloaded: String,
+    #[serde(default)]
+    pub dht_uploaded: String,
+    #[serde(default)]
+    pub disk_blocks_in_use: String,
+    #[serde(default)]
+    pub queued_disk_jobs: String,
+    #[serde(default)]
+    pub average_disk_job_time: String,
+    #[serde(default)]
+    pub disk_request_latency: String,
+    #[serde(default)]
+    pub disk_read_waiting_peers: String,
+    #[serde(default)]
+    pub disk_write_waiting_peers: String,
+    #[serde(default)]
+    pub last_performance_warning: Option<String>,
+    #[serde(default)]
+    pub performance_warnings: std::collections::HashMap<String, String>,
+    pub dht_state_healthy: bool,
     #[serde(default)]
     pub listen_endpoints: Vec<String>,
     #[serde(default)]
     pub port_mapping_error: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Aria2BtTrackerConfig {
+    pub url: String,
+    pub tier: u8,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Aria2BtPeerAddResult {
+    pub added: u64,
+    pub failed: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -367,7 +395,7 @@ mod tests {
                 "handshakingPeers": "1"
             },
             "infoHash": "abc123def456",
-            "seeder": "true",
+            "seeder": true,
             "numSeeders": "5"
         });
         let task: Aria2Task = serde_json::from_value(json).expect("deserialize");
@@ -378,7 +406,7 @@ mod tests {
         assert_eq!(bt.info_hash_v2.as_deref(), Some("def456abc123"));
         assert_eq!(bt.num_peers.as_deref(), Some("7"));
         assert_eq!(task.info_hash.as_deref(), Some("abc123def456"));
-        assert_eq!(task.seeder.as_deref(), Some("true"));
+        assert_eq!(task.seeder, Some(true));
         assert_eq!(task.num_seeders.as_deref(), Some("5"));
     }
 
@@ -450,7 +478,7 @@ mod tests {
                     "path": "/Users/test/Downloads/aria2-next-ed2k-search-75c1fb5d8979819f",
                     "length": "0",
                     "completedLength": "0",
-                    "selected": "true",
+                    "selected": true,
                     "uris": []
                 }
             ],
@@ -537,11 +565,11 @@ mod tests {
             "payloadUploaded": "1024",
             "trackerDownloaded": "512",
             "trackerUploaded": "256",
-            "dhtStateHealthy": "true",
+            "dhtStateHealthy": true,
             "listenEndpoints": ["0.0.0.0:29120"]
         }))
         .expect("deserialize BT session status");
-        assert_eq!(status.dht_state_healthy, "true");
+        assert!(status.dht_state_healthy);
 
         let tracker: Aria2BtTracker = serde_json::from_value(serde_json::json!({
             "url": "udp://tracker.example:6969/announce",
@@ -585,7 +613,7 @@ mod tests {
             "path": "/tmp/file.zip",
             "length": "1000",
             "completedLength": "500",
-            "selected": "true",
+            "selected": true,
             "uris": [
                 { "uri": "http://example.com/file.zip", "status": "used" }
             ]

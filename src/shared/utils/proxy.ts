@@ -93,6 +93,17 @@ export function isValidAria2ProxyUrl(url: string): boolean {
   return false
 }
 
+export function isValidBtProxyUrl(url: string): boolean {
+  if (!url.trim()) return true
+  const normalized = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(url.trim()) ? url.trim() : `http://${url.trim()}`
+  try {
+    const parsed = new URL(normalized)
+    return ['http:', 'socks4:', 'socks5:'].includes(parsed.protocol) && !!parsed.hostname && !!parsed.port
+  } catch {
+    return false
+  }
+}
+
 // ── App-side scoped proxy resolution ────────────────────────────────
 
 export type AppProxyScope = (typeof PROXY_SCOPES)[keyof typeof PROXY_SCOPES]
@@ -130,6 +141,10 @@ function clearProxyOptions(): Aria2EngineOptions {
   }
 }
 
+function clearDownloadProxyOptions(): Aria2EngineOptions {
+  return { ...clearProxyOptions(), 'bt-proxy': '' }
+}
+
 function addProxyCredentials(options: Aria2EngineOptions, username?: string, password?: string): void {
   const cleanUsername = username?.trim() ?? ''
   const cleanPassword = password ?? ''
@@ -139,19 +154,24 @@ function addProxyCredentials(options: Aria2EngineOptions, username?: string, pas
 }
 
 export function buildDownloadProxyOptions(proxy: ProxyConfig): Aria2EngineOptions {
-  if (!hasDownloadScope(proxy)) return clearProxyOptions()
-
   const mode = normalizeProxyMode(proxy.mode)
-  if (mode !== 'manual') return clearProxyOptions()
+  if (mode !== 'manual') return clearDownloadProxyOptions()
 
   const server = proxy.server.trim()
-  if (!server) return clearProxyOptions()
+  if (!server) return clearDownloadProxyOptions()
 
-  const options: Aria2EngineOptions = {
-    'all-proxy': server,
+  const options: Aria2EngineOptions = {}
+
+  if (hasDownloadScope(proxy)) {
+    options['all-proxy'] = server
+    addProxyCredentials(options, proxy.username, proxy.password)
+    if (proxy.bypass?.trim()) options['no-proxy'] = proxy.bypass.trim()
   }
-  addProxyCredentials(options, proxy.username, proxy.password)
-  if (proxy.bypass?.trim()) options['no-proxy'] = proxy.bypass.trim()
+  if (hasProxyScope(proxy, PROXY_SCOPES.BITTORRENT)) {
+    options['bt-proxy'] = buildProxyUrlWithCredentials(proxy) ?? ''
+  }
+  if (!hasDownloadScope(proxy)) Object.assign(options, clearProxyOptions())
+  if (!hasProxyScope(proxy, PROXY_SCOPES.BITTORRENT)) options['bt-proxy'] = ''
   return options
 }
 

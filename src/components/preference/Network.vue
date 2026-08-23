@@ -275,7 +275,7 @@ onMounted(() => {
               <template #label>
                 <PreferenceHintLabel
                   :label="t('preferences.proxy-server')"
-                  :hint="t('preferences.proxy-http-only-hint')"
+                  :hint="t('preferences.proxy-protocol-hint')"
                 />
               </template>
               <NInputGroup>

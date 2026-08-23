@@ -269,6 +269,14 @@ export const DEFAULT_APP_CONFIG = {
 
   // ── BitTorrent (qBT/Transmission/Deluge conventions) ──────────
   btMaxPeers: ENGINE_DEFAULT_BT_MAX_PEERS,
+  btMaxConnections: 500,
+  btMaxUploads: 20,
+  btMaxUploadsPerTorrent: 4,
+  btTransport: 'both' as const,
+  btFirstLastPieceFirst: false,
+  btRateLimitOverhead: false,
+  btAnonymousMode: false,
+  btBlocklistScope: 'peers' as const,
   btDhtEnabled: true,
   btPeerExchangeEnabled: true, // improves peer discovery inside active swarms
   btLocalPeerDiscoveryEnabled: true,
@@ -343,7 +351,7 @@ export const DEFAULT_APP_CONFIG = {
     username: '',
     password: '',
     bypass: '',
-    scope: ['download', 'update-app', 'update-trackers'],
+    scope: ['download', 'bittorrent', 'update-app', 'update-trackers'],
   },
   clipboard: { enable: true, http: true, ftp: true, magnet: true, ed2k: true, thunder: true, btHash: true },
   autoSubmitFromExtension: true,
@@ -406,11 +414,17 @@ export const FILE_ALLOCATION_OPTIONS = ['none', 'trunc', 'prealloc', 'falloc'] a
 
 export const PROXY_SCOPES = {
   DOWNLOAD: 'download',
+  BITTORRENT: 'bittorrent',
   UPDATE_APP: 'update-app',
   UPDATE_TRACKERS: 'update-trackers',
 }
 
-export const PROXY_SCOPE_OPTIONS = [PROXY_SCOPES.DOWNLOAD, PROXY_SCOPES.UPDATE_APP, PROXY_SCOPES.UPDATE_TRACKERS]
+export const PROXY_SCOPE_OPTIONS = [
+  PROXY_SCOPES.DOWNLOAD,
+  PROXY_SCOPES.BITTORRENT,
+  PROXY_SCOPES.UPDATE_APP,
+  PROXY_SCOPES.UPDATE_TRACKERS,
+]
 
 export const NONE_SELECTED_FILES = 'none'
 export const SELECTED_ALL_FILES = 'all'

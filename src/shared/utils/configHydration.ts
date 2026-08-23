@@ -217,6 +217,14 @@ function normalizeScalarValues(config: Record<string, unknown>, repairs: string[
     DEFAULT_APP_CONFIG.btEncryption,
     repairs,
   )
+  repairEnum(config, 'btTransport', ['tcp', 'utp', 'both'] as const, DEFAULT_APP_CONFIG.btTransport, repairs)
+  repairEnum(
+    config,
+    'btBlocklistScope',
+    ['peers', 'peers-and-trackers', 'all'] as const,
+    DEFAULT_APP_CONFIG.btBlocklistScope,
+    repairs,
+  )
 
   config.rpcListenPort = normalizePort(config.rpcListenPort, DEFAULT_APP_CONFIG.rpcListenPort, 'rpcListenPort', repairs)
   config.extensionApiPort = normalizePort(
@@ -273,6 +281,30 @@ function normalizeScalarValues(config: Record<string, unknown>, repairs: string[
     repairs,
   )
   config.btMaxPeers = normalizePositiveNumber(config.btMaxPeers, DEFAULT_APP_CONFIG.btMaxPeers, 'btMaxPeers', repairs)
+  config.btMaxConnections = normalizeBoundedInteger(
+    config.btMaxConnections,
+    DEFAULT_APP_CONFIG.btMaxConnections,
+    2,
+    100000,
+    'btMaxConnections',
+    repairs,
+  )
+  config.btMaxUploads = normalizeBoundedInteger(
+    config.btMaxUploads,
+    DEFAULT_APP_CONFIG.btMaxUploads,
+    1,
+    100000,
+    'btMaxUploads',
+    repairs,
+  )
+  config.btMaxUploadsPerTorrent = normalizeBoundedInteger(
+    config.btMaxUploadsPerTorrent,
+    DEFAULT_APP_CONFIG.btMaxUploadsPerTorrent,
+    1,
+    100000,
+    'btMaxUploadsPerTorrent',
+    repairs,
+  )
   config.btTrackerSyncIntervalHours = normalizePositiveNumber(
     config.btTrackerSyncIntervalHours,
     DEFAULT_APP_CONFIG.btTrackerSyncIntervalHours,
