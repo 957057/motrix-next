@@ -33,6 +33,7 @@ export interface PeerDetailRow {
   host: string
   ip: string
   client: string
+  connection: string
   percent: string
   uploadSpeed: string
   downloadSpeed: string
@@ -75,8 +76,13 @@ export function buildPeerDetailRows(peers: Aria2Peer[] | undefined): PeerDetailR
     .map((peer) => ({
       host: `${peer.ip}:${peer.port}`,
       ip: peer.ip,
-      client: peerIdParser(peer.peerId),
-      percent: peer.bitfield ? bitfieldToPercent(peer.bitfield) + '%' : '-',
+      client: peer.peerClientName || peerIdParser(peer.peerId ?? ''),
+      connection: [peer.state, peer.transport, peer.encryption].filter(Boolean).join(' · '),
+      percent: peer.bitfield
+        ? bitfieldToPercent(peer.bitfield) + '%'
+        : peer.progress
+          ? `${Math.floor(Number(peer.progress) * 100)}%`
+          : '-',
       uploadSpeed: bytesToSize(peer.uploadSpeed) + '/s',
       downloadSpeed: bytesToSize(peer.downloadSpeed) + '/s',
       amChoking: peer.amChoking === 'true',

@@ -112,6 +112,16 @@ describe('buildBtHealthSummary', () => {
             downloadSpeed: '20',
             uploadSpeed: '0',
             seeder: 'false',
+            state: 'connected',
+            transport: 'tcp',
+            encryption: 'plain',
+            sources: ['tracker'],
+            progress: '0.500000',
+            flags: 'D',
+            incoming: 'false',
+            downloaded: '20',
+            uploaded: '0',
+            completedLength: '50',
           },
           {
             peerId: '-TR3000-abcdefghijkl',
@@ -123,6 +133,16 @@ describe('buildBtHealthSummary', () => {
             downloadSpeed: '0',
             uploadSpeed: '10',
             seeder: 'true',
+            state: 'connected',
+            transport: 'utp',
+            encryption: 'rc4',
+            sources: ['dht'],
+            progress: '1.000000',
+            flags: 'U',
+            incoming: 'true',
+            downloaded: '0',
+            uploaded: '10',
+            completedLength: '100',
           },
         ],
         files: [
@@ -148,7 +168,6 @@ describe('buildBtHealthSummary', () => {
 
     expect(summary.metadataState).toBe('ready')
     expect(summary.trackerCount).toBe(2)
-    expect(summary.unprobeableTrackerCount).toBe(1)
     expect(summary.peerCount).toBe(2)
     expect(summary.activeDownloadPeerCount).toBe(1)
     expect(summary.activeUploadPeerCount).toBe(1)
@@ -161,6 +180,7 @@ describe('buildBtHealthSummary', () => {
       makeTask({
         bittorrent: {
           announceList: [],
+          state: 'downloadingMetadata',
         },
       }),
     )

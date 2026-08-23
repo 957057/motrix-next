@@ -37,10 +37,7 @@ export default {
   'confirm-exit-title': 'Confirmer la fermeture',
   'confirm-exit-message': 'Voulez-vous vraiment quitter ? Les téléchargements actifs seront suspendus.',
   'engine-not-ready': 'Le moteur démarre, veuillez patienter...',
-  'engine-ready': 'Moteur Aria2 Next pret',
   'engine-failed': 'Échec du démarrage du moteur',
-  'engine-stopped': 'Moteur Aria2 Next arrete',
-  'engine-crash': "Le moteur de téléchargement s'est arrêté de manière inattendue (code {code})",
   'new-version-available': 'Mise à jour disponible',
   'older-version-available': 'Ancienne version disponible',
   'tray-new-task': 'Nouvelle tâche',
@@ -74,16 +71,9 @@ export default {
   'quit-app': 'Quitter',
   'engine-crashed': 'Le moteur de telechargement Aria2 Next s\u0027est deconnecte',
   'engine-recovering': 'Redemarrage du moteur de telechargement Aria2 Next...',
-  'engine-recovered': 'Restaure avec succes',
   'engine-unrecoverable': 'Impossible de restaurer le moteur de telechargement Aria2 Next',
   'engine-retry': 'Reessayer',
-  'engine-dismiss-warning':
-    'Le moteur de telechargement Aria2 Next ne fonctionne pas, un comportement inattendu peut survenir',
-  'engine-verifying-stability': 'Le moteur de telechargement Aria2 Next a demarre, verification de la stabilite...',
-  'engine-retrying': 'Nouvelle tentative...',
   'engine-manual-retry': 'Reessayer manuellement',
-  'engine-port-conflict-hint':
-    'Le port {port} est peut-être occupé par un proxy, VPN ou autre logiciel. Changez le port dans les Paramètres avancés ou fermez le logiciel en conflit et réessayez.',
   'migration-success': 'Structure des paramètres utilisateur mise à jour vers {version}',
   'migration-incomplete':
     "La structure des paramètres utilisateur n'a pas pu être entièrement mise à jour vers {version}",

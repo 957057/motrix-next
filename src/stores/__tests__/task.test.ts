@@ -353,12 +353,11 @@ describe('TaskStore', () => {
       expect(gids).toEqual(['fresh', 'old'])
     })
 
-    it('filters out completed native aria2 metadata tasks from the stopped source', async () => {
+    it('filters out stale terminal metadata tasks from the stopped source', async () => {
       await store.changeCurrentList('all')
 
       const completedMeta = makeMockTask('meta1', 'complete', {
-        bittorrent: {},
-        followedBy: ['real-gid'],
+        bittorrent: { state: 'downloadingMetadata' },
       })
       const realTask = makeMockTask('real-gid', 'active')
 
@@ -689,6 +688,16 @@ describe('TaskStore', () => {
         downloadSpeed: '100',
         uploadSpeed: '0',
         seeder: 'false',
+        state: 'connected',
+        transport: 'tcp',
+        encryption: 'plain',
+        sources: ['tracker'],
+        progress: '0.500000',
+        flags: 'D',
+        incoming: 'false',
+        downloaded: '100',
+        uploaded: '0',
+        completedLength: '50',
       },
     ]
     store.updateCurrentTaskItem(task)

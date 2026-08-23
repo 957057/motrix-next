@@ -83,14 +83,22 @@ pub fn clear_session_file(app: AppHandle) -> Result<(), AppError> {
 }
 
 fn clear_session_file_inner(app: &AppHandle) -> Result<(), AppError> {
-    let session_path = app
+    let data_dir = app
         .path()
         .app_data_dir()
-        .map_err(|e| AppError::Io(e.to_string()))?
-        .join("download.session");
+        .map_err(|e| AppError::Io(e.to_string()))?;
+    let session_path = data_dir.join("download.session");
     if session_path.exists() {
         std::fs::remove_file(&session_path).map_err(|e| AppError::Io(e.to_string()))?;
         log::info!("engine:clear-session path={}", session_path.display());
+    }
+    let bt_state_file = data_dir.join("engine").join("bittorrent.session");
+    if bt_state_file.exists() {
+        std::fs::remove_file(&bt_state_file).map_err(|e| AppError::Io(e.to_string()))?;
+    }
+    let bt_resume_dir = data_dir.join("engine").join("torrents");
+    if bt_resume_dir.exists() {
+        std::fs::remove_dir_all(&bt_resume_dir).map_err(|e| AppError::Io(e.to_string()))?;
     }
     Ok(())
 }

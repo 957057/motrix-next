@@ -492,21 +492,13 @@ fn handle_run_event(app: &tauri::AppHandle, event: tauri::RunEvent) {
                 }
             }
 
-            // Save aria2 session before killing the engine so in-progress
-            // downloads survive across restarts.  Best-effort with 500ms
-            // timeout — never blocks app exit.
-            if let Some(aria2) = app.try_state::<aria2::client::Aria2State>() {
-                let client = aria2.0.clone();
-                let _ = tauri::async_runtime::block_on(async {
-                    tokio::time::timeout(
-                        std::time::Duration::from_millis(500),
-                        client.save_session(),
-                    )
-                    .await
-                });
-                log::info!("aria2 session save attempted via managed client");
+            if let Some(supervisor) = app.try_state::<engine::supervisor::EngineSupervisor>() {
+                let _ = tauri::async_runtime::block_on(supervisor.stop(
+                    app,
+                    engine::supervisor::EngineOperationCause::AppExit,
+                    true,
+                ));
             }
-            let _ = engine::stop_engine(app, true);
             // Stop the extension HTTP API server gracefully.
             if let Some(api_state) = app.try_state::<services::http_api::HttpApiState>() {
                 let _ = tauri::async_runtime::block_on(async {
@@ -528,23 +520,6 @@ fn handle_run_event(app: &tauri::AppHandle, event: tauri::RunEvent) {
                     )
                     .await;
                 });
-            }
-            // Stop stat service before process shutdown so any active
-            // keep-awake power assertion is released deterministically.
-            if let Some(stat_state) = app.try_state::<services::stat::StatServiceState>() {
-                let _ = tauri::async_runtime::block_on(async {
-                    tokio::time::timeout(std::time::Duration::from_millis(500), async {
-                        let handle = {
-                            let mut guard = stat_state.0.lock().await;
-                            guard.take()
-                        };
-                        if let Some(handle) = handle {
-                            handle.stop().await;
-                        }
-                    })
-                    .await
-                });
-                log::info!("stat_service: stopped");
             }
         }
         #[cfg(target_os = "macos")]
@@ -741,6 +716,7 @@ pub fn run() {
 
     builder
         .manage(EngineState::new())
+        .manage(engine::supervisor::EngineSupervisor::new())
         .manage(UpnpState::new())
         .manage(std::sync::Arc::new(UpdateCancelState::new()))
         .manage(std::sync::Arc::new(DownloadedUpdate::new()))
@@ -750,9 +726,11 @@ pub fn run() {
             commands::save_system_config,
             commands::read_settings_backup_file,
             commands::write_settings_backup_file,
-            commands::start_engine_command,
-            commands::stop_engine_command,
-            commands::restart_engine_command,
+            commands::engine_supervisor_state,
+            commands::engine_ensure_running,
+            commands::engine_restart,
+            commands::engine_stop,
+            commands::engine_cancel,
             commands::resolve_bt_listen_port,
             commands::factory_reset,
             commands::clear_session_file,
@@ -777,7 +755,6 @@ pub fn run() {
             commands::reconcile_bt_peer_blocklist,
             commands::set_dock_visible,
             commands::minimize_to_tray,
-            commands::probe_trackers,
             commands::fetch_tracker_sources,
             commands::is_autostart_launch,
             commands::clear_log_file,
@@ -819,6 +796,7 @@ pub fn run() {
             commands::aria2_fetch_active_task_list,
             commands::aria2_fetch_task_item,
             commands::aria2_fetch_task_item_with_peers,
+            commands::aria2_get_bt_trackers,
             commands::aria2_get_version,
             commands::aria2_get_global_option,
             commands::aria2_get_global_stat,
@@ -841,7 +819,6 @@ pub fn run() {
             commands::aria2_batch_unpause,
             commands::aria2_batch_force_pause,
             commands::aria2_batch_force_remove,
-            commands::wait_for_engine,
             commands::system_shutdown,
             commands::cancel_shutdown,
         ])

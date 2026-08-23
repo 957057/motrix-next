@@ -41,6 +41,42 @@ pub struct Aria2BtInfo {
     pub comment: Option<String>,
     #[serde(default)]
     pub mode: Option<String>,
+    #[serde(default, rename = "privateTorrent")]
+    pub private_torrent: Option<String>,
+    #[serde(default)]
+    pub state: Option<String>,
+    #[serde(default, rename = "infoHashV1")]
+    pub info_hash_v1: Option<String>,
+    #[serde(default, rename = "infoHashV2")]
+    pub info_hash_v2: Option<String>,
+    #[serde(default, rename = "currentTracker")]
+    pub current_tracker: Option<String>,
+    #[serde(default, rename = "numPeers")]
+    pub num_peers: Option<String>,
+    #[serde(default, rename = "connectingPeers")]
+    pub connecting_peers: Option<String>,
+    #[serde(default, rename = "handshakingPeers")]
+    pub handshaking_peers: Option<String>,
+    #[serde(default, rename = "numSeeds")]
+    pub num_seeds: Option<String>,
+    #[serde(default)]
+    pub progress: Option<String>,
+    #[serde(default)]
+    pub availability: Option<String>,
+    #[serde(default, rename = "failedLength")]
+    pub failed_length: Option<String>,
+    #[serde(default, rename = "redundantLength")]
+    pub redundant_length: Option<String>,
+    #[serde(default, rename = "activeTime")]
+    pub active_time: Option<String>,
+    #[serde(default, rename = "finishedTime")]
+    pub finished_time: Option<String>,
+    #[serde(default, rename = "seedingTime")]
+    pub seeding_time: Option<String>,
+    #[serde(default, rename = "connectCandidates")]
+    pub connect_candidates: Option<String>,
+    #[serde(default, rename = "uploadingPeers")]
+    pub uploading_peers: Option<String>,
 }
 
 /// Name sub-object within `Aria2BtInfo.info`.
@@ -185,10 +221,73 @@ pub struct Aria2GlobalStat {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Aria2BtEndpoint {
+pub struct Aria2BtSessionStatus {
     pub listen_port: String,
     pub announce_port: String,
     pub external_ip: String,
+    pub mapped_tcp_port: String,
+    pub mapped_udp_port: String,
+    pub dht_nodes: String,
+    pub dht_replacement_nodes: String,
+    pub dht_active_requests: String,
+    pub dropped_alerts: String,
+    pub peer_sockets: String,
+    pub established_peers: String,
+    pub handshaking_peers: String,
+    pub half_open_peers: String,
+    pub tcp_peers: String,
+    pub utp_peers: String,
+    pub queued_tracker_announces: String,
+    pub connection_attempts: String,
+    pub connection_timeouts: String,
+    pub payload_downloaded: String,
+    pub payload_uploaded: String,
+    pub tracker_downloaded: String,
+    pub tracker_uploaded: String,
+    pub dht_state_healthy: String,
+    #[serde(default)]
+    pub listen_endpoints: Vec<String>,
+    #[serde(default)]
+    pub port_mapping_error: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Aria2BtTrackerEndpoint {
+    pub local_endpoint: String,
+    pub protocol: String,
+    pub status: String,
+    pub failures: String,
+    pub seeders: String,
+    pub leechers: String,
+    pub downloads: String,
+    pub next_announce: String,
+    pub min_announce: String,
+    pub updating: String,
+    pub verified: String,
+    #[serde(default)]
+    pub message: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Aria2BtTracker {
+    pub url: String,
+    pub source: String,
+    pub tier: String,
+    pub status: String,
+    pub failures: String,
+    pub seeders: String,
+    pub leechers: String,
+    pub downloads: String,
+    pub next_announce: String,
+    pub min_announce: String,
+    pub updating: String,
+    pub verified: String,
+    #[serde(default)]
+    pub message: Option<String>,
+    #[serde(default)]
+    pub endpoints: Vec<Aria2BtTrackerEndpoint>,
 }
 
 // ── Internal JSON-RPC protocol types ────────────────────────────────
@@ -259,7 +358,13 @@ mod tests {
             "dir": "/downloads",
             "bittorrent": {
                 "info": { "name": "test.torrent" },
-                "mode": "multi"
+                "mode": "multi",
+                "state": "downloading",
+                "infoHashV1": "abc123def456",
+                "infoHashV2": "def456abc123",
+                "numPeers": "7",
+                "connectingPeers": "2",
+                "handshakingPeers": "1"
             },
             "infoHash": "abc123def456",
             "seeder": "true",
@@ -269,6 +374,9 @@ mod tests {
         let bt = task.bittorrent.as_ref().unwrap();
         assert_eq!(bt.info.as_ref().unwrap().name, "test.torrent");
         assert_eq!(bt.mode.as_deref(), Some("multi"));
+        assert_eq!(bt.state.as_deref(), Some("downloading"));
+        assert_eq!(bt.info_hash_v2.as_deref(), Some("def456abc123"));
+        assert_eq!(bt.num_peers.as_deref(), Some("7"));
         assert_eq!(task.info_hash.as_deref(), Some("abc123def456"));
         assert_eq!(task.seeder.as_deref(), Some("true"));
         assert_eq!(task.num_seeders.as_deref(), Some("5"));
@@ -402,6 +510,70 @@ mod tests {
         assert_eq!(stat.download_speed, "1048576");
         assert_eq!(stat.num_active, "3");
         assert_eq!(stat.num_stopped_total, "100");
+    }
+
+    #[test]
+    fn deserialize_native_bt_runtime_contract() {
+        let status: Aria2BtSessionStatus = serde_json::from_value(serde_json::json!({
+            "listenPort": "29120",
+            "announcePort": "29120",
+            "externalIp": "203.0.113.7",
+            "mappedTcpPort": "29120",
+            "mappedUdpPort": "29120",
+            "dhtNodes": "128",
+            "dhtReplacementNodes": "8",
+            "dhtActiveRequests": "2",
+            "droppedAlerts": "0",
+            "peerSockets": "12",
+            "establishedPeers": "10",
+            "handshakingPeers": "2",
+            "halfOpenPeers": "2",
+            "tcpPeers": "8",
+            "utpPeers": "4",
+            "queuedTrackerAnnounces": "1",
+            "connectionAttempts": "30",
+            "connectionTimeouts": "3",
+            "payloadDownloaded": "4096",
+            "payloadUploaded": "1024",
+            "trackerDownloaded": "512",
+            "trackerUploaded": "256",
+            "dhtStateHealthy": "true",
+            "listenEndpoints": ["0.0.0.0:29120"]
+        }))
+        .expect("deserialize BT session status");
+        assert_eq!(status.dht_state_healthy, "true");
+
+        let tracker: Aria2BtTracker = serde_json::from_value(serde_json::json!({
+            "url": "udp://tracker.example:6969/announce",
+            "source": "global",
+            "tier": "1",
+            "status": "working",
+            "failures": "0",
+            "seeders": "12",
+            "leechers": "4",
+            "downloads": "20",
+            "nextAnnounce": "600",
+            "minAnnounce": "300",
+            "updating": "false",
+            "verified": "true",
+            "endpoints": [{
+                "localEndpoint": "0.0.0.0:29120",
+                "protocol": "v1",
+                "status": "working",
+                "failures": "0",
+                "seeders": "12",
+                "leechers": "4",
+                "downloads": "20",
+                "nextAnnounce": "600",
+                "minAnnounce": "300",
+                "updating": "false",
+                "verified": "true"
+            }]
+        }))
+        .expect("deserialize BT tracker status");
+        assert_eq!(tracker.source, "global");
+        assert_eq!(tracker.next_announce, "600");
+        assert_eq!(tracker.endpoints[0].min_announce, "300");
     }
 
     // ── Aria2File deserialization ────────────────────────────────────

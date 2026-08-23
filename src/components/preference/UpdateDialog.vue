@@ -218,9 +218,8 @@ async function handleInstallAndRelaunch() {
     await invoke('apply_update', { channel: ch, proxy: getUpdateProxy() })
     relaunch()
   } catch (e) {
-    // Engine recovery is handled entirely by Rust (on_engine_ready).
-    // engine-crashed → useAppEvents listener handles UI overlay state.
-    // This catch block only manages UpdateDialog UI state.
+    // Engine recovery is owned by the Rust supervisor. This block only
+    // manages the update dialog state.
     logger.error('Updater', e)
     errorMsg.value = formatUpdateError(e)
     phase.value = 'error'

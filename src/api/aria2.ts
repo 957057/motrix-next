@@ -12,6 +12,7 @@ import type {
   Aria2Peer,
   Aria2EngineOptions,
   Aria2File,
+  Aria2BtTracker,
   AppConfig,
   Ed2kSearchOptions,
   Ed2kSearchResults,
@@ -21,23 +22,13 @@ import { formatLogFields, logger } from '@shared/logger'
 import { resolveDownloadDir } from '@shared/utils/fileCategory'
 import { sanitizeAria2OutHint } from '@shared/utils/batchHelpers'
 import { summarizeAria2Options, summarizeExternalInput } from '@shared/utils/externalInputDiagnostics'
-
-/**
- * Engine readiness state.
- * With the Rust backend transport, readiness is determined by the engine
- * lifecycle commands — the Aria2Client is always available once credentials
- * are set by `on_engine_ready`.
- */
-let engineReady = false
+import { useEngineStore } from '@/stores/engine'
+import { getActivePinia } from 'pinia'
 
 /** Returns true when the aria2 engine has started and is accepting RPC. */
 export function isEngineReady(): boolean {
-  return engineReady
-}
-
-/** Marks the engine as ready/unready. */
-export function setEngineReady(ready: boolean): void {
-  engineReady = ready
+  const pinia = getActivePinia()
+  return pinia ? useEngineStore(pinia).isReady : false
 }
 
 function withBtSafetyOptions(options: Aria2EngineOptions): Aria2EngineOptions {
@@ -87,6 +78,10 @@ export async function changeOption(params: { gid: string; options: Aria2EngineOp
 export async function getFiles(params: { gid: string }): Promise<Aria2File[]> {
   const data = await invoke<Record<string, unknown>[]>('aria2_get_files', { gid: params.gid })
   return data.map((f) => changeKeysToCamelCase(f)) as unknown as Aria2File[]
+}
+
+export async function getBtTrackers(params: { gid: string }): Promise<Aria2BtTracker[]> {
+  return invoke<Aria2BtTracker[]>('aria2_get_bt_trackers', { gid: params.gid })
 }
 
 /** Fetches only active tasks (no waiting). */
@@ -260,6 +255,7 @@ const api = {
   getOption,
   changeOption,
   getFiles,
+  getBtTrackers,
   fetchActiveTaskList,
   fetchTaskList,
   fetchTaskItem,

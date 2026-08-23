@@ -9,7 +9,7 @@
  * Tracker source URL validation (isValidTrackerSourceUrl) is co-located
  * here since it is only used in the BT tab's tracker source management.
  */
-import type { AppConfig } from '@shared/types'
+import type { AppConfig, BtEncryptionMode } from '@shared/types'
 import { DEFAULT_APP_CONFIG as D } from '@shared/constants'
 import { PORT_RECOVERY_RANGE_END, PORT_RECOVERY_RANGE_START } from '@shared/constants'
 import { convertCommaToLine, convertLineToComma, generateRandomInt } from '@shared/utils'
@@ -38,16 +38,14 @@ export function isValidTrackerSourceUrl(input: string): boolean {
 export interface BtForm {
   [key: string]: unknown
   btAutoDownloadContent: boolean
-  btForceEncryption: boolean
-  btDhtIpv4Enabled: boolean
-  btDhtIpv6Enabled: boolean
+  btEncryption: BtEncryptionMode
+  btDhtEnabled: boolean
   btPeerExchangeEnabled: boolean
   btLocalPeerDiscoveryEnabled: boolean
   btMaxPeers: number
   listenPort: number
   btExternalIp: string
   btExternalPort: number
-  dhtListenPort: number
   sharingMode: 'stop-by-condition' | 'manual-stop'
   shareRatio: number
   shareTime: number
@@ -75,16 +73,14 @@ export function buildBtForm(config: AppConfig): BtForm {
 
   return {
     btAutoDownloadContent,
-    btForceEncryption: config.btForceEncryption ?? D.btForceEncryption,
-    btDhtIpv4Enabled: config.btDhtIpv4Enabled ?? D.btDhtIpv4Enabled,
-    btDhtIpv6Enabled: config.btDhtIpv6Enabled ?? D.btDhtIpv6Enabled,
+    btEncryption: config.btEncryption ?? D.btEncryption,
+    btDhtEnabled: config.btDhtEnabled ?? D.btDhtEnabled,
     btPeerExchangeEnabled: config.btPeerExchangeEnabled ?? D.btPeerExchangeEnabled,
     btLocalPeerDiscoveryEnabled: config.btLocalPeerDiscoveryEnabled ?? D.btLocalPeerDiscoveryEnabled,
     btMaxPeers: config.btMaxPeers ?? D.btMaxPeers,
     listenPort: Number(config.listenPort ?? D.listenPort),
     btExternalIp: config.btExternalIp ?? D.btExternalIp,
     btExternalPort: Number(config.btExternalPort ?? D.btExternalPort),
-    dhtListenPort: Number(config.dhtListenPort ?? D.dhtListenPort),
     sharingMode: (config.keepSharing ?? D.keepSharing) ? 'manual-stop' : 'stop-by-condition',
     shareRatio: config.shareRatio ?? D.shareRatio,
     shareTime: config.shareTime ?? D.shareTime,
@@ -123,11 +119,8 @@ export function buildBtSystemConfig(f: BtForm): Record<string, string> {
     'listen-port': String(f.listenPort),
     'bt-external-ip': f.btExternalIp.trim(),
     'bt-external-port': String(f.btExternalPort),
-    'dht-listen-port': String(f.dhtListenPort),
-    'bt-force-encryption': String(!!f.btForceEncryption),
-    'bt-require-crypto': String(!!f.btForceEncryption),
-    'enable-dht': String(!!f.btDhtIpv4Enabled),
-    'enable-dht6': String(!!f.btDhtIpv6Enabled),
+    'bt-encryption': f.btEncryption,
+    'enable-dht': String(!!f.btDhtEnabled),
     'enable-peer-exchange': String(!!f.btPeerExchangeEnabled),
     'bt-enable-lpd': String(!!f.btLocalPeerDiscoveryEnabled),
     'pause-metadata': String(!autoContent),
@@ -139,9 +132,6 @@ export function validateBtEndpoint(f: BtForm): string | null {
   if (!Number.isInteger(f.listenPort) || f.listenPort < 1024 || f.listenPort > 65535) {
     return 'preferences.bt-port-unavailable'
   }
-  if (!Number.isInteger(f.dhtListenPort) || f.dhtListenPort < 1024 || f.dhtListenPort > 65535) {
-    return 'preferences.dht-port-invalid'
-  }
   if (!isValidOptionalIpAddress(f.btExternalIp)) {
     return 'preferences.bt-external-ip-invalid'
   }
@@ -152,10 +142,6 @@ export function validateBtEndpoint(f: BtForm): string | null {
 }
 
 export function randomBtPort(): number {
-  return generateRandomInt(PORT_RECOVERY_RANGE_START, PORT_RECOVERY_RANGE_END + 1)
-}
-
-export function randomDhtPort(): number {
   return generateRandomInt(PORT_RECOVERY_RANGE_START, PORT_RECOVERY_RANGE_END + 1)
 }
 

@@ -25,6 +25,19 @@ export interface Aria2File {
 }
 
 /** BitTorrent metadata attached to a task when the download is a torrent. */
+export type Aria2BtState =
+  | 'adding'
+  | 'downloadingMetadata'
+  | 'awaitingFileSelection'
+  | 'checking'
+  | 'downloading'
+  | 'finished'
+  | 'seeding'
+  | 'paused'
+  | 'stopping'
+  | 'stopped'
+  | 'error'
+
 export interface Aria2BtInfo {
   info?: { name: string }
   announceList?: string[][]
@@ -32,6 +45,24 @@ export interface Aria2BtInfo {
   creationDate?: number
   comment?: string
   mode?: string
+  privateTorrent?: string
+  state?: Aria2BtState
+  infoHashV1?: string
+  infoHashV2?: string
+  currentTracker?: string
+  numPeers?: string
+  connectingPeers?: string
+  handshakingPeers?: string
+  numSeeds?: string
+  progress?: string
+  availability?: string
+  failedLength?: string
+  redundantLength?: string
+  activeTime?: string
+  finishedTime?: string
+  seedingTime?: string
+  connectCandidates?: string
+  uploadingPeers?: string
 }
 
 /** ED2K metadata attached to a task when the download is an ED2K file link. */
@@ -94,7 +125,8 @@ export interface Ed2kSearchResults {
 
 /** Remote peer information for an active BitTorrent task. */
 export interface Aria2Peer {
-  peerId: string
+  peerId?: string
+  peerClientName?: string
   ip: string
   port: string
   bitfield: string
@@ -103,6 +135,48 @@ export interface Aria2Peer {
   downloadSpeed: string
   uploadSpeed: string
   seeder: string
+  state: 'connecting' | 'handshaking' | 'connected'
+  transport: 'tcp' | 'utp'
+  encryption: 'plain' | 'encryptedHandshake' | 'rc4' | 'tls'
+  sources: string[]
+  progress: string
+  flags: string
+  incoming: string
+  downloaded: string
+  uploaded: string
+  completedLength: string
+}
+
+export interface Aria2BtTrackerEndpoint {
+  localEndpoint: string
+  protocol: string
+  status: string
+  failures: string
+  seeders: string
+  leechers: string
+  downloads: string
+  nextAnnounce: string
+  minAnnounce: string
+  updating: string
+  verified: string
+  message?: string
+}
+
+export interface Aria2BtTracker {
+  url: string
+  source: 'metainfo' | 'magnet' | 'resume' | 'global' | 'rpc' | 'unknown'
+  tier: string
+  status: string
+  failures: string
+  seeders: string
+  leechers: string
+  downloads: string
+  nextAnnounce: string
+  minAnnounce: string
+  updating: string
+  verified: string
+  message?: string
+  endpoints: Aria2BtTrackerEndpoint[]
 }
 
 /**
@@ -216,10 +290,11 @@ export interface PortConflictRecoveryConfig {
   rpc: boolean
   extensionApi: boolean
   bt: boolean
-  dht: boolean
   ed2k: boolean
   ed2kUdp: boolean
 }
+
+export type BtEncryptionMode = 'preferred' | 'required' | 'disabled'
 
 /** A file category rule mapping extensions to a download directory. */
 export type FileCategoryUrlPatternMode = 'wildcard' | 'regex'
@@ -304,8 +379,7 @@ export interface AppConfig {
   shareTime: number
   shareRatio: number
   btMaxPeers: number
-  btDhtIpv4Enabled: boolean
-  btDhtIpv6Enabled: boolean
+  btDhtEnabled: boolean
   btPeerExchangeEnabled: boolean
   btLocalPeerDiscoveryEnabled: boolean
   openAtLogin: boolean
@@ -384,7 +458,6 @@ export interface AppConfig {
   listenPort: number
   btExternalIp: string
   btExternalPort: number
-  dhtListenPort: number
   ed2kListenPort: number
   ed2kUdpListenPort: number
   ed2kServer: string
@@ -395,7 +468,7 @@ export interface AppConfig {
   ed2kUploadSlots: number
   ed2kSearchTimeout: number
   btTracker: string
-  btForceEncryption: boolean
+  btEncryption: BtEncryptionMode
   pauseMetadata: boolean
   continue: boolean
   /** When true, aria2 applies the remote server's Last-Modified timestamp

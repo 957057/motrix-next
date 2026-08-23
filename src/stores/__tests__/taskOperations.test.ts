@@ -202,14 +202,13 @@ describe('cancelMagnetSelectionDownload', () => {
     ops = createTaskOperations(deps)
   })
 
-  it('removes the generated BT task, retries result purge, purges metadata parent, and cleans artifacts', async () => {
+  it('removes the single-GID BT task, retries result purge, and cleans artifacts', async () => {
     const childTask = makeTask({
       gid: 'child-gid',
       status: TASK_STATUS.PAUSED,
-      following: 'metadata-gid',
       dir: '/downloads',
       infoHash: 'abcdef1234567890abcdef1234567890abcdef12',
-      bittorrent: { info: { name: 'Movie' } },
+      bittorrent: { info: { name: 'Movie' }, state: 'awaitingFileSelection' },
       files: [
         { index: '1', path: '/downloads/Movie/video.mkv', length: '1024', completedLength: '0', selected: 'true' },
       ],
@@ -218,36 +217,31 @@ describe('cancelMagnetSelectionDownload', () => {
     ;(api.removeTaskRecord as Mock)
       .mockRejectedValueOnce(new Error('download result not ready'))
       .mockResolvedValueOnce('OK')
-      .mockResolvedValueOnce('OK')
 
-    await ops.cancelMagnetSelectionDownload({ metadataGid: 'metadata-gid', downloadGid: 'child-gid' })
+    await ops.cancelMagnetSelectionDownload({ gid: 'child-gid' })
 
     expect(api.fetchTaskItem).toHaveBeenCalledWith({ gid: 'child-gid' })
     expect(api.removeTask).toHaveBeenCalledWith({ gid: 'child-gid' })
     expect(api.removeTaskRecord).toHaveBeenNthCalledWith(1, { gid: 'child-gid' })
     expect(api.removeTaskRecord).toHaveBeenNthCalledWith(2, { gid: 'child-gid' })
-    expect(api.removeTaskRecord).toHaveBeenNthCalledWith(3, { gid: 'metadata-gid' })
     expect(mockCleanupAria2ControlFiles).toHaveBeenCalledWith(childTask)
     expect(mockDeleteTaskFiles).toHaveBeenCalledWith(childTask, 'trash')
     expect(mockCleanupAria2MetadataFiles).toHaveBeenCalledWith('/downloads', 'abcdef1234567890abcdef1234567890abcdef12')
     expect(mockRemoveRecord).toHaveBeenCalledWith('child-gid')
-    expect(mockRemoveRecord).toHaveBeenCalledWith('metadata-gid')
-    expect(mockRemoveBirthRecords).toHaveBeenCalledWith(['child-gid', 'metadata-gid'])
+    expect(mockRemoveBirthRecords).toHaveBeenCalledWith(['child-gid'])
     expect(deps.fetchList).toHaveBeenCalledOnce()
     expect(api.saveSession).toHaveBeenCalledOnce()
   })
 
-  it('still purges known gids and saves the session when the child task can no longer be fetched', async () => {
+  it('still purges the GID and saves the session when the task can no longer be fetched', async () => {
     ;(api.fetchTaskItem as Mock).mockRejectedValueOnce(new Error('GID not found'))
 
-    await ops.cancelMagnetSelectionDownload({ metadataGid: 'metadata-gid', downloadGid: 'child-gid' })
+    await ops.cancelMagnetSelectionDownload({ gid: 'child-gid' })
 
     expect(api.removeTask).toHaveBeenCalledWith({ gid: 'child-gid' })
     expect(api.removeTaskRecord).toHaveBeenCalledWith({ gid: 'child-gid' })
-    expect(api.removeTaskRecord).toHaveBeenCalledWith({ gid: 'metadata-gid' })
     expect(mockRemoveRecord).toHaveBeenCalledWith('child-gid')
-    expect(mockRemoveRecord).toHaveBeenCalledWith('metadata-gid')
-    expect(mockRemoveBirthRecords).toHaveBeenCalledWith(['child-gid', 'metadata-gid'])
+    expect(mockRemoveBirthRecords).toHaveBeenCalledWith(['child-gid'])
     expect(mockCleanupAria2ControlFiles).not.toHaveBeenCalled()
     expect(mockDeleteTaskFiles).not.toHaveBeenCalled()
     expect(deps.fetchList).toHaveBeenCalledOnce()
@@ -330,8 +324,7 @@ describe('resumeTask', () => {
     const task = makeTask({
       gid: 'magnet-download',
       status: TASK_STATUS.PAUSED,
-      following: 'metadata-gid',
-      bittorrent: { info: { name: 'Archive' } },
+      bittorrent: { info: { name: 'Archive' }, state: 'awaitingFileSelection' },
       files: [{ index: '1', path: '/downloads/file.bin', length: '1024' }],
     })
 

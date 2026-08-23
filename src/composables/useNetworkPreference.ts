@@ -49,7 +49,6 @@ function buildPortConflictRecovery(config: AppConfig): PortConflictRecoveryConfi
     rpc: saved?.rpc ?? defaults.rpc,
     extensionApi: saved?.extensionApi ?? defaults.extensionApi,
     bt: saved?.bt ?? defaults.bt,
-    dht: saved?.dht ?? defaults.dht,
     ed2k: saved?.ed2k ?? defaults.ed2k,
     ed2kUdp: saved?.ed2kUdp ?? defaults.ed2kUdp,
   }
@@ -97,6 +96,7 @@ export function buildNetworkSystemConfig(f: NetworkForm): Record<string, string>
     timeout: String(f.timeout),
     'file-allocation': f.fileAllocation || D.fileAllocation,
     'async-dns': String(!!f.asyncDns),
+    'bt-port-mapping': String(!!f.enableUpnp),
     ...buildDownloadProxyOptions(f.proxy),
   }
 

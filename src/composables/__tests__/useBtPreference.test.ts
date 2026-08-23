@@ -14,7 +14,6 @@ import {
   transformBtForStore,
   validateBtEndpoint,
   randomBtPort,
-  randomDhtPort,
   type BtForm,
 } from '../useBtPreference'
 import type { AppConfig } from '@shared/types'
@@ -49,35 +48,32 @@ describe('buildBtForm', () => {
 
   // ── BT settings ────────────────────────────────────────────────
 
-  it('defaults btForceEncryption to false', () => {
+  it('defaults BitTorrent encryption to preferred', () => {
     const form = buildBtForm(emptyConfig)
-    expect(form.btForceEncryption).toBe(false)
+    expect(form.btEncryption).toBe('preferred')
   })
 
   it('defaults BT discovery toggles to enabled', () => {
     const form = buildBtForm(emptyConfig)
-    expect(form.btDhtIpv4Enabled).toBe(true)
-    expect(form.btDhtIpv6Enabled).toBe(true)
+    expect(form.btDhtEnabled).toBe(true)
     expect(form.btPeerExchangeEnabled).toBe(true)
     expect(form.btLocalPeerDiscoveryEnabled).toBe(true)
   })
 
   it('reads BT discovery toggles from config', () => {
     const form = buildBtForm({
-      btDhtIpv4Enabled: false,
-      btDhtIpv6Enabled: true,
+      btDhtEnabled: false,
       btPeerExchangeEnabled: false,
       btLocalPeerDiscoveryEnabled: false,
     } as unknown as AppConfig)
-    expect(form.btDhtIpv4Enabled).toBe(false)
-    expect(form.btDhtIpv6Enabled).toBe(true)
+    expect(form.btDhtEnabled).toBe(false)
     expect(form.btPeerExchangeEnabled).toBe(false)
     expect(form.btLocalPeerDiscoveryEnabled).toBe(false)
   })
 
-  it('reads btForceEncryption from config', () => {
-    const form = buildBtForm({ btForceEncryption: true } as unknown as AppConfig)
-    expect(form.btForceEncryption).toBe(true)
+  it('reads encryption mode from config', () => {
+    const form = buildBtForm({ btEncryption: 'required' } as unknown as AppConfig)
+    expect(form.btEncryption).toBe('required')
   })
 
   it('defaults btMaxPeers to ENGINE_DEFAULT_BT_MAX_PEERS', () => {
@@ -94,7 +90,6 @@ describe('buildBtForm', () => {
     expect(form.listenPort).toBe(DEFAULT_APP_CONFIG.listenPort)
     expect(form.btExternalIp).toBe('')
     expect(form.btExternalPort).toBe(0)
-    expect(form.dhtListenPort).toBe(DEFAULT_APP_CONFIG.dhtListenPort)
     expect(form.sharingMode).toBe('stop-by-condition')
     expect(form.shareRatio).toBe(DEFAULT_APP_CONFIG.shareRatio)
     expect(form.shareTime).toBe(DEFAULT_APP_CONFIG.shareTime)
@@ -150,16 +145,14 @@ describe('buildBtForm', () => {
     const form = buildBtForm(emptyConfig)
     const expectedFields = [
       'btAutoDownloadContent',
-      'btForceEncryption',
-      'btDhtIpv4Enabled',
-      'btDhtIpv6Enabled',
+      'btEncryption',
+      'btDhtEnabled',
       'btPeerExchangeEnabled',
       'btLocalPeerDiscoveryEnabled',
       'btMaxPeers',
       'listenPort',
       'btExternalIp',
       'btExternalPort',
-      'dhtListenPort',
       'sharingMode',
       'shareRatio',
       'shareTime',
@@ -186,16 +179,14 @@ describe('buildBtForm', () => {
 describe('buildBtSystemConfig', () => {
   const baseForm: BtForm = {
     btAutoDownloadContent: true,
-    btForceEncryption: false,
-    btDhtIpv4Enabled: true,
-    btDhtIpv6Enabled: true,
+    btEncryption: 'preferred',
+    btDhtEnabled: true,
     btPeerExchangeEnabled: true,
     btLocalPeerDiscoveryEnabled: true,
     btMaxPeers: 128,
     listenPort: 29120,
     btExternalIp: '',
     btExternalPort: 0,
-    dhtListenPort: 29130,
     sharingMode: 'stop-by-condition',
     shareRatio: 2,
     shareTime: 2880,
@@ -214,35 +205,30 @@ describe('buildBtSystemConfig', () => {
   it('maps BT-specific keys to aria2 config', () => {
     const config = buildBtSystemConfig(baseForm)
     expect(config['bt-max-peers']).toBe('128')
-    expect(config['bt-force-encryption']).toBe('false')
+    expect(config['bt-encryption']).toBe('preferred')
     expect(config['listen-port']).toBe('29120')
     expect(config['bt-external-ip']).toBe('')
     expect(config['bt-external-port']).toBe('0')
-    expect(config['dht-listen-port']).toBe('29130')
   })
 
   it('maps BT discovery toggles to aria2 config', () => {
     const config = buildBtSystemConfig({
       ...baseForm,
-      btDhtIpv4Enabled: false,
-      btDhtIpv6Enabled: false,
+      btDhtEnabled: false,
       btPeerExchangeEnabled: false,
       btLocalPeerDiscoveryEnabled: false,
     })
     expect(config['enable-dht']).toBe('false')
-    expect(config['enable-dht6']).toBe('false')
     expect(config['enable-peer-exchange']).toBe('false')
     expect(config['bt-enable-lpd']).toBe('false')
   })
 
-  it('maps DHT network checkboxes to aria2 IPv4 and IPv6 switches', () => {
+  it('maps native DHT to one engine switch', () => {
     const config = buildBtSystemConfig({
       ...baseForm,
-      btDhtIpv4Enabled: true,
-      btDhtIpv6Enabled: false,
+      btDhtEnabled: true,
     })
     expect(config['enable-dht']).toBe('true')
-    expect(config['enable-dht6']).toBe('false')
   })
 
   it('maps condition-based seeding to aria2 config', () => {
@@ -260,10 +246,9 @@ describe('buildBtSystemConfig', () => {
     expect(config['seed-time']).toBe('')
   })
 
-  it('mirrors force encryption into both aria2 encryption switches', () => {
-    const config = buildBtSystemConfig({ ...baseForm, btForceEncryption: true })
-    expect(config['bt-force-encryption']).toBe('true')
-    expect(config['bt-require-crypto']).toBe('true')
+  it('passes the native encryption mode', () => {
+    const config = buildBtSystemConfig({ ...baseForm, btEncryption: 'required' })
+    expect(config['bt-encryption']).toBe('required')
   })
 
   it('sets pause-metadata=false when auto-content ON', () => {
@@ -326,16 +311,14 @@ describe('buildBtSystemConfig', () => {
 describe('transformBtForStore', () => {
   const baseForm: BtForm = {
     btAutoDownloadContent: true,
-    btForceEncryption: false,
-    btDhtIpv4Enabled: true,
-    btDhtIpv6Enabled: true,
+    btEncryption: 'preferred',
+    btDhtEnabled: true,
     btPeerExchangeEnabled: true,
     btLocalPeerDiscoveryEnabled: true,
     btMaxPeers: 128,
     listenPort: 29120,
     btExternalIp: '',
     btExternalPort: 0,
-    dhtListenPort: 29130,
     sharingMode: 'stop-by-condition',
     shareRatio: 2,
     shareTime: 2880,
@@ -387,13 +370,11 @@ describe('transformBtForStore', () => {
   it('preserves BT discovery toggles through transform', () => {
     const result = transformBtForStore({
       ...baseForm,
-      btDhtIpv4Enabled: false,
-      btDhtIpv6Enabled: true,
+      btDhtEnabled: false,
       btPeerExchangeEnabled: false,
       btLocalPeerDiscoveryEnabled: false,
     })
-    expect(result.btDhtIpv4Enabled).toBe(false)
-    expect(result.btDhtIpv6Enabled).toBe(true)
+    expect(result.btDhtEnabled).toBe(false)
     expect(result.btPeerExchangeEnabled).toBe(false)
     expect(result.btLocalPeerDiscoveryEnabled).toBe(false)
   })
@@ -416,7 +397,6 @@ describe('validateBtEndpoint', () => {
 
   it('rejects invalid listen ports', () => {
     expect(validateBtEndpoint({ ...form, listenPort: 80 })).toBe('preferences.bt-port-unavailable')
-    expect(validateBtEndpoint({ ...form, dhtListenPort: 65536 })).toBe('preferences.dht-port-invalid')
   })
 
   it('rejects invalid external endpoint values', () => {
@@ -432,8 +412,6 @@ describe('BitTorrent port randomizers', () => {
     for (let i = 0; i < 20; i++) {
       expect(randomBtPort()).toBeGreaterThanOrEqual(29000)
       expect(randomBtPort()).toBeLessThanOrEqual(29999)
-      expect(randomDhtPort()).toBeGreaterThanOrEqual(29000)
-      expect(randomDhtPort()).toBeLessThanOrEqual(29999)
     }
   })
 })

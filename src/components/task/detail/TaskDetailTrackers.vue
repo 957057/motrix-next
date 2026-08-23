@@ -1,56 +1,64 @@
 <script setup lang="ts">
-import { computed, h } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NButton, NDataTable, NTag } from 'naive-ui'
-import { calcColumnWidth } from '@shared/utils/calcColumnWidth'
-import type { Aria2BtInfo } from '@shared/types'
-import { buildTrackerRows, useTrackerProbe, type TrackerRow } from '@/composables/useTrackerProbe'
+import { NDataTable, NTag } from 'naive-ui'
+import { getBtTrackers } from '@/api/aria2'
 import { renderDetailCopyableText } from './TaskDetailShared'
+import { calcColumnWidth } from '@shared/utils/calcColumnWidth'
+import { logger } from '@shared/logger'
+import type { Aria2BtTracker } from '@shared/types'
 
 const props = defineProps<{
-  btInfo: Aria2BtInfo | null
+  gid: string
   tooltip: string
   onCopy: (value: string, label: string) => void
 }>()
 
 const { t } = useI18n()
+const trackers = ref<Aria2BtTracker[]>([])
 
-const {
-  statuses: trackerStatuses,
-  probing: trackerProbing,
-  probeAll: probeTrackers,
-  cancelProbe: cancelTrackerProbe,
-} = useTrackerProbe()
+const rows = computed(() =>
+  trackers.value.map((tracker) => ({
+    ...tracker,
+    tierNumber: Number(tracker.tier) + 1,
+    protocol: tracker.url.match(/^(\w+):\/\//)?.[1]?.toLowerCase() ?? 'unknown',
+  })),
+)
 
-const rows = computed((): TrackerRow[] => {
-  if (!props.btInfo) return []
-  const trackerRows = buildTrackerRows(props.btInfo.announceList)
-  return trackerRows.map((row) => ({
-    ...row,
-    status: trackerStatuses.value[row.url] ?? row.status,
-  }))
-})
+async function refreshTrackers() {
+  if (!props.gid) {
+    trackers.value = []
+    return
+  }
+  try {
+    trackers.value = await getBtTrackers({ gid: props.gid })
+  } catch (error) {
+    trackers.value = []
+    logger.debug('TaskDetail.trackers', error)
+  }
+}
 
-const TRACKER_STATUS_ORDER: Record<string, number> = { online: 0, checking: 1, 'not-probed': 2, unknown: 3, offline: 4 }
+const statusType = (status: string) =>
+  status === 'working' ? 'success' : status === 'error' ? 'error' : status === 'updating' ? 'warning' : 'default'
 
 const columns = computed(() => {
   const data = rows.value
   return [
     {
       title: t('task.task-tracker-tier'),
-      key: 'tier',
+      key: 'tierNumber',
       width: calcColumnWidth({
         title: t('task.task-tracker-tier'),
-        values: data.map((row) => String(row.tier)),
+        values: data.map((row) => String(row.tierNumber)),
         sortable: true,
       }),
       align: 'center' as const,
-      sorter: (a: TrackerRow, b: TrackerRow) => a.tier - b.tier,
+      sorter: (a: (typeof data)[number], b: (typeof data)[number]) => a.tierNumber - b.tierNumber,
     },
     {
       title: 'URL',
       key: 'url',
-      render: (row: TrackerRow) =>
+      render: (row: (typeof data)[number]) =>
         renderDetailCopyableText({ value: row.url, label: 'URL', tooltip: props.tooltip, onCopy: props.onCopy }),
     },
     {
@@ -69,57 +77,29 @@ const columns = computed(() => {
       key: 'status',
       width: calcColumnWidth({
         title: t('task.task-tracker-status'),
-        values: ['online', 'offline', 'checking', 'not-probed', 'unknown'].map((status) =>
-          t(`task.task-tracker-${status}`),
-        ),
+        values: data.map((row) => row.status),
         sortable: true,
         extraWidth: 20,
       }),
       align: 'center' as const,
-      sorter: (a: TrackerRow, b: TrackerRow) =>
-        (TRACKER_STATUS_ORDER[a.status] ?? 2) - (TRACKER_STATUS_ORDER[b.status] ?? 2),
-      render: (row: TrackerRow) =>
-        h(
-          NTag,
-          {
-            type: row.status === 'online' ? 'success' : row.status === 'offline' ? 'error' : 'default',
-            size: 'small',
-            round: true,
-            style: 'transition: all 0.3s cubic-bezier(0.05, 0.7, 0.1, 1)',
-          },
-          () => t(`task.task-tracker-${row.status}`),
+      sorter: 'default' as const,
+      render: (row: (typeof data)[number]) =>
+        h(NTag, { type: statusType(row.status), size: 'small', round: true }, () =>
+          t(`task.task-tracker-runtime-${row.status}`),
         ),
     },
   ]
 })
 
-function handleProbeTrackers() {
-  if (trackerProbing.value) {
-    cancelTrackerProbe()
-    return
-  }
-  probeTrackers(rows.value.map((row) => row.url))
-}
+watch(() => props.gid, refreshTrackers)
+onMounted(refreshTrackers)
 </script>
 
 <template>
-  <div style="margin-bottom: 12px; height: 34px">
-    <NButton
-      size="medium"
-      :type="trackerProbing ? 'default' : 'primary'"
-      class="probe-btn"
-      @click="handleProbeTrackers"
-    >
-      <template v-if="trackerProbing" #icon>
-        <div class="probe-spinner" />
-      </template>
-      {{ trackerProbing ? t('task.task-tracker-cancel-probe') : t('task.task-tracker-probe') }}
-    </NButton>
-  </div>
   <NDataTable
     :columns="columns"
     :data="rows"
-    :row-key="(row: TrackerRow) => row.url"
+    :row-key="(row) => row.url"
     size="small"
     :bordered="true"
     :max-height="400"

@@ -78,19 +78,24 @@ impl Aria2Client {
 
     /// Generic JSON-RPC call.  Handles request construction, token injection,
     /// HTTP transport, and response parsing.
-    async fn call<T: DeserializeOwned>(
+    async fn call_rpc<T: DeserializeOwned>(
         &self,
         method: &str,
         extra_params: Vec<serde_json::Value>,
+        authenticate: bool,
     ) -> Result<T, AppError> {
         let port = *self.port.read().await;
-        let params = self.build_params(extra_params).await;
+        let params = if authenticate {
+            self.build_params(extra_params).await
+        } else {
+            extra_params
+        };
         let id = self.request_id.fetch_add(1, Ordering::Relaxed);
 
         let req = JsonRpcRequest {
             jsonrpc: "2.0",
             id: id.to_string(),
-            method: format!("aria2.{method}"),
+            method: method.to_string(),
             params,
         };
 
@@ -120,11 +125,28 @@ impl Aria2Client {
             .ok_or_else(|| AppError::Aria2("aria2 returned null result".into()))
     }
 
+    async fn call<T: DeserializeOwned>(
+        &self,
+        method: &str,
+        extra_params: Vec<serde_json::Value>,
+    ) -> Result<T, AppError> {
+        self.call_rpc(&format!("aria2.{method}"), extra_params, true)
+            .await
+    }
+
     // ── Public API ──────────────────────────────────────────────────
 
     /// Saves the current aria2 download session to disk.
     pub async fn save_session(&self) -> Result<String, AppError> {
         self.call("saveSession", vec![]).await
+    }
+
+    pub async fn shutdown(&self) -> Result<String, AppError> {
+        self.call("shutdown", vec![]).await
+    }
+
+    pub async fn list_methods(&self) -> Result<Vec<String>, AppError> {
+        self.call_rpc("system.listMethods", vec![], false).await
     }
 
     /// Returns global download/upload statistics.
@@ -183,10 +205,10 @@ impl Aria2Client {
         };
 
         for task in paused_tasks {
-            let is_resolved_magnet = task.following.is_some()
-                && task.bittorrent.is_some()
-                && task.files.iter().any(|file| file.length != "0");
-            if is_resolved_magnet {
+            let requires_file_selection =
+                task.bittorrent.as_ref().and_then(|bt| bt.state.as_deref())
+                    == Some("awaitingFileSelection");
+            if requires_file_selection {
                 let has_selection = self
                     .get_option(&task.gid)
                     .await
@@ -221,8 +243,12 @@ impl Aria2Client {
             .await
     }
 
-    pub async fn get_bt_endpoint(&self) -> Result<Aria2BtEndpoint, AppError> {
-        self.call("getBtEndpoint", vec![]).await
+    pub async fn get_bt_session_status(&self) -> Result<Aria2BtSessionStatus, AppError> {
+        self.call("getBtSessionStatus", vec![]).await
+    }
+
+    pub async fn get_bt_trackers(&self, gid: &str) -> Result<Vec<Aria2BtTracker>, AppError> {
+        self.call("getBtTrackers", vec![gid.into()]).await
     }
 
     /// Adds a URI-based download.

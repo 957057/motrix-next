@@ -53,12 +53,11 @@ export function buildSelectFileOption(indices: number[]): string {
 /**
  * Determines whether the file selection dialog should be shown for a magnet download.
  *
- * When pauseMetadata=true (btAutoDownloadContent unchecked), aria2 pauses the
- * follow-up download after metadata resolves — giving the UI a chance to show
- * the file selection dialog.
+ * When pauseMetadata=true, aria2 pauses the same GID after metadata resolves
+ * so the UI can show the file selection dialog.
  *
  * When pauseMetadata=false (btAutoDownloadContent checked), aria2 starts the
- * follow-up download immediately — no file selection needed.
+ * same GID immediately — no file selection needed.
  *
  * Defaults to true (show dialog) when the config value is missing,
  * aligning with the industry standard of giving users control over file selection.
@@ -67,36 +66,24 @@ export function shouldShowFileSelection(config: { pauseMetadata?: boolean | stri
   return config.pauseMetadata !== false && config.pauseMetadata !== 'false'
 }
 
-function isPendingMagnetSelectionTask(task: Aria2Task): boolean {
+export function isPendingMagnetSelectionTask(task: Aria2Task): boolean {
   return Boolean(
     task.bittorrent &&
     task.status === 'paused' &&
+    task.bittorrent.state === 'awaitingFileSelection' &&
     task.bittorrent.info?.name &&
-    task.following &&
     task.files.some((file) => Number(file.length) > 0),
   )
 }
 
 export function getPendingMagnetSelectionGids(tasks: Aria2Task[]): string[] {
-  return tasks
-    .map((task) => (isPendingMagnetSelectionTask(task) ? task.following : false))
-    .filter((gid): gid is string => typeof gid === 'string' && gid.length > 0)
+  return tasks.filter(isPendingMagnetSelectionTask).map((task) => task.gid)
 }
 
-export function findPendingMagnetSelectionTask(tasks: Aria2Task[], metadataGid: string): Aria2Task | undefined {
-  return tasks.find((task) => isPendingMagnetSelectionTask(task) && task.following === metadataGid)
+export function findPendingMagnetSelectionTask(tasks: Aria2Task[], gid: string): Aria2Task | undefined {
+  return tasks.find((task) => isPendingMagnetSelectionTask(task) && task.gid === gid)
 }
 
 export interface MagnetSelectionResolution {
-  metadataGid: string
-  downloadGid: string
-}
-
-export function getResolvedMagnetSelection(task: Aria2Task): MagnetSelectionResolution | null {
-  const downloadGid = task.followedBy?.find((gid) => gid.trim().length > 0)
-  if (!downloadGid) return null
-  return {
-    metadataGid: task.gid,
-    downloadGid,
-  }
+  gid: string
 }

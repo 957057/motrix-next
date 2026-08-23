@@ -83,8 +83,7 @@ describe('deleteTaskFiles', () => {
     await deleteTaskFiles(task, 'trash')
 
     expect(mockDeletePath).toHaveBeenCalledWith({ path: '/downloads/My Torrent', mode: 'trash' })
-    expect(mockDeletePath).toHaveBeenCalledWith({ path: '/downloads/My Torrent.aria2', mode: 'permanent' })
-    expect(mockDeletePath).toHaveBeenCalledWith({ path: `/downloads/${infoHash}.aria2`, mode: 'permanent' })
+    expect(mockDeletePath).toHaveBeenCalledTimes(1)
     expect(mockCleanupTorrentMetadata).toHaveBeenCalledWith('/downloads', infoHash)
   })
 
@@ -203,7 +202,6 @@ describe('cleanupAria2ControlFiles', () => {
 
     await cleanupAria2ControlFiles(task)
 
-    expect(mockDeletePath).toHaveBeenCalledWith({ path: `/downloads/${task.infoHash}.aria2`, mode: 'permanent' })
     expect(mockDeletePath).toHaveBeenCalledWith({ path: '/downloads/file.bin.aria2', mode: 'permanent' })
   })
 

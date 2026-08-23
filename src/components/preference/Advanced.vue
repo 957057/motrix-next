@@ -7,7 +7,7 @@ import { usePlatform } from '@/composables/usePlatform'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
-import { useEngineRestart } from '@/composables/useEngineRestart'
+import { useEngineStore } from '@/stores/engine'
 import { useTaskStore } from '@/stores/task'
 import { useHistoryStore } from '@/stores/history'
 import { useAdvancedActions } from '@/composables/useAdvancedActions'
@@ -57,7 +57,7 @@ import PreferenceActionBar from './PreferenceActionBar.vue'
 import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 
-const { restartEngine } = useEngineRestart()
+const engineStore = useEngineStore()
 
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
@@ -71,7 +71,6 @@ const protocolPending = protocolHandlers.pending
 
 const { isLinux } = usePlatform()
 
-import { ENGINE_RPC_PORT } from '@shared/constants'
 import { diffConfig, checkIsNeedRestart } from '@shared/utils/config'
 import { writeAppClipboardText } from '@shared/utils'
 
@@ -186,12 +185,9 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
 
     // Engine restart — user already confirmed in beforeSave, execute immediately.
     if (checkIsNeedRestart(changed)) {
-      const port = f.rpcListenPort || ENGINE_RPC_PORT
-      const secret = f.rpcSecret || ''
-      message.info(t('preferences.engine-restarting'))
       await nextTick()
       await new Promise((r) => requestAnimationFrame(r))
-      await restartEngine({ port, secret })
+      await engineStore.restart('settingsChange')
     }
 
     // Motrix log level changes need a full app relaunch,
@@ -204,7 +200,7 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
         negativeText: t('preferences.engine-restart-later'),
         maskClosable: false,
         onPositiveClick: async () => {
-          await invoke('stop_engine_command')
+          await engineStore.stop('appRelaunch')
           await relaunch()
         },
       })
@@ -219,7 +215,7 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
         negativeText: t('preferences.engine-restart-later'),
         maskClosable: false,
         onPositiveClick: async () => {
-          await invoke('stop_engine_command')
+          await engineStore.stop('appRelaunch')
           await relaunch()
         },
       })
@@ -349,7 +345,7 @@ const {
 })
 
 function handleManualRestart() {
-  handleManualRestartAction(form.value.rpcListenPort as number, form.value.rpcSecret as string)
+  handleManualRestartAction()
 }
 
 onMounted(async () => {

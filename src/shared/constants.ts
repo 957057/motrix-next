@@ -79,7 +79,6 @@ export const ENGINE_RPC_HOST = '127.0.0.1'
 export const ENGINE_RPC_PORT = 29100
 export const EXTENSION_API_PORT = 29110
 export const BT_LISTEN_PORT = 29120
-export const DHT_LISTEN_PORT = 29130
 export const ED2K_LISTEN_PORT = 29140
 export const ED2K_UDP_LISTEN_PORT = 29150
 export const ED2K_SERVER_MET_URL = 'https://upd.emule-security.org/server.met'
@@ -231,7 +230,7 @@ export const TRACKER_SOURCE_OPTIONS = [
 export const DEFAULT_TRACKER_SOURCE = TRACKER_SOURCE_OPTIONS.map((source) => source.value)
 
 export const DEFAULT_APP_CONFIG = {
-  configVersion: 5,
+  configVersion: 6,
   dbSchemaVersion: CURRENT_DB_SCHEMA_VERSION,
   // ── Appearance ──────────────────────────────────────────────────
   theme: 'auto' as const,
@@ -269,13 +268,12 @@ export const DEFAULT_APP_CONFIG = {
   keepSharing: false, // stop by condition by default
 
   // ── BitTorrent (qBT/Transmission/Deluge conventions) ──────────
-  btMaxPeers: ENGINE_DEFAULT_BT_MAX_PEERS, // aria2 default=55; qBT=100, Transmission=60, Deluge=200
-  btDhtIpv4Enabled: true, // improves peer discovery; also enables UDP tracker support
-  btDhtIpv6Enabled: true, // restores IPv6 DHT peer discovery
+  btMaxPeers: ENGINE_DEFAULT_BT_MAX_PEERS,
+  btDhtEnabled: true,
   btPeerExchangeEnabled: true, // improves peer discovery inside active swarms
-  btLocalPeerDiscoveryEnabled: true, // aria2.conf legacy default; helps LAN peers
-  btForceEncryption: false, // qBT default "Allow", not "Force"; forcing reduces peers
-  pauseMetadata: true, // pause follow-up download after metadata — let user select files first
+  btLocalPeerDiscoveryEnabled: true,
+  btEncryption: 'preferred' as const,
+  pauseMetadata: true,
   continue: true, // aria2 default=true; resume incomplete downloads
   remoteTime: false, // aria2 default=false; file timestamp = download completion time
 
@@ -320,7 +318,6 @@ export const DEFAULT_APP_CONFIG = {
     rpc: true,
     extensionApi: true,
     bt: true,
-    dht: true,
     ed2k: true,
     ed2kUdp: true,
   },
@@ -333,7 +330,6 @@ export const DEFAULT_APP_CONFIG = {
   listenPort: BT_LISTEN_PORT,
   btExternalIp: '',
   btExternalPort: 0,
-  dhtListenPort: DHT_LISTEN_PORT,
   ed2kListenPort: ED2K_LISTEN_PORT,
   ed2kUdpListenPort: ED2K_UDP_LISTEN_PORT,
   ed2kServer: '',

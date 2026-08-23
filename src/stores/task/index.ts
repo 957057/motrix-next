@@ -10,7 +10,6 @@ import { historyRecordToTask, mergeHistoryIntoTasks, isMetadataTask } from '@/co
 import { buildMetadataOnlyOptions, shouldShowFileSelection } from '@/composables/useMagnetFlow'
 import {
   registerAddedAt,
-  getAddedAt,
   trackFirstSeen,
   loadAddedAtFromRecords,
   buildSortableAddedAtMap,
@@ -202,17 +201,6 @@ export const useTaskStore = defineStore('task', () => {
         // overwrite completed tasks' timestamps with Date.now().
         loadAddedAtFromRecords(historyRecords)
 
-        // Inherit added_at from parent task for aria2 "followedBy" GIDs.
-        // When a magnet resolves, aria2 auto-creates a new GID for the real
-        // download. This GID never goes through addUri/addTorrent, so it has
-        // no birth timestamp. Without inheritance it gets Date.now() from
-        // trackFirstSeen and jumps to the top of the list.
-        for (const t of data) {
-          if (t.following && !getAddedAt(t.gid)) {
-            const parentAt = getAddedAt(t.following)
-            if (parentAt) registerAddedAt(t.gid, parentAt)
-          }
-        }
         trackFirstSeen(data)
 
         const addedAtIndex = buildSortableAddedAtMap(data, historyRecords)
@@ -412,12 +400,13 @@ export const useTaskStore = defineStore('task', () => {
   }
 
   /**
-   * Adds a magnet URI as a normal download. Returns the metadata GID.
+   * Adds a magnet URI as a normal download. The returned GID owns the complete
+   * metadata, file-selection, download, and seeding lifecycle.
    *
    * The global `pause-metadata` setting (controlled by btAutoDownloadContent)
    * determines what happens after metadata resolves:
-   * - pause-metadata=true  → followedBy content task stays paused until selection
-   * - pause-metadata=false → follow-up download starts immediately (no selection)
+   * - pause-metadata=true  → the task pauses until selection
+   * - pause-metadata=false → the task starts downloading immediately
    *
    * Directly registers the GID for monitoring to avoid caller-chain breaks.
    */
@@ -445,9 +434,8 @@ export const useTaskStore = defineStore('task', () => {
     const historyStore = useHistoryStore()
     historyStore.recordTaskBirth(gid, now).catch((e) => logger.debug('taskBirth.write', e))
 
-    // Only register for file selection polling when pause-metadata is enabled.
-    // When btAutoDownloadContent=true (pauseMetadata=false), aria2 starts the
-    // follow-up download immediately — file selection is not needed.
+    // Register the GID for the event-driven file-selection queue.
+    // When btAutoDownloadContent=true, file selection is not needed.
     if (showFileSelection) {
       const { useAppStore } = await import('@/stores/app')
       const appStore = useAppStore()
@@ -458,7 +446,7 @@ export const useTaskStore = defineStore('task', () => {
     return gid
   }
 
-  /** Fetch a single task's full status (used for polling followedBy on magnet tasks). */
+  /** Fetch a single task's full status. */
   async function fetchTaskStatus(gid: string): Promise<Aria2Task> {
     return api.fetchTaskItem({ gid })
   }
@@ -544,8 +532,7 @@ export const useTaskStore = defineStore('task', () => {
     getTaskOption,
     changeTaskOption,
     removeTask: (task: Aria2Task) => taskOps.removeTask(task),
-    cancelMagnetSelectionDownload: (target: { metadataGid: string; downloadGid: string }) =>
-      taskOps.cancelMagnetSelectionDownload(target),
+    cancelMagnetSelectionDownload: (target: { gid: string }) => taskOps.cancelMagnetSelectionDownload(target),
     pauseTask: (task: Aria2Task) => taskOps.pauseTask(task),
     resumeTask: (task: Aria2Task) => taskOps.resumeTask(task),
     applyMagnetFileSelection: (task: Aria2Task, selectFile: string) =>

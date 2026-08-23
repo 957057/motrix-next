@@ -172,13 +172,10 @@ impl TaskEvent {
 }
 
 fn is_metadata_task(task: &Aria2Task) -> bool {
-    task.bittorrent.is_some()
-        && task
-            .bittorrent
-            .as_ref()
-            .and_then(|bt| bt.info.as_ref())
-            .is_none()
-        && task.following.is_none()
+    let Some(bt) = task.bittorrent.as_ref() else {
+        return false;
+    };
+    bt.info.is_none() && matches!(bt.state.as_deref(), Some("adding" | "downloadingMetadata"))
 }
 
 /// Builds the JSON `meta` field for a history record.
@@ -846,7 +843,10 @@ mod tests {
 
     fn make_metadata_task(gid: &str) -> Aria2Task {
         let mut task = make_task(gid, "complete");
-        task.bittorrent = Some(Aria2BtInfo::default());
+        task.bittorrent = Some(Aria2BtInfo {
+            state: Some("downloadingMetadata".to_string()),
+            ..Aria2BtInfo::default()
+        });
         task.info_hash = Some("abcdef1234567890abcdef1234567890abcdef12".to_string());
         task
     }

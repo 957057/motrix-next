@@ -22,7 +22,7 @@ import { DiceOutline, DownloadOutline, RefreshOutline, SearchOutline } from '@vi
 import { usePreferenceStore } from '@/stores/preference'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
-import { useEngineRestart } from '@/composables/useEngineRestart'
+import { useEngineStore } from '@/stores/engine'
 import { useAppMessage } from '@/composables/useAppMessage'
 import {
   buildEd2kForm,
@@ -32,7 +32,7 @@ import {
   validateEd2kForm,
 } from '@/composables/useEd2kPreference'
 import { useEd2kSearchSession } from '@/composables/useEd2kSearchSession'
-import { BT_LISTEN_PORT, DHT_LISTEN_PORT, ENGINE_RPC_PORT, PROXY_SCOPES } from '@shared/constants'
+import { PROXY_SCOPES } from '@shared/constants'
 import { diffConfig, checkIsNeedRestart } from '@shared/utils/config'
 import { bytesToSize } from '@shared/utils'
 import { resolveAppProxyUrl } from '@shared/utils/proxy'
@@ -47,7 +47,7 @@ const preferenceStore = usePreferenceStore()
 const taskStore = useTaskStore()
 const dialog = useDialog()
 const message = useAppMessage()
-const { restartEngine } = useEngineRestart()
+const engineStore = useEngineStore()
 
 const needsRestart = ref(false)
 const bootstrapSyncing = ref(false)
@@ -150,12 +150,9 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
   afterSave: async (f, prevConfig) => {
     if (needsRestart.value) {
       needsRestart.value = false
-      const port = (preferenceStore.config.rpcListenPort as number) || ENGINE_RPC_PORT
-      const secret = (preferenceStore.config.rpcSecret as string) || ''
-      message.info(t('preferences.engine-restarting'))
       await nextTick()
       await new Promise((r) => requestAnimationFrame(r))
-      await restartEngine({ port, secret })
+      await engineStore.restart('settingsChange')
     }
 
     if (
@@ -178,9 +175,6 @@ function onUdpPortDice() {
 async function syncUpnpState(ed2kPort: number, ed2kUdpPort: number) {
   try {
     await invoke('start_upnp_mapping', {
-      btPort: Number(preferenceStore.config.listenPort) || BT_LISTEN_PORT,
-      btExternalPort: Number(preferenceStore.config.btExternalPort) || 0,
-      dhtPort: Number(preferenceStore.config.dhtListenPort) || DHT_LISTEN_PORT,
       ed2kPort: ed2kPort > 0 ? ed2kPort : null,
       ed2kUdpPort: ed2kUdpPort > 0 ? ed2kUdpPort : null,
     })
@@ -286,8 +280,6 @@ const resultColumns = computed(() => [
 ])
 
 function handleManualRestart() {
-  const port = (preferenceStore.config.rpcListenPort as number) || ENGINE_RPC_PORT
-  const secret = (preferenceStore.config.rpcSecret as string) || ''
   const d = dialog.info({
     title: t('preferences.engine-restart-title'),
     content: t('preferences.engine-restart-manual-confirm'),
@@ -298,9 +290,8 @@ function handleManualRestart() {
       d.loading = true
       d.negativeText = ''
       d.closable = false
-      message.info(t('preferences.engine-restarting'))
       await new Promise((r) => requestAnimationFrame(r))
-      await restartEngine({ port, secret })
+      await engineStore.restart('manualRestart')
     },
   })
 }

@@ -25,7 +25,7 @@ import { logger } from '@shared/logger'
 import type { AppConfig } from '@shared/types'
 
 /** Current schema version. Must equal `migrations.length`. */
-export const CONFIG_VERSION = 5
+export const CONFIG_VERSION = 6
 
 /** Result returned by runMigrations for callers to act on (e.g. toast). */
 export interface MigrationResult {
@@ -175,6 +175,24 @@ const migrations: Migration[] = [
       config.clipboard.ed2k = true
       logger.info('ConfigMigration', 'v5: backfilled clipboard.ed2k')
     }
+  },
+
+  // ── v5 → v6 ──────────────────────────────────────────────────────
+  // Adopt the native libtorrent configuration model and remove the retired
+  // dual-DHT and legacy aria2 encryption fields.
+  function migrateV6(config: Partial<AppConfig>): void {
+    const legacy = config as Partial<AppConfig> & Record<string, unknown>
+    const forceEncryption = legacy.btForceEncryption === true
+    config.btEncryption = forceEncryption ? 'required' : 'preferred'
+    config.btDhtEnabled = legacy.btDhtIpv4Enabled !== false || legacy.btDhtIpv6Enabled !== false
+    delete legacy.btForceEncryption
+    delete legacy.btDhtIpv4Enabled
+    delete legacy.btDhtIpv6Enabled
+    delete legacy.dhtListenPort
+    if (config.portConflictRecovery) {
+      delete (config.portConflictRecovery as unknown as Record<string, unknown>).dht
+    }
+    logger.info('ConfigMigration', 'v6: adopted native BitTorrent encryption and unified DHT settings')
   },
 ]
 

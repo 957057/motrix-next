@@ -4,7 +4,7 @@ import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
-import { useEngineRestart } from '@/composables/useEngineRestart'
+import { useEngineStore } from '@/stores/engine'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { extractSpeedUnit } from '@shared/utils'
 import { logger } from '@shared/logger'
@@ -12,7 +12,6 @@ import { resolveUserVisibleDownloadDir } from '@shared/utils/userVisibleDirector
 import { toggleSpeedLimit } from '@/composables/useSpeedLimiter'
 import { changeGlobalOption, isEngineReady } from '@/api/aria2'
 import {
-  ENGINE_RPC_PORT,
   ENGINE_MAX_CONCURRENT_DOWNLOADS,
   ENGINE_MAX_CONNECTION_PER_SERVER,
   SAFE_LIMIT_SPLIT,
@@ -310,10 +309,8 @@ function loadForm() {
   downloadUnit.value = dl.unit
 }
 
-const { restartEngine } = useEngineRestart()
+const engineStore = useEngineStore()
 function handleManualRestart() {
-  const port = (preferenceStore.config.rpcListenPort as number) || ENGINE_RPC_PORT
-  const secret = (preferenceStore.config.rpcSecret as string) || ''
   const d = dialog.info({
     title: t('preferences.engine-restart-title'),
     content: t('preferences.engine-restart-manual-confirm'),
@@ -324,9 +321,8 @@ function handleManualRestart() {
       d.loading = true
       d.negativeText = ''
       d.closable = false
-      message.info(t('preferences.engine-restarting'))
       await new Promise((r) => requestAnimationFrame(r))
-      await restartEngine({ port, secret })
+      await engineStore.restart('manualRestart')
     },
   })
 }

@@ -244,7 +244,6 @@ describe('buildNetworkForm', () => {
       rpc: true,
       extensionApi: true,
       bt: true,
-      dht: true,
       ed2k: true,
       ed2kUdp: true,
     })

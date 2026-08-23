@@ -117,6 +117,12 @@ const columns = computed<DataTableColumns<PeerDetailRow>>(() => {
       render: (row) => renderDetailLongText(row.client),
     },
     {
+      title: t('task.task-peer-connection'),
+      key: 'connection',
+      minWidth: 150,
+      render: (row) => renderDetailLongText(row.connection),
+    },
+    {
       title: t('task.task-peer-percent'),
       key: 'percent',
       width: calcColumnWidth({

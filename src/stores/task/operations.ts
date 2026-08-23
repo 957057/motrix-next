@@ -14,6 +14,7 @@ import { logger } from '@shared/logger'
 import { buildSharingCompletionRecord } from '@/composables/useTaskLifecycle'
 import { cleanupAria2ControlFiles, deleteTaskFiles } from '@/composables/useFileDelete'
 import { cleanupAria2MetadataFiles } from '@/composables/useDownloadCleanup'
+import { isPendingMagnetSelectionTask } from '@/composables/useMagnetFlow'
 import { useHistoryStore } from '@/stores/history'
 import type { Aria2Task, TaskApi } from '@shared/types'
 import type { Ref } from 'vue'
@@ -22,8 +23,7 @@ const REMOVE_RESULT_RETRY_ATTEMPTS = 5
 const REMOVE_RESULT_RETRY_DELAY_MS = 120
 
 export interface MagnetSelectionCleanupTarget {
-  metadataGid: string
-  downloadGid: string
+  gid: string
 }
 
 interface TaskOperationsDeps {
@@ -46,8 +46,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
 
   async function requiresMagnetFileSelection(task: Aria2Task): Promise<boolean> {
     if (task.status !== TASK_STATUS.PAUSED) return false
-    if (!task.following || !task.bittorrent) return false
-    if (!task.files.some((file) => Number(file.length) > 0)) return false
+    if (!isPendingMagnetSelectionTask(task)) return false
 
     try {
       const options = await api.getOption({ gid: task.gid })
@@ -165,21 +164,19 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
   }
 
   async function cancelMagnetSelectionDownload(target: MagnetSelectionCleanupTarget) {
-    const { downloadGid, metadataGid } = target
-    if (downloadGid === currentTaskGid.value) hideTaskDetail()
+    const { gid } = target
+    if (gid === currentTaskGid.value) hideTaskDetail()
 
     try {
-      const task = await fetchTaskForCleanup(downloadGid)
+      const task = await fetchTaskForCleanup(gid)
 
       try {
-        await api.removeTask({ gid: downloadGid })
+        await api.removeTask({ gid })
       } catch (e) {
-        logger.debug('TaskOps.cancelMagnetSelection', `removeTask gid=${downloadGid} skipped: ${e}`)
+        logger.debug('TaskOps.cancelMagnetSelection', `removeTask gid=${gid} skipped: ${e}`)
       }
 
-      const resultGids = new Set<string>([downloadGid])
-      if (metadataGid) resultGids.add(metadataGid)
-      if (task?.following) resultGids.add(task.following)
+      const resultGids = new Set<string>([gid])
 
       for (const gid of resultGids) {
         await removeTaskRecordWithRetry(gid, 'TaskOps.cancelMagnetSelection')
@@ -201,10 +198,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
 
       if (task) await cleanupMagnetSelectionFiles(task)
 
-      logger.info(
-        'TaskOps.cancelMagnetSelection',
-        `downloadGid=${downloadGid} metadataGid=${metadataGid || task?.following || 'n/a'}`,
-      )
+      logger.info('TaskOps.cancelMagnetSelection', `gid=${gid}`)
     } finally {
       await fetchList()
       await api.saveSession()
@@ -305,13 +299,6 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
         await api.removeTaskRecord({ gid })
       } catch (e) {
         logger.debug('TaskOps.stopSharing', `removeTaskRecord gid=${gid} skipped: ${e}`)
-      }
-      if (protocolKind === 'bt' && task.following) {
-        try {
-          await api.removeTaskRecord({ gid: task.following })
-        } catch (e) {
-          logger.debug('TaskOps.stopSharing', `removeTaskRecord following=${task.following} skipped: ${e}`)
-        }
       }
       const record = buildSharingCompletionRecord(task)
       const historyStore = useHistoryStore()

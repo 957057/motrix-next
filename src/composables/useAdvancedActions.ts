@@ -19,8 +19,7 @@ import { calcColumnWidth } from '@shared/utils/calcColumnWidth'
 import { resolveUserVisibleDownloadDir } from '@shared/utils/userVisibleDirectory'
 import { buildSettingsBackup, parseSettingsBackup } from '@shared/utils/settingsBackup'
 import { buildSystemConfigFromAppConfig } from '@shared/utils/systemConfig'
-import { useEngineRestart } from '@/composables/useEngineRestart'
-import { ENGINE_RPC_PORT } from '@shared/constants'
+import { useEngineStore } from '@/stores/engine'
 import type { AppConfig, HistoryRecord } from '@shared/types'
 import type { DataTableSortState, PaginationProps } from 'naive-ui'
 
@@ -66,7 +65,7 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
   const { t, message, taskStore, historyStore, preferenceStore, form, buildForm, resetSnapshot } = deps
 
   const dialog = useDialog()
-  const { restartEngine } = useEngineRestart()
+  const engineStore = useEngineStore()
 
   // ── DB Browse state ──────────────────────────────────────────────────
   const showDbBrowse = ref(false)
@@ -162,9 +161,7 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
 
   // ── Handlers ─────────────────────────────────────────────────────────
 
-  function handleManualRestart(rpcListenPort: number, rpcSecret: string) {
-    const port = rpcListenPort || ENGINE_RPC_PORT
-    const secret = rpcSecret || ''
+  function handleManualRestart() {
     const d = dialog.info({
       title: t('preferences.engine-restart-title'),
       content: t('preferences.engine-restart-manual-confirm'),
@@ -175,9 +172,8 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
         d.loading = true
         d.negativeText = ''
         d.closable = false
-        message.info(t('preferences.engine-restarting'))
         await new Promise((r) => requestAnimationFrame(r))
-        await restartEngine({ port, secret })
+        await engineStore.restart('manualRestart')
       },
     })
   }
@@ -227,7 +223,7 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
             positiveText: t('preferences.restart-now'),
             negativeText: t('app.cancel'),
             onPositiveClick: async () => {
-              await invoke('stop_engine_command')
+              await engineStore.stop('appRelaunch')
               relaunch()
             },
           })
@@ -245,7 +241,7 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
       onPositiveClick: async () => {
         try {
           await invoke('factory_reset')
-          await invoke('stop_engine_command')
+          await engineStore.stop('appRelaunch')
           relaunch()
         } catch (e) {
           logger.error('Advanced.factoryReset', e)
@@ -418,7 +414,7 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
             negativeText: t('preferences.engine-restart-later'),
             maskClosable: false,
             onPositiveClick: async () => {
-              await invoke('stop_engine_command')
+              await engineStore.stop('appRelaunch')
               await relaunch()
             },
           })

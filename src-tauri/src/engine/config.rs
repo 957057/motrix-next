@@ -31,6 +31,7 @@ const PROXY_CLEAR_KEYS: &[&str] = &[
 const MANAGED_KEYS: &[&str] = &[
     "allow-remote-access",
     "bt-peer-blocklist",
+    "bt-session-state-file",
     "ed2k-node-list",
     "ed2k-server-list",
     "enable-rpc",
@@ -87,6 +88,7 @@ pub(crate) fn non_hot_reloadable_keys() -> &'static HashSet<&'static str> {
 #[derive(Clone, Copy)]
 pub(crate) struct ManagedEngineConfig<'a> {
     pub session_path: &'a str,
+    pub bt_session_state_file: &'a str,
     pub load_session: bool,
     pub log_file_path: &'a str,
     pub log_level: &'a str,
@@ -210,6 +212,11 @@ pub(crate) fn build_runtime_config(
     )?;
     insert_option(&mut options, "rpc-allow-origin-all", "true")?;
     insert_option(&mut options, "save-session", managed.session_path)?;
+    insert_option(
+        &mut options,
+        "bt-session-state-file",
+        managed.bt_session_state_file,
+    )?;
     if managed.load_session {
         insert_option(&mut options, "input-file", managed.session_path)?;
     } else {
@@ -329,6 +336,7 @@ mod tests {
     fn managed<'a>() -> ManagedEngineConfig<'a> {
         ManagedEngineConfig {
             session_path: "/data/download.session",
+            bt_session_state_file: "/data/engine/bittorrent.session",
             load_session: true,
             log_file_path: "/logs/aria2-next.log",
             log_level: "warn",
@@ -372,9 +380,22 @@ mod tests {
             Some("/data/download.session")
         );
         assert_eq!(
+            option_value(&content, "bt-session-state-file"),
+            Some("/data/engine/bittorrent.session")
+        );
+        assert_eq!(
             option_value(&content, "bt-peer-blocklist"),
             Some("/data/peer-blocklist.txt")
         );
+    }
+
+    #[test]
+    fn bundled_config_matches_the_native_bt_contract() {
+        let content = build_runtime_config(&json!({}), managed()).expect("build config");
+
+        assert_eq!(option_value(&content, "bt-encryption"), Some("preferred"));
+        assert_eq!(option_value(&content, "bt-tracker-connect-timeout"), None);
+        assert_eq!(option_value(&content, "bt-tracker-timeout"), None);
     }
 
     #[test]

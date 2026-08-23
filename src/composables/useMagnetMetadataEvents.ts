@@ -2,7 +2,7 @@ import { listen } from '@tauri-apps/api/event'
 import { formatLogFields, logger } from '@shared/logger'
 import {
   findPendingMagnetSelectionTask,
-  getResolvedMagnetSelection,
+  isPendingMagnetSelectionTask,
   parseFilesForSelection,
   type MagnetFileItem,
   type MagnetSelectionResolution,
@@ -41,36 +41,30 @@ export async function resolvePendingMagnetMetadata(
   if (state.visible) return false
   if (!state.pendingGids.includes(gid)) return false
 
-  let metadataQueryError: unknown
-  let resolved: MagnetSelectionResolution | null = null
+  let queryError: unknown
   let task: Aria2Task | undefined
 
   try {
-    const metadataTask = await deps.fetchTaskStatus(gid)
-    resolved = getResolvedMagnetSelection(metadataTask)
+    const candidate = await deps.fetchTaskStatus(gid)
+    if (isPendingMagnetSelectionTask(candidate)) task = candidate
   } catch (error) {
-    metadataQueryError = error
+    queryError = error
   }
 
   try {
-    if (resolved) {
-      task = await deps.fetchTaskStatus(resolved.downloadGid)
-    } else {
-      task = findPendingMagnetSelectionTask(await loadPendingTasks(), gid)
-      if (task) resolved = { metadataGid: gid, downloadGid: task.gid }
-    }
+    task ??= findPendingMagnetSelectionTask(await loadPendingTasks(), gid)
 
-    if (!resolved || !task) {
-      if (metadataQueryError !== undefined) {
+    if (!task) {
+      if (queryError !== undefined) {
         logger.debug(
           'MagnetMetadata.resolve',
-          formatLogFields({ gid, outcome: 'skipped', reason: getErrorMessage(metadataQueryError) }),
+          formatLogFields({ gid, outcome: 'skipped', reason: getErrorMessage(queryError) }),
         )
       }
       return false
     }
 
-    const files = await deps.getFiles(resolved.downloadGid)
+    const files = await deps.getFiles(gid)
     const realFiles = files.filter((file) => Number(file.length) > 0)
     if (realFiles.length === 0) return false
 
@@ -78,7 +72,7 @@ export async function resolvePendingMagnetMetadata(
 
     const parsed = parseFilesForSelection(realFiles)
     state.files = parsed
-    state.session = resolved
+    state.session = { gid }
     state.name = task.bittorrent?.info?.name || parsed[0]?.name || deps.fallbackName()
     state.visible = true
     return true
@@ -123,10 +117,10 @@ export function createMagnetMetadataResolver(getDeps: () => MagnetMetadataDeps):
   return { request }
 }
 
-export async function listenForAria2DownloadComplete(
-  onComplete: (gid: string) => unknown | Promise<unknown>,
+export async function listenForAria2DownloadPause(
+  onPause: (gid: string) => unknown | Promise<unknown>,
 ): Promise<() => void> {
-  return listen<{ gid: string }>('aria2-event:download-complete', (event) => {
-    void onComplete(event.payload.gid)
+  return listen<{ gid: string }>('aria2-event:download-pause', (event) => {
+    void onPause(event.payload.gid)
   })
 }

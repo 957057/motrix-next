@@ -5,7 +5,7 @@
  * calls the correct Tauri command with the expected arguments.
  *
  * Key behaviors under test:
- * - setEngineReady controls the readiness flag
+ * - readiness comes from the engine supervisor store
  * - All API methods invoke the correct Tauri command
  * - fetchTaskList routes by type (active vs stopped)
  * - addUri creates one invoke per URI with per-URI output filename override
@@ -13,11 +13,14 @@
  * - Batch operations use batch invoke commands
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 
 // ── Hoisted mocks ───────────────────────────────────────────────────
 const { mockInvoke } = vi.hoisted(() => ({
   mockInvoke: vi.fn().mockResolvedValue({}),
 }))
+
+const engineState = vi.hoisted(() => ({ isReady: false }))
 
 const loggerMock = vi.hoisted(() => ({
   debug: vi.fn(),
@@ -30,6 +33,10 @@ vi.mock('@tauri-apps/api/core', () => ({
   invoke: (...args: unknown[]) => mockInvoke(...args),
 }))
 
+vi.mock('@/stores/engine', () => ({
+  useEngineStore: () => engineState,
+}))
+
 vi.mock('@shared/logger', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@shared/logger')>()
   return {
@@ -40,7 +47,6 @@ vi.mock('@shared/logger', async (importOriginal) => {
 
 import {
   isEngineReady,
-  setEngineReady,
   getVersion,
   getGlobalOption,
   getGlobalStat,
@@ -69,17 +75,18 @@ import {
 
 describe('aria2 API (invoke transport)', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     vi.clearAllMocks()
-    setEngineReady(false)
+    engineState.isReady = false
   })
 
   // ── Client Lifecycle ────────────────────────────────────────────
 
   describe('client lifecycle', () => {
-    it('setEngineReady explicitly controls readiness flag', () => {
-      setEngineReady(true)
+    it('reads readiness from the supervisor store', () => {
+      engineState.isReady = true
       expect(isEngineReady()).toBe(true)
-      setEngineReady(false)
+      engineState.isReady = false
       expect(isEngineReady()).toBe(false)
     })
   })
@@ -88,7 +95,7 @@ describe('aria2 API (invoke transport)', () => {
 
   describe('RPC methods via invoke', () => {
     beforeEach(async () => {
-      setEngineReady(true)
+      engineState.isReady = true
     })
 
     it('getVersion invokes aria2_get_version', async () => {
@@ -196,7 +203,7 @@ describe('aria2 API (invoke transport)', () => {
 
   describe('task fetching', () => {
     beforeEach(async () => {
-      setEngineReady(true)
+      engineState.isReady = true
     })
 
     it('fetchTaskList with type "active" invokes aria2_fetch_task_list', async () => {
@@ -285,7 +292,7 @@ describe('aria2 API (invoke transport)', () => {
 
   describe('task creation', () => {
     beforeEach(async () => {
-      setEngineReady(true)
+      engineState.isReady = true
     })
 
     it('addUri creates one invoke per URI with per-URI out option', async () => {
@@ -509,7 +516,7 @@ describe('aria2 API (invoke transport)', () => {
 
   describe('task control', () => {
     beforeEach(async () => {
-      setEngineReady(true)
+      engineState.isReady = true
       mockInvoke.mockResolvedValue('OK')
     })
 
@@ -553,7 +560,7 @@ describe('aria2 API (invoke transport)', () => {
 
   describe('batch operations', () => {
     beforeEach(async () => {
-      setEngineReady(true)
+      engineState.isReady = true
       mockInvoke.mockResolvedValue([['OK'], ['OK']])
     })
 

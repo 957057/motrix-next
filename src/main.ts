@@ -8,14 +8,9 @@ import { usePreferenceStore } from './stores/preference'
 import { useTaskStore } from './stores/task'
 import { useAppStore } from './stores/app'
 import { useHistoryStore } from './stores/history'
+import { useEngineStore } from './stores/engine'
 import aria2Api from './api/aria2'
-import {
-  BT_LISTEN_PORT,
-  DEFAULT_TRACKER_SOURCE,
-  DHT_LISTEN_PORT,
-  ENGINE_RPC_PORT,
-  PROXY_SCOPES,
-} from '@shared/constants'
+import { DEFAULT_TRACKER_SOURCE, ENGINE_RPC_PORT, PROXY_SCOPES } from '@shared/constants'
 import { convertTrackerDataToLine, convertTrackerDataToComma } from '@shared/utils/tracker'
 import { logger } from '@shared/logger'
 import { getErrorMessage } from '@shared/utils/errorMessage'
@@ -69,19 +64,8 @@ if (import.meta.env.PROD) {
   const preferenceStore = usePreferenceStore()
   const taskStore = useTaskStore()
   const appStore = useAppStore()
+  const engineStore = useEngineStore()
   const historyStore = useHistoryStore()
-
-  /** Rust-side health check: probes Aria2 Next HTTP RPC with retries.
-   *  Also updates Aria2Client credentials so invoke() commands work. */
-  async function waitForEngine(): Promise<boolean> {
-    const { invoke } = await import('@tauri-apps/api/core')
-    try {
-      return await invoke<boolean>('wait_for_engine')
-    } catch (e) {
-      logger.error('waitForEngine', `invoke failed: ${e}`)
-      return false
-    }
-  }
 
   async function autoCheckForUpdate() {
     const config = preferenceStore.config
@@ -140,7 +124,7 @@ if (import.meta.env.PROD) {
 
       const { invoke } = await import('@tauri-apps/api/core')
       await invoke('save_system_config', { config: { 'bt-tracker': comma } })
-      if (appStore.engineReady) {
+      if (engineStore.isReady) {
         await aria2Api.changeGlobalOption({ 'bt-tracker': comma } as Partial<AppConfig>)
       }
       logger.info('Tracker', `Auto-synced: ${result.data.length}/${sources.length} source(s) succeeded`)
@@ -194,15 +178,13 @@ if (import.meta.env.PROD) {
   // window appears almost instantly while the engine boots in the background.
   //
   //  Phase 1 (critical path)   – loadPreference → locale → window.show()
-  //  Phase 2 (engine, async)   – rpcSecret → save config → start engine
-  //                              → on_engine_ready (Rust) → wait_for_engine
+  //  Phase 2 (engine, async)   – rpcSecret → save config → EngineSupervisor
   //  Phase 3 (non-critical)    – autostart, protocol sync (parallel)
   //  Phase 4 (deferred)        – update check, tracker sync, FS warmup,
   //                              clipboard monitor
   // ---------------------------------------------------------------------------
 
-  /** Start the aria2 engine, wait for readiness, and connect the RPC client.
-   *  Returns `true` if the engine is usable, `false` on failure. */
+  /** Persists the runtime configuration and delegates startup to EngineSupervisor. */
   async function initEngine(port: number, secret: string, config: AppConfig): Promise<boolean> {
     try {
       const { invoke } = await import('@tauri-apps/api/core')
@@ -251,27 +233,13 @@ if (import.meta.env.PROD) {
           'rpc-listen-port': String(port),
         },
       })
-      // start_engine_command ONLY spawns the bundled engine sidecar.
-      // Credential update + option sync happen in wait_for_engine
-      // (after Aria2 Next is confirmed ready).
-      await invoke('start_engine_command')
+      const snapshot = await engineStore.ensureRunning('startup')
+      logger.info('Engine', `supervisor completed startup on port ${port}`)
+      return snapshot.phase === 'running'
     } catch (e) {
-      logger.error('Engine', e)
+      logger.error('Engine', getErrorMessage(e))
       return false
     }
-
-    // Rust-side health check: probe → on_engine_ready (credential + option sync)
-    const ready = await waitForEngine()
-    if (!ready) {
-      logger.error('Engine', 'Engine did not become ready after retries')
-      return false
-    }
-
-    // Mark frontend as ready — invoke() transport is always available
-    const { setEngineReady } = await import('@/api/aria2')
-    setEngineReady(true)
-    logger.info('Engine', `Rust aria2 client connected via invoke() on port ${port}`)
-    return true
   }
 
   /**
@@ -351,6 +319,7 @@ if (import.meta.env.PROD) {
     // on their first run. The native window is still hidden until
     // MainLayout.onMounted explicitly shows it.
     app.mount('#app')
+    await engineStore.initialize()
 
     const config = preferenceStore.config
 
@@ -360,8 +329,7 @@ if (import.meta.env.PROD) {
 
     taskStore.setApi(aria2Api)
 
-    // Engine initializes in the background — does NOT block the UI.
-    // appStore.engineRestarting drives the engine banner in MainLayout.
+    // Engine initialization stays asynchronous while the supervisor publishes state.
     const enginePromise = initEngine(port, secret, config)
 
     // ── Phase 3: non-critical IPC ────────────────────────────────────────
@@ -378,9 +346,6 @@ if (import.meta.env.PROD) {
       import('@tauri-apps/api/core')
         .then(({ invoke }) =>
           invoke('start_upnp_mapping', {
-            btPort: Number(config.listenPort) || BT_LISTEN_PORT,
-            btExternalPort: Number(config.btExternalPort) || 0,
-            dhtPort: Number(config.dhtListenPort) || DHT_LISTEN_PORT,
             ed2kPort: Number(config.ed2kListenPort) > 0 ? Number(config.ed2kListenPort) : null,
             ed2kUdpPort: Number(config.ed2kUdpListenPort) > 0 ? Number(config.ed2kUdpListenPort) : null,
           }),
@@ -389,11 +354,8 @@ if (import.meta.env.PROD) {
     }
 
     // ── Phase 2 completion: engine ready ───────────────────────────────────
-    // try/finally guarantees engineRestarting always clears, even on failure.
-    // engineReady distinguishes success from failure for the UI toast.
     try {
       const ok = await enginePromise
-      appStore.engineReady = ok
 
       // Global option sync and speed scheduler are now handled by Rust:
       // - on_engine_ready() syncs system.json options to aria2 via changeGlobalOption
@@ -403,10 +365,7 @@ if (import.meta.env.PROD) {
         logger.info('Engine', 'Rust on_engine_ready completed: options synced, services spawned')
       }
     } catch (e) {
-      logger.error('Engine', 'unexpected startup error: ' + e)
-      appStore.engineReady = false
-    } finally {
-      appStore.setEngineRestarting(false)
+      logger.error('Engine', `unexpected startup error: ${getErrorMessage(e)}`)
     }
 
     // Resume all paused/waiting tasks on launch if configured
@@ -519,6 +478,5 @@ if (import.meta.env.PROD) {
 
   void bootstrapMainWindow().catch((e) => {
     logger.error('main.bootstrap', e)
-    appStore.setEngineRestarting(false)
   })
 } // end: main window initialization

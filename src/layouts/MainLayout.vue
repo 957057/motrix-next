@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import { onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
+import { useEngineStore } from '@/stores/engine'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
 import { logger } from '@shared/logger'
@@ -28,7 +29,7 @@ import { buildSelectFileOption, getPendingMagnetSelectionGids } from '@/composab
 import type { MagnetFileItem, MagnetSelectionSubmission } from '@/composables/useMagnetFlow'
 import {
   createMagnetMetadataResolver,
-  listenForAria2DownloadComplete,
+  listenForAria2DownloadPause,
   type MagnetMetadataState,
 } from '@/composables/useMagnetMetadataEvents'
 import aria2Api from '@/api/aria2'
@@ -39,7 +40,7 @@ import TaskSubnav from '@/components/layout/TaskSubnav.vue'
 import PreferenceSubnav from '@/components/layout/PreferenceSubnav.vue'
 import Speedometer from '@/components/layout/Speedometer.vue'
 import WindowControls from '@/components/layout/WindowControls.vue'
-import EngineOverlay from '@/components/layout/EngineOverlay.vue'
+import EngineStatusDialog from '@/components/layout/EngineStatusDialog.vue'
 import AboutPanel from '@/components/about/AboutPanel.vue'
 import AddTask from '@/components/task/AddTask.vue'
 import UpdateDialog from '@/components/preference/UpdateDialog.vue'
@@ -50,21 +51,23 @@ import { useAppMessage } from '@/composables/useAppMessage'
 import { NModal, NButton, NCheckbox, NProgress, NPagination, useDialog } from 'naive-ui'
 
 import { useAppEvents } from '@/composables/useAppEvents'
+import { useEngineNotifications } from '@/composables/useEngineNotifications'
 import { loadAddedAtFromRecords } from '@/composables/useTaskOrder'
 import { resolveArchiveAction } from '@shared/utils/autoArchive'
 
 interface MagnetSelectionSession {
-  metadataGid: string
-  downloadGid: string
+  gid: string
 }
 
 const { t } = useI18n()
 const route = useRoute()
 const appStore = useAppStore()
+const engineStore = useEngineStore()
 const taskStore = useTaskStore()
 const preferenceStore = usePreferenceStore()
 const navDialog = useDialog()
 const message = useAppMessage()
+useEngineNotifications()
 
 const isTaskPage = computed(() => route.path.startsWith('/task'))
 const isPreferencePage = computed(() => route.path.startsWith('/preference'))
@@ -75,7 +78,6 @@ const rememberChoice = ref(false)
 const pendingTrayHide = ref(false)
 const isMaximized = ref(false)
 const { platform: currentPlatform, isMac } = usePlatform()
-const showEngineOverlay = ref(false)
 const taskPaginationTab = computed(() =>
   taskStore.currentList === 'stopped' ? 'stopped' : taskStore.currentList === 'all' ? 'all' : 'active',
 )
@@ -126,7 +128,7 @@ let unlistenResize: (() => void) | null = null
 let unlistenExitDialog: (() => void) | null = null
 let unlistenStat: (() => void) | null = null
 let unlistenTaskMonitor: Array<() => void> = []
-let unlistenAria2DownloadComplete: (() => void) | null = null
+let unlistenAria2DownloadPause: (() => void) | null = null
 let stopPendingMagnetWatch: (() => void) | null = null
 let unlistenFocusRecheck: (() => void) | null = null
 let unlistenAppToast: (() => void) | null = null
@@ -217,8 +219,6 @@ const { setupListeners } = useAppEvents({
   preferenceStore,
   message,
   navDialog,
-  showEngineOverlay,
-  isExiting,
   handleExitConfirm,
   onAbout: () => {
     showAbout.value = true
@@ -303,14 +303,14 @@ function stopStatListener() {
 
 const magnetMetadataResolver = createMagnetMetadataResolver(magnetMetadataDeps)
 
-async function startAria2DownloadCompleteListener() {
-  stopAria2DownloadCompleteListener()
-  unlistenAria2DownloadComplete = await listenForAria2DownloadComplete((gid) => magnetMetadataResolver.request(gid))
+async function startAria2DownloadPauseListener() {
+  stopAria2DownloadPauseListener()
+  unlistenAria2DownloadPause = await listenForAria2DownloadPause((gid) => magnetMetadataResolver.request(gid))
 }
 
-function stopAria2DownloadCompleteListener() {
-  unlistenAria2DownloadComplete?.()
-  unlistenAria2DownloadComplete = null
+function stopAria2DownloadPauseListener() {
+  unlistenAria2DownloadPause?.()
+  unlistenAria2DownloadPause = null
 }
 
 function magnetMetadataDeps() {
@@ -376,9 +376,9 @@ async function handleMagnetConfirm(selectedIndices: number[]) {
   magnetSelectSubmission.value = 'confirm'
   try {
     const selectFile = buildSelectFileOption(selectedIndices)
-    const task = await taskStore.fetchTaskStatus(session.downloadGid)
+    const task = await taskStore.fetchTaskStatus(session.gid)
     await taskStore.applyMagnetFileSelection(task, selectFile)
-    appStore.pendingMagnetGids = appStore.pendingMagnetGids.filter((gid) => gid !== session.metadataGid)
+    appStore.pendingMagnetGids = appStore.pendingMagnetGids.filter((gid) => gid !== session.gid)
     magnetSelectClosing.value = true
     magnetSelectVisible.value = false
     magnetSelectionSession.value = null
@@ -401,7 +401,7 @@ async function handleMagnetCancel() {
   magnetSelectSubmission.value = 'cancel'
   try {
     await taskStore.cancelMagnetSelectionDownload(session)
-    appStore.pendingMagnetGids = appStore.pendingMagnetGids.filter((gid) => gid !== session.metadataGid)
+    appStore.pendingMagnetGids = appStore.pendingMagnetGids.filter((gid) => gid !== session.gid)
     magnetSelectClosing.value = true
     magnetSelectVisible.value = false
     magnetSelectionSession.value = null
@@ -659,7 +659,7 @@ onMounted(async () => {
   }
 
   startStatListener()
-  await startAria2DownloadCompleteListener()
+  await startAria2DownloadPauseListener()
 
   // ── Auto-shutdown event from Rust monitor (lightweight mode fallback) ──
   unlistenPowerCountdown = await listen('power:countdown', () => {
@@ -954,7 +954,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   stopStatListener()
-  stopAria2DownloadCompleteListener()
+  stopAria2DownloadPauseListener()
   stopPendingMagnetWatch?.()
   stopPendingMagnetWatch = null
   unlistenTaskMonitor.forEach((fn) => fn())
@@ -979,7 +979,7 @@ onUnmounted(() => {
   <div id="container" :class="{ 'native-frame': isMac }">
     <!-- Minimal progress bar during engine initialization / restart -->
     <Transition name="engine-slide">
-      <div v-if="appStore.engineRestarting" class="engine-banner">
+      <div v-if="engineStore.isBusy" class="engine-banner">
         <div class="engine-progress" />
       </div>
     </Transition>
@@ -1022,11 +1022,7 @@ onUnmounted(() => {
     <AboutPanel :show="showAbout" @close="showAbout = false" />
     <AddTask :show="appStore.addTaskVisible" @close="appStore.hideAddTaskDialog()" />
     <UpdateDialog ref="updateDialogRef" />
-    <EngineOverlay
-      :show="showEngineOverlay"
-      @recovered="showEngineOverlay = false"
-      @close="showEngineOverlay = false"
-    />
+    <EngineStatusDialog />
     <MagnetFileSelect
       :show="magnetSelectVisible"
       :files="magnetSelectFiles"

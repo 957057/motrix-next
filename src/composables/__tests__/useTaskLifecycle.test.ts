@@ -306,7 +306,7 @@ describe('buildSharingCompletionRecord', () => {
 describe('isMetadataTask', () => {
   it('recognizes native aria2 metadata tasks', () => {
     const task = makeTask({
-      bittorrent: {},
+      bittorrent: { state: 'downloadingMetadata' },
     })
 
     expect(isMetadataTask(task)).toBe(true)

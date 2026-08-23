@@ -4,8 +4,7 @@ import { ref, computed, watch, onMounted, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
-import { invoke } from '@tauri-apps/api/core'
-import { useEngineRestart } from '@/composables/useEngineRestart'
+import { useEngineStore } from '@/stores/engine'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { arch as osArch, version as osVersion } from '@tauri-apps/plugin-os'
 import { usePlatform } from '@/composables/usePlatform'
@@ -21,7 +20,7 @@ import {
   buildGeneralSystemConfig,
   transformGeneralForStore,
 } from '@/composables/useGeneralPreference'
-import { COLOR_SCHEMES, CUSTOM_COLOR_SCHEME_ID, ENGINE_RPC_PORT } from '@shared/constants'
+import { COLOR_SCHEMES, CUSTOM_COLOR_SCHEME_ID } from '@shared/constants'
 import { normalizeCustomColorScheme } from '@shared/utils/colorSchemeConfig'
 import { useAppMessage } from '@/composables/useAppMessage'
 import {
@@ -125,7 +124,7 @@ const { form, isDirty, handleSave, handleReset, patchSnapshot, resetSnapshot } =
           ? tt('preferences.language-changed-later')
           : `${tt('preferences.language-changed-later')} · Later`,
         onPositiveClick: async () => {
-          await invoke('stop_engine_command')
+          await engineStore.stop('appRelaunch')
           relaunch()
         },
       })
@@ -255,11 +254,9 @@ function handleCheckUpdate() {
   updateDialogRef.value?.open()
 }
 
-const { restartEngine } = useEngineRestart()
+const engineStore = useEngineStore()
 
 function handleManualRestart() {
-  const port = (preferenceStore.config.rpcListenPort as number) || ENGINE_RPC_PORT
-  const secret = (preferenceStore.config.rpcSecret as string) || ''
   const d = dialog.info({
     title: t('preferences.engine-restart-title'),
     content: t('preferences.engine-restart-manual-confirm'),
@@ -270,9 +267,8 @@ function handleManualRestart() {
       d.loading = true
       d.negativeText = ''
       d.closable = false
-      message.info(t('preferences.engine-restarting'))
       await new Promise((r) => requestAnimationFrame(r))
-      await restartEngine({ port, secret })
+      await engineStore.restart('manualRestart')
     },
   })
 }

@@ -5,13 +5,13 @@ import { invoke } from '@tauri-apps/api/core'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
-import { useEngineRestart } from '@/composables/useEngineRestart'
+import { useEngineStore } from '@/stores/engine'
 import { usePlatform } from '@/composables/usePlatform'
 import { useSystemProxyDetect } from '@/composables/useSystemProxyDetect'
 import { logger } from '@shared/logger'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { useAppMessage } from '@/composables/useAppMessage'
-import { PROXY_SCOPE_OPTIONS, FILE_ALLOCATION_OPTIONS, ENGINE_RPC_PORT } from '@shared/constants'
+import { PROXY_SCOPE_OPTIONS, FILE_ALLOCATION_OPTIONS } from '@shared/constants'
 import {
   buildNetworkForm,
   buildNetworkSystemConfig,
@@ -61,13 +61,12 @@ const fileAllocationOptions = computed(() =>
   })),
 )
 
-type PortRecoveryTarget = 'rpc' | 'extensionApi' | 'bt' | 'dht' | 'ed2k' | 'ed2kUdp'
-const portRecoveryTargets: PortRecoveryTarget[] = ['rpc', 'extensionApi', 'bt', 'dht', 'ed2k', 'ed2kUdp']
+type PortRecoveryTarget = 'rpc' | 'extensionApi' | 'bt' | 'ed2k' | 'ed2kUdp'
+const portRecoveryTargets: PortRecoveryTarget[] = ['rpc', 'extensionApi', 'bt', 'ed2k', 'ed2kUdp']
 const portRecoveryTargetOptions = computed(() => [
   { label: t('preferences.rpc-listen-port'), value: 'rpc' },
   { label: t('preferences.extension-api-port'), value: 'extensionApi' },
   { label: t('preferences.port-conflict-recovery-bt'), value: 'bt' },
-  { label: t('preferences.port-conflict-recovery-dht'), value: 'dht' },
   { label: t('preferences.port-conflict-recovery-ed2k'), value: 'ed2k' },
   { label: t('preferences.port-conflict-recovery-ed2k-udp'), value: 'ed2kUdp' },
 ])
@@ -104,7 +103,7 @@ function buildForm() {
   return buildNetworkForm(preferenceStore.config)
 }
 
-const { restartEngine } = useEngineRestart()
+const engineStore = useEngineStore()
 
 const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } = usePreferenceForm({
   buildForm,
@@ -129,9 +128,6 @@ async function syncUpnpState(enabled: boolean) {
   try {
     if (enabled) {
       await invoke('start_upnp_mapping', {
-        btPort: Number(config.listenPort),
-        btExternalPort: Number(config.btExternalPort) || 0,
-        dhtPort: Number(config.dhtListenPort),
         ed2kPort: Number(config.ed2kListenPort) > 0 ? Number(config.ed2kListenPort) : null,
         ed2kUdpPort: Number(config.ed2kUdpListenPort) > 0 ? Number(config.ed2kUdpListenPort) : null,
       })
@@ -185,8 +181,6 @@ function handleProxySwitch(value: boolean) {
 }
 
 function handleManualRestart() {
-  const port = (preferenceStore.config.rpcListenPort as number) || ENGINE_RPC_PORT
-  const secret = (preferenceStore.config.rpcSecret as string) || ''
   const d = dialog.info({
     title: t('preferences.engine-restart-title'),
     content: t('preferences.engine-restart-manual-confirm'),
@@ -197,9 +191,8 @@ function handleManualRestart() {
       d.loading = true
       d.negativeText = ''
       d.closable = false
-      message.info(t('preferences.engine-restarting'))
       await new Promise((r) => requestAnimationFrame(r))
-      await restartEngine({ port, secret })
+      await engineStore.restart('manualRestart')
     },
   })
 }

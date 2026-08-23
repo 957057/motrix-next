@@ -16,7 +16,6 @@ const {
   buildSelectFileOption,
   parseFilesForSelection,
   shouldShowFileSelection,
-  getResolvedMagnetSelection,
   getPendingMagnetSelectionGids,
 } = await import('@/composables/useMagnetFlow')
 
@@ -181,51 +180,8 @@ describe('useMagnetFlow', () => {
     })
   })
 
-  describe('getResolvedMagnetSelection', () => {
-    it('returns the followedBy content task when native aria2 metadata resolves', () => {
-      const result = getResolvedMagnetSelection({
-        gid: 'metadata-gid',
-        status: 'complete',
-        totalLength: '0',
-        completedLength: '0',
-        uploadLength: '0',
-        downloadSpeed: '0',
-        uploadSpeed: '0',
-        connections: '0',
-        dir: '/downloads',
-        files: [],
-        bittorrent: {
-          announceList: [['udp://tracker.example:6969']],
-        },
-        followedBy: ['content-gid'],
-      })
-
-      expect(result).toEqual({ metadataGid: 'metadata-gid', downloadGid: 'content-gid' })
-    })
-
-    it('returns null while metadata has not produced a content task', () => {
-      const result = getResolvedMagnetSelection({
-        gid: 'metadata-gid',
-        status: 'active',
-        totalLength: '0',
-        completedLength: '0',
-        uploadLength: '0',
-        downloadSpeed: '0',
-        uploadSpeed: '0',
-        connections: '1',
-        dir: '/downloads',
-        files: [],
-        bittorrent: {
-          announceList: [['udp://tracker.example:6969']],
-        },
-      })
-
-      expect(result).toBeNull()
-    })
-  })
-
   describe('getPendingMagnetSelectionGids', () => {
-    it('restores native aria2 metadata parent GIDs from paused content tasks', () => {
+    it('restores paused single-GID BitTorrent selections', () => {
       const gids = getPendingMagnetSelectionGids([
         {
           gid: 'content-gid',
@@ -251,12 +207,12 @@ describe('useMagnetFlow', () => {
             info: {
               name: 'Movie',
             },
+            state: 'awaitingFileSelection',
           },
-          following: 'metadata-gid',
         },
       ])
 
-      expect(gids).toEqual(['metadata-gid'])
+      expect(gids).toEqual(['content-gid'])
     })
   })
 })

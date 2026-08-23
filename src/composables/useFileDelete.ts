@@ -25,11 +25,9 @@ async function deletePaths(paths: string[], mode: FileDeletionMode): Promise<voi
 }
 
 export async function cleanupAria2ControlFiles(task: Aria2Task): Promise<void> {
+  if (task.bittorrent) return
   try {
     const paths: string[] = []
-    if (task.dir && task.infoHash) {
-      paths.push(`${task.dir}/${task.infoHash}.aria2`)
-    }
 
     const target = await resolveOpenTarget(task)
 
@@ -58,9 +56,7 @@ export async function deleteTaskFiles(task: Aria2Task, mode: FileDeletionMode): 
     deletionError = error
   } finally {
     await cleanupAria2ControlFiles(task)
-    if (task.dir && task.infoHash) {
-      await cleanupAria2MetadataFiles(task.dir, task.infoHash)
-    }
+    if (task.dir && task.infoHash) await cleanupAria2MetadataFiles(task.dir, task.infoHash)
   }
 
   if (deletionError) throw deletionError

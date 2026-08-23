@@ -173,7 +173,6 @@ function normalizePortRecovery(value: unknown, repairs: string[]): PortConflictR
     rpc: typeof saved.rpc === 'boolean' ? saved.rpc : defaults.rpc,
     extensionApi: typeof saved.extensionApi === 'boolean' ? saved.extensionApi : defaults.extensionApi,
     bt: typeof saved.bt === 'boolean' ? saved.bt : defaults.bt,
-    dht: typeof saved.dht === 'boolean' ? saved.dht : defaults.dht,
     ed2k: typeof saved.ed2k === 'boolean' ? saved.ed2k : defaults.ed2k,
     ed2kUdp: typeof saved.ed2kUdp === 'boolean' ? saved.ed2kUdp : defaults.ed2kUdp,
   }
@@ -211,6 +210,13 @@ function normalizeScalarValues(config: Record<string, unknown>, repairs: string[
   repairEnum(config, 'aria2LogLevel', ARIA2_LOG_LEVELS, DEFAULT_APP_CONFIG.aria2LogLevel, repairs)
   repairEnum(config, 'fileAllocation', FILE_ALLOCATION_OPTIONS, DEFAULT_APP_CONFIG.fileAllocation, repairs)
   repairEnum(config, 'fileDeletionMode', ['trash', 'permanent'] as const, DEFAULT_APP_CONFIG.fileDeletionMode, repairs)
+  repairEnum(
+    config,
+    'btEncryption',
+    ['preferred', 'required', 'disabled'] as const,
+    DEFAULT_APP_CONFIG.btEncryption,
+    repairs,
+  )
 
   config.rpcListenPort = normalizePort(config.rpcListenPort, DEFAULT_APP_CONFIG.rpcListenPort, 'rpcListenPort', repairs)
   config.extensionApiPort = normalizePort(
@@ -232,7 +238,6 @@ function normalizeScalarValues(config: Record<string, unknown>, repairs: string[
   } else {
     config.btExternalIp = config.btExternalIp.trim()
   }
-  config.dhtListenPort = normalizePort(config.dhtListenPort, DEFAULT_APP_CONFIG.dhtListenPort, 'dhtListenPort', repairs)
   config.ed2kListenPort = normalizePort(
     config.ed2kListenPort,
     DEFAULT_APP_CONFIG.ed2kListenPort,

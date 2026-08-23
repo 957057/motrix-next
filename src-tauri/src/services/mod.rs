@@ -36,6 +36,24 @@ use port_guard::DEFAULT_RPC_PORT;
 use tauri::Manager;
 use tauri_plugin_store::StoreExt;
 
+const REQUIRED_ENGINE_METHODS: [&str; 2] = ["aria2.getBtSessionStatus", "aria2.getBtTrackers"];
+
+fn validate_engine_methods(methods: &[String]) -> Result<(), AppError> {
+    let missing = REQUIRED_ENGINE_METHODS
+        .iter()
+        .filter(|required| !methods.iter().any(|method| method == *required))
+        .copied()
+        .collect::<Vec<_>>();
+    if missing.is_empty() {
+        Ok(())
+    } else {
+        Err(AppError::Engine(format!(
+            "Bundled Aria2 Next does not satisfy the required RPC contract: {}",
+            missing.join(", ")
+        )))
+    }
+}
+
 /// Reads the `system.json` store and returns its key-value pairs as a
 /// flat `Map<String, String>`, filtered to only hot-reloadable keys.
 ///
@@ -87,6 +105,7 @@ pub async fn on_engine_ready(app: &tauri::AppHandle) -> Result<(), AppError> {
     let (port, secret) = read_engine_credentials(app)?;
     if let Some(aria2) = app.try_state::<Aria2State>() {
         aria2.0.update_credentials(port, secret).await;
+        validate_engine_methods(&aria2.0.list_methods().await?)?;
     }
 
     // 2. Refresh RuntimeConfig
@@ -144,6 +163,23 @@ pub async fn on_engine_ready(app: &tauri::AppHandle) -> Result<(), AppError> {
         }
     } else {
         log::info!("runtime_services: no global options to sync");
+    }
+
+    if let Some(aria2) = app.try_state::<Aria2State>() {
+        match aria2.0.get_bt_session_status().await {
+            Ok(status) => log::info!(
+                "runtime_services: bt_session listen_port={} endpoints={} mapped_tcp={} mapped_udp={} dht_nodes={} dht_state_healthy={}",
+                status.listen_port,
+                status.listen_endpoints.len(),
+                status.mapped_tcp_port,
+                status.mapped_udp_port,
+                status.dht_nodes,
+                status.dht_state_healthy
+            ),
+            Err(error) => {
+                log::warn!("runtime_services: BT session diagnostics unavailable: {error}")
+            }
+        }
     }
 
     // 5–6. Stop old services, spawn fresh ones.
@@ -276,6 +312,35 @@ async fn spawn_background_services(app: &tauri::AppHandle) {
     log::info!(
         "runtime_services: spawned stat_service + speed_scheduler + task_monitor + bt_peer_blocklist"
     );
+}
+
+/// Stops every service whose lifetime is bound to the engine process.
+pub async fn stop_engine_services(app: &tauri::AppHandle) {
+    if let Some(state) = app.try_state::<stat::StatServiceState>() {
+        if let Some(handle) = state.0.lock().await.take() {
+            handle.stop().await;
+        }
+    }
+    if let Some(state) = app.try_state::<speed::SpeedSchedulerState>() {
+        if let Some(handle) = state.0.lock().await.take() {
+            handle.stop();
+        }
+    }
+    if let Some(state) = app.try_state::<monitor::TaskMonitorState>() {
+        if let Some(handle) = state.0.lock().await.take() {
+            handle.stop();
+        }
+    }
+    if let Some(state) = app.try_state::<aria2_events::Aria2EventState>() {
+        if let Some(handle) = state.0.lock().await.take() {
+            handle.stop();
+        }
+    }
+    if let Some(state) = app.try_state::<bt_blocklist::BtPeerBlocklistServiceState>() {
+        if let Some(handle) = state.0.lock().await.take() {
+            handle.stop();
+        }
+    }
 }
 
 /// Read engine port and secret from the config store.
@@ -492,16 +557,8 @@ mod tests {
             "rpc-listen-port",
             "allow-remote-access",
             "rpc-secret",
-            "dht-listen-port",
             "ed2k-listen-port",
             "ed2k-udp-listen-port",
-            "enable-dht",
-            "enable-dht6",
-            "enable-peer-exchange",
-            "bt-enable-lpd",
-            "bt-force-encryption",
-            "bt-require-crypto",
-            "bt-max-peers",
         ] {
             assert!(keys.contains(key), "missing: {key}");
         }
@@ -516,5 +573,25 @@ mod tests {
         assert!(!keys.contains("listen-port"));
         assert!(!keys.contains("bt-external-ip"));
         assert!(!keys.contains("bt-external-port"));
+        assert!(!keys.contains("bt-encryption"));
+        assert!(!keys.contains("enable-dht"));
+        assert!(!keys.contains("enable-peer-exchange"));
+        assert!(!keys.contains("bt-enable-lpd"));
+        assert!(!keys.contains("bt-max-peers"));
+    }
+
+    #[test]
+    fn engine_contract_accepts_the_required_native_bt_methods() {
+        let methods = REQUIRED_ENGINE_METHODS
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>();
+        assert!(validate_engine_methods(&methods).is_ok());
+    }
+
+    #[test]
+    fn engine_contract_rejects_legacy_bt_rpc_surfaces() {
+        let methods = vec!["aria2.getBtEndpoint".to_string()];
+        assert!(validate_engine_methods(&methods).is_err());
     }
 }

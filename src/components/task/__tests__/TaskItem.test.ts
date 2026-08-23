@@ -206,7 +206,7 @@ describe('TaskItem', () => {
       totalLength: '0',
       completedLength: '0',
       files: [],
-      bittorrent: {},
+      bittorrent: { state: 'downloadingMetadata' },
     } satisfies Aria2Task
 
     const wrapper = mount(TaskItem, {

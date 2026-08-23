@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, nextTick, reactive, ref } from 'vue'
+import { defineComponent, reactive } from 'vue'
 import { mount } from '@vue/test-utils'
 
 const listenMock = vi.fn()
@@ -21,7 +21,6 @@ const loggerMock = vi.hoisted(() => ({
   warn: vi.fn(),
 }))
 
-const setEngineReadyMock = vi.fn()
 let eventUnlisteners: Array<ReturnType<typeof vi.fn>> = []
 let eventCallbacks: Record<string, (event: { payload: unknown }) => unknown> = {}
 
@@ -59,7 +58,6 @@ vi.mock('vue-router', () => ({
 
 vi.mock('@/api/aria2', () => ({
   isEngineReady: vi.fn(() => true),
-  setEngineReady: (...args: unknown[]) => setEngineReadyMock(...args),
 }))
 
 vi.mock('@shared/logger', () => ({
@@ -79,8 +77,6 @@ import { useAppEvents } from '../useAppEvents'
 type UseAppEventsDeps = Parameters<typeof useAppEvents>[0]
 
 function createDeps() {
-  const showEngineOverlay = ref(false)
-  const isExiting = ref(false)
   const appStore = reactive({
     showAddTaskDialog: vi.fn(),
     enqueueBatch: vi.fn(() => 0),
@@ -88,8 +84,6 @@ function createDeps() {
     handleExternalInputs: vi.fn(),
     setExternalInputErrorHandler: vi.fn(),
     setExternalInputStartHandler: vi.fn(),
-    engineReady: false,
-    engineRestarting: true,
     addTaskVisible: false,
     pendingBatch: [] as unknown[],
     pendingMagnetGids: [] as string[],
@@ -130,8 +124,6 @@ function createDeps() {
     preferenceStore,
     message,
     navDialog: navDialog as never,
-    showEngineOverlay,
-    isExiting,
     handleExitConfirm: vi.fn().mockResolvedValue(undefined),
     onAbout: vi.fn(),
   }
@@ -184,33 +176,16 @@ describe('useAppEvents', () => {
     invokeMock.mockResolvedValue([])
   })
 
-  it('returns a teardown that unregisters engine listeners, the watcher, and the router guard', async () => {
-    const { deps, appStore, message } = createDeps()
+  it('returns a teardown that unregisters event listeners and the router guard', async () => {
+    const { deps } = createDeps()
     const { setupListeners } = mountComposable(deps)
 
     const listeners = await setupListeners()
     expect(typeof (listeners as { teardown?: unknown }).teardown).toBe('function')
-
-    appStore.engineRestarting = false
-    await nextTick()
-    expect(message.error).toHaveBeenCalledTimes(1)
-
-    appStore.engineRestarting = true
-    await nextTick()
-    message.success.mockClear()
-    message.error.mockClear()
-    message.warning.mockClear()
-    message.info.mockClear()
     ;(listeners as { teardown: () => void }).teardown()
-
-    appStore.engineRestarting = false
-    await nextTick()
-
-    expect(message.error).not.toHaveBeenCalled()
     expect(routerBeforeEachMock).toHaveBeenCalledTimes(1)
 
-    const engineUnlisteners = eventUnlisteners.slice(0, 3)
-    for (const unlisten of engineUnlisteners) {
+    for (const unlisten of eventUnlisteners) {
       expect(unlisten).toHaveBeenCalledTimes(1)
     }
 
@@ -219,20 +194,14 @@ describe('useAppEvents', () => {
     expect(removeGuard).toHaveBeenCalledTimes(1)
   })
 
-  it('cleans up the watcher and listeners automatically on component unmount', async () => {
-    const { deps, appStore, message } = createDeps()
+  it('cleans up listeners automatically on component unmount', async () => {
+    const { deps } = createDeps()
     const { setupListeners, unmount } = mountComposable(deps)
 
     await setupListeners()
     unmount()
 
-    appStore.engineRestarting = false
-    await nextTick()
-
-    expect(message.error).not.toHaveBeenCalled()
-
-    const engineUnlisteners = eventUnlisteners.slice(0, 3)
-    for (const unlisten of engineUnlisteners) {
+    for (const unlisten of eventUnlisteners) {
       expect(unlisten).toHaveBeenCalledTimes(1)
     }
 
@@ -419,33 +388,6 @@ describe('useAppEvents', () => {
     })
 
     expect(message.warning).toHaveBeenCalledWith('preferences.port-auto-switch-disabled')
-  })
-
-  it('deduplicates concurrent engine recovered readiness probes', async () => {
-    let resolveWait: ((ready: boolean) => void) | undefined
-    invokeMock.mockImplementation((command: string) => {
-      if (command === 'wait_for_engine') {
-        return new Promise((resolve) => {
-          resolveWait = resolve
-        })
-      }
-      return Promise.resolve([])
-    })
-    const { deps } = createDeps()
-    const { setupListeners } = mountComposable(deps)
-
-    await setupListeners()
-    const first = eventCallbacks['engine-recovered']?.({ payload: { source: 'bt-port-auto-switch' } })
-    const second = eventCallbacks['engine-recovered']?.({ payload: { source: 'bt-port-auto-switch' } })
-    await new Promise<void>((resolve) => {
-      setTimeout(resolve, 0)
-    })
-
-    expect(invokeMock).toHaveBeenCalledWith('wait_for_engine')
-    expect(invokeMock.mock.calls.filter(([command]) => command === 'wait_for_engine')).toHaveLength(1)
-
-    resolveWait?.(true)
-    await Promise.all([first, second])
   })
 
   it('opens the add-task dialog from a pending tray action after listeners are ready', async () => {

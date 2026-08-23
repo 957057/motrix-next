@@ -105,7 +105,7 @@ export const isMagnetTask = (task: Aria2Task): boolean => {
 export const isBtMetadataTask = (task: Aria2Task): boolean => {
   if (!task.bittorrent) return false
   if (task.bittorrent.info) return false
-  return !task.following
+  return task.bittorrent.state === 'adding' || task.bittorrent.state === 'downloadingMetadata'
 }
 
 export type TaskSharingKind = 'bt' | 'ed2k'

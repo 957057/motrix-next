@@ -96,16 +96,12 @@ describe('checkIsNeedRestart', () => {
   it('returns false for the hot-reloadable BitTorrent listen port', () => {
     expect(checkIsNeedRestart({ listenPort: 21302 })).toBe(false)
   })
-  it('returns true for dhtListenPort', () => {
-    expect(checkIsNeedRestart({ dhtListenPort: 26702 })).toBe(true)
-  })
-  it('returns true for BT discovery and encryption session keys', () => {
-    expect(checkIsNeedRestart({ btDhtIpv4Enabled: false })).toBe(true)
-    expect(checkIsNeedRestart({ btDhtIpv6Enabled: false })).toBe(true)
-    expect(checkIsNeedRestart({ btPeerExchangeEnabled: false })).toBe(true)
-    expect(checkIsNeedRestart({ btLocalPeerDiscoveryEnabled: false })).toBe(true)
-    expect(checkIsNeedRestart({ btForceEncryption: true })).toBe(true)
-    expect(checkIsNeedRestart({ btMaxPeers: 256 })).toBe(true)
+  it('keeps native BitTorrent settings hot-reloadable', () => {
+    expect(checkIsNeedRestart({ btDhtEnabled: false })).toBe(false)
+    expect(checkIsNeedRestart({ btPeerExchangeEnabled: false })).toBe(false)
+    expect(checkIsNeedRestart({ btLocalPeerDiscoveryEnabled: false })).toBe(false)
+    expect(checkIsNeedRestart({ btEncryption: 'required' })).toBe(false)
+    expect(checkIsNeedRestart({ btMaxPeers: 256 })).toBe(false)
     expect(checkIsNeedRestart({ aria2LogLevel: 'info' })).toBe(true)
   })
   it('returns true for ED2K restart keys from AppConfig camelCase fields', () => {
@@ -192,20 +188,25 @@ describe('filterHotReloadableKeys', () => {
       'listen-port': '29120',
       'bt-external-ip': '203.0.113.7',
       'bt-external-port': '62000',
-      'dht-listen-port': '29130',
       'ed2k-listen-port': '29140',
       'ed2k-udp-listen-port': '29150',
       'enable-dht': 'true',
       'enable-peer-exchange': 'true',
       'bt-enable-lpd': 'true',
-      'bt-force-encryption': 'false',
-      'bt-require-crypto': 'false',
+      'bt-encryption': 'enabled',
+      'bt-port-mapping': 'true',
       'bt-max-peers': '128',
     }
     expect(filterHotReloadableKeys(config)).toEqual({
       'listen-port': '29120',
       'bt-external-ip': '203.0.113.7',
       'bt-external-port': '62000',
+      'enable-dht': 'true',
+      'enable-peer-exchange': 'true',
+      'bt-enable-lpd': 'true',
+      'bt-encryption': 'enabled',
+      'bt-port-mapping': 'true',
+      'bt-max-peers': '128',
     })
   })
 

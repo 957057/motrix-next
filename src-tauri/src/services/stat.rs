@@ -395,6 +395,7 @@ async fn stat_loop(
     mut stop_rx: watch::Receiver<bool>,
 ) {
     let mut interval_state = IntervalState::new();
+    let mut consecutive_rpc_failures = 0_u32;
 
     // Keep-awake RAII guard: held while downloads are active, dropped when idle.
     // The guard prevents system idle sleep via OS-native APIs while allowing
@@ -419,11 +420,16 @@ async fn stat_loop(
         let stat = match aria2.get_global_stat().await {
             Ok(s) => s,
             Err(e) => {
+                consecutive_rpc_failures += 1;
                 log::debug!("stat_service: get_global_stat failed: {e}");
+                if consecutive_rpc_failures == 5 {
+                    crate::engine::supervisor::report_rpc_unhealthy(app.clone(), e.to_string());
+                }
                 interval_state.increase_idle();
                 continue;
             }
         };
+        consecutive_rpc_failures = 0;
 
         // Parse string values to u64
         let download_speed_raw = stat.download_speed.parse::<u64>().unwrap_or(0);

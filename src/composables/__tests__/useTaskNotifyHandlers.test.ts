@@ -124,7 +124,7 @@ describe('handleTaskComplete', () => {
   it('skips native aria2 metadata-only tasks', () => {
     const deps = makeDeps()
     const task = makeTask({
-      bittorrent: {},
+      bittorrent: { state: 'downloadingMetadata' },
     })
 
     handleTaskComplete(task, deps)

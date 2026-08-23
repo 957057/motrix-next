@@ -1,21 +1,19 @@
 <script setup lang="ts">
 /** @fileoverview BitTorrent preference tab: BT settings + tracker management. */
-import { ref, computed, onMounted, h, nextTick } from 'vue'
+import { ref, computed, onMounted, h } from 'vue'
 import type { VNodeChild } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
-import { useEngineRestart } from '@/composables/useEngineRestart'
+import { useEngineStore } from '@/stores/engine'
 import { changeGlobalOption, isEngineReady } from '@/api/aria2'
 import { convertTrackerDataToComma, convertTrackerDataToLine } from '@shared/utils/tracker'
-import { diffConfig, checkIsNeedRestart } from '@shared/utils/config'
 import { SYNC_MIN_DURATION } from '@shared/timing'
 import {
   DEFAULT_TRACKER_SOURCE,
   ENGINE_MAX_BT_MAX_PEERS,
-  ENGINE_RPC_PORT,
   SAFE_LIMIT_BT_MAX_PEERS,
   TRACKER_SOURCE_OPTIONS,
 } from '@shared/constants'
@@ -29,7 +27,6 @@ import {
   isValidTrackerSourceUrl,
   validateBtEndpoint,
   randomBtPort,
-  randomDhtPort,
 } from '@/composables/useBtPreference'
 import {
   NForm,
@@ -51,7 +48,6 @@ import {
   useDialog,
 } from 'naive-ui'
 import PreferenceActionBar from './PreferenceActionBar.vue'
-import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 import { SyncOutline, AddCircleOutline, CloseCircleOutline, DiceOutline } from '@vicons/ionicons5'
 
@@ -59,13 +55,9 @@ const { t, locale } = useI18n()
 const preferenceStore = usePreferenceStore()
 const dialog = useDialog()
 const message = useAppMessage()
-const DHT_NETWORK_IPV4 = 'ipv4'
-const DHT_NETWORK_IPV6 = 'ipv6'
-
 const syncingTracker = ref(false)
 const syncingBlocklist = ref(false)
 const customTrackerInput = ref('')
-const needsRestart = ref(false)
 const pendingPortSwitch = ref<{ from: number; to: number } | null>(null)
 interface BtPeerBlocklistStatus {
   ruleCount: number
@@ -82,9 +74,10 @@ const syncIntervalOptions = computed(() => [
   { label: t('preferences.interval-daily'), value: 24 },
   { label: t('preferences.interval-weekly'), value: 168 },
 ])
-const dhtNetworkOptions = computed(() => [
-  { label: t('preferences.bt-dht-ipv4'), value: DHT_NETWORK_IPV4 },
-  { label: t('preferences.bt-dht-ipv6'), value: DHT_NETWORK_IPV6 },
+const encryptionOptions = computed(() => [
+  { label: t('preferences.bt-encryption-preferred'), value: 'preferred' },
+  { label: t('preferences.bt-encryption-required'), value: 'required' },
+  { label: t('preferences.bt-encryption-disabled'), value: 'disabled' },
 ])
 const blocklistStatusText = computed(() => {
   const status = blocklistStatus.value
@@ -101,19 +94,6 @@ const blocklistStatusText = computed(() => {
     : ''
   return updated ? `${rules} · ${t('preferences.last-sync-time')} ${updated}` : rules
 })
-const selectedDhtNetworks = computed({
-  get: () => {
-    const values: string[] = []
-    if (form.value.btDhtIpv4Enabled) values.push(DHT_NETWORK_IPV4)
-    if (form.value.btDhtIpv6Enabled) values.push(DHT_NETWORK_IPV6)
-    return values
-  },
-  set: (values: string[]) => {
-    form.value.btDhtIpv4Enabled = values.includes(DHT_NETWORK_IPV4)
-    form.value.btDhtIpv6Enabled = values.includes(DHT_NETWORK_IPV6)
-  },
-})
-
 // ── Tracker source management ───────────────────────────────────────
 const presetTrackerValues = new Set<string>(TRACKER_SOURCE_OPTIONS.map((source) => source.value))
 
@@ -219,8 +199,7 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } =
   saveFeedback: (f, prevConfig) =>
     f.listenPort !== prevConfig.listenPort ||
     f.btExternalIp.trim() !== String(prevConfig.btExternalIp ?? '').trim() ||
-    f.btExternalPort !== prevConfig.btExternalPort ||
-    f.dhtListenPort !== prevConfig.dhtListenPort
+    f.btExternalPort !== prevConfig.btExternalPort
       ? {
           success: t('preferences.bt-connection-apply-succeeded'),
           restored: t('preferences.bt-connection-restore-succeeded'),
@@ -260,43 +239,9 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } =
       if (!ok) return false
     }
 
-    const changed = diffConfig(preferenceStore.config, transformBtForStore(f))
-    if (checkIsNeedRestart(changed)) {
-      const ok = await new Promise<boolean>((resolve) => {
-        dialog.info({
-          title: t('preferences.engine-restart-title'),
-          content: t('preferences.engine-restart-confirm'),
-          positiveText: t('preferences.engine-restart-now'),
-          negativeText: t('app.cancel'),
-          maskClosable: false,
-          onPositiveClick: () => resolve(true),
-          onNegativeClick: () => resolve(false),
-          onClose: () => resolve(false),
-        })
-      })
-      if (!ok) return false
-      needsRestart.value = true
-    }
     return true
   },
-  afterSave: async (f, prevConfig) => {
-    if (needsRestart.value) {
-      needsRestart.value = false
-      const port = (preferenceStore.config.rpcListenPort as number) || ENGINE_RPC_PORT
-      const secret = (preferenceStore.config.rpcSecret as string) || ''
-      message.info(t('preferences.engine-restarting'))
-      await nextTick()
-      await new Promise((r) => requestAnimationFrame(r))
-      await restartEngine({ port, secret })
-    }
-    if (
-      preferenceStore.config.enableUpnp &&
-      (f.listenPort !== prevConfig.listenPort ||
-        f.btExternalPort !== prevConfig.btExternalPort ||
-        f.dhtListenPort !== prevConfig.dhtListenPort)
-    ) {
-      syncUpnpInBackground(f)
-    }
+  afterSave: async () => {
     if (pendingPortSwitch.value) {
       const { from, to } = pendingPortSwitch.value
       pendingPortSwitch.value = null
@@ -309,24 +254,6 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } =
 
 function onBtPortDice() {
   form.value.listenPort = randomBtPort()
-}
-
-function onDhtPortDice() {
-  form.value.dhtListenPort = randomDhtPort()
-}
-
-function syncUpnpInBackground(f: typeof form.value) {
-  const config = preferenceStore.config
-  void invoke('start_upnp_mapping', {
-    btPort: Number(f.listenPort),
-    btExternalPort: Number(f.btExternalPort) || 0,
-    dhtPort: Number(f.dhtListenPort),
-    ed2kPort: Number(config.ed2kListenPort) > 0 ? Number(config.ed2kListenPort) : null,
-    ed2kUdpPort: Number(config.ed2kUdpListenPort) > 0 ? Number(config.ed2kUdpListenPort) : null,
-  }).catch((error) => {
-    logger.warn('BT.upnp', getErrorMessage(error))
-    message.warning(t('preferences.upnp-mapping-failed'))
-  })
 }
 
 function reconcileBlocklistInBackground() {
@@ -459,10 +386,8 @@ function onAddCustomTracker() {
   customTrackerInput.value = ''
 }
 
-const { restartEngine } = useEngineRestart()
+const engineStore = useEngineStore()
 function handleManualRestart() {
-  const port = (preferenceStore.config.rpcListenPort as number) || ENGINE_RPC_PORT
-  const secret = (preferenceStore.config.rpcSecret as string) || ''
   const d = dialog.info({
     title: t('preferences.engine-restart-title'),
     content: t('preferences.engine-restart-manual-confirm'),
@@ -473,9 +398,8 @@ function handleManualRestart() {
       d.loading = true
       d.negativeText = ''
       d.closable = false
-      message.info(t('preferences.engine-restarting'))
       await new Promise((r) => requestAnimationFrame(r))
-      await restartEngine({ port, secret })
+      await engineStore.restart('manualRestart')
     },
   })
 }
@@ -497,8 +421,8 @@ onMounted(() => {
         <NFormItem :label="t('preferences.bt-auto-download-content')">
           <NSwitch v-model:value="form.btAutoDownloadContent" />
         </NFormItem>
-        <NFormItem :label="t('preferences.bt-force-encryption')">
-          <NSwitch v-model:value="form.btForceEncryption" />
+        <NFormItem :label="t('preferences.bt-encryption')">
+          <NSelect v-model:value="form.btEncryption" :options="encryptionOptions" class="pref-control-auto" />
         </NFormItem>
         <NFormItem :label="t('preferences.bt-max-peers')">
           <NInputNumber v-model:value="form.btMaxPeers" :min="0" :max="ENGINE_MAX_BT_MAX_PEERS" class="pref-number" />
@@ -547,19 +471,8 @@ onMounted(() => {
         <NFormItem :label="t('preferences.bt-local-peer-discovery')">
           <NSwitch v-model:value="form.btLocalPeerDiscoveryEnabled" />
         </NFormItem>
-        <NFormItem :label="t('preferences.bt-dht-network')">
-          <PreferenceCheckboxGrid v-model:value="selectedDhtNetworks" :options="dhtNetworkOptions" />
-        </NFormItem>
-        <NFormItem :label="t('preferences.dht-port')">
-          <NInputGroup>
-            <NInputNumber v-model:value="form.dhtListenPort" :min="1024" :max="65535" class="pref-port" />
-            <NButton secondary class="pref-action-button pref-action-button--compact" @click="onDhtPortDice">
-              <template #icon>
-                <NIcon><DiceOutline /></NIcon>
-              </template>
-              {{ t('preferences.random-port') }}
-            </NButton>
-          </NInputGroup>
+        <NFormItem :label="t('preferences.bt-dht')">
+          <NSwitch v-model:value="form.btDhtEnabled" />
         </NFormItem>
 
         <NDivider title-placement="left">{{ t('preferences.p2p-sharing-section') }}</NDivider>

@@ -230,6 +230,41 @@ describe('runMigrations error isolation', () => {
   })
 })
 
+describe('v6 migration — native BitTorrent settings', () => {
+  it('converts force encryption and removes the retired DHT shape', () => {
+    const config = {
+      configVersion: 5,
+      btForceEncryption: true,
+      btDhtIpv4Enabled: false,
+      btDhtIpv6Enabled: true,
+      dhtListenPort: 29130,
+      portConflictRecovery: { dht: true },
+    } as unknown as Partial<AppConfig>
+
+    runMigrations(config)
+
+    expect(config.btEncryption).toBe('required')
+    expect(config.btDhtEnabled).toBe(true)
+    expect(config).not.toHaveProperty('btForceEncryption')
+    expect(config).not.toHaveProperty('btDhtIpv4Enabled')
+    expect(config).not.toHaveProperty('btDhtIpv6Enabled')
+    expect(config).not.toHaveProperty('dhtListenPort')
+    expect(config.portConflictRecovery).not.toHaveProperty('dht')
+  })
+
+  it('uses the final native encryption value without a compatibility alias', () => {
+    const config = {
+      configVersion: 5,
+      btForceEncryption: false,
+    } as unknown as Partial<AppConfig>
+
+    runMigrations(config)
+
+    expect(config.btEncryption).toBe('preferred')
+    expect(config).not.toHaveProperty('btForceEncryption')
+  })
+})
+
 // ── v2 Migration: decouple split / maxConnectionPerServer ──────────
 
 describe('v2 migration — decouple split / maxConnectionPerServer', () => {

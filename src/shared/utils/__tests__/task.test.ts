@@ -354,17 +354,16 @@ describe('isMagnetTask', () => {
 describe('isBtMetadataTask', () => {
   it('returns true for native aria2 metadata task without torrent info', () => {
     const task = createMockTask({
-      bittorrent: {},
+      bittorrent: { state: 'downloadingMetadata' },
       files: [],
     })
 
     expect(isBtMetadataTask(task)).toBe(true)
   })
 
-  it('returns false for native aria2 content task with following parent', () => {
+  it('returns false for native aria2 task awaiting file selection', () => {
     const task = createMockTask({
-      bittorrent: {},
-      following: 'metadata-gid',
+      bittorrent: { info: { name: 'Archive' }, state: 'awaitingFileSelection' },
     })
 
     expect(isBtMetadataTask(task)).toBe(false)

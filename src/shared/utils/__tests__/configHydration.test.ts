@@ -207,6 +207,16 @@ describe('hydrateAppConfig', () => {
     expect(result.repairs).toContain('proxy.mode')
   })
 
+  it('rejects removed BitTorrent encryption values', () => {
+    const result = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
+      btEncryption: 'enabled' as never,
+    })
+
+    expect(result.config.btEncryption).toBe('preferred')
+    expect(result.repairs).toContain('btEncryption')
+  })
+
   it('drops removed tracker auto-sync config without migration', () => {
     const result = hydrateAppConfig({
       configVersion: CONFIG_VERSION,

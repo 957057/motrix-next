@@ -15,11 +15,11 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::MaybeTlsStream;
 use tokio_tungstenite::WebSocketStream;
 
-pub const DOWNLOAD_COMPLETE: &str = "aria2-event:download-complete";
+pub const DOWNLOAD_PAUSE: &str = "aria2-event:download-pause";
 
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DownloadCompleteEvent {
+pub struct DownloadPauseEvent {
     pub gid: String,
 }
 
@@ -98,10 +98,10 @@ async fn event_loop(
                     log::debug!("aria2_events: websocket closed");
                     return;
                 };
-                if let Some(gid) = completed_gid_from_message(&message) {
-                    let payload = DownloadCompleteEvent { gid };
-                    if let Err(e) = app.emit(DOWNLOAD_COMPLETE, payload) {
-                        log::warn!("aria2_events: failed to emit download completion: {e}");
+                if let Some(gid) = paused_gid_from_message(&message) {
+                    let payload = DownloadPauseEvent { gid };
+                    if let Err(e) = app.emit(DOWNLOAD_PAUSE, payload) {
+                        log::warn!("aria2_events: failed to emit download pause: {e}");
                     }
                 }
             }
@@ -127,16 +127,16 @@ async fn authorize_socket(
     socket.send(Message::Text(request.to_string().into())).await
 }
 
-fn completed_gid_from_message(message: &Message) -> Option<String> {
+fn paused_gid_from_message(message: &Message) -> Option<String> {
     let Message::Text(text) = message else {
         return None;
     };
-    completed_gid_from_text(text)
+    paused_gid_from_text(text)
 }
 
-fn completed_gid_from_text(text: &str) -> Option<String> {
+fn paused_gid_from_text(text: &str) -> Option<String> {
     let notification: Aria2Notification = serde_json::from_str(text).ok()?;
-    if notification.method != "aria2.onDownloadComplete" {
+    if notification.method != "aria2.onDownloadPause" {
         return None;
     }
     notification
@@ -150,17 +150,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn completed_gid_from_text_extracts_on_download_complete_gid() {
-        let gid = completed_gid_from_text(
-            r#"{"jsonrpc":"2.0","method":"aria2.onDownloadComplete","params":[{"gid":"abc123"}]}"#,
+    fn paused_gid_from_text_extracts_on_download_pause_gid() {
+        let gid = paused_gid_from_text(
+            r#"{"jsonrpc":"2.0","method":"aria2.onDownloadPause","params":[{"gid":"abc123"}]}"#,
         );
 
         assert_eq!(gid.as_deref(), Some("abc123"));
     }
 
     #[test]
-    fn completed_gid_from_text_ignores_non_completion_events() {
-        let gid = completed_gid_from_text(
+    fn paused_gid_from_text_ignores_other_events() {
+        let gid = paused_gid_from_text(
             r#"{"jsonrpc":"2.0","method":"aria2.onDownloadStart","params":[{"gid":"abc123"}]}"#,
         );
 
@@ -168,8 +168,8 @@ mod tests {
     }
 
     #[test]
-    fn completed_gid_from_text_ignores_rpc_responses() {
-        let gid = completed_gid_from_text(
+    fn paused_gid_from_text_ignores_rpc_responses() {
+        let gid = paused_gid_from_text(
             r#"{"jsonrpc":"2.0","id":"motrix-next-events-auth","result":{"version":"1.37.0"}}"#,
         );
 
@@ -177,9 +177,9 @@ mod tests {
     }
 
     #[test]
-    fn completed_gid_from_text_handles_empty_params() {
-        let gid = completed_gid_from_text(
-            r#"{"jsonrpc":"2.0","method":"aria2.onDownloadComplete","params":[]}"#,
+    fn paused_gid_from_text_handles_empty_params() {
+        let gid = paused_gid_from_text(
+            r#"{"jsonrpc":"2.0","method":"aria2.onDownloadPause","params":[]}"#,
         );
 
         assert_eq!(gid, None);

@@ -446,9 +446,6 @@ function handleClose() {
                 </NDescriptionsItem>
                 <NDescriptionsItem :label="t('task.task-bt-trackers')">
                   {{ btHealth.trackerCount }}
-                  <span v-if="btHealth.unprobeableTrackerCount > 0" class="muted-inline">
-                    · {{ btHealth.unprobeableTrackerCount }} {{ t('task.task-tracker-not-probed') }}
-                  </span>
                 </NDescriptionsItem>
                 <NDescriptionsItem :label="t('task.task-bt-peers')">
                   {{ btHealth.peerCount }}
@@ -687,7 +684,7 @@ function handleClose() {
           </div>
 
           <div v-else-if="activeTab === 'trackers'" key="trackers" class="tab-content">
-            <TaskDetailTrackers :bt-info="btInfo" :tooltip="t('about.click-to-copy')" :on-copy="copyDetailValue" />
+            <TaskDetailTrackers :gid="task?.gid ?? ''" :tooltip="t('about.click-to-copy')" :on-copy="copyDetailValue" />
           </div>
         </Transition>
       </div>

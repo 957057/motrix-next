@@ -106,11 +106,12 @@ pub async fn aria2_change_global_option(
         || options.contains_key("bt-external-port");
     let result = state.0.change_global_option(options).await?;
     if endpoint_changed {
-        let endpoint = state.0.get_bt_endpoint().await?;
+        let endpoint = state.0.get_bt_session_status().await?;
         log::info!(
-            "aria2:bt-endpoint listen_port={} announce_port={} external_ip_configured={}",
+            "aria2:bt-session listen_port={} announce_port={} endpoints={} external_ip_configured={}",
             endpoint.listen_port,
             endpoint.announce_port,
+            endpoint.listen_endpoints.len(),
             !endpoint.external_ip.is_empty()
         );
     }
@@ -143,6 +144,15 @@ pub async fn aria2_get_files(
     gid: String,
 ) -> Result<Vec<Aria2File>, AppError> {
     state.0.get_files(&gid).await
+}
+
+#[tauri::command]
+pub async fn aria2_get_bt_trackers(
+    state: State<'_, Aria2State>,
+    gid: String,
+) -> Result<serde_json::Value, AppError> {
+    let trackers = state.0.get_bt_trackers(&gid).await?;
+    serde_json::to_value(trackers).map_err(|e| AppError::Aria2(format!("serialize trackers: {e}")))
 }
 
 // ── `out` option sanitization ────────────────────────────────────────
