@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** @fileoverview Action buttons for individual task items. */
-import { computed, inject, type Ref } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TASK_STATUS } from '@shared/constants'
 import { NIcon } from 'naive-ui'
@@ -8,7 +8,6 @@ import MTooltip from '@/components/common/MTooltip.vue'
 import {
   PauseOutline,
   PlayOutline,
-  StopOutline,
   RefreshOutline,
   CloseOutline,
   TrashOutline,
@@ -16,17 +15,15 @@ import {
   InformationCircleOutline,
   FolderOpenOutline,
   OpenOutline,
-  SyncOutline,
+  ListOutline,
 } from '@vicons/ionicons5'
 import { type Component } from 'vue'
 import type { Aria2Task } from '@shared/types'
+import { getBtLifecycleState } from '@/composables/useBtLifecycle'
 
-const props = withDefaults(
-  defineProps<{ task: Aria2Task; status: string; fileMissing?: boolean; density?: 'full' | 'compact' }>(),
-  { density: 'full' },
-)
-const stoppingGids = inject<Ref<string[]>>('stoppingGids')
-const isStopping = computed(() => stoppingGids?.value.includes(props.task.gid) ?? false)
+const props = withDefaults(defineProps<{ task: Aria2Task; fileMissing?: boolean; density?: 'full' | 'compact' }>(), {
+  density: 'full',
+})
 const emit = defineEmits<{
   pause: []
   resume: []
@@ -36,7 +33,7 @@ const emit = defineEmits<{
   'show-info': []
   folder: []
   'open-file': []
-  'stop-sharing': []
+  'select-files': []
 }>()
 
 const { t } = useI18n()
@@ -50,52 +47,65 @@ interface ActionDef {
   cls?: string
 }
 
-const actionsMap = computed<Record<string, ActionDef[]>>(() => ({
-  [TASK_STATUS.ACTIVE]: [
-    { key: 'toggle', icon: PauseOutline, label: t('task.pause-task'), event: 'pause' },
-    { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
-  ],
-  [TASK_STATUS.PAUSED]: [
-    { key: 'toggle', icon: PlayOutline, label: t('task.resume-task'), event: 'resume' },
-    { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
-  ],
-  [TASK_STATUS.WAITING]: [
-    { key: 'toggle', icon: PauseOutline, label: t('task.pause-task'), event: 'pause' },
-    { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
-  ],
-  [TASK_STATUS.ERROR]: [
-    { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
-    { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
-    { key: 'restart', icon: RefreshOutline, label: t('task.resume-task'), event: 'resume' },
-    { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
-  ],
-  [TASK_STATUS.COMPLETE]: [
-    { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
-    { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
-    { key: 'restart', icon: RefreshOutline, label: t('task.restart-task'), event: 'resume' },
-    { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
-  ],
-  [TASK_STATUS.REMOVED]: [
-    { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
-    { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
-    { key: 'restart', icon: RefreshOutline, label: t('task.restart-task'), event: 'resume' },
-    { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
-  ],
-  [TASK_STATUS.SHARING]: [
-    {
-      key: 'stop',
-      icon: StopOutline,
-      label: t('task.stop-sharing') || 'Stop Sharing',
-      event: 'stop-sharing',
-      tooltip: t('task.stop-sharing-tip') || 'Download complete. Click to stop sharing.',
-      cls: 'stop-sharing',
-    },
-    { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
-  ],
-}))
-
 const actions = computed(() => {
-  const primary = actionsMap.value[props.status] || []
+  const lifecycle = getBtLifecycleState(props.task)
+  let primary: ActionDef[]
+  if (lifecycle === 'selection') {
+    primary = [
+      {
+        key: 'select-files',
+        icon: ListOutline,
+        label: t('task.select-files'),
+        event: 'select-files',
+        cls: 'select-files',
+      },
+      { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
+    ]
+  } else if (lifecycle === 'seeding') {
+    primary = [
+      { key: 'toggle', icon: PauseOutline, label: t('task.pause-seeding'), event: 'pause' },
+      { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
+    ]
+  } else if (lifecycle === 'paused-seeding') {
+    primary = [
+      { key: 'toggle', icon: PlayOutline, label: t('task.resume-seeding'), event: 'resume' },
+      { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
+    ]
+  } else {
+    const actionsMap: Record<string, ActionDef[]> = {
+      [TASK_STATUS.ACTIVE]: [
+        { key: 'toggle', icon: PauseOutline, label: t('task.pause-task'), event: 'pause' },
+        { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
+      ],
+      [TASK_STATUS.PAUSED]: [
+        { key: 'toggle', icon: PlayOutline, label: t('task.resume-task'), event: 'resume' },
+        { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
+      ],
+      [TASK_STATUS.WAITING]: [
+        { key: 'toggle', icon: PauseOutline, label: t('task.pause-task'), event: 'pause' },
+        { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
+      ],
+      [TASK_STATUS.ERROR]: [
+        { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
+        { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
+        { key: 'restart', icon: RefreshOutline, label: t('task.resume-task'), event: 'resume' },
+        { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
+      ],
+      [TASK_STATUS.COMPLETE]: [
+        { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
+        { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
+        { key: 'restart', icon: RefreshOutline, label: t('task.restart-task'), event: 'resume' },
+        { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
+      ],
+      [TASK_STATUS.REMOVED]: [
+        { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
+        { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
+        { key: 'restart', icon: RefreshOutline, label: t('task.restart-task'), event: 'resume' },
+        { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
+      ],
+    }
+    primary = actionsMap[props.task.status] || []
+  }
   const primaryKeys = new Set(primary.map((a) => a.key))
 
   // Destructive actions (trash, delete) always go to the far right
@@ -138,8 +148,8 @@ function onAction(event: string) {
     case 'open-file':
       emit('open-file')
       break
-    case 'stop-sharing':
-      emit('stop-sharing')
+    case 'select-files':
+      emit('select-files')
       break
   }
 }
@@ -152,43 +162,25 @@ function onAction(event: string) {
     class="task-item-actions"
     :class="{ 'task-item-actions--compact': props.density === 'compact' }"
   >
-    <li v-for="action in actions" :key="action.key" class="task-item-action-slot">
+    <li v-for="action in actions" :key="action.key" class="task-item-action-slot" :class="action.cls">
       <MTooltip :style="action.tooltip ? 'max-width: 220px' : ''">
         <template #trigger>
           <button
             type="button"
             class="task-item-action"
-            :class="[
-              action.cls,
-              {
-                'is-stopping': action.event === 'stop-sharing' && isStopping,
-              },
-            ]"
-            :disabled="action.event === 'stop-sharing' && isStopping"
+            :class="action.cls"
             :aria-label="action.label"
             @click="onAction(action.event)"
           >
             <span class="task-action-visual" aria-hidden="true">
-              <span v-if="action.event === 'stop-sharing'" class="stop-icon-wrapper">
-                <span class="stop-icon-static" :class="{ 'fade-out': isStopping }">
-                  <NIcon class="task-action-icon"><StopOutline /></NIcon>
-                </span>
-                <span class="stop-icon-spin" :class="{ 'fade-in': isStopping }">
-                  <NIcon class="task-action-icon"><SyncOutline /></NIcon>
-                </span>
-              </span>
-              <Transition v-else name="icon-swap" mode="out-in">
+              <Transition name="icon-swap" mode="out-in">
                 <NIcon :key="action.event" class="task-action-icon"><component :is="action.icon" /></NIcon>
               </Transition>
+              <span v-if="action.event === 'select-files'" class="task-action-label">{{ action.label }}</span>
             </span>
           </button>
         </template>
-        <template v-if="action.event === 'stop-sharing' && isStopping">
-          {{ t('task.stopping-sharing') || 'Stopping…' }}
-        </template>
-        <template v-else>
-          {{ action.tooltip || action.label }}
-        </template>
+        {{ action.tooltip || action.label }}
       </MTooltip>
     </li>
   </TransitionGroup>
@@ -270,18 +262,37 @@ function onAction(event: string) {
 .task-item-action:focus-visible {
   color: var(--m3-primary);
 }
-.task-item-action.stop-sharing {
-  color: var(--m3-success);
+.task-item-action-slot.select-files {
+  --task-action-item-max-width: 124px;
+  flex-basis: auto;
+  width: auto;
 }
-.task-item-action.stop-sharing:hover,
-.task-item-action.stop-sharing:active,
-.task-item-action.stop-sharing:focus-visible {
-  color: var(--m3-success);
+.task-item-action.select-files {
+  width: auto;
+  padding: 0 8px;
+  gap: 5px;
+  color: var(--m3-primary);
 }
-.task-item-action.is-stopping,
-.task-item-action.is-stopping:hover {
-  color: var(--m3-warning);
-  cursor: default;
+.task-action-label {
+  display: inline;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.task-item-action.select-files .task-action-visual {
+  width: auto;
+}
+.task-item-actions--compact .task-item-action-slot.select-files {
+  --task-action-item-max-width: var(--task-action-button-size);
+  flex-basis: var(--task-action-button-size);
+  width: var(--task-action-button-size);
+}
+.task-item-actions--compact .task-item-action.select-files {
+  width: var(--task-action-button-size);
+  padding: 0;
+}
+.task-item-actions--compact .task-action-label {
+  display: none;
 }
 .task-action-visual {
   display: inline-flex;
@@ -298,49 +309,8 @@ function onAction(event: string) {
   transition: transform 0.09s cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* Icon crossfade wrapper */
-.stop-icon-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--task-action-icon-size);
-  height: var(--task-action-icon-size);
-}
 .task-action-icon {
   font-size: var(--task-action-icon-size);
-}
-.stop-icon-static,
-.stop-icon-spin {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.5s ease;
-}
-.stop-icon-static {
-  opacity: 1;
-}
-.stop-icon-static.fade-out {
-  opacity: 0;
-}
-.stop-icon-spin {
-  opacity: 0;
-}
-.stop-icon-spin.fade-in {
-  opacity: 1;
-  animation: spin-stop 0.9s linear infinite;
-  will-change: transform;
-  contain: layout style paint;
-}
-@keyframes spin-stop {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* M3 icon crossfade for play ↔ pause toggle */

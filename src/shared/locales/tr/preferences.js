@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': 'Devre dışı',
   'bt-dht': 'DHT ağı',
   'bt-connection-section': 'BitTorrent Bağlantısı',
+  'bt-endpoint-section': 'Bağlantı noktaları ve genel adres',
   'bt-connection-apply-succeeded': 'BitTorrent bağlantı ayarları uygulandı',
   'bt-connection-restore-succeeded': 'BitTorrent bağlantı ayarları uygulanamadı. Önceki ayarlar geri yüklendi',
   'bt-connection-restore-failed': 'Önceki BitTorrent bağlantı ayarları geri yüklenemedi. Motoru yeniden başlatın',

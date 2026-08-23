@@ -44,6 +44,7 @@ export default {
   'bt-encryption-disabled': 'Ανενεργή',
   'bt-dht': 'Δίκτυο DHT',
   'bt-connection-section': 'Σύνδεση BitTorrent',
+  'bt-endpoint-section': 'Θύρες και δημόσια διεύθυνση',
   'bt-connection-apply-succeeded': 'Οι ρυθμίσεις σύνδεσης BitTorrent εφαρμόστηκαν',
   'bt-connection-restore-succeeded':
     'Δεν ήταν δυνατή η εφαρμογή των ρυθμίσεων σύνδεσης BitTorrent. Έγινε επαναφορά των προηγούμενων ρυθμίσεων',

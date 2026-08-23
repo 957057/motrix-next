@@ -166,6 +166,26 @@ impl HistoryDb {
         Ok(())
     }
 
+    /// Remove every persisted record owned by a deleted task.
+    pub async fn remove_task_records(
+        &self,
+        gid: &str,
+        info_hash: Option<&str>,
+    ) -> Result<(), AppError> {
+        let mut conn = self.conn.lock().await;
+        let transaction = conn.transaction()?;
+        transaction.execute("DELETE FROM download_history WHERE gid = ?1", params![gid])?;
+        if let Some(info_hash) = info_hash.filter(|value| !value.is_empty()) {
+            transaction.execute(
+                "DELETE FROM download_history WHERE json_extract(meta, '$.infoHash') = ?1",
+                params![info_hash],
+            )?;
+        }
+        transaction.execute("DELETE FROM task_birth WHERE gid = ?1", params![gid])?;
+        transaction.commit()?;
+        Ok(())
+    }
+
     /// Clear all records, optionally filtered by status.
     pub async fn clear_records(&self, status: Option<&str>) -> Result<(), AppError> {
         let conn = self.conn.lock().await;
@@ -398,6 +418,22 @@ mod tests {
         let records = db.get_records(None, None).await.unwrap();
         assert_eq!(records.len(), 1);
         assert_eq!(records[0].gid, "g2");
+    }
+
+    #[tokio::test]
+    async fn remove_task_records_clears_history_and_birth() {
+        let db = HistoryDb::open_in_memory().unwrap();
+        db.add_record(&make_record("gid001", "test.zip", "complete"))
+            .await
+            .unwrap();
+        db.record_task_birth("gid001", "2025-01-01T00:00:00Z")
+            .await
+            .unwrap();
+
+        db.remove_task_records("gid001", None).await.unwrap();
+
+        assert!(db.get_records(None, None).await.unwrap().is_empty());
+        assert_eq!(db.get_task_birth("gid001").await.unwrap(), None);
     }
 
     #[tokio::test]

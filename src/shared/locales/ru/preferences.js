@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': 'Отключено',
   'bt-dht': 'Сеть DHT',
   'bt-connection-section': 'Подключение BitTorrent',
+  'bt-endpoint-section': 'Порты и публичный адрес',
   'bt-connection-apply-succeeded': 'Настройки подключения BitTorrent применены',
   'bt-connection-restore-succeeded':
     'Не удалось применить настройки подключения BitTorrent. Предыдущие настройки восстановлены',

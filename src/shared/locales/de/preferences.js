@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': 'Deaktiviert',
   'bt-dht': 'DHT-Netzwerk',
   'bt-connection-section': 'BitTorrent-Verbindung',
+  'bt-endpoint-section': 'Ports und öffentliche Adresse',
   'bt-connection-apply-succeeded': 'BitTorrent-Verbindungseinstellungen angewendet',
   'bt-connection-restore-succeeded':
     'Die BitTorrent-Verbindungseinstellungen konnten nicht angewendet werden. Die vorherigen Einstellungen wurden wiederhergestellt',

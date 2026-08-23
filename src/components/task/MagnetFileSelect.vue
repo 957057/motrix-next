@@ -22,6 +22,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   confirm: [selectedIndices: number[]]
   cancel: []
+  dismiss: []
   afterLeave: []
 }>()
 
@@ -111,6 +112,11 @@ function handleCancel() {
   if (submitting.value) return
   emit('cancel')
 }
+
+function handleDismiss() {
+  if (submitting.value) return
+  emit('dismiss')
+}
 </script>
 
 <template>
@@ -121,7 +127,7 @@ function handleCancel() {
     :auto-focus="false"
     transform-origin="center"
     :transition="{ name: 'fade-scale' }"
-    @update:show="(v) => !v && handleCancel()"
+    @update:show="(v) => !v && handleDismiss()"
     @after-leave="emit('afterLeave')"
   >
     <NCard
@@ -140,7 +146,7 @@ function handleCancel() {
       }"
       :content-style="{ flex: '1', minHeight: '0', overflowY: 'auto', overflowX: 'hidden' }"
       :segmented="{ footer: true }"
-      @close="handleCancel"
+      @close="handleDismiss"
     >
       <!-- Task name subtitle -->
       <div class="task-name-subtitle">

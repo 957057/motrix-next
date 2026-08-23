@@ -66,6 +66,7 @@ import {
   addUriAtomic,
   addTorrent,
   removeTask,
+  deleteTask,
   pauseTask,
   resumeTask,
   forcePauseTask,
@@ -549,6 +550,11 @@ describe('aria2 API (invoke transport)', () => {
     it('removeTask invokes aria2_force_remove', async () => {
       await removeTask({ gid: 'abc' })
       expect(mockInvoke).toHaveBeenCalledWith('aria2_force_remove', { gid: 'abc' })
+    })
+
+    it('deleteTask invokes the state-independent deletion command', async () => {
+      await deleteTask({ gid: 'abc', infoHash: 'hash' })
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_delete_task', { gid: 'abc', infoHash: 'hash' })
     })
 
     it('pauseTask invokes aria2_pause', async () => {

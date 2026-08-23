@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** @fileoverview Task list view with polling, task actions, and file delete confirmation. */
-import { computed, watch, onMounted, onBeforeUnmount, ref, provide } from 'vue'
+import { computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTaskStore } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
@@ -31,9 +31,6 @@ const { isDark } = useTheme()
 const watermarkSrc = computed(() => (isDark.value ? watermarkLight : watermarkDark))
 const showTaskListWatermark = computed(() => preferenceStore.config.taskListWatermark)
 
-const stoppingGids = ref<string[]>([])
-provide('stoppingGids', stoppingGids)
-
 const {
   handlePauseTask,
   handleResumeTask,
@@ -43,14 +40,14 @@ const {
   handleShowInfo,
   handleShowInFolder,
   handleOpenFile,
-  handleStopSharing,
+  handleSelectFiles,
 } = useTaskActions({
   taskStore,
   preferenceConfig: () => preferenceStore.config,
   t,
   dialog,
   message,
-  stoppingGids,
+  requestMagnetSelection: appStore.requestMagnetSelection,
 })
 
 const subnavs = computed(() => [
@@ -142,7 +139,7 @@ onBeforeUnmount(() => {
           @show-info="handleShowInfo"
           @folder="handleShowInFolder"
           @open-file="handleOpenFile"
-          @stop-sharing="handleStopSharing"
+          @select-files="handleSelectFiles"
         />
       </div>
     </div>

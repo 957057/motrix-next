@@ -14,6 +14,7 @@ import {
   timeRemaining,
 } from '@shared/utils'
 import { buildTaskTransferSummary } from '@/composables/useTaskDetailSummary'
+import { formatBtDuration, getBtLifecycleState } from '@/composables/useBtLifecycle'
 import type { Aria2Task } from '@shared/types'
 
 export interface TaskCardStatusBadge {
@@ -41,6 +42,7 @@ interface TaskCardModel {
   remaining: ComputedRef<number>
   remainingText: ComputedRef<string>
   transferSummary: ComputedRef<ReturnType<typeof buildTaskTransferSummary>>
+  seedingTimeText: ComputedRef<string>
 }
 
 export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
@@ -48,6 +50,15 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
 
   const taskFullName = computed(() =>
     getTaskDisplayName(task.value, { defaultName: t('task.get-task-name') || 'Unknown' }),
+  )
+  const btLifecycle = computed(() => getBtLifecycleState(task.value))
+  const seedingTimeText = computed(() =>
+    formatBtDuration(Number(task.value.bittorrent?.seedingTime ?? 0), {
+      day: t('task.seeding-day-unit'),
+      hour: t('app.hour') || 'h',
+      minute: t('app.minute') || 'm',
+      second: t('app.second') || 's',
+    }),
   )
   const sharingKind = computed(() => getTaskSharingKind(task.value))
   const isSharing = computed(() => checkTaskIsSharing(task.value))
@@ -59,7 +70,29 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
   const isMetadataFetching = computed(() => isBtMetadataTask(task.value))
   const taskStatus = computed(() => (isSharing.value ? TASK_STATUS.SHARING : task.value.status))
   const statusBadge = computed<TaskCardStatusBadge | null>(() => {
-    if (isSharing.value) return { key: 'sharing', label: sharingLabel.value, tone: 'success' }
+    if (btLifecycle.value === 'selection') {
+      return {
+        key: 'bt-file-selection',
+        label: t('task.awaiting-file-selection'),
+        tone: 'waiting',
+      }
+    }
+    if (btLifecycle.value === 'paused-seeding') {
+      const duration = seedingTimeText.value
+      return {
+        key: 'bt-seeding-paused',
+        label: duration ? `${t('task.seeding-paused')} · ${duration}` : t('task.seeding-paused'),
+        tone: 'muted',
+      }
+    }
+    if (isSharing.value) {
+      const duration = seedingTimeText.value
+      return {
+        key: 'sharing',
+        label: duration ? `${sharingLabel.value} · ${duration}` : sharingLabel.value,
+        tone: 'success',
+      }
+    }
     if (isMetadataFetching.value)
       return {
         key: 'bt-metadata-fetching',
@@ -125,5 +158,6 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
     remaining,
     remainingText,
     transferSummary,
+    seedingTimeText,
   }
 }

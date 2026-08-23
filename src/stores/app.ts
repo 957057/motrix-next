@@ -95,6 +95,7 @@ export const useAppStore = defineStore('app', () => {
   const progress = ref(0)
   const pendingUpdate = ref<TauriUpdate | null>(null)
   const pendingMagnetGids = ref<string[]>([])
+  const requestedMagnetSelectionGid = ref('')
   const externalInputSubmitting = ref(false)
   let externalInputSubmitCount = 0
   let externalInputErrorHandler: ((error: unknown) => void) | null = null
@@ -106,6 +107,11 @@ export const useAppStore = defineStore('app', () => {
     pendingFilename.value = ''
     pendingUserAgent.value = ''
     pendingRequestHeaders.value = []
+  }
+
+  function requestMagnetSelection(gid: string) {
+    requestedMagnetSelectionGid.value = ''
+    requestedMagnetSelectionGid.value = gid
   }
 
   function setPendingExternalMetadata(context: ExternalDownloadContext, filenameHint: string) {
@@ -185,7 +191,7 @@ export const useAppStore = defineStore('app', () => {
   function handleStatEvent(payload: StatPayload) {
     const { numActive } = payload
     stat.value = {
-      downloadSpeed: numActive > 0 ? payload.downloadSpeed : 0,
+      downloadSpeed: payload.downloadSpeed,
       uploadSpeed: payload.uploadSpeed,
       numActive,
       numWaiting: payload.numWaiting,
@@ -539,6 +545,8 @@ export const useAppStore = defineStore('app', () => {
     progress,
     pendingUpdate,
     pendingMagnetGids,
+    requestedMagnetSelectionGid,
+    requestMagnetSelection,
     updateInterval,
     increaseInterval,
     enqueueBatch,

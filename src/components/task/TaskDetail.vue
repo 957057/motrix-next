@@ -62,6 +62,7 @@ import TaskDetailSources from './detail/TaskDetailSources.vue'
 import TaskDetailTrackers from './detail/TaskDetailTrackers.vue'
 import { forceBtRecheck } from '@/api/aria2'
 import { getErrorMessage } from '@shared/utils/errorMessage'
+import { formatBtDuration, getBtLifecycleState } from '@/composables/useBtLifecycle'
 
 const props = defineProps<{
   show: boolean
@@ -239,14 +240,19 @@ watch(visibleTabs, (tabs) => {
 const sharingKind = computed(() => (props.task ? getTaskSharingKind(props.task) : null))
 const isSharing = computed(() => (props.task ? checkTaskIsSharing(props.task) : false))
 const isMetadataFetching = computed(() => (props.task ? isBtMetadataTask(props.task) : false))
+const btLifecycle = computed(() => (props.task ? getBtLifecycleState(props.task) : 'none'))
 const taskStatusKey = computed(() =>
-  isSharing.value
-    ? sharingKind.value === 'bt'
-      ? 'seeding'
-      : 'sharing'
-    : isMetadataFetching.value
-      ? 'bt-metadata-fetching'
-      : props.task?.status,
+  btLifecycle.value === 'selection'
+    ? 'awaiting-file-selection'
+    : btLifecycle.value === 'paused-seeding'
+      ? 'seeding-paused'
+      : isSharing.value
+        ? sharingKind.value === 'bt'
+          ? 'seeding'
+          : 'sharing'
+        : isMetadataFetching.value
+          ? 'bt-metadata-fetching'
+          : props.task?.status,
 )
 const taskStatus = computed(() => {
   const key = taskStatusKey.value
@@ -289,6 +295,14 @@ const btInfo = computed(() => {
   if (!isBT.value || !props.task) return null
   return props.task.bittorrent ?? null
 })
+const seedingTime = computed(() =>
+  formatBtDuration(Number(btInfo.value?.seedingTime ?? 0), {
+    day: t('task.seeding-day-unit'),
+    hour: t('app.hour') || 'h',
+    minute: t('app.minute') || 'm',
+    second: t('app.second') || 's',
+  }),
+)
 
 const ed2kInfo = computed(() => {
   if (!isED2K.value || !props.task) return null
@@ -308,6 +322,7 @@ const statusTagType = computed<TaskStatusTagType>(() => {
     case 'active':
     case 'waiting':
     case 'bt-metadata-fetching':
+    case 'awaiting-file-selection':
       return 'warning'
     case 'seeding':
     case 'sharing':
@@ -408,6 +423,9 @@ function handleClose() {
                   </NDescriptionsItem>
                   <NDescriptionsItem :label="t('task.task-num-pieces') || 'Pieces'">
                     {{ task.numPieces }}
+                  </NDescriptionsItem>
+                  <NDescriptionsItem v-if="seedingTime" :label="t('task.seeding-time')">
+                    {{ seedingTime }}
                   </NDescriptionsItem>
                   <NDescriptionsItem
                     v-if="btInfo?.creationDate"

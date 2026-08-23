@@ -73,6 +73,7 @@ function createMockApi() {
     changeOption: vi.fn().mockResolvedValue(undefined),
     getFiles: vi.fn().mockResolvedValue([]),
     removeTask: vi.fn().mockResolvedValue('gid1'),
+    deleteTask: vi.fn().mockResolvedValue(undefined),
     forcePauseTask: vi.fn().mockResolvedValue('gid1'),
     pauseTask: vi.fn().mockResolvedValue('gid1'),
     resumeTask: vi.fn().mockResolvedValue('gid1'),
@@ -538,7 +539,7 @@ describe('TaskStore', () => {
     expect(mockApi.saveSession).toHaveBeenCalled()
   })
 
-  it('pauseAllTask skips seeding tasks', async () => {
+  it('pauseAllTask includes seeding tasks', async () => {
     mockApi.fetchTaskList.mockResolvedValueOnce([
       makeMockTask('dl-1', 'active'),
       makeMockTask('seed-1', 'active', {
@@ -549,7 +550,8 @@ describe('TaskStore', () => {
     await store.fetchList()
     await store.pauseAllTask()
     expect(mockApi.forcePauseTask).toHaveBeenCalledWith({ gid: 'dl-1' })
-    expect(mockApi.forcePauseTask).toHaveBeenCalledTimes(1)
+    expect(mockApi.forcePauseTask).toHaveBeenCalledWith({ gid: 'seed-1' })
+    expect(mockApi.forcePauseTask).toHaveBeenCalledTimes(2)
   })
 
   it('resumeAllTask resumes eligible paused tasks, refreshes, and saves session', async () => {
@@ -598,7 +600,7 @@ describe('TaskStore', () => {
   it('removeTask calls API and refreshes list', async () => {
     const task = makeMockTask('gid1')
     await store.removeTask(task)
-    expect(mockApi.removeTask).toHaveBeenCalledWith({ gid: 'gid1' })
+    expect(mockApi.deleteTask).toHaveBeenCalledWith({ gid: 'gid1', infoHash: undefined })
     expect(mockApi.fetchTaskList).toHaveBeenCalled()
     expect(mockApi.saveSession).toHaveBeenCalled()
   })
@@ -612,7 +614,7 @@ describe('TaskStore', () => {
   })
 
   it('removeTask always refreshes list even if API throws', async () => {
-    mockApi.removeTask.mockRejectedValueOnce(new Error('not found'))
+    mockApi.deleteTask.mockRejectedValueOnce(new Error('not found'))
     const task = makeMockTask('gid1')
     await expect(store.removeTask(task)).rejects.toThrow('not found')
     expect(mockApi.fetchTaskList).toHaveBeenCalled()
@@ -667,7 +669,9 @@ describe('TaskStore', () => {
 
   it('batchRemoveTask calls API with gids and saves session', async () => {
     await store.batchRemoveTask(['gid1', 'gid2'])
-    expect(mockApi.batchRemoveTask).toHaveBeenCalledWith({ gids: ['gid1', 'gid2'] })
+    expect(mockApi.deleteTask).toHaveBeenCalledTimes(2)
+    expect(mockApi.deleteTask).toHaveBeenCalledWith({ gid: 'gid1', infoHash: undefined })
+    expect(mockApi.deleteTask).toHaveBeenCalledWith({ gid: 'gid2', infoHash: undefined })
     expect(mockApi.saveSession).toHaveBeenCalled()
   })
 
@@ -713,150 +717,19 @@ describe('TaskStore', () => {
     expect(store.currentTaskPeers).toEqual([])
   })
 
-  // ─── sharingList ────────────────────────────────────────
-
-  it('addToSharingList adds new gid', () => {
-    store.addToSharingList('gid1')
-    expect(store.sharingList).toContain('gid1')
-  })
-
-  it('addToSharingList ignores duplicates', () => {
-    store.addToSharingList('gid1')
-    store.addToSharingList('gid1')
-    expect(store.sharingList).toEqual(['gid1'])
-  })
-
-  it('removeFromSharingList removes existing gid', () => {
-    store.addToSharingList('gid1')
-    store.addToSharingList('gid2')
-    store.removeFromSharingList('gid1')
-    expect(store.sharingList).toEqual(['gid2'])
-  })
-
-  it('removeFromSharingList ignores non-existent gid', () => {
-    store.addToSharingList('gid1')
-    store.removeFromSharingList('gid999')
-    expect(store.sharingList).toEqual(['gid1'])
-  })
-
-  // ─── stopSharing ────────────────────────────────────────
-
-  it('stopSharing calls forcePause then removeTask then writes DB', async () => {
-    const callOrder: string[] = []
-    mockApi.forcePauseTask.mockImplementation(() => {
-      callOrder.push('forcePause')
-      return Promise.resolve('OK')
-    })
-    mockApi.removeTask.mockImplementation(() => {
-      callOrder.push('removeTask')
-      return Promise.resolve('OK')
-    })
-
-    const task = makeMockTask('gid1', 'active', { bittorrent: { info: { name: 'seed' } }, seeder: 'true' })
-    await store.stopSharing(task)
-
-    expect(mockApi.forcePauseTask).toHaveBeenCalledWith({ gid: 'gid1' })
-    expect(mockApi.removeTask).toHaveBeenCalledWith({ gid: 'gid1' })
-    expect(callOrder).toEqual(['forcePause', 'removeTask'])
-    // DB persistence
-    expect(mockHistoryFns.addRecord).toHaveBeenCalledWith(expect.objectContaining({ gid: 'gid1', status: 'complete' }))
-  })
-
-  it('stopSharing does not call removeTask if forcePause fails', async () => {
-    mockApi.forcePauseTask.mockRejectedValueOnce(new Error('pause failed'))
-
-    const task = makeMockTask('gid1', 'active', { bittorrent: { info: { name: 'x' } }, seeder: 'true' })
-    await expect(store.stopSharing(task)).rejects.toThrow('pause failed')
-    expect(mockApi.forcePauseTask).toHaveBeenCalledWith({ gid: 'gid1' })
-    expect(mockApi.removeTask).not.toHaveBeenCalled()
-    expect(mockHistoryFns.addRecord).not.toHaveBeenCalled()
-  })
-
-  // ─── stopAllSharing ─────────────────────────────────────
-
-  it('stopAllSharing calls two-step stop + DB write for every sharing task', async () => {
-    const seeder1 = makeMockTask('s1', 'active', { bittorrent: { info: { name: 'a' } }, seeder: 'true' })
-    const seeder2 = makeMockTask('s2', 'active', { bittorrent: { info: { name: 'b' } }, seeder: 'true' })
-    store.taskList = [seeder1, seeder2]
-    const count = await store.stopAllSharing()
-    expect(count).toBe(2)
-    expect(mockApi.forcePauseTask).toHaveBeenCalledWith({ gid: 's1' })
-    expect(mockApi.forcePauseTask).toHaveBeenCalledWith({ gid: 's2' })
-    expect(mockApi.removeTask).toHaveBeenCalledWith({ gid: 's1' })
-    expect(mockApi.removeTask).toHaveBeenCalledWith({ gid: 's2' })
-    // Both tasks persisted to DB
-    expect(mockHistoryFns.addRecord).toHaveBeenCalledTimes(2)
-  })
-
-  it('stopAllSharing skips non-sharing tasks', async () => {
-    const active = makeMockTask('a1', 'active')
-    const seeder = makeMockTask('s1', 'active', { bittorrent: { info: { name: 'x' } }, seeder: 'true' })
-    store.taskList = [active, seeder]
-    const count = await store.stopAllSharing()
-    expect(count).toBe(1)
-    expect(mockApi.forcePauseTask).toHaveBeenCalledTimes(1)
-    expect(mockApi.forcePauseTask).toHaveBeenCalledWith({ gid: 's1' })
-    expect(mockApi.removeTask).toHaveBeenCalledTimes(1)
-    expect(mockApi.removeTask).toHaveBeenCalledWith({ gid: 's1' })
-  })
-
-  it('stopAllSharing returns 0 when no sharing tasks exist', async () => {
-    store.taskList = [makeMockTask('a1', 'active')]
-    const count = await store.stopAllSharing()
-    expect(count).toBe(0)
-    expect(mockApi.forcePauseTask).not.toHaveBeenCalled()
-    expect(mockApi.removeTask).not.toHaveBeenCalled()
-  })
-
-  it('stopAllSharing continues even if one task fails', async () => {
-    const seeder1 = makeMockTask('s1', 'active', { bittorrent: { info: { name: 'a' } }, seeder: 'true' })
-    const seeder2 = makeMockTask('s2', 'active', { bittorrent: { info: { name: 'b' } }, seeder: 'true' })
-    store.taskList = [seeder1, seeder2]
-    mockApi.forcePauseTask.mockRejectedValueOnce(new Error('fail'))
-    const count = await store.stopAllSharing()
-    expect(count).toBe(2)
-    // Both tasks attempted — s1 failed at forcePause, s2 succeeded with both steps
-    expect(mockApi.forcePauseTask).toHaveBeenCalledTimes(2)
-  })
-
   // ─── removeTaskRecord ───────────────────────────────────
 
-  it('removeTaskRecord removes completed task via DB then aria2', async () => {
+  it('removeTaskRecord uses the unified deletion transaction', async () => {
     const task = makeMockTask('gid1', 'complete')
     await store.removeTaskRecord(task)
-    // DB is primary — removeRecord called first
-    expect(mockHistoryFns.removeRecord).toHaveBeenCalledWith('gid1')
-    // aria2 best-effort cleanup
-    expect(mockApi.removeTaskRecord).toHaveBeenCalledWith({ gid: 'gid1' })
+    expect(mockApi.deleteTask).toHaveBeenCalledWith({ gid: 'gid1', infoHash: undefined })
   })
 
-  it('removeTaskRecord removes error task via DB then aria2', async () => {
-    const task = makeMockTask('gid1', 'error')
-    await store.removeTaskRecord(task)
-    expect(mockHistoryFns.removeRecord).toHaveBeenCalledWith('gid1')
-    expect(mockApi.removeTaskRecord).toHaveBeenCalledWith({ gid: 'gid1' })
-  })
-
-  it('removeTaskRecord ignores active task', async () => {
-    const task = makeMockTask('gid1', 'active')
-    await store.removeTaskRecord(task)
-    expect(mockHistoryFns.removeRecord).not.toHaveBeenCalled()
-    expect(mockApi.removeTaskRecord).not.toHaveBeenCalled()
-  })
-
-  it('removeTaskRecord hides detail if removing current detail task', async () => {
+  it('removeTaskRecord hides the current task detail', async () => {
     const task = makeMockTask('gid1', 'complete')
     store.showTaskDetail(task)
     await store.removeTaskRecord(task)
     expect(store.taskDetailVisible).toBe(false)
-    expect(mockHistoryFns.removeRecord).toHaveBeenCalledWith('gid1')
-  })
-
-  it('removeTaskRecord survives aria2 failure (DB-only records)', async () => {
-    mockApi.removeTaskRecord.mockRejectedValueOnce(new Error('GID not found'))
-    const task = makeMockTask('gid1', 'complete')
-    await store.removeTaskRecord(task)
-    expect(mockHistoryFns.removeRecord).toHaveBeenCalledWith('gid1')
   })
 
   // ─── purgeTaskRecord ────────────────────────────────────

@@ -432,22 +432,12 @@ async fn stat_loop(
         consecutive_rpc_failures = 0;
 
         // Parse string values to u64
-        let download_speed_raw = stat.download_speed.parse::<u64>().unwrap_or(0);
+        let download_speed = stat.download_speed.parse::<u64>().unwrap_or(0);
         let upload_speed = stat.upload_speed.parse::<u64>().unwrap_or(0);
         let num_active = stat.num_active.parse::<u64>().unwrap_or(0);
         let num_waiting = stat.num_waiting.parse::<u64>().unwrap_or(0);
         let num_stopped = stat.num_stopped.parse::<u64>().unwrap_or(0);
         let num_stopped_total = stat.num_stopped_total.parse::<u64>().unwrap_or(0);
-
-        // aria2 uses a 10-second sliding window for speed calculation
-        // (SpeedCalc::WINDOW_TIME = 10s). After pausing, stale bytes in the
-        // window cause getGlobalStat to report non-zero speed for up to 10s.
-        // Normalize to 0 when no tasks are actively downloading.
-        let download_speed = if num_active > 0 {
-            download_speed_raw
-        } else {
-            0
-        };
 
         // Adaptive interval
         if num_active > 0 {

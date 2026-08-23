@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': 'Dezactivată',
   'bt-dht': 'Rețea DHT',
   'bt-connection-section': 'Conexiune BitTorrent',
+  'bt-endpoint-section': 'Porturi și adresă publică',
   'bt-connection-apply-succeeded': 'Setările conexiunii BitTorrent au fost aplicate',
   'bt-connection-restore-succeeded':
     'Setările conexiunii BitTorrent nu au putut fi aplicate. Setările anterioare au fost restaurate',

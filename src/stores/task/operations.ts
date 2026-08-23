@@ -2,25 +2,21 @@
  * @fileoverview Extracted task CRUD operations from the Pinia task store.
  *
  * Contains: removeTask, pauseTask, resumeTask, pauseAllTask, resumeAllTask,
- * toggleTask, stopSharing, stopAllSharing, removeTaskRecord, purgeTaskRecord,
+ * toggleTask, removeTaskRecord, purgeTaskRecord,
  * batchRemoveTask.
  *
  * Uses dependency injection — accepts API + store refs instead of importing
  * them directly, enabling testability and keeping the task store thin.
  */
 import { TASK_STATUS } from '@shared/constants'
-import { checkTaskIsBT, checkTaskIsSharing, getTaskSharingKind } from '@shared/utils'
+import { checkTaskIsBT, checkTaskIsSharing } from '@shared/utils'
 import { logger } from '@shared/logger'
-import { buildSharingCompletionRecord } from '@/composables/useTaskLifecycle'
 import { cleanupAria2ControlFiles, deleteTaskFiles } from '@/composables/useFileDelete'
 import { cleanupAria2MetadataFiles } from '@/composables/useDownloadCleanup'
-import { isPendingMagnetSelectionTask } from '@/composables/useMagnetFlow'
+import { isAwaitingBtFileSelection } from '@/composables/useBtLifecycle'
 import { useHistoryStore } from '@/stores/history'
 import type { Aria2Task, TaskApi } from '@shared/types'
 import type { Ref } from 'vue'
-
-const REMOVE_RESULT_RETRY_ATTEMPTS = 5
-const REMOVE_RESULT_RETRY_DELAY_MS = 120
 
 export interface MagnetSelectionCleanupTarget {
   gid: string
@@ -32,21 +28,16 @@ interface TaskOperationsDeps {
   currentTaskGid: Ref<string>
   hideTaskDetail: () => void
   fetchList: () => Promise<void>
-  removeResultRetryDelayMs?: number
+  setTaskDeleting?: (gid: string, deleting: boolean) => void
+  requestMagnetSelection?: (gid: string) => void
 }
 
 export function createTaskOperations(deps: TaskOperationsDeps) {
   const { api, taskList, currentTaskGid, hideTaskDetail, fetchList } = deps
-  const removeResultRetryDelayMs = deps.removeResultRetryDelayMs ?? REMOVE_RESULT_RETRY_DELAY_MS
-
-  function sleep(ms: number): Promise<void> {
-    if (ms <= 0) return Promise.resolve()
-    return new Promise((resolve) => setTimeout(resolve, ms))
-  }
+  const setTaskDeleting = deps.setTaskDeleting ?? (() => undefined)
 
   async function requiresMagnetFileSelection(task: Aria2Task): Promise<boolean> {
-    if (task.status !== TASK_STATUS.PAUSED) return false
-    if (!isPendingMagnetSelectionTask(task)) return false
+    if (!isAwaitingBtFileSelection(task)) return false
 
     try {
       const options = await api.getOption({ gid: task.gid })
@@ -70,65 +61,19 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
     return { resumed: resumableGids.length, blocked }
   }
 
-  async function removeTaskRecordWithRetry(gid: string, scope: string): Promise<boolean> {
-    for (let attempt = 1; attempt <= REMOVE_RESULT_RETRY_ATTEMPTS; attempt += 1) {
-      try {
-        await api.removeTaskRecord({ gid })
-        return true
-      } catch (e) {
-        if (attempt === REMOVE_RESULT_RETRY_ATTEMPTS) {
-          logger.debug(scope, `removeTaskRecord gid=${gid} skipped after ${attempt} attempts: ${e}`)
-          return false
-        }
-        await sleep(removeResultRetryDelayMs)
-      }
-    }
-    return false
-  }
-
-  async function removeHistoryRecordForDeletedTask(task: Aria2Task): Promise<void> {
-    const historyStore = useHistoryStore()
-    if (task.infoHash) {
-      try {
-        await historyStore.removeByInfoHash(task.infoHash)
-      } catch (e) {
-        logger.debug('TaskOps.removeTask', `removeByInfoHash infoHash=${task.infoHash} skipped: ${e}`)
-      }
-    }
-    try {
-      await historyStore.removeRecord(task.gid)
-    } catch (e) {
-      logger.debug('TaskOps.removeTask', `removeHistory gid=${task.gid} skipped: ${e}`)
-    }
-  }
-
-  async function removeHistoryRecordsByGid(gids: string[], scope: string): Promise<void> {
-    if (gids.length === 0) return
-    const historyStore = useHistoryStore()
-    for (const gid of gids) {
-      try {
-        await historyStore.removeRecord(gid)
-      } catch (e) {
-        logger.debug(scope, `removeHistory gid=${gid} skipped: ${e}`)
-      }
-    }
-  }
-
   async function removeTask(task: Aria2Task) {
     if (task.gid === currentTaskGid.value) hideTaskDetail()
+    setTaskDeleting(task.gid, true)
     try {
-      await api.removeTask({ gid: task.gid })
-      // Purge from aria2's stopped-result list so it is not saved again.
-      try {
-        await api.removeTaskRecord({ gid: task.gid })
-      } catch (e) {
-        logger.debug('TaskOps.removeTask', `removeTaskRecord gid=${task.gid} skipped: ${e}`)
-      }
+      await api.deleteTask({ gid: task.gid, infoHash: task.infoHash })
       logger.info('TaskOps.removeTask', `gid=${task.gid}`)
-    } finally {
-      await removeHistoryRecordForDeletedTask(task)
+      setTaskDeleting(task.gid, false)
       await fetchList()
       await api.saveSession()
+    } catch (error) {
+      setTaskDeleting(task.gid, false)
+      await fetchList()
+      throw error
     }
   }
 
@@ -170,36 +115,14 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
     try {
       const task = await fetchTaskForCleanup(gid)
 
-      try {
-        await api.removeTask({ gid })
-      } catch (e) {
-        logger.debug('TaskOps.cancelMagnetSelection', `removeTask gid=${gid} skipped: ${e}`)
-      }
-
-      const resultGids = new Set<string>([gid])
-
-      for (const gid of resultGids) {
-        await removeTaskRecordWithRetry(gid, 'TaskOps.cancelMagnetSelection')
-      }
-
-      const historyStore = useHistoryStore()
-      for (const gid of resultGids) {
-        try {
-          await historyStore.removeRecord(gid)
-        } catch (e) {
-          logger.debug('TaskOps.cancelMagnetSelection', `removeHistory gid=${gid} skipped: ${e}`)
-        }
-      }
-      try {
-        await historyStore.removeBirthRecords([...resultGids])
-      } catch (e) {
-        logger.debug('TaskOps.cancelMagnetSelection', `removeBirthRecords skipped: ${e}`)
-      }
+      setTaskDeleting(gid, true)
+      await api.deleteTask({ gid, infoHash: task?.infoHash })
 
       if (task) await cleanupMagnetSelectionFiles(task)
 
       logger.info('TaskOps.cancelMagnetSelection', `gid=${gid}`)
     } finally {
+      setTaskDeleting(gid, false)
       await fetchList()
       await api.saveSession()
     }
@@ -220,6 +143,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
   async function resumeTask(task: Aria2Task): Promise<boolean> {
     if (await requiresMagnetFileSelection(task)) {
       logger.info('TaskOps.resumeTask', `gid=${task.gid} blocked=file-selection-required`)
+      deps.requestMagnetSelection?.(task.gid)
       return false
     }
 
@@ -253,7 +177,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
   async function pauseAllTask() {
     try {
       const pausableTasks = taskList.value.filter(
-        (t) => (t.status === TASK_STATUS.ACTIVE || t.status === TASK_STATUS.WAITING) && !checkTaskIsSharing(t),
+        (t) => t.status === TASK_STATUS.ACTIVE || t.status === TASK_STATUS.WAITING,
       )
       if (pausableTasks.length > 0) {
         await Promise.allSettled(pausableTasks.map((t) => api.forcePauseTask({ gid: t.gid })))
@@ -282,75 +206,14 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
 
   function toggleTask(task: Aria2Task) {
     const { status } = task
-    if (status === TASK_STATUS.ACTIVE && !checkTaskIsSharing(task)) return pauseTask(task)
+    if (status === TASK_STATUS.ACTIVE) return pauseTask(task)
     if (status === TASK_STATUS.WAITING) return pauseTask(task)
     if (status === TASK_STATUS.PAUSED) return resumeTask(task)
     logger.debug('TaskOps.toggleTask', `no-op gid=${task.gid} status=${status} sharing=${checkTaskIsSharing(task)}`)
   }
 
-  async function stopSharing(task: Aria2Task) {
-    const { gid } = task
-    const protocolKind = getTaskSharingKind(task) ?? (task.bittorrent ? 'bt' : task.ed2k ? 'ed2k' : null)
-    try {
-      await api.forcePauseTask({ gid })
-      await api.removeTask({ gid })
-      // Purge from aria2's stopped list so it is not restored on restart.
-      try {
-        await api.removeTaskRecord({ gid })
-      } catch (e) {
-        logger.debug('TaskOps.stopSharing', `removeTaskRecord gid=${gid} skipped: ${e}`)
-      }
-      const record = buildSharingCompletionRecord(task)
-      const historyStore = useHistoryStore()
-      if (protocolKind === 'bt' && task.infoHash) {
-        await historyStore.removeByInfoHash(task.infoHash, task.gid)
-      }
-      await historyStore.addRecord(record)
-      if (protocolKind === 'bt' || protocolKind === 'ed2k') {
-        try {
-          await cleanupAria2ControlFiles(task)
-        } catch (e) {
-          logger.debug('TaskOps.stopSharing', `cleanupControlFiles gid=${gid} skipped: ${e}`)
-        }
-      }
-      if (protocolKind === 'bt') {
-        if (task.dir && task.infoHash) {
-          try {
-            await cleanupAria2MetadataFiles(task.dir, task.infoHash)
-          } catch (e) {
-            logger.debug('TaskOps.stopSharing', `cleanupMetadata gid=${gid} skipped: ${e}`)
-          }
-        }
-      }
-      logger.info('TaskOps.stopSharing', `gid=${gid} kind=${protocolKind ?? 'unknown'}`)
-    } finally {
-      await fetchList()
-      await api.saveSession()
-    }
-  }
-
-  async function stopAllSharing(): Promise<number> {
-    const sharingTasks = taskList.value.filter(checkTaskIsSharing)
-    if (sharingTasks.length === 0) return 0
-    await Promise.allSettled(sharingTasks.map((t) => stopSharing(t)))
-    logger.info('TaskOps.stopAllSharing', `stopped ${sharingTasks.length} sharing task(s)`)
-    return sharingTasks.length
-  }
-
   async function removeTaskRecord(task: Aria2Task) {
-    const { gid, status } = task
-    if (gid === currentTaskGid.value) hideTaskDetail()
-    const { ERROR, COMPLETE, REMOVED } = TASK_STATUS
-    if ([ERROR, COMPLETE, REMOVED].indexOf(status) === -1) return
-    const historyStore = useHistoryStore()
-    await historyStore.removeRecord(gid)
-    try {
-      await api.removeTaskRecord({ gid })
-    } catch (e) {
-      logger.debug('TaskStore.removeTaskRecord.aria2', e)
-    }
-    await fetchList()
-    await api.saveSession()
+    await removeTask(task)
   }
 
   async function purgeTaskRecord() {
@@ -366,19 +229,13 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
   }
 
   async function batchRemoveTask(gids: string[]) {
+    const tasks = new Map(taskList.value.map((task) => [task.gid, task]))
+    gids.forEach((gid) => setTaskDeleting(gid, true))
     try {
-      await api.batchRemoveTask({ gids })
-      // Purge each gid from aria2's stopped-result list so it is not saved again.
-      for (const gid of gids) {
-        try {
-          await api.removeTaskRecord({ gid })
-        } catch (e) {
-          logger.debug('TaskOps.batchRemoveTask', `removeTaskRecord gid=${gid} skipped: ${e}`)
-        }
-      }
+      await Promise.all(gids.map((gid) => api.deleteTask({ gid, infoHash: tasks.get(gid)?.infoHash })))
       logger.info('TaskOps.batchRemoveTask', `removed ${gids.length} task(s) gids=[${gids.join(',')}]`)
     } finally {
-      await removeHistoryRecordsByGid(gids, 'TaskOps.batchRemoveTask')
+      gids.forEach((gid) => setTaskDeleting(gid, false))
       await fetchList()
       await api.saveSession()
     }
@@ -387,9 +244,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
   async function hasActiveTasks(): Promise<boolean> {
     try {
       const tasks = await api.fetchTaskList({ type: TASK_STATUS.ACTIVE })
-      return tasks.some(
-        (t) => (t.status === TASK_STATUS.ACTIVE && !checkTaskIsSharing(t)) || t.status === TASK_STATUS.WAITING,
-      )
+      return tasks.some((t) => t.status === TASK_STATUS.ACTIVE || t.status === TASK_STATUS.WAITING)
     } catch (e) {
       logger.debug('TaskOps.hasActiveTasks', `fetchTaskList failed: ${e}`)
       return false
@@ -420,8 +275,6 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
     pauseAllTask,
     resumeAllTask,
     toggleTask,
-    stopSharing,
-    stopAllSharing,
     removeTaskRecord,
     purgeTaskRecord,
     batchRemoveTask,

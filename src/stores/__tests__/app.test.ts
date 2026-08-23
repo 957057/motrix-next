@@ -247,7 +247,7 @@ describe('useAppStore', () => {
       expect(store.interval).toBeGreaterThanOrEqual(before)
     })
 
-    it('zeros downloadSpeed when no active tasks', () => {
+    it('preserves the authoritative engine speed payload', () => {
       const store = useAppStore()
       store.handleStatEvent({
         downloadSpeed: 999,
@@ -257,9 +257,7 @@ describe('useAppStore', () => {
         numStopped: 1,
         numStoppedTotal: 1,
       })
-      // downloadSpeed is forced to 0 when numActive === 0
-      // (matches fetchGlobalStat behavior and Rust's expectation)
-      expect(store.stat.downloadSpeed).toBe(0)
+      expect(store.stat.downloadSpeed).toBe(999)
       expect(store.stat.uploadSpeed).toBe(100)
     })
 

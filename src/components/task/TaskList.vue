@@ -20,7 +20,7 @@ const emit = defineEmits<{
   'show-info': [task: Aria2Task]
   folder: [task: Aria2Task]
   'open-file': [task: Aria2Task]
-  'stop-sharing': [task: Aria2Task]
+  'select-files': [task: Aria2Task]
 }>()
 
 const taskStore = useTaskStore()
@@ -284,7 +284,7 @@ function handleCardBeforeLeave(element: Element) {
             @show-info="emit('show-info', item)"
             @folder="emit('folder', item)"
             @open-file="emit('open-file', item)"
-            @stop-sharing="emit('stop-sharing', item)"
+            @select-files="emit('select-files', item)"
           />
         </div>
       </TransitionGroup>

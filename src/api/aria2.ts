@@ -215,6 +215,14 @@ export async function removeTask(params: { gid: string }): Promise<string> {
   return invoke<string>('aria2_force_remove', { gid: params.gid })
 }
 
+/** Deletes a task across live, transitioning, stopped, and history states. */
+export async function deleteTask(params: { gid: string; infoHash?: string }): Promise<void> {
+  return invoke<void>('aria2_delete_task', {
+    gid: params.gid,
+    infoHash: params.infoHash ?? null,
+  })
+}
+
 /** Forcefully pauses a download task by GID. */
 export async function forcePauseTask(params: { gid: string }): Promise<string> {
   return invoke<string>('aria2_force_pause', { gid: params.gid })
@@ -285,6 +293,7 @@ const api = {
   getEd2kSearchResults,
   cleanupEd2kSearch,
   removeTask,
+  deleteTask,
   forcePauseTask,
   pauseTask,
   resumeTask,

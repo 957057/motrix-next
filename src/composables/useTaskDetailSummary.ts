@@ -53,7 +53,11 @@ export interface TaskTransferSummary {
 }
 
 export function getTaskDetailStatusLabelKey(status: string | undefined): string {
-  return status === 'seeding' || status === 'sharing' || status === 'bt-metadata-fetching'
+  return status === 'seeding' ||
+    status === 'sharing' ||
+    status === 'bt-metadata-fetching' ||
+    status === 'awaiting-file-selection' ||
+    status === 'seeding-paused'
     ? `task.${status}`
     : `task.status-${status}`
 }

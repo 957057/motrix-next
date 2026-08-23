@@ -457,6 +457,8 @@ onMounted(() => {
         <NFormItem :label="t('preferences.bt-rate-limit-overhead')">
           <NSwitch v-model:value="form.btRateLimitOverhead" />
         </NFormItem>
+
+        <NDivider title-placement="left">{{ t('preferences.bt-endpoint-section') }}</NDivider>
         <NFormItem :label="t('preferences.bt-port')">
           <NInputGroup>
             <NInputNumber v-model:value="form.listenPort" :min="1024" :max="65535" class="pref-port" />

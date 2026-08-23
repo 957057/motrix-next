@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': 'अक्षम',
   'bt-dht': 'DHT नेटवर्क',
   'bt-connection-section': 'BitTorrent कनेक्शन',
+  'bt-endpoint-section': 'पोर्ट और सार्वजनिक पता',
   'bt-connection-apply-succeeded': 'BitTorrent कनेक्शन सेटिंग लागू हो गई हैं',
   'bt-connection-restore-succeeded': 'BitTorrent कनेक्शन सेटिंग लागू नहीं हो सकीं। पिछली सेटिंग बहाल कर दी गई हैं',
   'bt-connection-restore-failed': 'पिछली BitTorrent कनेक्शन सेटिंग बहाल नहीं हो सकीं। इंजन पुनः आरंभ करें',

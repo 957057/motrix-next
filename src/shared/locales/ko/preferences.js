@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': '사용 안 함',
   'bt-dht': 'DHT 네트워크',
   'bt-connection-section': 'BitTorrent 연결',
+  'bt-endpoint-section': '포트 및 공인 주소',
   'bt-connection-apply-succeeded': 'BitTorrent 연결 설정이 적용되었습니다',
   'bt-connection-restore-succeeded': 'BitTorrent 연결 설정을 적용하지 못했습니다. 이전 설정을 복원했습니다',
   'bt-connection-restore-failed': '이전 BitTorrent 연결 설정을 복원하지 못했습니다. 엔진을 다시 시작하세요',

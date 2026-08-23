@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': 'Tắt',
   'bt-dht': 'Mạng DHT',
   'bt-connection-section': 'Kết nối BitTorrent',
+  'bt-endpoint-section': 'Cổng và địa chỉ công khai',
   'bt-connection-apply-succeeded': 'Đã áp dụng cài đặt kết nối BitTorrent',
   'bt-connection-restore-succeeded': 'Không thể áp dụng cài đặt kết nối BitTorrent. Đã khôi phục cài đặt trước đó',
   'bt-connection-restore-failed': 'Không thể khôi phục cài đặt kết nối BitTorrent trước đó. Hãy khởi động lại engine',

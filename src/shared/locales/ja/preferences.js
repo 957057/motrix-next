@@ -44,6 +44,7 @@ export default {
   'bt-encryption-disabled': '無効',
   'bt-dht': 'DHT ネットワーク',
   'bt-connection-section': 'BitTorrent 接続',
+  'bt-endpoint-section': 'ポートと公開アドレス',
   'bt-connection-apply-succeeded': 'BitTorrent 接続設定を適用しました',
   'bt-connection-restore-succeeded': 'BitTorrent 接続設定を適用できませんでした。以前の設定を復元しました',
   'bt-connection-restore-failed': '以前の BitTorrent 接続設定を復元できませんでした。エンジンを再起動してください',

@@ -51,8 +51,8 @@ export const useTaskStore = defineStore('task', () => {
   const currentTaskItem = ref<Aria2Task | null>(null)
   const currentTaskFiles = ref<Aria2File[]>([])
   const currentTaskPeers = ref<Aria2Peer[]>([])
-  const sharingList = ref<string[]>([])
   const taskList = ref<Aria2Task[]>([])
+  const deletingGids = ref<string[]>([])
   const taskListTransitionRevision = ref(0)
   const taskPagination = reactive({
     active: { page: 1, total: 0, loaded: false },
@@ -82,6 +82,10 @@ export const useTaskStore = defineStore('task', () => {
       currentTaskGid,
       hideTaskDetail,
       fetchList,
+      setTaskDeleting,
+      requestMagnetSelection: (gid) => {
+        void import('@/stores/app').then(({ useAppStore }) => useAppStore().requestMagnetSelection(gid))
+      },
     })
     Object.assign(taskOps, ops)
   }
@@ -228,6 +232,8 @@ export const useTaskStore = defineStore('task', () => {
         }
       }
 
+      const deleting = new Set(deletingGids.value)
+      data = data.filter((task) => !deleting.has(task.gid))
       taskList.value = data
       updateCurrentTaskTotal(data.length)
       clampCurrentTaskPage()
@@ -245,6 +251,18 @@ export const useTaskStore = defineStore('task', () => {
     } catch (e) {
       logger.debug('TaskStore.fetchList', e instanceof Error ? e.message : String(e))
     }
+  }
+
+  function setTaskDeleting(gid: string, deleting: boolean) {
+    if (deleting) {
+      if (!deletingGids.value.includes(gid)) deletingGids.value = [...deletingGids.value, gid]
+      taskList.value = taskList.value.filter((task) => task.gid !== gid)
+      updateCurrentTaskTotal(taskList.value.length)
+      clampCurrentTaskPage()
+      refreshCurrentTaskPageCount()
+      return
+    }
+    deletingGids.value = deletingGids.value.filter((candidate) => candidate !== gid)
   }
 
   async function saveManualOrder(gids: string[]) {
@@ -478,17 +496,6 @@ export const useTaskStore = defineStore('task', () => {
   // The ops object is populated when setApi() is called.
   const taskOps = {} as ReturnType<typeof createTaskOperations>
 
-  function addToSharingList(gid: string) {
-    if (sharingList.value.includes(gid)) return
-    sharingList.value = [...sharingList.value, gid]
-  }
-
-  function removeFromSharingList(gid: string) {
-    const idx = sharingList.value.indexOf(gid)
-    if (idx === -1) return
-    sharingList.value = [...sharingList.value.slice(0, idx), ...sharingList.value.slice(idx + 1)]
-  }
-
   async function restartTask(task: Aria2Task) {
     const historyStore = useHistoryStore()
     await restartTaskImpl(task, { ...api, fetchList, saveSession: () => api.saveSession() }, historyStore)
@@ -502,8 +509,8 @@ export const useTaskStore = defineStore('task', () => {
     currentTaskItem,
     currentTaskFiles,
     currentTaskPeers,
-    sharingList,
     taskList,
+    deletingGids,
     taskListTransitionRevision,
     taskPagination,
     currentTaskPageCount,
@@ -540,10 +547,6 @@ export const useTaskStore = defineStore('task', () => {
     pauseAllTask: () => taskOps.pauseAllTask(),
     resumeAllTask: () => taskOps.resumeAllTask(),
     toggleTask: (task: Aria2Task) => taskOps.toggleTask(task),
-    addToSharingList,
-    removeFromSharingList,
-    stopSharing: (task: Aria2Task) => taskOps.stopSharing(task),
-    stopAllSharing: () => taskOps.stopAllSharing(),
     removeTaskRecord: (task: Aria2Task) => taskOps.removeTaskRecord(task),
     purgeTaskRecord: () => taskOps.purgeTaskRecord(),
     saveSession: () => taskOps.saveSession(),

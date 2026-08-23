@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': 'Dinonaktifkan',
   'bt-dht': 'Jaringan DHT',
   'bt-connection-section': 'Koneksi BitTorrent',
+  'bt-endpoint-section': 'Port dan alamat publik',
   'bt-connection-apply-succeeded': 'Pengaturan koneksi BitTorrent diterapkan',
   'bt-connection-restore-succeeded':
     'Pengaturan koneksi BitTorrent tidak dapat diterapkan. Pengaturan sebelumnya dipulihkan',

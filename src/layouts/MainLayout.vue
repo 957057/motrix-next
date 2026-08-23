@@ -211,6 +211,7 @@ const magnetSelectionSession = ref<MagnetSelectionSession | null>(null)
 const magnetSelectName = ref('')
 const magnetSelectSubmission = ref<MagnetSelectionSubmission>(null)
 const magnetSelectClosing = ref(false)
+const deferredMagnetGids = ref<string[]>([])
 
 const { setupListeners } = useAppEvents({
   t,
@@ -321,6 +322,12 @@ function magnetMetadataDeps() {
     set pendingGids(value) {
       appStore.pendingMagnetGids = value
     },
+    get deferredGids() {
+      return deferredMagnetGids.value
+    },
+    set deferredGids(value) {
+      deferredMagnetGids.value = value
+    },
     get visible() {
       return magnetSelectVisible.value
     },
@@ -379,11 +386,8 @@ async function handleMagnetConfirm(selectedIndices: number[]) {
     const task = await taskStore.fetchTaskStatus(session.gid)
     await taskStore.applyMagnetFileSelection(task, selectFile)
     appStore.pendingMagnetGids = appStore.pendingMagnetGids.filter((gid) => gid !== session.gid)
-    magnetSelectClosing.value = true
-    magnetSelectVisible.value = false
-    magnetSelectionSession.value = null
-    magnetSelectFiles.value = []
-    magnetSelectName.value = ''
+    deferredMagnetGids.value = deferredMagnetGids.value.filter((gid) => gid !== session.gid)
+    closeMagnetSelection()
     message.success(t('task.magnet-files-selected') || 'Files selected, download starting')
   } catch (e) {
     logger.error('MainLayout.magnetConfirm', e)
@@ -402,11 +406,8 @@ async function handleMagnetCancel() {
   try {
     await taskStore.cancelMagnetSelectionDownload(session)
     appStore.pendingMagnetGids = appStore.pendingMagnetGids.filter((gid) => gid !== session.gid)
-    magnetSelectClosing.value = true
-    magnetSelectVisible.value = false
-    magnetSelectionSession.value = null
-    magnetSelectFiles.value = []
-    magnetSelectName.value = ''
+    deferredMagnetGids.value = deferredMagnetGids.value.filter((gid) => gid !== session.gid)
+    closeMagnetSelection()
     message.info(t('task.magnet-download-cancelled') || 'Download cancelled')
   } catch (e) {
     logger.error('MainLayout.magnetCancel', e)
@@ -415,11 +416,42 @@ async function handleMagnetCancel() {
   }
 }
 
+function closeMagnetSelection() {
+  magnetSelectClosing.value = true
+  magnetSelectVisible.value = false
+  magnetSelectionSession.value = null
+  magnetSelectFiles.value = []
+  magnetSelectName.value = ''
+}
+
+function handleMagnetDismiss() {
+  if (magnetSelectSubmission.value !== null) return
+  const gid = magnetSelectionSession.value?.gid
+  if (!gid) return
+  if (!deferredMagnetGids.value.includes(gid)) {
+    deferredMagnetGids.value = [...deferredMagnetGids.value, gid]
+  }
+  closeMagnetSelection()
+}
+
 function handleMagnetSelectAfterLeave() {
   if (!magnetSelectClosing.value) return
   magnetSelectClosing.value = false
   if (appStore.pendingMagnetGids.length > 0) void magnetMetadataResolver.request()
 }
+
+watch(
+  () => appStore.requestedMagnetSelectionGid,
+  (gid) => {
+    if (!gid) return
+    appStore.requestedMagnetSelectionGid = ''
+    deferredMagnetGids.value = deferredMagnetGids.value.filter((candidate) => candidate !== gid)
+    if (!appStore.pendingMagnetGids.includes(gid)) {
+      appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, gid]
+    }
+    void magnetMetadataResolver.request(gid)
+  },
+)
 
 /**
  * Handle the maximize-toggled event from WindowControls.
@@ -1030,6 +1062,7 @@ onUnmounted(() => {
       :submission="magnetSelectSubmission"
       @confirm="handleMagnetConfirm"
       @cancel="handleMagnetCancel"
+      @dismiss="handleMagnetDismiss"
       @after-leave="handleMagnetSelectAfterLeave"
     />
 

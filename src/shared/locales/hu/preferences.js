@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': 'Letiltva',
   'bt-dht': 'DHT-hálózat',
   'bt-connection-section': 'BitTorrent-kapcsolat',
+  'bt-endpoint-section': 'Portok és nyilvános cím',
   'bt-connection-apply-succeeded': 'A BitTorrent-kapcsolat beállításai alkalmazva',
   'bt-connection-restore-succeeded':
     'A BitTorrent-kapcsolat beállításai nem alkalmazhatók. A korábbi beállítások visszaállítva',

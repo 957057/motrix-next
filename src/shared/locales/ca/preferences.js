@@ -44,6 +44,7 @@ export default {
   'bt-encryption-disabled': 'Desactivat',
   'bt-dht': 'Xarxa DHT',
   'bt-connection-section': 'Connexió BitTorrent',
+  'bt-endpoint-section': 'Ports i adreça pública',
   'bt-connection-apply-succeeded': 'S’han aplicat els paràmetres de connexió BitTorrent',
   'bt-connection-restore-succeeded':
     'No s’han pogut aplicar els paràmetres de connexió BitTorrent. S’han restaurat els paràmetres anteriors',

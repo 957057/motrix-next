@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': 'Deaktivert',
   'bt-dht': 'DHT-nettverk',
   'bt-connection-section': 'BitTorrent-tilkobling',
+  'bt-endpoint-section': 'Porter og offentlig adresse',
   'bt-connection-apply-succeeded': 'Innstillinger for BitTorrent-tilkobling er brukt',
   'bt-connection-restore-succeeded':
     'Innstillingene for BitTorrent-tilkobling kunne ikke brukes. Tidligere innstillinger er gjenopprettet',

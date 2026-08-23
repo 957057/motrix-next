@@ -117,8 +117,7 @@ export function buildHistoryRecord(task: Aria2Task): HistoryRecord {
  * perspective the download is done. This function overrides status to
  * 'complete' so the record correctly reflects download completion.
  *
- * Used by both the lifecycle service (automatic detection) and
- * stopSharing (manual stop) to avoid duplicating the override logic. */
+ * Used by the lifecycle service when a task first enters shared-upload state. */
 export function buildSharingCompletionRecord(task: Aria2Task): HistoryRecord {
   const record = buildHistoryRecord(task)
   record.status = 'complete'

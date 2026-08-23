@@ -1,13 +1,12 @@
 <script setup lang="ts">
 /** @fileoverview Batch task action buttons: resume all, pause all, delete all, purge. */
-import { ref, computed, h, inject, watch, onBeforeUnmount, type Ref, type WatchStopHandle } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
 
 import { isEngineReady } from '@/api/aria2'
 import { TASK_STATUS } from '@shared/constants'
-import { checkTaskIsSharing } from '@shared/utils/task'
 import type { Aria2Task } from '@shared/types'
 import { deleteTaskFiles } from '@/composables/useFileDelete'
 
@@ -33,8 +32,6 @@ import {
   TrashOutline,
   RefreshOutline,
   CloseOutline,
-  StopCircleOutline,
-  SyncOutline,
   SwapVerticalOutline,
   ArrowUpOutline,
   ArrowDownOutline,
@@ -94,25 +91,18 @@ const message = useAppMessage()
 const dialog = useDialog()
 
 const refreshing = ref(false)
-const stoppingAllSharing = ref(false)
-let stopSharingWatcher: WatchStopHandle | null = null
-let stopSharingSafetyTimer: ReturnType<typeof setTimeout> | null = null
 let refreshTimer: ReturnType<typeof setTimeout> | null = null
 
-const stoppingGids = inject<Ref<string[]>>('stoppingGids')
 const currentList = computed(() => taskStore.currentList)
 const allGids = computed(() => taskStore.taskList.map((t: { gid: string }) => t.gid))
-const hasSharingTasks = computed(() => taskStore.taskList.some(checkTaskIsSharing))
 const hasActiveTasks = computed(() =>
-  taskStore.taskList.some(
-    (t: Aria2Task) => (t.status === TASK_STATUS.ACTIVE && !checkTaskIsSharing(t)) || t.status === TASK_STATUS.WAITING,
-  ),
+  taskStore.taskList.some((t: Aria2Task) => t.status === TASK_STATUS.ACTIVE || t.status === TASK_STATUS.WAITING),
 )
 const hasPausedTasks = computed(() =>
   taskStore.taskList.some((t: { status: string }) => t.status === TASK_STATUS.PAUSED),
 )
 
-/** active and all views show Resume/Pause/StopSharing/Delete buttons */
+/** Active and all views show resume, pause, and delete actions. */
 const showActiveActions = computed(() => currentList.value === 'active' || currentList.value === 'all')
 
 /** stopped and all views show Purge Records button */
@@ -277,77 +267,6 @@ function pauseAll() {
   })
 }
 
-function stopAllSharing() {
-  if (!isEngineReady()) {
-    message.warning(t('app.engine-not-ready'))
-    return
-  }
-  if (!hasSharingTasks.value) {
-    message.info(t('task.stop-all-sharing-none'))
-    return
-  }
-  dialog.info({
-    title: t('task.stop-all-sharing'),
-    content: t('task.stop-all-sharing-confirm'),
-    positiveText: t('app.yes'),
-    negativeText: t('app.no'),
-    onPositiveClick: async () => {
-      // 1. Snapshot sharing task gids at click time — only these are tracked
-      const targetGids = new Set(taskStore.taskList.filter(checkTaskIsSharing).map((t) => t.gid))
-
-      // 2. Push into shared stoppingGids → triggers card spin animations
-      if (stoppingGids) {
-        stoppingGids.value = [...stoppingGids.value, ...targetGids]
-      }
-
-      // 3. Set toolbar button spinning
-      stoppingAllSharing.value = true
-
-      // 4. Fire RPC (don't tie spin to this promise — it resolves instantly)
-      taskStore
-        .stopAllSharing()
-        .then(() => message.success(t('task.stop-all-sharing-success')))
-        .catch((e) => {
-          logger.warn('TaskActions.stopAllSharing', getErrorMessage(e))
-          message.error(t('task.stop-all-sharing-fail'))
-        })
-
-      // 5. Watch taskList — spin stops when ALL target gids exit sharing
-      cleanupStopSharingWatcher()
-      stopSharingWatcher = watch(
-        () => taskStore.taskList,
-        (list) => {
-          const stillSharing = list.some((task) => targetGids.has(task.gid) && checkTaskIsSharing(task))
-          if (!stillSharing) {
-            stoppingAllSharing.value = false
-            cleanupStopSharingWatcher()
-          }
-        },
-        { deep: true },
-      )
-
-      // 6. Safety timeout — 10s fallback
-      stopSharingSafetyTimer = setTimeout(() => {
-        stoppingAllSharing.value = false
-        cleanupStopSharingWatcher()
-      }, 10_000)
-    },
-  })
-}
-
-function cleanupStopSharingWatcher() {
-  if (stopSharingWatcher) {
-    stopSharingWatcher()
-    stopSharingWatcher = null
-  }
-  if (stopSharingSafetyTimer) {
-    clearTimeout(stopSharingSafetyTimer)
-    stopSharingSafetyTimer = null
-  }
-}
-
-onBeforeUnmount(() => cleanupStopSharingWatcher())
-
 function purgeRecord() {
   const deleteFiles = ref(false)
   const d = dialog.error({
@@ -482,25 +401,6 @@ function purgeRecord() {
     </MTooltip>
     <MTooltip v-if="showActiveActions">
       <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :disabled="!hasSharingTasks || stoppingAllSharing"
-          @click="stopAllSharing"
-        >
-          <template #icon>
-            <NIcon :class="{ 'stop-all-spinning': stoppingAllSharing }">
-              <SyncOutline v-if="stoppingAllSharing" />
-              <StopCircleOutline v-else />
-            </NIcon>
-          </template>
-        </NButton>
-      </template>
-      {{ t('task.stop-all-sharing') }}
-    </MTooltip>
-    <MTooltip v-if="showActiveActions">
-      <template #trigger>
         <NButton quaternary circle size="small" :disabled="deleteAllDisabled" @click="onDeleteAll">
           <template #icon>
             <NIcon><CloseOutline /></NIcon>
@@ -540,13 +440,6 @@ function purgeRecord() {
   animation: spin 0.6s cubic-bezier(0.2, 0, 0, 1);
   display: inline-block;
   transform-origin: center;
-}
-.stop-all-spinning {
-  animation: spin 0.9s linear infinite;
-  display: inline-block;
-  transform-origin: center;
-  will-change: transform;
-  contain: layout style paint;
 }
 </style>
 

@@ -814,6 +814,7 @@ pub fn run() {
             commands::aria2_get_ed2k_search_results,
             commands::aria2_cleanup_ed2k_search,
             commands::aria2_force_remove,
+            commands::aria2_delete_task,
             commands::aria2_force_pause,
             commands::aria2_pause,
             commands::aria2_unpause,

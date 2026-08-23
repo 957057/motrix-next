@@ -23,7 +23,7 @@ const emit = defineEmits<{
   'show-info': [task: Aria2Task]
   folder: [task: Aria2Task]
   'open-file': [task: Aria2Task]
-  'stop-sharing': [task: Aria2Task]
+  'select-files': [task: Aria2Task]
 }>()
 
 const { t } = useI18n()
@@ -106,7 +106,6 @@ watch(isSharing, (now, was) => {
         </MTooltip>
         <TaskItemActions
           :task="task"
-          :status="taskStatus"
           :file-missing="fileMissing"
           density="compact"
           @pause="emit('pause', task)"
@@ -117,7 +116,7 @@ watch(isSharing, (now, was) => {
           @show-info="emit('show-info', task)"
           @folder="emit('folder', task)"
           @open-file="emit('open-file', task)"
-          @stop-sharing="emit('stop-sharing', task)"
+          @select-files="emit('select-files', task)"
         />
       </div>
       <div class="compact-progress-row">

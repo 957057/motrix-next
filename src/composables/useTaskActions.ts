@@ -5,7 +5,7 @@
  * Uses dependency injection for all Vue/Pinia dependencies — stores,
  * i18n, dialog, and message are passed in via the options object.
  */
-import { ref, type Ref, h } from 'vue'
+import { ref, h } from 'vue'
 import { getTaskUri, getTaskDisplayName, resolveOpenTarget, canRestart, writeAppClipboardText } from '@shared/utils'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { invoke } from '@tauri-apps/api/core'
@@ -23,11 +23,11 @@ interface TaskActionsDeps {
     removeTask: (task: Aria2Task) => Promise<unknown>
     removeTaskRecord: (task: Aria2Task) => Promise<unknown>
     restartTask: (task: Aria2Task) => Promise<unknown>
-    stopSharing: (task: Aria2Task) => Promise<unknown>
     showTaskDetail: (task: Aria2Task) => void
     fetchList: () => Promise<unknown>
     taskList: Aria2Task[]
   }
+  requestMagnetSelection: (gid: string) => void
   preferenceConfig: () => AppConfig
   t: (key: string, params?: Record<string, unknown>) => string
   dialog: ReturnType<typeof useDialog>
@@ -37,11 +37,10 @@ interface TaskActionsDeps {
     warning: (msg: string) => void
     info: (msg: string) => void
   }
-  stoppingGids: Ref<string[]>
 }
 
 export function useTaskActions(deps: TaskActionsDeps) {
-  const { taskStore, preferenceConfig, t, dialog, message, stoppingGids } = deps
+  const { taskStore, preferenceConfig, t, dialog, message, requestMagnetSelection } = deps
 
   const deleteFilesLabel = () =>
     t(
@@ -137,7 +136,6 @@ export function useTaskActions(deps: TaskActionsDeps) {
         d.negativeButtonProps = { disabled: true }
         d.closable = false
         d.maskClosable = false
-        await new Promise((r) => setTimeout(r, 50))
         try {
           await taskStore.removeTask(task)
           if (deleteFiles.value) {
@@ -208,7 +206,6 @@ export function useTaskActions(deps: TaskActionsDeps) {
         d.negativeButtonProps = { disabled: true }
         d.closable = false
         d.maskClosable = false
-        await new Promise((r) => setTimeout(r, 50))
         try {
           if (deleteFiles.value) {
             try {
@@ -302,18 +299,8 @@ export function useTaskActions(deps: TaskActionsDeps) {
     }
   }
 
-  async function handleStopSharing(task: Aria2Task) {
-    if (stoppingGids.value.includes(task.gid)) return
-    stoppingGids.value = [...stoppingGids.value, task.gid]
-    try {
-      await taskStore.stopSharing(task)
-      stoppingGids.value = stoppingGids.value.filter((g) => g !== task.gid)
-      message.success(t('task.stop-sharing-success'))
-      await taskStore.fetchList()
-    } catch (e) {
-      logger.warn('[TaskView] stopSharing failed:', String(e))
-      stoppingGids.value = stoppingGids.value.filter((g) => g !== task.gid)
-    }
+  function handleSelectFiles(task: Aria2Task) {
+    requestMagnetSelection(task.gid)
   }
 
   return {
@@ -325,6 +312,6 @@ export function useTaskActions(deps: TaskActionsDeps) {
     handleShowInfo,
     handleShowInFolder,
     handleOpenFile,
-    handleStopSharing,
+    handleSelectFiles,
   }
 }

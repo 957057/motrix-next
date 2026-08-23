@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': 'معطّل',
   'bt-dht': 'شبكة DHT',
   'bt-connection-section': 'اتصال BitTorrent',
+  'bt-endpoint-section': 'المنافذ والعنوان العام',
   'bt-connection-apply-succeeded': 'تم تطبيق إعدادات اتصال BitTorrent',
   'bt-connection-restore-succeeded': 'تعذر تطبيق إعدادات اتصال BitTorrent. تمت استعادة الإعدادات السابقة',
   'bt-connection-restore-failed': 'تعذر استعادة إعدادات اتصال BitTorrent السابقة. أعد تشغيل المحرك',

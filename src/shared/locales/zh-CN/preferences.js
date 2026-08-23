@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': '禁用加密',
   'bt-dht': 'DHT 网络',
   'bt-connection-section': 'BT 连接',
+  'bt-endpoint-section': '端口与公网地址',
   'bt-connection-apply-succeeded': 'BT 连接设置已应用',
   'bt-connection-restore-succeeded': '无法应用 BT 连接设置，已恢复原设置',
   'bt-connection-restore-failed': '无法恢复原 BT 连接设置，请重启引擎',

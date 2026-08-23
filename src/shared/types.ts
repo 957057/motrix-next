@@ -717,6 +717,7 @@ export interface TaskApi {
   changeOption: (params: TaskOptionParams) => Promise<void>
   getFiles: (params: { gid: string }) => Promise<Aria2File[]>
   removeTask: (params: { gid: string }) => Promise<string>
+  deleteTask: (params: { gid: string; infoHash?: string }) => Promise<void>
   forcePauseTask: (params: { gid: string }) => Promise<string>
   pauseTask: (params: { gid: string }) => Promise<string>
   resumeTask: (params: { gid: string }) => Promise<string>

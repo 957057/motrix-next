@@ -43,6 +43,7 @@ export default {
   'bt-encryption-disabled': 'غیرفعال',
   'bt-dht': 'شبکه DHT',
   'bt-connection-section': 'اتصال BitTorrent',
+  'bt-endpoint-section': 'درگاه‌ها و نشانی عمومی',
   'bt-connection-apply-succeeded': 'تنظیمات اتصال BitTorrent اعمال شد',
   'bt-connection-restore-succeeded': 'تنظیمات اتصال BitTorrent اعمال نشد. تنظیمات قبلی بازیابی شد',
   'bt-connection-restore-failed': 'تنظیمات قبلی اتصال BitTorrent بازیابی نشد. موتور را راه‌اندازی مجدد کنید',

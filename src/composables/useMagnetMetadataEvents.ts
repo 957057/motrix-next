@@ -12,6 +12,7 @@ import { getErrorMessage } from '@shared/utils/errorMessage'
 
 export interface MagnetMetadataState {
   pendingGids: string[]
+  deferredGids: string[]
   visible: boolean
   files: MagnetFileItem[]
   session: MagnetSelectionResolution | null
@@ -40,6 +41,7 @@ export async function resolvePendingMagnetMetadata(
   const { state } = deps
   if (state.visible) return false
   if (!state.pendingGids.includes(gid)) return false
+  if (state.deferredGids.includes(gid)) return false
 
   let queryError: unknown
   let task: Aria2Task | undefined

@@ -58,6 +58,7 @@ describe('useMagnetMetadataEvents', () => {
 
   it('opens file selection when the pending GID pauses for selection', async () => {
     const state: MagnetMetadataState = {
+      deferredGids: [],
       pendingGids: ['metadata-gid'],
       visible: false,
       files: [],
@@ -106,6 +107,7 @@ describe('useMagnetMetadataEvents', () => {
 
   it('ignores completion events for non-pending gids', async () => {
     const state: MagnetMetadataState = {
+      deferredGids: [],
       pendingGids: ['metadata-gid'],
       visible: false,
       files: [],
@@ -130,8 +132,36 @@ describe('useMagnetMetadataEvents', () => {
     expect(state.pendingGids).toEqual(['metadata-gid'])
   })
 
+  it('keeps a dismissed selection pending without reopening it automatically', async () => {
+    const state: MagnetMetadataState = {
+      deferredGids: ['metadata-gid'],
+      pendingGids: ['metadata-gid'],
+      visible: false,
+      files: [],
+      session: null,
+      name: '',
+    }
+    const fetchTaskStatus = vi.fn()
+
+    const resolved = await resolvePendingMagnetMetadata(
+      {
+        state,
+        fetchTaskStatus,
+        fetchPendingTasks: vi.fn().mockResolvedValue([]),
+        getFiles: vi.fn(),
+        fallbackName: () => 'Magnet task',
+      },
+      'metadata-gid',
+    )
+
+    expect(resolved).toBe(false)
+    expect(state.pendingGids).toEqual(['metadata-gid'])
+    expect(fetchTaskStatus).not.toHaveBeenCalled()
+  })
+
   it('serializes simultaneous metadata pauses without replacing the open selection', async () => {
     const state: MagnetMetadataState = {
+      deferredGids: [],
       pendingGids: ['metadata-a', 'metadata-b'],
       visible: false,
       files: [],
@@ -160,6 +190,7 @@ describe('useMagnetMetadataEvents', () => {
 
   it('recovers the same GID from the one-shot pending task scan', async () => {
     const state: MagnetMetadataState = {
+      deferredGids: [],
       pendingGids: ['metadata-gid'],
       visible: false,
       files: [],
@@ -191,6 +222,7 @@ describe('useMagnetMetadataEvents', () => {
 
   it('serializes Tauri errors when neither metadata nor a follow-up task exists', async () => {
     const state: MagnetMetadataState = {
+      deferredGids: [],
       pendingGids: ['metadata-gid'],
       visible: false,
       files: [],

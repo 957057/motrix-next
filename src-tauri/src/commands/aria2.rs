@@ -7,6 +7,7 @@ use crate::aria2::client::Aria2State;
 use crate::aria2::types::{Aria2BtPeerAddResult, Aria2BtTrackerConfig, Aria2File, Aria2Task};
 use crate::commands::net::decode_filename_encoding;
 use crate::error::AppError;
+use crate::history::HistoryDbState;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager, State};
@@ -476,6 +477,76 @@ pub async fn aria2_force_remove(
     state.0.force_remove(&gid).await
 }
 
+fn is_missing_download(error: &AppError) -> bool {
+    let message = error.to_string().to_ascii_lowercase();
+    message.contains("not found") || message.contains("no such download")
+}
+
+fn is_terminal_download_status(status: &str) -> bool {
+    matches!(status, "complete" | "error" | "removed")
+}
+
+fn is_download_result_transitioning(error: &AppError) -> bool {
+    error
+        .to_string()
+        .to_ascii_lowercase()
+        .contains("could not remove download result")
+}
+
+/// Delete a task regardless of whether it is live, transitioning, or stopped.
+#[tauri::command]
+pub async fn aria2_delete_task(
+    state: State<'_, Aria2State>,
+    history: State<'_, HistoryDbState>,
+    gid: String,
+    info_hash: Option<String>,
+) -> Result<(), AppError> {
+    const RESULT_ATTEMPTS: usize = 100;
+    const RESULT_DELAY: std::time::Duration = std::time::Duration::from_millis(50);
+
+    log::info!("aria2:delete gid={gid}");
+    let force_result = state.0.force_remove(&gid).await;
+    let mut result_removed = false;
+
+    for _ in 0..RESULT_ATTEMPTS {
+        match state.0.tell_status(&gid).await {
+            Err(error) if is_missing_download(&error) => break,
+            Err(error) => return Err(error),
+            Ok(task) if is_terminal_download_status(&task.status) => {
+                match state.0.remove_download_result(&gid).await {
+                    Ok(_) => {
+                        result_removed = true;
+                        break;
+                    }
+                    Err(error) if is_missing_download(&error) => break,
+                    Err(error) if is_download_result_transitioning(&error) => {}
+                    Err(error) => return Err(error),
+                }
+            }
+            Ok(_) => {}
+        }
+        tokio::time::sleep(RESULT_DELAY).await;
+    }
+
+    if !result_removed {
+        match state.0.tell_status(&gid).await {
+            Err(error) if is_missing_download(&error) => {}
+            Err(error) => return Err(error),
+            Ok(_) => {
+                return Err(force_result.err().unwrap_or_else(|| {
+                    AppError::Aria2(format!("GID {gid} did not reach the removed state"))
+                }));
+            }
+        }
+    }
+
+    history
+        .0
+        .remove_task_records(&gid, info_hash.as_deref())
+        .await?;
+    Ok(())
+}
+
 /// Forcefully pause a task by GID.
 #[tauri::command]
 pub async fn aria2_force_pause(
@@ -576,7 +647,10 @@ pub async fn aria2_batch_force_remove(
 
 #[cfg(test)]
 mod tests {
-    use super::{ed2k_search_temp_paths, sanitize_out_option};
+    use super::{
+        ed2k_search_temp_paths, is_download_result_transitioning, is_missing_download,
+        is_terminal_download_status, sanitize_out_option, AppError,
+    };
     use std::path::{Path, PathBuf};
 
     // ── Existing #261 tests (updated for String return) ─────────────
@@ -849,5 +923,38 @@ mod tests {
             sanitize_out_option(".gitignore").as_deref(),
             Some(".gitignore")
         );
+    }
+
+    #[test]
+    fn deletion_recognizes_missing_download_errors() {
+        assert!(is_missing_download(&AppError::Aria2(
+            "GID abc is not found".to_string()
+        )));
+        assert!(is_missing_download(&AppError::Aria2(
+            "No such download for GID abc".to_string()
+        )));
+        assert!(!is_missing_download(&AppError::Aria2(
+            "connection reset".to_string()
+        )));
+    }
+
+    #[test]
+    fn deletion_waits_for_a_terminal_download_status() {
+        assert!(is_terminal_download_status("complete"));
+        assert!(is_terminal_download_status("error"));
+        assert!(is_terminal_download_status("removed"));
+        assert!(!is_terminal_download_status("active"));
+        assert!(!is_terminal_download_status("waiting"));
+        assert!(!is_terminal_download_status("paused"));
+    }
+
+    #[test]
+    fn deletion_retries_only_during_result_transition() {
+        assert!(is_download_result_transitioning(&AppError::Aria2(
+            "Could not remove download result of GID#abc".to_string()
+        )));
+        assert!(!is_download_result_transitioning(&AppError::Aria2(
+            "connection reset".to_string()
+        )));
     }
 }
