@@ -107,6 +107,28 @@ describe('EngineRecoveryDialog', () => {
     expect(wrapper.findAll('.engine-stage-dot')).toHaveLength(3)
   })
 
+  it('reserves the retry counter from the first stopping frame', () => {
+    const store = useEngineStore()
+    store.snapshot = { ...recoverySnapshot('stopping'), attempt: 0, cause: 'manualRestart' }
+    const wrapper = mount(EngineRecoveryDialog)
+
+    expect(wrapper.text()).toContain('0 / 5')
+    expect(wrapper.find('.engine-attempt').exists()).toBe(true)
+  })
+
+  it('animates the error into the recovering layout without replacing the stage track', async () => {
+    const store = useEngineStore()
+    store.snapshot = { ...recoverySnapshot('probing'), failure: null }
+    const wrapper = mount(EngineRecoveryDialog)
+    const stageTrack = wrapper.find('.engine-stage-track').element
+
+    store.snapshot = { ...recoverySnapshot('probing'), revision: 2 }
+    await nextTick()
+
+    expect(wrapper.find('.engine-error-block').exists()).toBe(true)
+    expect(wrapper.find('.engine-stage-track').element).toBe(stageTrack)
+  })
+
   it('shows the engine error and recovery actions after retries are exhausted', async () => {
     const store = useEngineStore()
     store.snapshot = { ...recoverySnapshot('failed'), attempt: 5 }
@@ -114,7 +136,7 @@ describe('EngineRecoveryDialog', () => {
     const wrapper = mount(EngineRecoveryDialog)
 
     expect(wrapper.text()).toContain('bt-encryption contains an unsupported value')
-    const cleanup = wrapper.findAll('button').find((button) => button.text() === 'app.engine-cleanup-retry')
+    const cleanup = wrapper.findAll('button').find((button) => button.text() === 'app.engine-reset-state')
     expect(cleanup).toBeDefined()
     await cleanup?.trigger('click')
     expect(recover).toHaveBeenCalledOnce()

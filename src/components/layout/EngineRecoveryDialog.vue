@@ -38,7 +38,7 @@ const title = computed(() =>
 )
 const attemptText = computed(() => {
   const { attempt, maxAttempts } = engineStore.snapshot
-  return attempt > 0 ? `${attempt} / ${maxAttempts}` : ''
+  return `${attempt} / ${maxAttempts}`
 })
 const failureDetail = computed(() => {
   const failure = engineStore.snapshot.failure
@@ -159,39 +159,41 @@ async function cleanupAndRetry() {
                 <NSpin size="small" />
                 <div>
                   <h2>{{ t('app.engine-recovering') }}</h2>
-                  <p v-if="attemptText" class="engine-attempt">{{ t('app.engine-retry') }} {{ attemptText }}</p>
+                  <p class="engine-attempt">{{ t('app.engine-attempt') }} {{ attemptText }}</p>
                 </div>
               </div>
 
-              <div class="engine-stage-track" role="list" :aria-label="activeStageLabel">
-                <template v-for="(stage, index) in recoveryStages" :key="stage.label">
-                  <div
-                    class="engine-recovery-stage"
-                    :data-state="stage.state"
-                    role="listitem"
-                    :aria-current="stage.state === 'active' ? 'step' : undefined"
-                  >
-                    <span class="engine-stage-marker">
-                      <span class="engine-stage-dot" />
-                      <NIcon class="engine-stage-check" :size="22">
-                        <CheckmarkCircleOutline />
-                      </NIcon>
-                    </span>
-                    <span class="engine-stage-label">{{ stage.label }}</span>
-                  </div>
-                  <span
-                    v-if="index < recoveryStages.length - 1"
-                    class="engine-stage-connector"
-                    :data-complete="index < activeStage"
-                    aria-hidden="true"
-                  />
-                </template>
-              </div>
+              <TransitionGroup name="engine-recovery-content" tag="div" class="engine-recovery-body">
+                <div key="stages" class="engine-stage-track" role="list" :aria-label="activeStageLabel">
+                  <template v-for="(stage, index) in recoveryStages" :key="stage.label">
+                    <div
+                      class="engine-recovery-stage"
+                      :data-state="stage.state"
+                      role="listitem"
+                      :aria-current="stage.state === 'active' ? 'step' : undefined"
+                    >
+                      <span class="engine-stage-marker">
+                        <span class="engine-stage-dot" />
+                        <NIcon class="engine-stage-check" :size="22">
+                          <CheckmarkCircleOutline />
+                        </NIcon>
+                      </span>
+                      <span class="engine-stage-label">{{ stage.label }}</span>
+                    </div>
+                    <span
+                      v-if="index < recoveryStages.length - 1"
+                      class="engine-stage-connector"
+                      :data-complete="index < activeStage"
+                      aria-hidden="true"
+                    />
+                  </template>
+                </div>
 
-              <div v-if="failureDetail" class="engine-error-block">
-                <span class="engine-error-label">{{ t('app.engine-last-error') }}</span>
-                <code>{{ failureDetail }}</code>
-              </div>
+                <div v-if="failureDetail" key="error" class="engine-error-block">
+                  <span class="engine-error-label">{{ t('app.engine-last-error') }}</span>
+                  <code>{{ failureDetail }}</code>
+                </div>
+              </TransitionGroup>
             </template>
 
             <template v-else-if="panelState === 'cleaning'">
@@ -208,7 +210,7 @@ async function cleanupAndRetry() {
                 <div>
                   <h2>{{ title }}</h2>
                   <p>{{ t('app.engine-unrecoverable') }}</p>
-                  <p v-if="attemptText" class="engine-attempt">{{ t('app.engine-retry') }} {{ attemptText }}</p>
+                  <p class="engine-attempt">{{ t('app.engine-attempt') }} {{ attemptText }}</p>
                 </div>
               </div>
 
@@ -258,7 +260,7 @@ async function cleanupAndRetry() {
                 :disabled="pendingAction !== null"
                 @click="cleanupAndRetry"
               >
-                {{ t('app.engine-cleanup-retry') }}
+                {{ t('app.engine-reset-state') }}
               </NButton>
             </div>
           </div>
@@ -344,11 +346,36 @@ async function cleanupAndRetry() {
   color: var(--m3-on-surface-variant);
 }
 
+.engine-panel-state[data-panel='recovering'] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.engine-recovery-body {
+  display: grid;
+  min-height: 0;
+  align-content: center;
+  gap: 26px;
+}
+
+.engine-recovery-content-move,
+.engine-recovery-content-enter-active,
+.engine-recovery-content-leave-active {
+  transition:
+    opacity 0.28s cubic-bezier(0.2, 0, 0, 1),
+    transform 0.34s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.engine-recovery-content-enter-from,
+.engine-recovery-content-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+}
+
 .engine-stage-track {
   display: grid;
   grid-template-columns: auto minmax(24px, 1fr) auto minmax(24px, 1fr) auto;
   align-items: start;
-  margin-top: 30px;
 }
 
 .engine-recovery-stage {
@@ -456,8 +483,7 @@ async function cleanupAndRetry() {
 .engine-panel-state[data-panel='recovering'] .engine-error-block {
   width: min(100%, 430px);
   box-sizing: border-box;
-  margin-right: auto;
-  margin-left: auto;
+  margin: 0 auto;
 }
 
 .engine-error-block {
@@ -504,7 +530,6 @@ async function cleanupAndRetry() {
   border-radius: 50%;
   color: var(--m3-on-success-container);
   background: var(--m3-success-container);
-  box-shadow: 0 10px 30px color-mix(in srgb, var(--m3-success) 18%, transparent);
   place-items: center;
   animation: engine-success-arrive 0.56s cubic-bezier(0.2, 0, 0, 1) both;
 }

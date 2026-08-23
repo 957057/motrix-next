@@ -89,7 +89,6 @@ pub(crate) fn non_hot_reloadable_keys() -> &'static HashSet<&'static str> {
 pub(crate) struct ManagedEngineConfig<'a> {
     pub session_path: &'a str,
     pub bt_session_state_file: &'a str,
-    pub load_session: bool,
     pub log_file_path: &'a str,
     pub log_level: &'a str,
     pub ed2k_server_list: &'a str,
@@ -217,11 +216,7 @@ pub(crate) fn build_runtime_config(
         "bt-session-state-file",
         managed.bt_session_state_file,
     )?;
-    if managed.load_session {
-        insert_option(&mut options, "input-file", managed.session_path)?;
-    } else {
-        options.remove("input-file");
-    }
+    insert_option(&mut options, "input-file", managed.session_path)?;
     insert_option(&mut options, "log", managed.log_file_path)?;
     insert_option(&mut options, "log-level", managed.log_level)?;
     insert_option(
@@ -337,7 +332,6 @@ mod tests {
         ManagedEngineConfig {
             session_path: "/data/download.session",
             bt_session_state_file: "/data/engine/bittorrent.session",
-            load_session: true,
             log_file_path: "/logs/aria2-next.log",
             log_level: "warn",
             ed2k_server_list: "/data/server.met",
@@ -469,15 +463,17 @@ mod tests {
     }
 
     #[test]
-    fn runtime_config_omits_session_input_and_blocklist_when_disabled() {
+    fn runtime_config_always_loads_the_managed_session_and_omits_a_missing_blocklist() {
         let managed = ManagedEngineConfig {
-            load_session: false,
             bt_peer_blocklist: None,
             ..managed()
         };
         let content = build_runtime_config(&json!({}), managed).expect("build config");
 
-        assert_eq!(option_value(&content, "input-file"), None);
+        assert_eq!(
+            option_value(&content, "input-file"),
+            Some("/data/download.session")
+        );
         assert_eq!(option_value(&content, "bt-peer-blocklist"), None);
     }
 

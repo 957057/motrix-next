@@ -59,6 +59,21 @@ fn engine_log_config(app: &tauri::AppHandle) -> Result<(String, String), String>
     Ok((log_path, log_level))
 }
 
+fn ensure_download_session(path: &std::path::Path) -> Result<(), String> {
+    match std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(path)
+    {
+        Ok(_) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => Ok(()),
+        Err(error) => Err(format!(
+            "Failed to create download session '{}': {error}",
+            path.display()
+        )),
+    }
+}
+
 fn kill_process_by_pid(pid: u32) -> Result<(), String> {
     #[cfg(windows)]
     {
@@ -125,6 +140,7 @@ fn prepare_engine_args(
     std::fs::create_dir_all(&data_dir)
         .map_err(|error| format!("Failed to create app data directory: {error}"))?;
     let session_path = data_dir.join("download.session");
+    ensure_download_session(&session_path)?;
     let session_path_string = path_to_safe_string(&session_path);
     let bt_session_state_file = data_dir.join("engine").join("bittorrent.session");
     if let Some(directory) = bt_session_state_file.parent() {
@@ -144,7 +160,6 @@ fn prepare_engine_args(
         ManagedEngineConfig {
             session_path: &session_path_string,
             bt_session_state_file: &bt_session_state_file_string,
-            load_session: session_path.exists(),
             log_file_path: &log_file_path,
             log_level: &log_level,
             ed2k_server_list: &ed2k_bootstrap.0,
@@ -334,6 +349,22 @@ pub fn wait_for_engine_exit(app: &tauri::AppHandle, timeout: std::time::Duration
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ensure_download_session_creates_an_empty_file_without_overwriting_existing_state() {
+        let temp = tempfile::tempdir().unwrap();
+        let session = temp.path().join("download.session");
+
+        ensure_download_session(&session).unwrap();
+        assert_eq!(std::fs::read(&session).unwrap(), b"");
+
+        std::fs::write(&session, "existing session").unwrap();
+        ensure_download_session(&session).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&session).unwrap(),
+            "existing session"
+        );
+    }
 
     #[test]
     fn sanitized_engine_proxy_env_clears_lowercase_and_uppercase_proxy_vars() {
