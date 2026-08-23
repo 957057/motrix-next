@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'シードを一時停止',
   'resume-seeding': 'シードを再開',
   'finish-seeding': 'シードを停止',
-  'finish-seeding-confirm': '「{taskName}」のシードを停止しますか？ダウンロード済みファイルは保持されます。',
   'finish-seeding-success': '「{taskName}」のシードを停止しました',
   'finish-seeding-fail': '「{taskName}」のシードを停止できませんでした',
   'seeding-time': 'シード時間',

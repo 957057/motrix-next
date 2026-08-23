@@ -275,14 +275,11 @@ export default {
   'upnp-mapping-started': 'UPnPポートマッピングが有効になりました',
   'upnp-mapping-failed': 'UPnPポートマッピングに失敗しました',
   'engine-restarted': 'Aria2 Next エンジンを再起動しました',
-  'engine-restart-failed': 'Aria2 Next エンジンの再起動に失敗しました',
-  'engine-restart-stopping': 'Aria2 Next エンジンを停止しています...',
   'engine-restart-title': 'Aria2 Next エンジンの再起動',
   'engine-restart-confirm':
     'この変更はダウンロードエンジンの再起動が必要です。アクティブなダウンロードは一時中断されますが、再起動後に自動的に再開されます。',
   'engine-restart-now': '今すぐ再起動',
   'engine-restart-later': '後で',
-  'engine-restarting': 'Aria2 Next エンジンを再起動中...',
   'engine-restart-btn': 'Aria2 Next エンジンを再起動',
   'engine-restart-manual-confirm':
     'ダウンロードエンジンを再起動しますか？アクティブなダウンロードは一時的に中断されますが、再起動後に自動的に再開されます。',

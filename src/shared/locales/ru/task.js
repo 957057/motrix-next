@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Приостановить раздачу',
   'resume-seeding': 'Продолжить раздачу',
   'finish-seeding': 'Остановить раздачу',
-  'finish-seeding-confirm': 'Остановить раздачу «{taskName}»? Загруженные файлы будут сохранены.',
   'finish-seeding-success': 'Раздача «{taskName}» остановлена',
   'finish-seeding-fail': 'Не удалось остановить раздачу «{taskName}»',
   'seeding-time': 'Время раздачи',

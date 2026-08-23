@@ -25,7 +25,7 @@ import { logger } from '@shared/logger'
 import type { AppConfig } from '@shared/types'
 
 /** Current schema version. Must equal `migrations.length`. */
-export const CONFIG_VERSION = 7
+export const CONFIG_VERSION = 6
 
 /** Result returned by runMigrations for callers to act on (e.g. toast). */
 export interface MigrationResult {
@@ -178,8 +178,8 @@ const migrations: Migration[] = [
   },
 
   // ── v5 → v6 ──────────────────────────────────────────────────────
-  // Adopt the native libtorrent configuration model and remove the retired
-  // dual-DHT and legacy aria2 encryption fields.
+  // Adopt the native libtorrent configuration model, remove retired BT
+  // fields, and use explicit magnet dialog presentation.
   function migrateV6(config: Partial<AppConfig>): void {
     const legacy = config as Partial<AppConfig> & Record<string, unknown>
     const forceEncryption = legacy.btForceEncryption === true
@@ -189,20 +189,13 @@ const migrations: Migration[] = [
     delete legacy.btDhtIpv4Enabled
     delete legacy.btDhtIpv6Enabled
     delete legacy.dhtListenPort
+    delete legacy.pauseMetadata
+    delete legacy.autoSelectAllBtFilesFromExtension
+    config.magnetFileSelectionMode = 'auto'
     if (config.portConflictRecovery) {
       delete (config.portConflictRecovery as unknown as Record<string, unknown>).dht
     }
-    logger.info('ConfigMigration', 'v6: adopted native BitTorrent encryption and unified DHT settings')
-  },
-
-  // ── v6 → v7 ──────────────────────────────────────────────
-  // Replace automatic BT content selection with presentation-only control.
-  function migrateV7(config: Partial<AppConfig>): void {
-    const retired = config as Partial<AppConfig> & Record<string, unknown>
-    delete retired.pauseMetadata
-    delete retired.autoSelectAllBtFilesFromExtension
-    config.magnetFileSelectionMode = 'auto'
-    logger.info('ConfigMigration', 'v7: replaced automatic BT content selection with magnet dialog presentation')
+    logger.info('ConfigMigration', 'v6: adopted native BitTorrent settings and magnet dialog presentation')
   },
 ]
 

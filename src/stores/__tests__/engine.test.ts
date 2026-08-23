@@ -13,7 +13,7 @@ vi.mock('@tauri-apps/api/event', () => ({
   listen: (...args: unknown[]) => listenMock(...args),
 }))
 
-import { useEngineStore, type EngineSnapshot } from '@/stores/engine'
+import { useEngineStore, type EngineOperationCause, type EngineSnapshot } from '@/stores/engine'
 
 function snapshot(operationId: number, phase: EngineSnapshot['phase']): EngineSnapshot {
   return {
@@ -22,7 +22,7 @@ function snapshot(operationId: number, phase: EngineSnapshot['phase']): EngineSn
     revision: operationId,
     operationId,
     attempt: phase === 'stopped' ? 0 : 1,
-    maxAttempts: 3,
+    maxAttempts: 5,
     cause: 'manualRestart',
     failure: null,
   }
@@ -86,5 +86,55 @@ describe('engine supervisor store', () => {
     expect(invokeMock).toHaveBeenNthCalledWith(1, 'engine_restart', { cause: 'manualRestart' })
     expect(invokeMock).toHaveBeenNthCalledWith(2, 'engine_supervisor_state')
     expect(store.snapshot.phase).toBe('failed')
+  })
+
+  it('keeps automatic recovery visible across every busy phase', () => {
+    const store = useEngineStore()
+    const busyPhases: EngineSnapshot['phase'][] = [
+      'recovering',
+      'preparing',
+      'starting',
+      'probing',
+      'initializing',
+      'stabilizing',
+    ]
+
+    for (const phase of busyPhases) {
+      store.snapshot = {
+        ...snapshot(2, phase),
+        attempt: 2,
+        cause: 'startup',
+      }
+      expect(store.showStatusDialog).toBe(true)
+    }
+  })
+
+  it('keeps explicit failure recovery visible from its first phase', () => {
+    const store = useEngineStore()
+    store.snapshot = {
+      ...snapshot(3, 'starting'),
+      cause: 'failureRetry',
+    }
+    expect(store.showStatusDialog).toBe(true)
+
+    store.snapshot = {
+      ...snapshot(4, 'cleaning'),
+      cause: 'sessionRecovery',
+      attempt: 0,
+    }
+    expect(store.showStatusDialog).toBe(true)
+  })
+
+  it('shows the unified status dialog as soon as a confirmed restart begins', () => {
+    const store = useEngineStore()
+
+    const causes: EngineOperationCause[] = ['manualRestart', 'settingsChange']
+    for (const cause of causes) {
+      store.snapshot = {
+        ...snapshot(store.snapshot.operationId + 1, 'stopping'),
+        cause,
+      }
+      expect(store.showStatusDialog).toBe(true)
+    }
   })
 })

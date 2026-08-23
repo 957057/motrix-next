@@ -274,14 +274,11 @@ export default {
   'upnp-mapping-started': 'UPnP 포트 매핑이 활성화되었습니다',
   'upnp-mapping-failed': 'UPnP 포트 매핑에 실패했습니다',
   'engine-restarted': 'Aria2 Next 엔진이 재시작되었습니다',
-  'engine-restart-failed': 'Aria2 Next 엔진 재시작 실패',
-  'engine-restart-stopping': 'Aria2 Next 엔진을 중지하는 중...',
   'engine-restart-title': 'Aria2 Next 엔진 재시작',
   'engine-restart-confirm':
     '이 변경 사항은 다운로드 엔진을 다시 시작해야 적용됩니다. 활성 다운로드가 잠시 중단되지만 다시 시작한 후 자동으로 재개됩니다.',
   'engine-restart-now': '지금 재시작',
   'engine-restart-later': '나중에',
-  'engine-restarting': 'Aria2 Next 엔진 재시작 중...',
   'engine-restart-btn': 'Aria2 Next 엔진 재시작',
   'engine-restart-manual-confirm':
     '다운로드 엔진을 재시작하시겠습니까? 활성 다운로드가 잠시 중단되지만 재시작 후 자동으로 재개됩니다.',

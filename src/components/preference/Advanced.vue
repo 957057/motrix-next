@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** @fileoverview Advanced preference tab: RPC, extension, clipboard, default programs, engine, log, history, diagnostics. */
-import { ref, computed, nextTick, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { usePlatform } from '@/composables/usePlatform'
@@ -11,6 +11,7 @@ import { useEngineStore } from '@/stores/engine'
 import { useTaskStore } from '@/stores/task'
 import { useHistoryStore } from '@/stores/history'
 import { useAdvancedActions } from '@/composables/useAdvancedActions'
+import { useEngineRestart } from '@/composables/useEngineRestart'
 import { useProtocolHandlers, type ProtocolKey } from '@/composables/useProtocolHandlers'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { appDataDir, appLogDir, join, tempDir } from '@tauri-apps/api/path'
@@ -58,6 +59,7 @@ import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 
 const engineStore = useEngineStore()
+const { confirmManualRestart: handleManualRestart, restartEngine } = useEngineRestart()
 
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
@@ -145,15 +147,21 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
     const changed = diffConfig(preferenceStore.config, f)
     if (checkIsNeedRestart(changed)) {
       const ok = await new Promise<boolean>((resolve) => {
+        let accepted = false
         dialog.info({
           title: t('preferences.engine-restart-title'),
           content: t('preferences.engine-restart-confirm'),
           positiveText: t('preferences.engine-restart-now'),
           negativeText: t('app.cancel'),
           maskClosable: false,
-          onPositiveClick: () => resolve(true),
+          onPositiveClick: () => {
+            accepted = true
+          },
           onNegativeClick: () => resolve(false),
           onClose: () => resolve(false),
+          onAfterLeave: () => {
+            if (accepted) resolve(true)
+          },
         })
       })
       if (!ok) return false
@@ -185,9 +193,7 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
 
     // Engine restart — user already confirmed in beforeSave, execute immediately.
     if (checkIsNeedRestart(changed)) {
-      await nextTick()
-      await new Promise((r) => requestAnimationFrame(r))
-      await engineStore.restart('settingsChange')
+      restartEngine('settingsChange')
     }
 
     // Motrix log level changes need a full app relaunch,
@@ -320,7 +326,6 @@ const {
   exportingLogs,
   exportingSettings,
   importingSettings,
-  handleManualRestart: handleManualRestartAction,
   handleSessionReset,
   handleRestoreDefaults,
   handleFactoryReset,
@@ -343,10 +348,6 @@ const {
   buildForm,
   resetSnapshot,
 })
-
-function handleManualRestart() {
-  handleManualRestartAction()
-}
 
 onMounted(async () => {
   loadForm()

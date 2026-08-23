@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Παύση διαμοίρασης',
   'resume-seeding': 'Συνέχιση διαμοίρασης',
   'finish-seeding': 'Διακοπή διαμοιρασμού',
-  'finish-seeding-confirm': 'Να διακοπεί ο διαμοιρασμός του «{taskName}»; Τα ληφθέντα αρχεία θα διατηρηθούν.',
   'finish-seeding-success': 'Ο διαμοιρασμός του «{taskName}» διακόπηκε',
   'finish-seeding-fail': 'Αποτυχία διακοπής διαμοιρασμού του «{taskName}»',
   'seeding-time': 'Χρόνος διαμοίρασης',

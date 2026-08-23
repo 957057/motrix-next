@@ -283,14 +283,11 @@ export default {
   'upnp-mapping-started': 'Mapeo de puertos UPnP activado',
   'upnp-mapping-failed': 'Error en el mapeo de puertos UPnP',
   'engine-restarted': 'Motor Aria2 Next reiniciado',
-  'engine-restart-failed': 'Error al reiniciar el motor Aria2 Next',
-  'engine-restart-stopping': 'Deteniendo el motor Aria2 Next...',
   'engine-restart-title': 'Reiniciar motor Aria2 Next',
   'engine-restart-confirm':
     'Este cambio requiere reiniciar el motor de descarga para aplicarse. Las descargas activas se interrumpirán brevemente pero se reanudarán automáticamente después del reinicio.',
   'engine-restart-now': 'Reiniciar ahora',
   'engine-restart-later': 'Más tarde',
-  'engine-restarting': 'Reiniciando motor Aria2 Next...',
   'engine-restart-btn': 'Reiniciar motor Aria2 Next',
   'engine-restart-manual-confirm':
     '¿Desea reiniciar el motor de descargas? Las descargas activas se interrumpirán brevemente, pero se reanudarán automáticamente después del reinicio.',

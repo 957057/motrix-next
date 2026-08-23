@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Seeden pauzeren',
   'resume-seeding': 'Seeden hervatten',
   'finish-seeding': 'Seeden stoppen',
-  'finish-seeding-confirm': 'Seeden van ‘{taskName}’ stoppen? Gedownloade bestanden blijven behouden.',
   'finish-seeding-success': 'Seeden van ‘{taskName}’ gestopt',
   'finish-seeding-fail': 'Seeden van ‘{taskName}’ stoppen is mislukt',
   'seeding-time': 'Seedduur',

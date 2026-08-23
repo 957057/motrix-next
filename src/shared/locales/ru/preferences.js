@@ -279,14 +279,11 @@ export default {
   'upnp-mapping-started': 'Проброс портов UPnP включён',
   'upnp-mapping-failed': 'Ошибка проброса портов UPnP',
   'engine-restarted': 'Движок Aria2 Next перезапущен',
-  'engine-restart-failed': 'Не удалось перезапустить движок Aria2 Next',
-  'engine-restart-stopping': 'Остановка движка Aria2 Next...',
   'engine-restart-title': 'Перезапустить движок Aria2 Next',
   'engine-restart-confirm':
     'Это изменение требует перезапуска движка загрузки для вступления в силу. Активные загрузки будут ненадолго прерваны, но автоматически возобновятся после перезапуска.',
   'engine-restart-now': 'Перезапустить сейчас',
   'engine-restart-later': 'Позже',
-  'engine-restarting': 'Перезапуск движка Aria2 Next...',
   'engine-restart-btn': 'Перезапустить движок Aria2 Next',
   'engine-restart-manual-confirm':
     'Перезапустить движок загрузки? Активные загрузки будут ненадолго прерваны, но автоматически продолжатся после перезапуска.',

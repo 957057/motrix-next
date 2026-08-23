@@ -139,7 +139,6 @@ export default {
   'pause-seeding': '배포 일시 중지',
   'resume-seeding': '배포 재개',
   'finish-seeding': '시딩 중지',
-  'finish-seeding-confirm': '“{taskName}” 시딩을 중지할까요? 다운로드한 파일은 유지됩니다.',
   'finish-seeding-success': '“{taskName}” 시딩을 중지했습니다',
   'finish-seeding-fail': '“{taskName}” 시딩을 중지하지 못했습니다',
   'seeding-time': '배포 시간',

@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Pausa la compartició',
   'resume-seeding': 'Continua compartint',
   'finish-seeding': 'Atura la sembra',
-  'finish-seeding-confirm': 'Vols aturar la sembra de «{taskName}»? Es conservaran els fitxers baixats.',
   'finish-seeding-success': 'S’ha aturat la sembra de «{taskName}»',
   'finish-seeding-fail': 'No s’ha pogut aturar la sembra de «{taskName}»',
   'seeding-time': 'Temps compartint',

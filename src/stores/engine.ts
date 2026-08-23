@@ -10,18 +10,30 @@ export type EnginePhase =
   | 'starting'
   | 'probing'
   | 'initializing'
+  | 'stabilizing'
   | 'running'
   | 'recovering'
   | 'stopping'
+  | 'cleaning'
   | 'failed'
 
-export type EngineFailureStage = 'spawn' | 'probe' | 'contract' | 'initialization' | 'runtime' | 'shutdown'
+export type EngineFailureStage =
+  | 'spawn'
+  | 'probe'
+  | 'contract'
+  | 'initialization'
+  | 'stability'
+  | 'runtime'
+  | 'shutdown'
+  | 'recovery'
 
 export type EngineOperationCause =
   | 'initial'
   | 'startup'
   | 'manualRestart'
   | 'settingsChange'
+  | 'failureRetry'
+  | 'sessionRecovery'
   | 'runtimeCrash'
   | 'rpcUnhealthy'
   | 'portConflict'
@@ -57,7 +69,7 @@ const INITIAL_SNAPSHOT: EngineSnapshot = {
   revision: 0,
   operationId: 0,
   attempt: 0,
-  maxAttempts: 3,
+  maxAttempts: 5,
   cause: 'initial',
   failure: null,
 }
@@ -69,13 +81,23 @@ export const useEngineStore = defineStore('engine', () => {
 
   const isReady = computed(() => snapshot.value.phase === 'running')
   const isBusy = computed(() =>
-    ['preparing', 'starting', 'probing', 'initializing', 'recovering', 'stopping'].includes(snapshot.value.phase),
+    ['preparing', 'starting', 'probing', 'initializing', 'stabilizing', 'recovering', 'stopping', 'cleaning'].includes(
+      snapshot.value.phase,
+    ),
   )
+  const dialogCauses = new Set<EngineOperationCause>([
+    'manualRestart',
+    'settingsChange',
+    'runtimeCrash',
+    'rpcUnhealthy',
+    'portConflict',
+    'failureRetry',
+    'sessionRecovery',
+  ])
   const showStatusDialog = computed(
     () =>
       snapshot.value.phase === 'failed' ||
-      snapshot.value.phase === 'recovering' ||
-      (snapshot.value.cause === 'runtimeCrash' && isBusy.value),
+      (isBusy.value && (snapshot.value.attempt > 1 || dialogCauses.has(snapshot.value.cause))),
   )
 
   function applySnapshot(next: EngineSnapshot) {
@@ -119,6 +141,21 @@ export const useEngineStore = defineStore('engine', () => {
     return run('engine_stop', cause)
   }
 
+  async function recoverRuntimeState() {
+    try {
+      const next = await invoke<EngineSnapshot>('engine_recover_runtime_state')
+      applySnapshot(next)
+      return next
+    } catch (error) {
+      try {
+        applySnapshot(await invoke<EngineSnapshot>('engine_supervisor_state'))
+      } catch (stateError) {
+        logger.error('EngineStore.recoveryState', stateError)
+      }
+      throw error
+    }
+  }
+
   async function cancel() {
     try {
       const next = await invoke<EngineSnapshot>('engine_cancel')
@@ -149,6 +186,7 @@ export const useEngineStore = defineStore('engine', () => {
     ensureRunning,
     restart,
     stop,
+    recoverRuntimeState,
     cancel,
     dispose,
   }

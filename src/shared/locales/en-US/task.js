@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Pause seeding',
   'resume-seeding': 'Resume seeding',
   'finish-seeding': 'Stop Seeding',
-  'finish-seeding-confirm': 'Stop seeding “{taskName}”? Downloaded files will be kept.',
   'finish-seeding-success': 'Stopped seeding “{taskName}”',
   'finish-seeding-fail': 'Failed to stop seeding “{taskName}”',
   'seeding-time': 'Seeding time',

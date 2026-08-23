@@ -282,14 +282,11 @@ export default {
   'upnp-mapping-started': 'Mappage de ports UPnP activé',
   'upnp-mapping-failed': 'Échec du mappage de ports UPnP',
   'engine-restarted': 'Moteur Aria2 Next redemarre',
-  'engine-restart-failed': 'Echec du redemarrage du moteur Aria2 Next',
-  'engine-restart-stopping': 'Arrêt du moteur Aria2 Next...',
   'engine-restart-title': 'Redemarrer le moteur Aria2 Next',
   'engine-restart-confirm':
     'Cette modification nécessite un redémarrage du moteur de téléchargement pour prendre effet. Les téléchargements actifs seront brièvement interrompus mais reprendront automatiquement après le redémarrage.',
   'engine-restart-now': 'Redémarrer maintenant',
   'engine-restart-later': 'Plus tard',
-  'engine-restarting': 'Redemarrage du moteur Aria2 Next...',
   'engine-restart-btn': 'Redemarrer le moteur Aria2 Next',
   'engine-restart-manual-confirm':
     'Voulez-vous redémarrer le moteur de téléchargement ? Les téléchargements actifs seront brièvement interrompus mais reprendront automatiquement après le redémarrage.',

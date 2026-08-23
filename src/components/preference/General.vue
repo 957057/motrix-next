@@ -46,6 +46,7 @@ import { CloudDownloadOutline } from '@vicons/ionicons5'
 import UpdateDialog from '@/components/preference/UpdateDialog.vue'
 import type { UpdateChannel } from '@shared/types'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
+import { useEngineRestart } from '@/composables/useEngineRestart'
 
 const { t, locale } = useI18n()
 const preferenceStore = usePreferenceStore()
@@ -255,23 +256,7 @@ function handleCheckUpdate() {
 }
 
 const engineStore = useEngineStore()
-
-function handleManualRestart() {
-  const d = dialog.info({
-    title: t('preferences.engine-restart-title'),
-    content: t('preferences.engine-restart-manual-confirm'),
-    positiveText: t('preferences.engine-restart-now'),
-    negativeText: t('preferences.engine-restart-later'),
-    maskClosable: false,
-    onPositiveClick: async () => {
-      d.loading = true
-      d.negativeText = ''
-      d.closable = false
-      await new Promise((r) => requestAnimationFrame(r))
-      await engineStore.restart('manualRestart')
-    },
-  })
-}
+const { confirmManualRestart: handleManualRestart } = useEngineRestart()
 
 onMounted(async () => {
   try {

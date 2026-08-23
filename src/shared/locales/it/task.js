@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Metti in pausa il seeding',
   'resume-seeding': 'Riprendi il seeding',
   'finish-seeding': 'Interrompi seeding',
-  'finish-seeding-confirm': 'Interrompere il seeding di “{taskName}”? I file scaricati verranno conservati.',
   'finish-seeding-success': 'Seeding di “{taskName}” interrotto',
   'finish-seeding-fail': 'Impossibile interrompere il seeding di “{taskName}”',
   'seeding-time': 'Durata seeding',

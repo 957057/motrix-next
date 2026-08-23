@@ -239,6 +239,8 @@ describe('v6 migration — native BitTorrent settings', () => {
       btDhtIpv6Enabled: true,
       dhtListenPort: 29130,
       portConflictRecovery: { dht: true },
+      pauseMetadata: false,
+      autoSelectAllBtFilesFromExtension: true,
     } as unknown as Partial<AppConfig>
 
     runMigrations(config)
@@ -250,6 +252,9 @@ describe('v6 migration — native BitTorrent settings', () => {
     expect(config).not.toHaveProperty('btDhtIpv6Enabled')
     expect(config).not.toHaveProperty('dhtListenPort')
     expect(config.portConflictRecovery).not.toHaveProperty('dht')
+    expect(config.magnetFileSelectionMode).toBe('auto')
+    expect(config).not.toHaveProperty('pauseMetadata')
+    expect(config).not.toHaveProperty('autoSelectAllBtFilesFromExtension')
   })
 
   it('uses the final native encryption value without a compatibility alias', () => {
@@ -507,22 +512,6 @@ describe('v5 migration — ED2K clipboard backfill', () => {
     runMigrations(config)
 
     expect(config.clipboard?.ed2k).toBe(false)
-  })
-})
-
-describe('v7 migration — magnet file selection presentation', () => {
-  it('removes content auto-selection and defaults to automatic dialog presentation', () => {
-    const config = {
-      configVersion: 6,
-      pauseMetadata: false,
-      autoSelectAllBtFilesFromExtension: true,
-    } as unknown as Partial<AppConfig>
-
-    runMigrations(config)
-
-    expect(config.magnetFileSelectionMode).toBe('auto')
-    expect((config as Record<string, unknown>).pauseMetadata).toBeUndefined()
-    expect((config as Record<string, unknown>).autoSelectAllBtFilesFromExtension).toBeUndefined()
   })
 })
 

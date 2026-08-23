@@ -278,14 +278,11 @@ export default {
   'upnp-mapping-started': 'UPnP картографирането на портове е активирано',
   'upnp-mapping-failed': 'UPnP картографирането на портове е неуспешно',
   'engine-restarted': 'Двигателят Aria2 Next е рестартиран',
-  'engine-restart-failed': 'Неуспешно рестартиране на двигателя Aria2 Next',
-  'engine-restart-stopping': 'Спиране на Aria2 Next двигателя...',
   'engine-restart-title': 'Рестартиране на двигателя Aria2 Next',
   'engine-restart-confirm':
     'Тази промяна изисква рестартиране на двигателя за изтегляне, за да влезе в сила. Активните изтегляния ще бъдат кратко прекъснати, но ще се възобновят автоматично след рестарт.',
   'engine-restart-now': 'Рестартирай сега',
   'engine-restart-later': 'По-късно',
-  'engine-restarting': 'Рестартиране на двигателя Aria2 Next...',
   'engine-restart-btn': 'Рестартиране на двигателя Aria2 Next',
   'engine-restart-manual-confirm':
     'Искате ли да рестартирате двигателя за изтегляне? Активните изтегляния ще бъдат временно прекъснати, но ще се възобновят автоматично след рестартирането.',

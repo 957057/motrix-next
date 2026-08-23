@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Suspendre le partage',
   'resume-seeding': 'Reprendre le partage',
   'finish-seeding': 'Arrêter le partage',
-  'finish-seeding-confirm': 'Arrêter le partage de « {taskName} » ? Les fichiers téléchargés seront conservés.',
   'finish-seeding-success': 'Partage de « {taskName} » arrêté',
   'finish-seeding-fail': 'Impossible d’arrêter le partage de « {taskName} »',
   'seeding-time': 'Durée de partage',

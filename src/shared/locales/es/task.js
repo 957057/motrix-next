@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Pausar siembra',
   'resume-seeding': 'Reanudar siembra',
   'finish-seeding': 'Detener siembra',
-  'finish-seeding-confirm': '¿Detener la siembra de «{taskName}»? Los archivos descargados se conservarán.',
   'finish-seeding-success': 'Se detuvo la siembra de «{taskName}»',
   'finish-seeding-fail': 'No se pudo detener la siembra de «{taskName}»',
   'seeding-time': 'Tiempo de siembra',

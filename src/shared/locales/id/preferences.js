@@ -278,14 +278,11 @@ export default {
   'upnp-mapping-started': 'Pemetaan port UPnP diaktifkan',
   'upnp-mapping-failed': 'Pemetaan port UPnP gagal',
   'engine-restarted': 'Mesin Aria2 Next dimulai ulang',
-  'engine-restart-failed': 'Gagal memulai ulang mesin Aria2 Next',
-  'engine-restart-stopping': 'Menghentikan mesin Aria2 Next...',
   'engine-restart-title': 'Mulai ulang mesin Aria2 Next',
   'engine-restart-confirm':
     'Perubahan ini memerlukan restart mesin unduhan agar berlaku. Unduhan aktif akan terputus sebentar tetapi akan dilanjutkan secara otomatis setelah restart.',
   'engine-restart-now': 'Mulai ulang sekarang',
   'engine-restart-later': 'Nanti',
-  'engine-restarting': 'Memulai ulang mesin Aria2 Next...',
   'engine-restart-btn': 'Mulai ulang mesin Aria2 Next',
   'engine-restart-manual-confirm':
     'Mulai ulang mesin unduhan? Unduhan aktif akan terganggu sebentar tetapi akan dilanjutkan secara otomatis setelah dimulai ulang.',

@@ -14,10 +14,12 @@ use super::{
     start_engine, stop_engine, wait_for_engine_exit, wait_for_engine_ports_release, EngineState,
 };
 
-const START_ATTEMPTS: u32 = 3;
+const START_ATTEMPTS: u32 = 5;
 const PROBE_ATTEMPTS: u32 = 5;
 const PROBE_BASE_DELAY_MS: u64 = 200;
 const RECOVERY_BASE_DELAY_MS: u64 = 500;
+const STABILITY_CHECKS: u32 = 3;
+const STABILITY_CHECK_INTERVAL_MS: u64 = 500;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -27,9 +29,11 @@ pub enum EnginePhase {
     Starting,
     Probing,
     Initializing,
+    Stabilizing,
     Running,
     Recovering,
     Stopping,
+    Cleaning,
     Failed,
 }
 
@@ -47,6 +51,8 @@ pub enum EngineOperationCause {
     Startup,
     ManualRestart,
     SettingsChange,
+    FailureRetry,
+    SessionRecovery,
     RuntimeCrash,
     RpcUnhealthy,
     PortConflict,
@@ -64,8 +70,10 @@ pub enum EngineFailureStage {
     Probe,
     Contract,
     Initialization,
+    Stability,
     Runtime,
     Shutdown,
+    Recovery,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -233,6 +241,36 @@ impl EngineSupervisor {
         cause: EngineOperationCause,
     ) -> Result<EngineSnapshot, AppError> {
         self.run_running_operation(app, cause, true, None).await
+    }
+
+    pub async fn recover_runtime_state(&self, app: &AppHandle) -> Result<EngineSnapshot, AppError> {
+        let cause = EngineOperationCause::SessionRecovery;
+        let (operation_id, mut cancelled) = self.begin_operation(DesiredEngineState::Running);
+        let _guard = self.operation_lock.lock().await;
+        ensure_active(self, operation_id, &cancelled)?;
+
+        self.publish(app, operation_id, EnginePhase::Stopping, 0, cause, None);
+        if let Err(error) = self.stop_runtime(app, false).await {
+            let failure = failure_from_error(EngineFailureStage::Shutdown, &error, false, app);
+            let result = self.fail(app, operation_id, 0, cause, failure);
+            self.finish_operation(operation_id);
+            return result;
+        }
+
+        ensure_active(self, operation_id, &cancelled)?;
+        self.publish(app, operation_id, EnginePhase::Cleaning, 0, cause, None);
+        if let Err(message) = crate::engine::clear_engine_runtime_state(app) {
+            let failure = failure_from_message(EngineFailureStage::Recovery, message, false, app);
+            let result = self.fail(app, operation_id, 0, cause, failure);
+            self.finish_operation(operation_id);
+            return result;
+        }
+
+        let result = self
+            .start_with_recovery(app, operation_id, cause, &mut cancelled, None)
+            .await;
+        self.finish_operation(operation_id);
+        result
     }
 
     async fn run_running_operation(
@@ -414,6 +452,46 @@ impl EngineSupervisor {
                     );
                 }
                 return self.fail(app, operation_id, attempt, cause, failure);
+            }
+
+            self.publish(
+                app,
+                operation_id,
+                EnginePhase::Stabilizing,
+                attempt,
+                cause,
+                None,
+            );
+            match confirm_engine_stability(app, cancelled).await {
+                Ok(()) => {}
+                Err(error) if is_cancelled_error(&error) => return Err(error),
+                Err(error) => {
+                    last_failure = Some(failure_from_error(
+                        EngineFailureStage::Stability,
+                        &error,
+                        true,
+                        app,
+                    ));
+                    if let Err(stop_error) = self.stop_runtime(app, false).await {
+                        let failure = failure_from_error(
+                            EngineFailureStage::Shutdown,
+                            &stop_error,
+                            false,
+                            app,
+                        );
+                        return self.fail(app, operation_id, attempt, cause, failure);
+                    }
+                    if attempt < START_ATTEMPTS {
+                        continue;
+                    }
+                    return self.fail(
+                        app,
+                        operation_id,
+                        attempt,
+                        cause,
+                        last_failure.expect("stability failure must exist"),
+                    );
+                }
             }
 
             ensure_active(self, operation_id, cancelled)?;
@@ -623,6 +701,36 @@ async fn probe_engine(
     Err(last_error.unwrap_or_else(|| AppError::Engine("Engine probe failed".into())))
 }
 
+async fn confirm_engine_stability(
+    app: &AppHandle,
+    cancelled: &mut watch::Receiver<bool>,
+) -> Result<(), AppError> {
+    let engine = app
+        .try_state::<EngineState>()
+        .ok_or_else(|| AppError::Engine("EngineState is not managed".into()))?;
+    let aria2 = app
+        .try_state::<Aria2State>()
+        .ok_or_else(|| AppError::Engine("Aria2State is not managed".into()))?;
+
+    for index in 0..STABILITY_CHECKS {
+        ensure_not_cancelled(cancelled)?;
+        if !engine.is_running() {
+            return Err(AppError::Engine(
+                "Engine process exited during stability confirmation".into(),
+            ));
+        }
+        aria2.0.get_version().await?;
+        if index + 1 < STABILITY_CHECKS {
+            cancellable_delay(
+                cancelled,
+                Duration::from_millis(STABILITY_CHECK_INTERVAL_MS),
+            )
+            .await?;
+        }
+    }
+    Ok(())
+}
+
 fn ensure_active(
     supervisor: &EngineSupervisor,
     operation_id: u64,
@@ -763,6 +871,10 @@ mod tests {
         assert_eq!(
             serde_json::to_string(&EngineOperationCause::SettingsChange).unwrap(),
             "\"settingsChange\""
+        );
+        assert_eq!(
+            serde_json::to_string(&EngineOperationCause::SessionRecovery).unwrap(),
+            "\"sessionRecovery\""
         );
         assert!(serde_json::from_str::<EngineOperationCause>("\"arbitrary\"").is_err());
     }

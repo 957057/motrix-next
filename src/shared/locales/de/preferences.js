@@ -279,14 +279,11 @@ export default {
   'upnp-mapping-started': 'UPnP-Portweiterleitung aktiviert',
   'upnp-mapping-failed': 'UPnP-Portweiterleitung fehlgeschlagen',
   'engine-restarted': 'Aria2 Next-Engine neu gestartet',
-  'engine-restart-failed': 'Neustart der Aria2 Next-Engine fehlgeschlagen',
-  'engine-restart-stopping': 'Aria2 Next-Engine wird beendet...',
   'engine-restart-title': 'Aria2 Next-Engine neu starten',
   'engine-restart-confirm':
     'Diese Änderung erfordert einen Neustart der Download-Engine, um wirksam zu werden. Aktive Downloads werden kurz unterbrochen, aber nach dem Neustart automatisch fortgesetzt.',
   'engine-restart-now': 'Jetzt neu starten',
   'engine-restart-later': 'Später',
-  'engine-restarting': 'Aria2 Next-Engine wird neu gestartet...',
   'engine-restart-btn': 'Aria2 Next-Engine neu starten',
   'engine-restart-manual-confirm':
     'Möchten Sie die Download-Engine neu starten? Aktive Downloads werden kurz unterbrochen, aber nach dem Neustart automatisch fortgesetzt.',

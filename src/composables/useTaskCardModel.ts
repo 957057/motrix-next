@@ -115,7 +115,11 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
   })
   const isActive = computed(() => task.value.status === TASK_STATUS.ACTIVE)
   const completedLengthValue = computed(() => {
-    if (btLifecycle.value === 'seeding' || btLifecycle.value === 'paused-seeding') {
+    if (
+      btLifecycle.value === 'seeding' ||
+      btLifecycle.value === 'restoring-seeding' ||
+      btLifecycle.value === 'paused-seeding'
+    ) {
       return Number(task.value.totalLength)
     }
     return getTaskCompletedLength(task.value)

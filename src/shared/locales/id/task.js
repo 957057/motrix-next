@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Jeda seeding',
   'resume-seeding': 'Lanjutkan seeding',
   'finish-seeding': 'Hentikan seeding',
-  'finish-seeding-confirm': 'Hentikan seeding “{taskName}”? File yang diunduh akan tetap disimpan.',
   'finish-seeding-success': 'Seeding “{taskName}” dihentikan',
   'finish-seeding-fail': 'Gagal menghentikan seeding “{taskName}”',
   'seeding-time': 'Waktu seeding',

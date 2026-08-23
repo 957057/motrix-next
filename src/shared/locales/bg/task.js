@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Пауза на раздаването',
   'resume-seeding': 'Продължаване на раздаването',
   'finish-seeding': 'Спиране на раздаването',
-  'finish-seeding-confirm': 'Да се спре ли раздаването на „{taskName}“? Изтеглените файлове ще бъдат запазени.',
   'finish-seeding-success': 'Раздаването на „{taskName}“ е спряно',
   'finish-seeding-fail': 'Раздаването на „{taskName}“ не можа да бъде спряно',
   'seeding-time': 'Време на раздаване',

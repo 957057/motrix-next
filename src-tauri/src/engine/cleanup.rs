@@ -1,3 +1,50 @@
+use std::path::{Path, PathBuf};
+
+use tauri::Manager;
+
+const DOWNLOAD_SESSION_FILE: &str = "download.session";
+const BT_SESSION_FILE: &str = "bittorrent.session";
+const BT_RESUME_DIR: &str = "torrents";
+const RECOVERY_BACKUP_DIR: &str = "recovery-backup";
+
+fn engine_runtime_paths(data_dir: &Path) -> [PathBuf; 3] {
+    [
+        data_dir.join(DOWNLOAD_SESSION_FILE),
+        data_dir.join("engine").join(BT_SESSION_FILE),
+        data_dir.join("engine").join(BT_RESUME_DIR),
+    ]
+}
+
+fn remove_path(path: &Path) -> Result<(), String> {
+    if !path.exists() {
+        return Ok(());
+    }
+    if path.is_dir() {
+        std::fs::remove_dir_all(path)
+    } else {
+        std::fs::remove_file(path)
+    }
+    .map_err(|error| format!("Failed to remove {}: {error}", path.display()))
+}
+
+fn clear_runtime_paths(data_dir: &Path) -> Result<(), String> {
+    for path in engine_runtime_paths(data_dir) {
+        remove_path(&path)?;
+    }
+    remove_path(&data_dir.join("engine").join(RECOVERY_BACKUP_DIR))?;
+    Ok(())
+}
+
+pub(crate) fn clear_engine_runtime_state(app: &tauri::AppHandle) -> Result<(), String> {
+    let data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|error| format!("Failed to get app data directory: {error}"))?;
+    clear_runtime_paths(&data_dir)?;
+    log::info!("engine: cleared resumable runtime state");
+    Ok(())
+}
+
 /// Determines whether a process command name is a supported Aria2 Next process.
 ///
 /// Used by `cleanup_port` (Unix) to verify that only supported engine processes are
@@ -161,6 +208,40 @@ pub(crate) fn cleanup_port(port: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn create_runtime_fixture(data_dir: &Path) {
+        std::fs::create_dir_all(data_dir.join("engine").join(BT_RESUME_DIR)).unwrap();
+        std::fs::write(data_dir.join(DOWNLOAD_SESSION_FILE), "session").unwrap();
+        std::fs::write(data_dir.join("engine").join(BT_SESSION_FILE), "bt-state").unwrap();
+        std::fs::write(
+            data_dir
+                .join("engine")
+                .join(BT_RESUME_DIR)
+                .join("resume.dat"),
+            "resume",
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn clear_runtime_paths_removes_only_resumable_engine_state() {
+        let temp = tempfile::tempdir().unwrap();
+        create_runtime_fixture(temp.path());
+        std::fs::write(temp.path().join("history.db"), "history").unwrap();
+        std::fs::write(temp.path().join("config.json"), "settings").unwrap();
+        let old_backup = temp.path().join("engine").join(RECOVERY_BACKUP_DIR);
+        std::fs::create_dir_all(&old_backup).unwrap();
+        std::fs::write(old_backup.join("old.session"), "old").unwrap();
+
+        clear_runtime_paths(temp.path()).unwrap();
+
+        for path in engine_runtime_paths(temp.path()) {
+            assert!(!path.exists());
+        }
+        assert!(temp.path().join("history.db").exists());
+        assert!(temp.path().join("config.json").exists());
+        assert!(!old_backup.exists());
+    }
 
     #[test]
     fn is_supported_engine_process_matches_motrix_next_engine() {

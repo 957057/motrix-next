@@ -280,14 +280,11 @@ export default {
   'upnp-mapping-started': 'UPnP porttérképezés engedélyezve',
   'upnp-mapping-failed': 'UPnP porttérképezés sikertelen',
   'engine-restarted': 'Aria2 Next motor ujrainditva',
-  'engine-restart-failed': 'Aria2 Next motor ujrainditasa sikertelen',
-  'engine-restart-stopping': 'Aria2 Next motor leállítása...',
   'engine-restart-title': 'Aria2 Next motor ujrainditasa',
   'engine-restart-confirm':
     'Ez a módosítás a letöltési motor újraindítását igényli az érvénybe lépéshez. Az aktív letöltések rövid időre megszakadnak, de az újraindítás után automatikusan folytatódnak.',
   'engine-restart-now': 'Újraindítás most',
   'engine-restart-later': 'Később',
-  'engine-restarting': 'Aria2 Next motor ujrainditasa...',
   'engine-restart-btn': 'Aria2 Next motor ujrainditasa',
   'engine-restart-manual-confirm':
     'Újra szeretné indítani a letöltő motort? Az aktív letöltések rövid időre megszakadnak, de az újraindítás után automatikusan folytatódnak.',

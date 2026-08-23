@@ -4,7 +4,7 @@
  * Extracted from Advanced.vue to reduce component script size.
  * Contains dialog-heavy operations: session reset, restore defaults,
  * factory reset, DB integrity check, DB browse, DB reset, export logs,
- * and manual engine restart.
+ * and diagnostics utilities.
  */
 import { ref, h, computed } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -161,23 +161,6 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
 
   // ── Handlers ─────────────────────────────────────────────────────────
 
-  function handleManualRestart() {
-    const d = dialog.info({
-      title: t('preferences.engine-restart-title'),
-      content: t('preferences.engine-restart-manual-confirm'),
-      positiveText: t('preferences.engine-restart-now'),
-      negativeText: t('preferences.engine-restart-later'),
-      maskClosable: false,
-      onPositiveClick: async () => {
-        d.loading = true
-        d.negativeText = ''
-        d.closable = false
-        await new Promise((r) => requestAnimationFrame(r))
-        await engineStore.restart('manualRestart')
-      },
-    })
-  }
-
   function handleSessionReset() {
     dialog.error({
       title: t('preferences.clear-all-tasks'),
@@ -196,7 +179,7 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
             await taskStore.batchRemoveTask(allGids)
           }
           await taskStore.purgeTaskRecord()
-          await invoke('clear_session_file')
+          await invoke('clear_engine_runtime_state')
           message.success(t('preferences.clear-all-tasks-success'))
         } catch (e) {
           logger.error('Advanced.sessionReset', e)
@@ -485,7 +468,6 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
     exportingSettings,
     importingSettings,
     // Handlers
-    handleManualRestart,
     handleSessionReset,
     handleRestoreDefaults,
     handleFactoryReset,

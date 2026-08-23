@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'सीडिंग रोकें',
   'resume-seeding': 'सीडिंग जारी रखें',
   'finish-seeding': 'सीडिंग रोकें',
-  'finish-seeding-confirm': '“{taskName}” की सीडिंग रोकें? डाउनलोड की गई फ़ाइलें रखी जाएँगी।',
   'finish-seeding-success': '“{taskName}” की सीडिंग रोक दी गई',
   'finish-seeding-fail': '“{taskName}” की सीडिंग नहीं रोकी जा सकी',
   'seeding-time': 'सीडिंग समय',

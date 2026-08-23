@@ -83,7 +83,8 @@ function createDeps(api: TaskApi) {
   const currentTaskGid = ref('')
   const hideTaskDetail = vi.fn()
   const fetchList = vi.fn().mockResolvedValue(undefined)
-  return { api, taskList, currentTaskGid, hideTaskDetail, fetchList }
+  const setTaskRemoving = vi.fn()
+  return { api, taskList, currentTaskGid, hideTaskDetail, fetchList, setTaskRemoving }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -126,6 +127,7 @@ describe('finishSeeding', () => {
 
     expect(api.finishSeeding).toHaveBeenCalledWith({ gid: 'seed-1' })
     expect(api.deleteTask).not.toHaveBeenCalled()
+    expect(deps.setTaskRemoving).not.toHaveBeenCalled()
     expect(deps.fetchList).toHaveBeenCalledOnce()
     expect(api.saveSession).toHaveBeenCalledOnce()
   })

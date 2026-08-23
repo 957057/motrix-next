@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Întrerupe însămânțarea',
   'resume-seeding': 'Reia însămânțarea',
   'finish-seeding': 'Oprește seedingul',
-  'finish-seeding-confirm': 'Opriți seedingul pentru „{taskName}”? Fișierele descărcate vor fi păstrate.',
   'finish-seeding-success': 'Seeding oprit pentru „{taskName}”',
   'finish-seeding-fail': 'Seedingul pentru „{taskName}” nu a putut fi oprit',
   'seeding-time': 'Durata însămânțării',

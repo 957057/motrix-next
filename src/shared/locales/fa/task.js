@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'توقف بذرگذاری',
   'resume-seeding': 'ادامه بذرگذاری',
   'finish-seeding': 'توقف سید',
-  'finish-seeding-confirm': 'سید کردن «{taskName}» متوقف شود؟ فایل‌های دانلودشده حفظ می‌شوند.',
   'finish-seeding-success': 'سید کردن «{taskName}» متوقف شد',
   'finish-seeding-fail': 'توقف سید کردن «{taskName}» ناموفق بود',
   'seeding-time': 'زمان بذرگذاری',

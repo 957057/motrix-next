@@ -281,14 +281,11 @@ export default {
   'upnp-mapping-started': 'Mapatge de ports UPnP activat',
   'upnp-mapping-failed': 'Error en el mapatge de ports UPnP',
   'engine-restarted': 'El motor Aria2 Next ha estat reiniciat',
-  'engine-restart-failed': 'No s\u0027ha pogut reiniciar el motor Aria2 Next',
-  'engine-restart-stopping': 'Aturant el motor Aria2 Next...',
   'engine-restart-title': 'Reiniciar el motor Aria2 Next',
   'engine-restart-confirm':
     "Aquest canvi requereix reiniciar el motor de descàrregues per tenir efecte. Les descàrregues actives s'interrompran breument però es reprendran automàticament després del reinici.",
   'engine-restart-now': 'Reiniciar ara',
   'engine-restart-later': 'Més tard',
-  'engine-restarting': 'Reiniciant el motor Aria2 Next...',
   'engine-restart-btn': 'Reiniciar el motor Aria2 Next',
   'engine-restart-manual-confirm':
     "Voleu reiniciar el motor de descàrregues? Les descàrregues actives s'interrompran temporalment, però es reprendran automàticament després del reinici.",

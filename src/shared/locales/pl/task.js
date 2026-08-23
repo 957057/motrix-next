@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Wstrzymaj wysyłanie',
   'resume-seeding': 'Wznów wysyłanie',
   'finish-seeding': 'Zatrzymaj seedowanie',
-  'finish-seeding-confirm': 'Zatrzymać seedowanie „{taskName}”? Pobrane pliki zostaną zachowane.',
   'finish-seeding-success': 'Zatrzymano seedowanie „{taskName}”',
   'finish-seeding-fail': 'Nie udało się zatrzymać seedowania „{taskName}”',
   'seeding-time': 'Czas wysyłania',

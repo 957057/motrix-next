@@ -281,14 +281,11 @@ export default {
   'upnp-mapping-started': 'Η αντιστοίχιση θυρών UPnP ενεργοποιήθηκε',
   'upnp-mapping-failed': 'Η αντιστοίχιση θυρών UPnP απέτυχε',
   'engine-restarted': 'Ο μηχανισμός Aria2 Next επανεκκινήθηκε',
-  'engine-restart-failed': 'Αποτυχία επανεκκίνησης μηχανισμού Aria2 Next',
-  'engine-restart-stopping': 'Διακοπή λειτουργίας του Aria2 Next...',
   'engine-restart-title': 'Επανεκκίνηση μηχανισμού Aria2 Next',
   'engine-restart-confirm':
     'Αυτή η αλλαγή απαιτεί επανεκκίνηση του μηχανισμού λήψης για να τεθεί σε ισχύ. Οι ενεργές λήψεις θα διακοπούν στιγμιαία αλλά θα συνεχιστούν αυτόματα μετά την επανεκκίνηση.',
   'engine-restart-now': 'Επανεκκίνηση τώρα',
   'engine-restart-later': 'Αργότερα',
-  'engine-restarting': 'Επανεκκίνηση μηχανισμού Aria2 Next...',
   'engine-restart-btn': 'Επανεκκίνηση μηχανισμού Aria2 Next',
   'engine-restart-manual-confirm':
     'Θέλετε να επανεκκινήσετε τη μηχανή λήψης; Οι ενεργές λήψεις θα διακοπούν προσωρινά αλλά θα συνεχιστούν αυτόματα μετά την επανεκκίνηση.',

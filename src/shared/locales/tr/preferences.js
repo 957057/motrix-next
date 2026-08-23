@@ -277,14 +277,11 @@ export default {
   'upnp-mapping-started': 'UPnP port eşlemesi etkinleştirildi',
   'upnp-mapping-failed': 'UPnP port eşlemesi başarısız oldu',
   'engine-restarted': 'Aria2 Next motoru yeniden baslatildi',
-  'engine-restart-failed': 'Aria2 Next motoru yeniden baslatma basarisiz',
-  'engine-restart-stopping': 'Aria2 Next motoru durduruluyor...',
   'engine-restart-title': 'Aria2 Next motorunu yeniden baslat',
   'engine-restart-confirm':
     'Bu değişikliğin geçerli olması için indirme motorunun yeniden başlatılması gerekir. Etkin indirmeler kısa süreliğine kesintiye uğrayacak ancak yeniden başlatma sonrasında otomatik olarak devam edecektir.',
   'engine-restart-now': 'Şimdi yeniden başlat',
   'engine-restart-later': 'Daha sonra',
-  'engine-restarting': 'Aria2 Next motoru yeniden baslatiliyor...',
   'engine-restart-btn': 'Aria2 Next motorunu yeniden baslat',
   'engine-restart-manual-confirm':
     'İndirme motorunu yeniden başlatmak istiyor musunuz? Aktif indirmeler kısa süreliğine kesintiye uğrayacak ancak yeniden başlatmanın ardından otomatik olarak devam edecektir.',

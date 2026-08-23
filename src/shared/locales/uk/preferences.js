@@ -279,14 +279,11 @@ export default {
   'upnp-mapping-started': 'Прокидання портів UPnP увімкнено',
   'upnp-mapping-failed': 'Помилка прокидання портів UPnP',
   'engine-restarted': 'Рушій Aria2 Next перезапущено',
-  'engine-restart-failed': 'Не вдалося перезапустити рушій Aria2 Next',
-  'engine-restart-stopping': 'Зупинення рушія Aria2 Next...',
   'engine-restart-title': 'Перезапустити рушій Aria2 Next',
   'engine-restart-confirm':
     'Ця зміна потребує перезапуску рушія завантажень, щоб набути чинності. Активні завантаження будуть ненадовго перервані, але автоматично відновляться після перезапуску.',
   'engine-restart-now': 'Перезапустити зараз',
   'engine-restart-later': 'Пізніше',
-  'engine-restarting': 'Перезапуск рушія Aria2 Next...',
   'engine-restart-btn': 'Перезапустити рушій Aria2 Next',
   'engine-restart-manual-confirm':
     'Перезапустити рушій завантаження? Активні завантаження будуть ненадовго перервані, але автоматично продовжаться після перезапуску.',

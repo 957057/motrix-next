@@ -2,7 +2,6 @@ use crate::engine;
 use crate::error::AppError;
 use serde_json::Value;
 use tauri::AppHandle;
-use tauri::Manager;
 use tauri_plugin_store::StoreExt;
 
 /// Reads all system-level configuration from the `system.json` store.
@@ -69,38 +68,16 @@ pub fn factory_reset(app: AppHandle) -> Result<(), AppError> {
     config_store.clear();
 
     // Remove aria2 session file so downloads don't reappear after restart
-    clear_session_file_inner(&app)?;
+    engine::clear_engine_runtime_state(&app).map_err(AppError::Io)?;
     crate::commands::bt_blocklist::remove_bt_peer_blocklist_cache(&app)?;
 
     Ok(())
 }
 
-/// Removes the aria2 download session file.
-/// Called by both factory reset and session reset flows.
+/// Removes resumable engine state without touching settings, history, or downloaded files.
 #[tauri::command]
-pub fn clear_session_file(app: AppHandle) -> Result<(), AppError> {
-    clear_session_file_inner(&app)
-}
-
-fn clear_session_file_inner(app: &AppHandle) -> Result<(), AppError> {
-    let data_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| AppError::Io(e.to_string()))?;
-    let session_path = data_dir.join("download.session");
-    if session_path.exists() {
-        std::fs::remove_file(&session_path).map_err(|e| AppError::Io(e.to_string()))?;
-        log::info!("engine:clear-session path={}", session_path.display());
-    }
-    let bt_state_file = data_dir.join("engine").join("bittorrent.session");
-    if bt_state_file.exists() {
-        std::fs::remove_file(&bt_state_file).map_err(|e| AppError::Io(e.to_string()))?;
-    }
-    let bt_resume_dir = data_dir.join("engine").join("torrents");
-    if bt_resume_dir.exists() {
-        std::fs::remove_dir_all(&bt_resume_dir).map_err(|e| AppError::Io(e.to_string()))?;
-    }
-    Ok(())
+pub fn clear_engine_runtime_state(app: AppHandle) -> Result<(), AppError> {
+    engine::clear_engine_runtime_state(&app).map_err(AppError::Io)
 }
 
 /// Returns the managed runtime aria2.conf path.

@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Sett seeding på pause',
   'resume-seeding': 'Fortsett seeding',
   'finish-seeding': 'Stopp seeding',
-  'finish-seeding-confirm': 'Stoppe seeding av «{taskName}»? Nedlastede filer beholdes.',
   'finish-seeding-success': 'Seeding av «{taskName}» er stoppet',
   'finish-seeding-fail': 'Kunne ikke stoppe seeding av «{taskName}»',
   'seeding-time': 'Seedingtid',

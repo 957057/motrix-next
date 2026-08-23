@@ -66,6 +66,7 @@ describe('TaskItemActions', () => {
 
     const action = wrapper.find('[aria-label="task.select-files"]')
     expect(action.text()).toBe('')
+    expect(action.classes()).toContain('task-item-action--emphasis')
     await action.trigger('click')
     expect(wrapper.emitted('select-files')).toBeTruthy()
     expect(wrapper.emitted('resume')).toBeFalsy()
@@ -94,6 +95,19 @@ describe('TaskItemActions', () => {
     await paused.find('[aria-label="task.resume-seeding"]').trigger('click')
     expect(paused.emitted('resume')).toBeTruthy()
     expect(paused.find('[aria-label="task.finish-seeding"]').exists()).toBe(true)
+  })
+
+  it('preserves seeding controls while the engine restores the task', () => {
+    const restoring = mountActions(
+      makeTask('active', {
+        completedLength: '1024',
+        seeder: 'true',
+        bittorrent: { state: 'checking' },
+      }),
+    )
+
+    expect(restoring.find('[aria-label="task.pause-seeding"]').exists()).toBe(true)
+    expect(restoring.find('[aria-label="task.finish-seeding"]').attributes('disabled')).toBeDefined()
   })
 
   it('keeps terminal actions accessible', () => {

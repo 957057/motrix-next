@@ -274,14 +274,11 @@ export default {
   'upnp-mapping-started': 'UPnP port mapping enabled',
   'upnp-mapping-failed': 'UPnP port mapping failed',
   'engine-restarted': 'Aria2 Next engine restarted',
-  'engine-restart-failed': 'Aria2 Next engine restart failed',
-  'engine-restart-stopping': 'Stopping Aria2 Next engine...',
   'engine-restart-title': 'Restart Aria2 Next Engine',
   'engine-restart-confirm':
     'This change requires restarting the download engine to take effect. Active downloads will be briefly interrupted but will resume automatically after restart.',
   'engine-restart-now': 'Restart Now',
   'engine-restart-later': 'Later',
-  'engine-restarting': 'Restarting Aria2 Next engine...',
   'engine-restart-btn': 'Restart Aria2 Next Engine',
   'engine-restart-manual-confirm':
     'Restart the download engine? Active downloads will be briefly interrupted but will resume automatically after restart.',

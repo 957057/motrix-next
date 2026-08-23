@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** @fileoverview ED2K preference tab: search, engine options, and server discovery. */
-import { ref, computed, nextTick, onMounted, h } from 'vue'
+import { ref, computed, onMounted, h } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useI18n } from 'vue-i18n'
 import { useDialog } from 'naive-ui'
@@ -22,8 +22,8 @@ import { DiceOutline, DownloadOutline, RefreshOutline, SearchOutline } from '@vi
 import { usePreferenceStore } from '@/stores/preference'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
-import { useEngineStore } from '@/stores/engine'
 import { useAppMessage } from '@/composables/useAppMessage'
+import { useEngineRestart } from '@/composables/useEngineRestart'
 import {
   buildEd2kForm,
   buildEd2kSystemConfig,
@@ -47,7 +47,7 @@ const preferenceStore = usePreferenceStore()
 const taskStore = useTaskStore()
 const dialog = useDialog()
 const message = useAppMessage()
-const engineStore = useEngineStore()
+const { confirmManualRestart: handleManualRestart, restartEngine } = useEngineRestart()
 
 const needsRestart = ref(false)
 const bootstrapSyncing = ref(false)
@@ -131,15 +131,21 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
     const changed = diffConfig(preferenceStore.config, transformEd2kForStore(f))
     if (checkIsNeedRestart(changed)) {
       const ok = await new Promise<boolean>((resolve) => {
+        let accepted = false
         dialog.info({
           title: t('preferences.engine-restart-title'),
           content: t('preferences.engine-restart-confirm'),
           positiveText: t('preferences.engine-restart-now'),
           negativeText: t('app.cancel'),
           maskClosable: false,
-          onPositiveClick: () => resolve(true),
+          onPositiveClick: () => {
+            accepted = true
+          },
           onNegativeClick: () => resolve(false),
           onClose: () => resolve(false),
+          onAfterLeave: () => {
+            if (accepted) resolve(true)
+          },
         })
       })
       if (!ok) return false
@@ -150,9 +156,7 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
   afterSave: async (f, prevConfig) => {
     if (needsRestart.value) {
       needsRestart.value = false
-      await nextTick()
-      await new Promise((r) => requestAnimationFrame(r))
-      await engineStore.restart('settingsChange')
+      restartEngine('settingsChange')
     }
 
     if (
@@ -278,23 +282,6 @@ const resultColumns = computed(() => [
     },
   },
 ])
-
-function handleManualRestart() {
-  const d = dialog.info({
-    title: t('preferences.engine-restart-title'),
-    content: t('preferences.engine-restart-manual-confirm'),
-    positiveText: t('preferences.engine-restart-now'),
-    negativeText: t('preferences.engine-restart-later'),
-    maskClosable: false,
-    onPositiveClick: async () => {
-      d.loading = true
-      d.negativeText = ''
-      d.closable = false
-      await new Promise((r) => requestAnimationFrame(r))
-      await engineStore.restart('manualRestart')
-    },
-  })
-}
 
 onMounted(() => {
   Object.assign(form.value, buildForm())

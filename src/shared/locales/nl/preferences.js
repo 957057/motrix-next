@@ -278,14 +278,11 @@ export default {
   'upnp-mapping-started': 'UPnP-poorttoewijzing ingeschakeld',
   'upnp-mapping-failed': 'UPnP-poorttoewijzing mislukt',
   'engine-restarted': 'Aria2 Next-engine opnieuw opgestart',
-  'engine-restart-failed': 'Aria2 Next-engine opnieuw opstarten mislukt',
-  'engine-restart-stopping': 'Aria2 Next-engine wordt gestopt...',
   'engine-restart-title': 'Aria2 Next-engine opnieuw opstarten',
   'engine-restart-confirm':
     'Deze wijziging vereist een herstart van de downloadengine om van kracht te worden. Actieve downloads worden even onderbroken maar worden automatisch hervat na de herstart.',
   'engine-restart-now': 'Nu herstarten',
   'engine-restart-later': 'Later',
-  'engine-restarting': 'Aria2 Next-engine wordt opnieuw opgestart...',
   'engine-restart-btn': 'Aria2 Next-engine opnieuw opstarten',
   'engine-restart-manual-confirm':
     'Wilt u de downloadengine herstarten? Actieve downloads worden kort onderbroken maar worden automatisch hervat na het herstarten.',

@@ -91,20 +91,13 @@ export function useTaskActions(deps: TaskActionsDeps) {
 
   function handleFinishSeeding(task: Aria2Task) {
     const taskName = getTaskDisplayName(task, { defaultName: 'Unknown' })
-    dialog.warning({
-      title: t('task.finish-seeding'),
-      content: t('task.finish-seeding-confirm', { taskName }),
-      positiveText: t('task.finish-seeding'),
-      negativeText: t('app.cancel'),
-      onPositiveClick: () =>
-        taskStore
-          .finishSeeding(task)
-          .then(() => message.success(t('task.finish-seeding-success', { taskName })))
-          .catch((error) => {
-            logger.warn('TaskView.finishSeeding', getErrorMessage(error))
-            message.error(t('task.finish-seeding-fail', { taskName }))
-          }),
-    })
+    taskStore
+      .finishSeeding(task)
+      .then(() => message.success(t('task.finish-seeding-success', { taskName })))
+      .catch((error) => {
+        logger.warn('TaskView.finishSeeding', getErrorMessage(error))
+        message.error(t('task.finish-seeding-fail', { taskName }))
+      })
   }
 
   function handleDeleteTask(task: Aria2Task) {

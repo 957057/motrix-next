@@ -279,14 +279,11 @@ export default {
   'upnp-mapping-started': 'Mapowanie portów UPnP włączone',
   'upnp-mapping-failed': 'Mapowanie portów UPnP nie powiodło się',
   'engine-restarted': 'Silnik Aria2 Next uruchomiony ponownie',
-  'engine-restart-failed': 'Nie udalo sie ponownie uruchomic silnika Aria2 Next',
-  'engine-restart-stopping': 'Zatrzymywanie silnika Aria2 Next...',
   'engine-restart-title': 'Uruchom silnik Aria2 Next ponownie',
   'engine-restart-confirm':
     'Ta zmiana wymaga ponownego uruchomienia silnika pobierania, aby wejść w życie. Aktywne pobierania zostaną na chwilę przerwane, ale zostaną automatycznie wznowione po ponownym uruchomieniu.',
   'engine-restart-now': 'Uruchom ponownie teraz',
   'engine-restart-later': 'Później',
-  'engine-restarting': 'Ponowne uruchamianie silnika Aria2 Next...',
   'engine-restart-btn': 'Uruchom silnik Aria2 Next ponownie',
   'engine-restart-manual-confirm':
     'Czy chcesz ponownie uruchomić silnik pobierania? Aktywne pobierania zostaną na chwilę przerwane, ale zostaną automatycznie wznowione po ponownym uruchomieniu.',

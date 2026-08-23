@@ -277,14 +277,11 @@ export default {
   'upnp-mapping-started': 'Maparea porturilor UPnP activată',
   'upnp-mapping-failed': 'Maparea porturilor UPnP a eșuat',
   'engine-restarted': 'Motorul Aria2 Next a fost repornit',
-  'engine-restart-failed': 'Repornirea motorului Aria2 Next a esuat',
-  'engine-restart-stopping': 'Se oprește motorul Aria2 Next...',
   'engine-restart-title': 'Repornire motor Aria2 Next',
   'engine-restart-confirm':
     'Această modificare necesită repornirea motorului de descărcare pentru a avea efect. Descărcările active vor fi întrerupte scurt, dar se vor relua automat după repornire.',
   'engine-restart-now': 'Repornește acum',
   'engine-restart-later': 'Mai târziu',
-  'engine-restarting': 'Se reporneste motorul Aria2 Next...',
   'engine-restart-btn': 'Repornire motor Aria2 Next',
   'engine-restart-manual-confirm':
     'Doriți să reporniți motorul de descărcare? Descărcările active vor fi întrerupte temporar, dar vor fi reluate automat după repornire.',

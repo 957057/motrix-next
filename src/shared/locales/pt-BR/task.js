@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Pausar semeadura',
   'resume-seeding': 'Retomar semeadura',
   'finish-seeding': 'Parar semeadura',
-  'finish-seeding-confirm': 'Parar a semeadura de “{taskName}”? Os arquivos baixados serão mantidos.',
   'finish-seeding-success': 'Semeadura de “{taskName}” interrompida',
   'finish-seeding-fail': 'Falha ao interromper a semeadura de “{taskName}”',
   'seeding-time': 'Tempo de semeadura',

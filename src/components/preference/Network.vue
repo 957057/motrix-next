@@ -5,7 +5,6 @@ import { invoke } from '@tauri-apps/api/core'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
-import { useEngineStore } from '@/stores/engine'
 import { usePlatform } from '@/composables/usePlatform'
 import { useSystemProxyDetect } from '@/composables/useSystemProxyDetect'
 import { logger } from '@shared/logger'
@@ -35,7 +34,6 @@ import {
   NDivider,
   NIcon,
   NText,
-  useDialog,
 } from 'naive-ui'
 const showUserAgentManager = ref(false)
 import PreferenceActionBar from './PreferenceActionBar.vue'
@@ -43,10 +41,10 @@ import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 import UserAgentManager from './UserAgentManager.vue'
 import { SearchOutline } from '@vicons/ionicons5'
+import { useEngineRestart } from '@/composables/useEngineRestart'
 
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
-const dialog = useDialog()
 const message = useAppMessage()
 const { isWindows } = usePlatform()
 
@@ -103,7 +101,7 @@ function buildForm() {
   return buildNetworkForm(preferenceStore.config)
 }
 
-const engineStore = useEngineStore()
+const { confirmManualRestart: handleManualRestart } = useEngineRestart()
 
 const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } = usePreferenceForm({
   buildForm,
@@ -178,23 +176,6 @@ async function handleUserAgentManagerSave(payload: {
 
 function handleProxySwitch(value: boolean) {
   form.value.proxy.mode = proxySwitchValueToMode(value)
-}
-
-function handleManualRestart() {
-  const d = dialog.info({
-    title: t('preferences.engine-restart-title'),
-    content: t('preferences.engine-restart-manual-confirm'),
-    positiveText: t('preferences.engine-restart-now'),
-    negativeText: t('preferences.engine-restart-later'),
-    maskClosable: false,
-    onPositiveClick: async () => {
-      d.loading = true
-      d.negativeText = ''
-      d.closable = false
-      await new Promise((r) => requestAnimationFrame(r))
-      await engineStore.restart('manualRestart')
-    },
-  })
 }
 
 onMounted(() => {

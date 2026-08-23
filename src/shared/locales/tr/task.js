@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Göndermeyi duraklat',
   'resume-seeding': 'Göndermeyi sürdür',
   'finish-seeding': 'Seed işlemini durdur',
-  'finish-seeding-confirm': '“{taskName}” seed işlemi durdurulsun mu? İndirilen dosyalar korunacak.',
   'finish-seeding-success': '“{taskName}” seed işlemi durduruldu',
   'finish-seeding-fail': '“{taskName}” seed işlemi durdurulamadı',
   'seeding-time': 'Gönderme süresi',

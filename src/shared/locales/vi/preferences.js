@@ -274,14 +274,11 @@ export default {
   'upnp-mapping-started': 'Đã bật ánh xạ cổng UPnP',
   'upnp-mapping-failed': 'Ánh xạ cổng UPnP thất bại',
   'engine-restarted': 'Dong co Aria2 Next da khoi dong lai',
-  'engine-restart-failed': 'Khoi dong lai dong co Aria2 Next that bai',
-  'engine-restart-stopping': 'Đang dừng động cơ Aria2 Next...',
   'engine-restart-title': 'Khoi dong lai dong co Aria2 Next',
   'engine-restart-confirm':
     'Thay đổi này yêu cầu khởi động lại công cụ tải xuống để có hiệu lực. Các bản tải xuống đang hoạt động sẽ bị gián đoạn ngắn nhưng sẽ tự động tiếp tục sau khi khởi động lại.',
   'engine-restart-now': 'Khởi động lại ngay',
   'engine-restart-later': 'Để sau',
-  'engine-restarting': 'Dang khoi dong lai dong co Aria2 Next...',
   'engine-restart-btn': 'Khoi dong lai dong co Aria2 Next',
   'engine-restart-manual-confirm':
     'Khởi động lại engine tải xuống? Các bản tải đang hoạt động sẽ bị gián đoạn tạm thời nhưng sẽ tự động tiếp tục sau khi khởi động lại.',

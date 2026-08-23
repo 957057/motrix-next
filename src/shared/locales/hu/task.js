@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Megosztás szüneteltetése',
   'resume-seeding': 'Megosztás folytatása',
   'finish-seeding': 'Visszaosztás leállítása',
-  'finish-seeding-confirm': 'Leállítja a(z) „{taskName}” visszaosztását? A letöltött fájlok megmaradnak.',
   'finish-seeding-success': 'A(z) „{taskName}” visszaosztása leállt',
   'finish-seeding-fail': 'Nem sikerült leállítani a(z) „{taskName}” visszaosztását',
   'seeding-time': 'Megosztási idő',

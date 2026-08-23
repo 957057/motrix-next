@@ -7,7 +7,6 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
-import { useEngineStore } from '@/stores/engine'
 import { changeGlobalOption, isEngineReady } from '@/api/aria2'
 import { convertTrackerDataToComma, convertTrackerDataToLine } from '@shared/utils/tracker'
 import { SYNC_MIN_DURATION } from '@shared/timing'
@@ -49,11 +48,13 @@ import {
 } from 'naive-ui'
 import PreferenceActionBar from './PreferenceActionBar.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
+import { useEngineRestart } from '@/composables/useEngineRestart'
 import { SyncOutline, AddCircleOutline, CloseCircleOutline, DiceOutline } from '@vicons/ionicons5'
 
 const { t, locale } = useI18n()
 const preferenceStore = usePreferenceStore()
 const dialog = useDialog()
+const { confirmManualRestart: handleManualRestart } = useEngineRestart()
 const message = useAppMessage()
 const syncingTracker = ref(false)
 const syncingBlocklist = ref(false)
@@ -398,24 +399,6 @@ function onAddCustomTracker() {
     form.value.trackerSource = [...form.value.trackerSource, url]
   }
   customTrackerInput.value = ''
-}
-
-const engineStore = useEngineStore()
-function handleManualRestart() {
-  const d = dialog.info({
-    title: t('preferences.engine-restart-title'),
-    content: t('preferences.engine-restart-manual-confirm'),
-    positiveText: t('preferences.engine-restart-now'),
-    negativeText: t('preferences.engine-restart-later'),
-    maskClosable: false,
-    onPositiveClick: async () => {
-      d.loading = true
-      d.negativeText = ''
-      d.closable = false
-      await new Promise((r) => requestAnimationFrame(r))
-      await engineStore.restart('manualRestart')
-    },
-  })
 }
 
 onMounted(() => {

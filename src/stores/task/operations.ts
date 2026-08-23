@@ -85,12 +85,10 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
 
   async function finishSeeding(task: Aria2Task): Promise<void> {
     if (task.gid === currentTaskGid.value) hideTaskDetail()
-    setTaskRemoving(task.gid, true)
     try {
       await api.finishSeeding({ gid: task.gid })
       logger.info('TaskOps.finishSeeding', `gid=${task.gid}`)
     } finally {
-      setTaskRemoving(task.gid, false)
       await fetchList()
       await api.saveSession()
     }

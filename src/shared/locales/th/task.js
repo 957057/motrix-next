@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'หยุดปล่อยชั่วคราว',
   'resume-seeding': 'ปล่อยต่อ',
   'finish-seeding': 'หยุดปล่อย',
-  'finish-seeding-confirm': 'หยุดปล่อย “{taskName}” หรือไม่ ไฟล์ที่ดาวน์โหลดแล้วจะยังคงอยู่',
   'finish-seeding-success': 'หยุดปล่อย “{taskName}” แล้ว',
   'finish-seeding-fail': 'หยุดปล่อย “{taskName}” ไม่สำเร็จ',
   'seeding-time': 'เวลาปล่อย',

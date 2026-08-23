@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'إيقاف البذر مؤقتًا',
   'resume-seeding': 'متابعة البذر',
   'finish-seeding': 'إيقاف البذر',
-  'finish-seeding-confirm': 'إيقاف بذر «{taskName}»؟ سيتم الاحتفاظ بالملفات المنزلة.',
   'finish-seeding-success': 'تم إيقاف بذر «{taskName}»',
   'finish-seeding-fail': 'تعذر إيقاف بذر «{taskName}»',
   'seeding-time': 'مدة البذر',

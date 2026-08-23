@@ -277,14 +277,11 @@ export default {
   'upnp-mapping-started': 'UPnP-porttilordning aktivert',
   'upnp-mapping-failed': 'UPnP-porttilordning mislyktes',
   'engine-restarted': 'Aria2 Next-motoren startet pa nytt',
-  'engine-restart-failed': 'Kunne ikke starte Aria2 Next-motoren pa nytt',
-  'engine-restart-stopping': 'Stopper Aria2 Next-motoren...',
   'engine-restart-title': 'Start Aria2 Next-motoren pa nytt',
   'engine-restart-confirm':
     'Denne endringen krever omstart av nedlastingsmotoren for å tre i kraft. Aktive nedlastinger vil bli kort avbrutt, men vil gjenopptas automatisk etter omstart.',
   'engine-restart-now': 'Start på nytt nå',
   'engine-restart-later': 'Senere',
-  'engine-restarting': 'Starter Aria2 Next-motoren pa nytt...',
   'engine-restart-btn': 'Start Aria2 Next-motoren pa nytt',
   'engine-restart-manual-confirm':
     'Vil du starte nedlastingsmotoren på nytt? Aktive nedlastinger vil bli kort avbrutt, men gjenopptas automatisk etter omstart.',

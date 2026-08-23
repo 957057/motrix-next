@@ -139,7 +139,6 @@ export default {
   'pause-seeding': 'Tạm dừng chia sẻ',
   'resume-seeding': 'Tiếp tục chia sẻ',
   'finish-seeding': 'Dừng seed',
-  'finish-seeding-confirm': 'Dừng seed “{taskName}”? Các tệp đã tải xuống sẽ được giữ lại.',
   'finish-seeding-success': 'Đã dừng seed “{taskName}”',
   'finish-seeding-fail': 'Không thể dừng seed “{taskName}”',
   'seeding-time': 'Thời gian chia sẻ',

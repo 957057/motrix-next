@@ -4,7 +4,7 @@
 //! - [`state`] — `EngineState` struct, ANSI stripping, log routing
 //! - [`lifecycle`] — `start_engine`, `stop_engine`, `restart_engine`
 //! - [`config`] — managed runtime configuration for Aria2 Next
-//! - [`cleanup`] — Port cleanup and process identification
+//! - [`cleanup`] — Runtime-state cleanup and process identification
 
 mod cleanup;
 mod config;
@@ -13,6 +13,7 @@ mod log_level;
 mod state;
 pub mod supervisor;
 
+pub(crate) use cleanup::clear_engine_runtime_state;
 pub(crate) use config::{non_hot_reloadable_keys, runtime_config_path, supported_engine_keys};
 pub(crate) use lifecycle::{
     start_engine, stop_engine, wait_for_engine_exit, wait_for_engine_ports_release,

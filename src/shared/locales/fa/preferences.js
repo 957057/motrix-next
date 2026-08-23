@@ -276,14 +276,11 @@ export default {
   'upnp-mapping-started': 'نگاشت پورت UPnP فعال شد',
   'upnp-mapping-failed': 'نگاشت پورت UPnP ناموفق بود',
   'engine-restarted': 'موتور Aria2 Next مجدداً راه‌اندازی شد',
-  'engine-restart-failed': 'خطا در راه‌اندازی مجدد موتور Aria2 Next',
-  'engine-restart-stopping': 'در حال توقف موتور Aria2 Next...',
   'engine-restart-title': 'راه‌اندازی مجدد موتور Aria2 Next',
   'engine-restart-confirm':
     'این تغییر برای اعمال شدن نیاز به راه‌اندازی مجدد موتور دانلود دارد. دانلودهای فعال به‌طور موقت متوقف می‌شوند اما پس از راه‌اندازی مجدد به‌طور خودکار از سر گرفته می‌شوند.',
   'engine-restart-now': 'اکنون راه‌اندازی مجدد',
   'engine-restart-later': 'بعداً',
-  'engine-restarting': 'در حال راه‌اندازی مجدد موتور Aria2 Next...',
   'engine-restart-btn': 'راه‌اندازی مجدد موتور Aria2 Next',
   'engine-restart-manual-confirm':
     'آیا می‌خواهید موتور دانلود را مجدداً راه‌اندازی کنید؟ دانلودهای فعال به طور موقت متوقف شده اما پس از راه‌اندازی مجدد به طور خودکار از سر گرفته می‌شوند.',

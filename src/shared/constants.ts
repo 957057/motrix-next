@@ -230,7 +230,7 @@ export const TRACKER_SOURCE_OPTIONS = [
 export const DEFAULT_TRACKER_SOURCE = TRACKER_SOURCE_OPTIONS.map((source) => source.value)
 
 export const DEFAULT_APP_CONFIG = {
-  configVersion: 7,
+  configVersion: 6,
   dbSchemaVersion: CURRENT_DB_SCHEMA_VERSION,
   // ── Appearance ──────────────────────────────────────────────────
   theme: 'auto' as const,

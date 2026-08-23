@@ -4,7 +4,6 @@ import { ref, computed, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
-import { useEngineStore } from '@/stores/engine'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { extractSpeedUnit } from '@shared/utils'
 import { logger } from '@shared/logger'
@@ -49,11 +48,13 @@ import PreferenceHintLabel from './PreferenceHintLabel.vue'
 import DirectoryPopover from '@/components/common/DirectoryPopover.vue'
 import FileCategoryManager from './FileCategoryManager.vue'
 import { FolderOpenOutline } from '@vicons/ionicons5'
+import { useEngineRestart } from '@/composables/useEngineRestart'
 
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
 const dialog = useDialog()
 const message = useAppMessage()
+const { confirmManualRestart: handleManualRestart } = useEngineRestart()
 const defaultDownloadDir = ref('')
 
 // ── File timestamp strategy ─────────────────────────────────────────
@@ -307,24 +308,6 @@ function loadForm() {
   const dl = parseSpeedLimit(form.value.maxOverallDownloadLimit)
   downloadSpeedValue.value = dl.num
   downloadUnit.value = dl.unit
-}
-
-const engineStore = useEngineStore()
-function handleManualRestart() {
-  const d = dialog.info({
-    title: t('preferences.engine-restart-title'),
-    content: t('preferences.engine-restart-manual-confirm'),
-    positiveText: t('preferences.engine-restart-now'),
-    negativeText: t('preferences.engine-restart-later'),
-    maskClosable: false,
-    onPositiveClick: async () => {
-      d.loading = true
-      d.negativeText = ''
-      d.closable = false
-      await new Promise((r) => requestAnimationFrame(r))
-      await engineStore.restart('manualRestart')
-    },
-  })
 }
 
 onMounted(async () => {

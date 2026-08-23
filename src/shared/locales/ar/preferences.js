@@ -272,14 +272,11 @@ export default {
   'upnp-mapping-started': 'تم تفعيل تعيين منافذ UPnP',
   'upnp-mapping-failed': 'فشل تعيين منافذ UPnP',
   'engine-restarted': 'تم إعادة تشغيل محرك Aria2 Next',
-  'engine-restart-failed': 'فشل إعادة تشغيل محرك Aria2 Next',
-  'engine-restart-stopping': 'جارٍ إيقاف محرك Aria2 Next...',
   'engine-restart-title': 'إعادة تشغيل محرك Aria2 Next',
   'engine-restart-confirm':
     'يتطلب هذا التعديل إعادة تشغيل محرك التنزيل ليصبح ساري المفعول. ستتوقف التنزيلات النشطة لفترة وجيزة لكنها ستستأنف تلقائيًا بعد إعادة التشغيل.',
   'engine-restart-now': 'إعادة التشغيل الآن',
   'engine-restart-later': 'لاحقاً',
-  'engine-restarting': 'جارٍ إعادة تشغيل محرك Aria2 Next...',
   'engine-restart-btn': 'إعادة تشغيل محرك Aria2 Next',
   'engine-restart-manual-confirm':
     'هل تريد إعادة تشغيل محرك التنزيل؟ ستتوقف التنزيلات النشطة مؤقتًا ولكنها ستستأنف تلقائيًا بعد إعادة التشغيل.',

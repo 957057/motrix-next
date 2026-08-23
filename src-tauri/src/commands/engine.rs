@@ -54,6 +54,14 @@ pub async fn engine_cancel(app: AppHandle) -> Result<EngineSnapshot, AppError> {
 }
 
 #[tauri::command]
+pub async fn engine_recover_runtime_state(app: AppHandle) -> Result<EngineSnapshot, AppError> {
+    let supervisor = app
+        .try_state::<EngineSupervisor>()
+        .ok_or_else(|| AppError::Engine("EngineSupervisor is not managed".into()))?;
+    supervisor.recover_runtime_state(&app).await
+}
+
+#[tauri::command]
 pub fn resolve_bt_listen_port(app: AppHandle, requested_port: u16) -> Result<u16, AppError> {
     crate::services::port_guard::resolve_bt_listen_port(&app, requested_port)
 }

@@ -40,7 +40,7 @@ import TaskSubnav from '@/components/layout/TaskSubnav.vue'
 import PreferenceSubnav from '@/components/layout/PreferenceSubnav.vue'
 import Speedometer from '@/components/layout/Speedometer.vue'
 import WindowControls from '@/components/layout/WindowControls.vue'
-import EngineStatusDialog from '@/components/layout/EngineStatusDialog.vue'
+import EngineRecoveryDialog from '@/components/layout/EngineRecoveryDialog.vue'
 import AboutPanel from '@/components/about/AboutPanel.vue'
 import AddTask from '@/components/task/AddTask.vue'
 import UpdateDialog from '@/components/preference/UpdateDialog.vue'
@@ -51,7 +51,6 @@ import { useAppMessage } from '@/composables/useAppMessage'
 import { NModal, NButton, NCheckbox, NProgress, NPagination, useDialog } from 'naive-ui'
 
 import { useAppEvents } from '@/composables/useAppEvents'
-import { useEngineNotifications } from '@/composables/useEngineNotifications'
 import { loadAddedAtFromRecords } from '@/composables/useTaskOrder'
 import { resolveArchiveAction } from '@shared/utils/autoArchive'
 
@@ -67,8 +66,6 @@ const taskStore = useTaskStore()
 const preferenceStore = usePreferenceStore()
 const navDialog = useDialog()
 const message = useAppMessage()
-useEngineNotifications()
-
 const isTaskPage = computed(() => route.path.startsWith('/task'))
 const isPreferencePage = computed(() => route.path.startsWith('/preference'))
 const showAbout = ref(false)
@@ -1042,7 +1039,7 @@ onUnmounted(() => {
     <AboutPanel :show="showAbout" @close="showAbout = false" />
     <AddTask :show="appStore.addTaskVisible" @close="appStore.hideAddTaskDialog()" />
     <UpdateDialog ref="updateDialogRef" />
-    <EngineStatusDialog />
+    <EngineRecoveryDialog />
     <MagnetFileSelect
       :show="magnetSelectVisible"
       :files="magnetSelectFiles"

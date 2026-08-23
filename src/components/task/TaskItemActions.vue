@@ -45,6 +45,8 @@ interface ActionDef {
   icon: Component
   label: string
   event: string
+  emphasis?: boolean
+  disabled?: boolean
 }
 
 const actions = computed(() => {
@@ -57,6 +59,7 @@ const actions = computed(() => {
         icon: ListOutline,
         label: t('task.select-files'),
         event: 'select-files',
+        emphasis: true,
       },
       { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
@@ -64,6 +67,18 @@ const actions = computed(() => {
     primary = [
       { key: 'toggle', icon: PauseOutline, label: t('task.pause-seeding'), event: 'pause' },
       { key: 'finish-seeding', icon: StopCircleOutline, label: t('task.finish-seeding'), event: 'finish-seeding' },
+      { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
+    ]
+  } else if (lifecycle === 'restoring-seeding') {
+    primary = [
+      { key: 'toggle', icon: PauseOutline, label: t('task.pause-seeding'), event: 'pause' },
+      {
+        key: 'finish-seeding',
+        icon: StopCircleOutline,
+        label: t('task.finish-seeding'),
+        event: 'finish-seeding',
+        disabled: true,
+      },
       { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
   } else if (lifecycle === 'paused-seeding') {
@@ -169,7 +184,14 @@ function onAction(event: string) {
     <li v-for="action in actions" :key="action.key" class="task-item-action-slot">
       <MTooltip>
         <template #trigger>
-          <button type="button" class="task-item-action" :aria-label="action.label" @click="onAction(action.event)">
+          <button
+            type="button"
+            class="task-item-action"
+            :class="{ 'task-item-action--emphasis': action.emphasis }"
+            :aria-label="action.label"
+            :disabled="action.disabled"
+            @click="onAction(action.event)"
+          >
             <span class="task-action-visual" aria-hidden="true">
               <Transition name="icon-swap" mode="out-in">
                 <NIcon :key="action.event" class="task-action-icon"><component :is="action.icon" /></NIcon>
@@ -258,6 +280,13 @@ function onAction(event: string) {
 .task-item-action:active,
 .task-item-action:focus-visible {
   color: var(--m3-primary);
+}
+.task-item-action--emphasis {
+  color: var(--m3-primary);
+}
+.task-item-action:disabled {
+  cursor: default;
+  opacity: 0.56;
 }
 .task-action-visual {
   display: inline-flex;

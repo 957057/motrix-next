@@ -139,7 +139,6 @@ export default {
   'pause-seeding': '暂停做种',
   'resume-seeding': '继续做种',
   'finish-seeding': '停止做种',
-  'finish-seeding-confirm': '停止“{taskName}”的做种吗？已下载文件会保留。',
   'finish-seeding-success': '已停止“{taskName}”的做种',
   'finish-seeding-fail': '无法停止“{taskName}”的做种',
   'seeding-time': '做种时长',

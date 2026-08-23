@@ -271,14 +271,11 @@ export default {
   'upnp-mapping-started': 'เปิดใช้งานการแมปพอร์ต UPnP แล้ว',
   'upnp-mapping-failed': 'การแมปพอร์ต UPnP ล้มเหลว',
   'engine-restarted': 'เอนจิน Aria2 Next ถูกรีสตาร์ทแล้ว',
-  'engine-restart-failed': 'ไม่สามารถรีสตาร์ทเอนจิน Aria2 Next ได้',
-  'engine-restart-stopping': 'กำลังหยุดเอนจิน Aria2 Next...',
   'engine-restart-title': 'รีสตาร์ทเอนจิน Aria2 Next',
   'engine-restart-confirm':
     'การเปลี่ยนแปลงนี้ต้องรีสตาร์ทเอ็นจินดาวน์โหลดจึงจะมีผล การดาวน์โหลดที่ใช้งานอยู่จะถูกขัดจังหวะชั่วครู่ แต่จะกลับมาทำงานต่อโดยอัตโนมัติหลังจากรีสตาร์ท',
   'engine-restart-now': 'รีสตาร์ททันที',
   'engine-restart-later': 'ภายหลัง',
-  'engine-restarting': 'กำลังรีสตาร์ทเอนจิน Aria2 Next...',
   'engine-restart-btn': 'รีสตาร์ทเอนจิน Aria2 Next',
   'engine-restart-manual-confirm':
     'รีสตาร์ทเอ็นจิ้นดาวน์โหลดหรือไม่? การดาวน์โหลดที่ใช้งานอยู่จะหยุดชั่วคราวแต่จะดำเนินการต่อโดยอัตโนมัติหลังจากรีสตาร์ท',

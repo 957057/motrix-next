@@ -281,14 +281,11 @@ export default {
   'upnp-mapping-started': 'Mappatura porte UPnP attivata',
   'upnp-mapping-failed': 'Mappatura porte UPnP non riuscita',
   'engine-restarted': 'Motore Aria2 Next riavviato',
-  'engine-restart-failed': 'Riavvio del motore Aria2 Next non riuscito',
-  'engine-restart-stopping': 'Arresto del motore Aria2 Next...',
   'engine-restart-title': 'Riavvia motore Aria2 Next',
   'engine-restart-confirm':
     'Questa modifica richiede il riavvio del motore di download per avere effetto. I download attivi verranno brevemente interrotti ma riprenderanno automaticamente dopo il riavvio.',
   'engine-restart-now': 'Riavvia ora',
   'engine-restart-later': 'Più tardi',
-  'engine-restarting': 'Riavvio del motore Aria2 Next...',
   'engine-restart-btn': 'Riavvia motore Aria2 Next',
   'engine-restart-manual-confirm':
     'Vuoi riavviare il motore di download? I download attivi verranno brevemente interrotti ma riprenderanno automaticamente dopo il riavvio.',
