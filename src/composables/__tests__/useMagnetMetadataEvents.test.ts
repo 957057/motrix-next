@@ -44,7 +44,7 @@ function makeSelectionTask(gid: string, name = 'Ubuntu ISO'): Aria2Task {
         path: `/downloads/${name}/file.bin`,
         length: '1024',
         completedLength: '0',
-        selected: true,
+        selected: 'true',
         uris: [],
       },
     ],
@@ -71,7 +71,7 @@ describe('useMagnetMetadataEvents', () => {
         path: '/downloads/Ubuntu/ubuntu.iso',
         length: '1024',
         completedLength: '0',
-        selected: true,
+        selected: 'true',
         uris: [],
       },
     ])
@@ -146,7 +146,7 @@ describe('useMagnetMetadataEvents', () => {
       getFiles: vi
         .fn()
         .mockResolvedValue([
-          { index: '1', path: '/downloads/file.bin', length: '1024', completedLength: '0', selected: true, uris: [] },
+          { index: '1', path: '/downloads/file.bin', length: '1024', completedLength: '0', selected: 'true', uris: [] },
         ]),
       fallbackName: () => 'Magnet task',
     }))

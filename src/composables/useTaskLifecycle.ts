@@ -156,7 +156,7 @@ export function historyRecordToTask(record: HistoryRecord): Aria2Task {
       path: f.path,
       length: f.length ?? '0',
       completedLength: record.status === 'complete' ? (f.length ?? '0') : '0',
-      selected: f.selected ?? true,
+      selected: f.selected ?? 'true',
       uris: f.uris.map((uri) => ({ uri, status: 'used' as const })),
     }))
   } else {
@@ -164,7 +164,7 @@ export function historyRecordToTask(record: HistoryRecord): Aria2Task {
     // dir may end with `\\` (Windows) or `/` (Unix); avoid double separators.
     const filePath = dir && record.name ? `${dir.replace(/[\\/]+$/, '')}/${record.name}` : record.name
     const uris = record.uri ? [{ uri: record.uri, status: 'used' as const }] : []
-    files = [{ index: '1', path: filePath, length: totalLength, completedLength, selected: true, uris }]
+    files = [{ index: '1', path: filePath, length: totalLength, completedLength, selected: 'true', uris }]
   }
 
   const task: Aria2Task = {

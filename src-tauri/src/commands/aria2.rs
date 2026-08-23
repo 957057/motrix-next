@@ -106,14 +106,16 @@ pub async fn aria2_change_global_option(
         || options.contains_key("bt-external-port");
     let result = state.0.change_global_option(options).await?;
     if endpoint_changed {
-        let endpoint = state.0.get_bt_session_status().await?;
-        log::info!(
-            "aria2:bt-session listen_port={} announce_port={} endpoints={} external_ip_configured={}",
-            endpoint.listen_port,
-            endpoint.announce_port,
-            endpoint.listen_endpoints.len(),
-            !endpoint.external_ip.is_empty()
-        );
+        match state.0.get_bt_session_status().await {
+            Ok(endpoint) => log::info!(
+                "aria2:bt-session listen_port={} announce_port={} endpoints={} external_ip_configured={}",
+                endpoint.listen_port,
+                endpoint.announce_port,
+                endpoint.listen_endpoints.len(),
+                !endpoint.external_ip.is_empty()
+            ),
+            Err(error) => log::debug!("aria2:bt-session diagnostics unavailable after option update: {error}"),
+        }
     }
     Ok(result)
 }

@@ -21,7 +21,7 @@ pub struct Aria2File {
     pub path: String,
     pub length: String,
     pub completed_length: String,
-    pub selected: bool,
+    pub selected: String,
     #[serde(default)]
     pub priority: Option<String>,
     #[serde(default)]
@@ -44,7 +44,7 @@ pub struct Aria2BtInfo {
     #[serde(default)]
     pub mode: Option<String>,
     #[serde(default, rename = "privateTorrent")]
-    pub private_torrent: Option<bool>,
+    pub private_torrent: Option<String>,
     #[serde(default)]
     pub state: Option<String>,
     #[serde(default, rename = "infoHashV1")]
@@ -176,7 +176,7 @@ pub struct Aria2Task {
     #[serde(default)]
     pub num_seeders: Option<String>,
     #[serde(default)]
-    pub seeder: Option<bool>,
+    pub seeder: Option<String>,
     #[serde(default)]
     pub bitfield: Option<String>,
     #[serde(default)]
@@ -260,7 +260,7 @@ pub struct Aria2BtSessionStatus {
     pub last_performance_warning: Option<String>,
     #[serde(default)]
     pub performance_warnings: std::collections::HashMap<String, String>,
-    pub dht_state_healthy: bool,
+    pub dht_state_healthy: String,
     #[serde(default)]
     pub listen_endpoints: Vec<String>,
     #[serde(default)]
@@ -395,7 +395,7 @@ mod tests {
                 "handshakingPeers": "1"
             },
             "infoHash": "abc123def456",
-            "seeder": true,
+            "seeder": "true",
             "numSeeders": "5"
         });
         let task: Aria2Task = serde_json::from_value(json).expect("deserialize");
@@ -406,7 +406,7 @@ mod tests {
         assert_eq!(bt.info_hash_v2.as_deref(), Some("def456abc123"));
         assert_eq!(bt.num_peers.as_deref(), Some("7"));
         assert_eq!(task.info_hash.as_deref(), Some("abc123def456"));
-        assert_eq!(task.seeder, Some(true));
+        assert_eq!(task.seeder.as_deref(), Some("true"));
         assert_eq!(task.num_seeders.as_deref(), Some("5"));
     }
 
@@ -478,7 +478,7 @@ mod tests {
                     "path": "/Users/test/Downloads/aria2-next-ed2k-search-75c1fb5d8979819f",
                     "length": "0",
                     "completedLength": "0",
-                    "selected": true,
+                    "selected": "true",
                     "uris": []
                 }
             ],
@@ -565,11 +565,11 @@ mod tests {
             "payloadUploaded": "1024",
             "trackerDownloaded": "512",
             "trackerUploaded": "256",
-            "dhtStateHealthy": true,
+            "dhtStateHealthy": "true",
             "listenEndpoints": ["0.0.0.0:29120"]
         }))
         .expect("deserialize BT session status");
-        assert!(status.dht_state_healthy);
+        assert_eq!(status.dht_state_healthy, "true");
 
         let tracker: Aria2BtTracker = serde_json::from_value(serde_json::json!({
             "url": "udp://tracker.example:6969/announce",
@@ -613,7 +613,7 @@ mod tests {
             "path": "/tmp/file.zip",
             "length": "1000",
             "completedLength": "500",
-            "selected": true,
+            "selected": "true",
             "uris": [
                 { "uri": "http://example.com/file.zip", "status": "used" }
             ]

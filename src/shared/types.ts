@@ -19,7 +19,7 @@ export interface Aria2File {
   path: string
   length: string
   completedLength: string
-  selected: boolean
+  selected: string
   priority?: BtFilePriority
   uris: Aria2FileUri[]
 }
@@ -45,7 +45,7 @@ export interface Aria2BtInfo {
   creationDate?: number
   comment?: string
   mode?: string
-  privateTorrent?: boolean
+  privateTorrent?: string
   state?: Aria2BtState
   infoHashV1?: string
   infoHashV2?: string
@@ -133,18 +133,18 @@ export interface Aria2Peer {
   ip: string
   port: string
   bitfield: string
-  amChoking: boolean
-  peerChoking: boolean
+  amChoking: string
+  peerChoking: string
   downloadSpeed: string
   uploadSpeed: string
-  seeder: boolean
+  seeder: string
   state: 'connecting' | 'handshaking' | 'connected'
   transport: 'tcp' | 'utp'
   encryption: 'plain' | 'encryptedHandshake' | 'rc4' | 'tls'
   sources: string[]
   progress: string
   flags: string
-  incoming: boolean
+  incoming: string
   downloaded: string
   uploaded: string
   completedLength: string
@@ -211,7 +211,7 @@ export interface Aria2Task {
   ed2k?: Aria2Ed2kInfo
   infoHash?: string
   numSeeders?: string
-  seeder?: boolean
+  seeder?: string
   bitfield?: string
   errorCode?: string
   errorMessage?: string
@@ -648,7 +648,7 @@ export interface HistoryFileSnapshot {
   path: string
   /** File size as string (aria2 convention). */
   length?: string
-  selected?: boolean
+  selected?: string
   /** All download URIs for this file — preserving mirrors, not just the first. */
   uris: string[]
 }

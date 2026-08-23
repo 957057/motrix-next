@@ -158,7 +158,7 @@ describe('aria2 API (invoke transport)', () => {
           path: '/downloads/movie.mkv',
           length: '1500000000',
           'completed-length': '0',
-          selected: true,
+          selected: 'true',
           uris: [{ uri: 'magnet:?xt=urn:btih:abc', status: 'used' }],
         },
         {
@@ -166,7 +166,7 @@ describe('aria2 API (invoke transport)', () => {
           path: '/downloads/subtitle.srt',
           length: '50000',
           'completed-length': '0',
-          selected: true,
+          selected: 'true',
           uris: [],
         },
       ]

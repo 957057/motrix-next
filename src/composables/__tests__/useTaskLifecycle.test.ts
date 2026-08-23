@@ -42,7 +42,7 @@ function makeTask(overrides: Partial<Aria2Task> = {}): Aria2Task {
         index: '1',
         path: '/downloads/test.zip',
         length: '1048576',
-        selected: true,
+        selected: 'true',
         uris: [{ uri: 'https://example.com/test.zip', status: 'used' }],
       },
     ],
@@ -65,7 +65,7 @@ describe('buildHistoryRecord', () => {
   it('extracts name from first file path basename', () => {
     const task = makeTask({
       files: [
-        { index: '1', path: '/dl/big-file.iso', length: '999', completedLength: '999', selected: true, uris: [] },
+        { index: '1', path: '/dl/big-file.iso', length: '999', completedLength: '999', selected: 'true', uris: [] },
       ],
     })
     const record = buildHistoryRecord(task)
@@ -80,7 +80,7 @@ describe('buildHistoryRecord', () => {
           path: 'C:\\Users\\foo\\Downloads\\setup.exe',
           length: '999',
           completedLength: '999',
-          selected: true,
+          selected: 'true',
           uris: [],
         },
       ],
@@ -117,7 +117,7 @@ describe('buildHistoryRecord', () => {
           path: '/dl/f.zip',
           length: '100',
           completedLength: '100',
-          selected: true,
+          selected: 'true',
           uris: [{ uri: 'https://dl.example.com/f.zip', status: 'used' }],
         },
       ],
@@ -194,7 +194,7 @@ describe('buildHistoryRecord', () => {
           path: '/downloads/AAA%20BBB.mp3',
           length: '100',
           completedLength: '100',
-          selected: true,
+          selected: 'true',
           uris: [],
         },
       ],
@@ -211,7 +211,7 @@ describe('buildHistoryRecord', () => {
           path: '/downloads/r%C3%A9sum%C3%A9.txt',
           length: '100',
           completedLength: '100',
-          selected: true,
+          selected: 'true',
           uris: [],
         },
       ],
@@ -228,7 +228,7 @@ describe('buildHistoryRecord', () => {
           path: '/downloads/bad%ZZfile.txt',
           length: '100',
           completedLength: '100',
-          selected: true,
+          selected: 'true',
           uris: [],
         },
       ],
@@ -246,7 +246,7 @@ describe('buildHistoryRecord', () => {
           path: '/downloads/Ubuntu%2024.04/file.iso',
           length: '100',
           completedLength: '100',
-          selected: true,
+          selected: 'true',
           uris: [],
         },
       ],
@@ -264,7 +264,7 @@ describe('buildSharingCompletionRecord', () => {
     const task = makeTask({
       status: 'active',
       bittorrent: { info: { name: 'Ubuntu 24.04' } },
-      seeder: true,
+      seeder: 'true',
     } as Partial<Aria2Task>)
     const record = buildSharingCompletionRecord(task)
     expect(record.status).toBe('complete')
@@ -565,7 +565,7 @@ describe('mergeHistoryIntoTasks', () => {
             path: 'D:/download/setup.exe',
             length: '1000',
             completedLength: '1000',
-            selected: true,
+            selected: 'true',
             uris: [],
           },
         ],
@@ -584,7 +584,7 @@ describe('mergeHistoryIntoTasks', () => {
         {
           path: 'D:/download/Videos/movie.mp4',
           length: '5000',
-          selected: true,
+          selected: 'true',
           uris: ['http://example.com/movie.mp4'],
         },
       ],
@@ -600,7 +600,7 @@ describe('mergeHistoryIntoTasks', () => {
             path: 'D:/download/movie.mp4',
             length: '5000',
             completedLength: '5000',
-            selected: true,
+            selected: 'true',
             uris: [],
           },
         ],
@@ -650,7 +650,7 @@ describe('mergeHistoryIntoTasks', () => {
             path: 'C:\\Users\\test\\Downloads\\file.zip',
             length: '100',
             completedLength: '100',
-            selected: true,
+            selected: 'true',
             uris: [],
           },
         ],
@@ -683,7 +683,7 @@ describe('buildHistoryMeta', () => {
           path: '/dl/a.zip',
           length: '100',
           completedLength: '100',
-          selected: true,
+          selected: 'true',
           uris: [{ uri: 'http://m1/a.zip', status: 'used' }],
         },
         {
@@ -691,7 +691,7 @@ describe('buildHistoryMeta', () => {
           path: '/dl/b.zip',
           length: '200',
           completedLength: '200',
-          selected: true,
+          selected: 'true',
           uris: [{ uri: 'http://m1/b.zip', status: 'used' }],
         },
         {
@@ -699,7 +699,7 @@ describe('buildHistoryMeta', () => {
           path: '/dl/c.zip',
           length: '300',
           completedLength: '300',
-          selected: false,
+          selected: 'false',
           uris: [{ uri: 'http://m1/c.zip', status: 'used' }],
         },
       ],
@@ -708,7 +708,7 @@ describe('buildHistoryMeta', () => {
     expect(meta.files).toBeDefined()
     expect(meta.files).toHaveLength(3)
     expect(meta.files![0].path).toBe('/dl/a.zip')
-    expect(meta.files![2].selected).toBe(false)
+    expect(meta.files![2].selected).toBe('false')
   })
 
   it('does NOT store meta.files for single-file single-mirror tasks', () => {
@@ -725,7 +725,7 @@ describe('buildHistoryMeta', () => {
           path: '/dl/archive.zip',
           length: '5000',
           completedLength: '5000',
-          selected: true,
+          selected: 'true',
           uris: [
             { uri: 'http://mirror1.example.com/archive.zip', status: 'used' },
             { uri: 'http://mirror2.example.com/archive.zip', status: 'waiting' },
@@ -754,7 +754,7 @@ describe('buildHistoryMeta', () => {
           path: '/dl/archive.zip',
           length: '5000',
           completedLength: '5000',
-          selected: true,
+          selected: 'true',
           uris: [
             { uri: 'http://mirror1/archive.zip', status: 'used' },
             { uri: 'http://mirror2/archive.zip', status: 'waiting' },
@@ -782,7 +782,7 @@ describe('buildHistoryMeta', () => {
           path: '/dl/a.zip',
           length: '100',
           completedLength: '100',
-          selected: true,
+          selected: 'true',
           uris: [
             { uri: 'http://mirror1/a.zip', status: 'used' },
             { uri: 'http://mirror2/a.zip', status: 'waiting' },
@@ -793,7 +793,7 @@ describe('buildHistoryMeta', () => {
           path: '/dl/b.zip',
           length: '200',
           completedLength: '200',
-          selected: true,
+          selected: 'true',
           uris: [{ uri: 'http://mirror1/b.zip', status: 'used' }],
         },
       ],
@@ -831,7 +831,7 @@ describe('buildHistoryMeta', () => {
     const ed2kLink = 'ed2k://|file|movie.mkv|42|31313131313131313131313131313131|/'
     const task = makeTask({
       ed2k: { ed2kLink },
-      files: [{ index: '1', path: '/dl/movie.mkv', length: '42', completedLength: '42', selected: true, uris: [] }],
+      files: [{ index: '1', path: '/dl/movie.mkv', length: '42', completedLength: '42', selected: 'true', uris: [] }],
     })
 
     expect(buildHistoryMeta(task).ed2kLink).toBe(ed2kLink)
@@ -844,16 +844,16 @@ describe('historyRecordToTask — multi-file restoration', () => {
   it('restores complete files[] from meta.files', () => {
     const meta = JSON.stringify({
       files: [
-        { path: '/dl/a.zip', length: '100', selected: true, uris: ['http://m1/a.zip'] },
-        { path: '/dl/b.zip', length: '200', selected: true, uris: ['http://m1/b.zip'] },
-        { path: '/dl/c.zip', length: '300', selected: false, uris: ['http://m1/c.zip'] },
+        { path: '/dl/a.zip', length: '100', selected: 'true', uris: ['http://m1/a.zip'] },
+        { path: '/dl/b.zip', length: '200', selected: 'true', uris: ['http://m1/b.zip'] },
+        { path: '/dl/c.zip', length: '300', selected: 'false', uris: ['http://m1/c.zip'] },
       ],
     })
     const task = historyRecordToTask(makeRecord({ meta }))
     expect(task.files).toHaveLength(3)
     expect(task.files[0].path).toBe('/dl/a.zip')
     expect(task.files[1].length).toBe('200')
-    expect(task.files[2].selected).toBe(false)
+    expect(task.files[2].selected).toBe('false')
   })
 
   it('restores full mirror URIs from meta.files', () => {

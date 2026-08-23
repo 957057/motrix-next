@@ -60,7 +60,7 @@ function makeTask(overrides: Partial<Aria2Task> = {}): Aria2Task {
         path: '/downloads/test-file.zip',
         length: '1048576',
         completedLength: '1048576',
-        selected: true,
+        selected: 'true',
         uris: [{ uri: 'https://example.com/test-file.zip', status: 'used' }],
       },
     ],

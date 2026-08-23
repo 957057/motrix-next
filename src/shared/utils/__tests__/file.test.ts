@@ -22,7 +22,7 @@ function createMockFile(overrides: Partial<Aria2File> = {}): Aria2File {
     path: '/tmp/test.txt',
     length: '1000',
     completedLength: '500',
-    selected: true,
+    selected: 'true',
     uris: [],
     ...overrides,
   }
@@ -34,7 +34,7 @@ function createEnrichedFile(extension: string, overrides: Partial<EnrichedFile> 
     path: `/tmp/file${extension}`,
     length: '1000',
     completedLength: '500',
-    selected: true,
+    selected: 'true',
     uris: [],
     extension,
     ...overrides,
@@ -138,20 +138,20 @@ describe('getFileSelection', () => {
   })
 
   it('returns "none" when no files are selected', () => {
-    const files = [createMockFile({ index: '1', selected: false }), createMockFile({ index: '2', selected: false })]
+    const files = [createMockFile({ index: '1', selected: 'false' }), createMockFile({ index: '2', selected: 'false' })]
     expect(getFileSelection(files)).toBe('none')
   })
 
   it('returns "all" when every file is selected', () => {
-    const files = [createMockFile({ index: '1', selected: true }), createMockFile({ index: '2', selected: true })]
+    const files = [createMockFile({ index: '1', selected: 'true' }), createMockFile({ index: '2', selected: 'true' })]
     expect(getFileSelection(files)).toBe('all')
   })
 
   it('returns selected file indices for partial selection', () => {
     const files = [
-      createMockFile({ index: '1', selected: true }),
-      createMockFile({ index: '2', selected: false }),
-      createMockFile({ index: '3', selected: true }),
+      createMockFile({ index: '1', selected: 'true' }),
+      createMockFile({ index: '2', selected: 'false' }),
+      createMockFile({ index: '3', selected: 'true' }),
     ]
     const result = getFileSelection(files)
     // aria2 uses 1-based indices; only selected files should be included.

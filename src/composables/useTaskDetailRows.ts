@@ -55,8 +55,8 @@ export function buildFileDetailRows(files: Aria2File[]): FileDetailRow[] {
       length,
       completedLength,
       percent: calcProgress(item.length, item.completedLength, 1),
-      selected: item.selected,
-      priority: item.priority ?? (item.selected ? 'normal' : 'off'),
+      selected: item.selected === 'true',
+      priority: item.priority ?? (item.selected === 'true' ? 'normal' : 'off'),
     }
   })
 }
@@ -87,9 +87,9 @@ export function buildPeerDetailRows(peers: Aria2Peer[] | undefined): PeerDetailR
           : '-',
       uploadSpeed: bytesToSize(peer.uploadSpeed) + '/s',
       downloadSpeed: bytesToSize(peer.downloadSpeed) + '/s',
-      amChoking: peer.amChoking,
-      peerChoking: peer.peerChoking,
-      seeder: peer.seeder,
+      amChoking: peer.amChoking === 'true',
+      peerChoking: peer.peerChoking === 'true',
+      seeder: peer.seeder === 'true',
     }))
     .sort((a, b) => a.host.localeCompare(b.host))
     .map((row, index) => ({ ...row, index: index + 1 }))

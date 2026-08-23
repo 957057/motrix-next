@@ -71,7 +71,7 @@ function toPositiveInt(value: string | number | boolean | undefined): number {
 }
 
 function selectedFiles(files: Aria2File[]): Aria2File[] {
-  return files.filter((file) => file.selected)
+  return files.filter((file) => file.selected === 'true')
 }
 
 function fileLength(file: Aria2File): number {
@@ -113,14 +113,14 @@ export function buildBtHealthSummary(task: Aria2Task | null | undefined): BtHeal
     hasMetadata,
     trackerCount: trackers.length,
     peerCount: toPositiveInt(task?.bittorrent?.numPeers) || peers.filter((peer) => peer.state === 'connected').length,
-    seederPeerCount: peers.filter((peer: Aria2Peer) => peer.state === 'connected' && peer.seeder).length,
+    seederPeerCount: peers.filter((peer: Aria2Peer) => peer.state === 'connected' && peer.seeder === 'true').length,
     activeDownloadPeerCount: peers.filter(
       (peer: Aria2Peer) => peer.state === 'connected' && hasSpeed(peer.downloadSpeed),
     ).length,
     activeUploadPeerCount: peers.filter((peer: Aria2Peer) => peer.state === 'connected' && hasSpeed(peer.uploadSpeed))
       .length,
-    amChokingCount: peers.filter((peer: Aria2Peer) => peer.amChoking).length,
-    peerChokingCount: peers.filter((peer: Aria2Peer) => peer.peerChoking).length,
+    amChokingCount: peers.filter((peer: Aria2Peer) => peer.amChoking === 'true').length,
+    peerChokingCount: peers.filter((peer: Aria2Peer) => peer.peerChoking === 'true').length,
     selectedFileCount: selected.length,
     totalFileCount: files.length,
     selectedLength: selected.reduce((sum, file) => sum + fileLength(file), 0),

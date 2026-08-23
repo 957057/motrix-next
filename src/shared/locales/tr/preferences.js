@@ -21,7 +21,7 @@ export default {
   'transfer-speed-unlimited': 'Sınırsız',
   'bt-settings': 'BitTorrent',
   'bt-transport': 'BT transport',
-  'bt-transport-both': 'TCP + uTP (recommended)',
+  'bt-transport-both': 'TCP + uTP',
   'bt-first-last-piece-first': 'Prioritize file boundaries',
   'bt-max-connections': 'Global connection limit',
   'bt-max-uploads': 'Global upload slots',

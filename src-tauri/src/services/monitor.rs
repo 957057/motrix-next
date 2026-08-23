@@ -60,7 +60,7 @@ impl SharingKind {
 pub struct TaskEventFile {
     pub path: String,
     pub length: String,
-    pub selected: bool,
+    pub selected: String,
     pub uris: Vec<String>,
 }
 
@@ -115,7 +115,7 @@ impl TaskEvent {
             .map(|f| TaskEventFile {
                 path: f.path.clone(),
                 length: f.length.clone(),
-                selected: f.selected,
+                selected: f.selected.clone(),
                 uris: f.uris.iter().map(|u| u.uri.clone()).collect(),
             })
             .collect();
@@ -184,7 +184,7 @@ fn is_metadata_task(task: &Aria2Task) -> bool {
 /// ```json
 /// {
 ///   "infoHash": "abc123...",
-///   "files": [{"path": "...", "length": "...", "selected": true, "uris": [...]}],
+///   "files": [{"path": "...", "length": "...", "selected": "true", "uris": [...]}],
 ///   "announceList": [["tracker1..."], ["tracker2..."]]
 /// }
 /// ```
@@ -437,7 +437,7 @@ fn protocol_sharing_kind(task: &Aria2Task) -> Option<SharingKind> {
 }
 
 fn sharing_kind(task: &Aria2Task) -> Option<SharingKind> {
-    if task.status != "active" || task.seeder != Some(true) {
+    if task.status != "active" || task.seeder.as_deref() != Some("true") {
         return None;
     }
     protocol_sharing_kind(task)
@@ -744,7 +744,7 @@ mod tests {
                 path: "/tmp/test.zip".to_string(),
                 length: "1024".to_string(),
                 completed_length: "1024".to_string(),
-                selected: true,
+                selected: "true".to_string(),
                 priority: None,
                 uris: vec![],
             }],
@@ -763,7 +763,7 @@ mod tests {
             ..Aria2BtInfo::default()
         });
         task.info_hash = Some("abcdef1234567890".to_string());
-        task.seeder = Some(seeder);
+        task.seeder = Some(seeder.to_string());
         task
     }
 
@@ -785,7 +785,7 @@ mod tests {
             completed_length: Some("1024".to_string()),
             ..Aria2Ed2kInfo::default()
         });
-        task.seeder = Some(sharing);
+        task.seeder = Some(sharing.to_string());
         task
     }
 
@@ -805,7 +805,7 @@ mod tests {
                     path: "/downloads/MyTorrent/video.mkv".to_string(),
                     length: "1536".to_string(),
                     completed_length: "1536".to_string(),
-                    selected: true,
+                    selected: "true".to_string(),
                     priority: None,
                     uris: vec![],
                 },
@@ -814,7 +814,7 @@ mod tests {
                     path: "/downloads/MyTorrent/subs.srt".to_string(),
                     length: "512".to_string(),
                     completed_length: "512".to_string(),
-                    selected: true,
+                    selected: "true".to_string(),
                     priority: None,
                     uris: vec![],
                 },
@@ -832,7 +832,7 @@ mod tests {
                 ..Aria2BtInfo::default()
             }),
             info_hash: Some("deadbeef".repeat(5)),
-            seeder: Some(true),
+            seeder: Some("true".to_string()),
             ..Aria2Task::default()
         }
     }
@@ -1352,7 +1352,7 @@ mod tests {
         assert_eq!(files[0]["path"], "/downloads/MyTorrent/video.mkv");
         assert_eq!(files[1]["path"], "/downloads/MyTorrent/subs.srt");
         assert_eq!(files[0]["length"], "1536");
-        assert_eq!(files[0]["selected"], true);
+        assert_eq!(files[0]["selected"], "true");
     }
 
     #[test]

@@ -21,7 +21,7 @@ export default {
   'transfer-speed-unlimited': '不限速',
   'bt-settings': 'BT 設定',
   'bt-transport': 'BT 傳輸協定',
-  'bt-transport-both': 'TCP + uTP（建議）',
+  'bt-transport-both': 'TCP + uTP',
   'bt-first-last-piece-first': '優先下載檔案首尾',
   'bt-max-connections': '全域連線上限',
   'bt-max-uploads': '全域上傳槽位',

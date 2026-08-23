@@ -746,7 +746,7 @@ mod tests {
                 path: "/tmp/test.zip".to_string(),
                 length: "1024".to_string(),
                 completed_length: "1024".to_string(),
-                selected: true,
+                selected: "true".to_string(),
                 priority: None,
                 uris: vec![],
             }],
