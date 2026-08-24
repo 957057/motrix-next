@@ -18,10 +18,15 @@ export function getBtLifecycleState(task: Aria2Task): BtLifecycleState {
 
   if (task.bittorrent.fileSelectionState === 'awaiting') return 'selection'
 
+  const finishedTime = Number(task.bittorrent.finishedTime)
+  const hasFinishedPayload = task.seeder === 'true' || (Number.isFinite(finishedTime) && finishedTime > 0)
+
   switch (task.bittorrent.state) {
-    case 'adding':
     case 'downloadingMetadata':
       return 'metadata'
+    case 'adding':
+      if (!hasFinishedPayload) return 'metadata'
+      break
     case 'checking':
       return 'checking'
     case 'seeding':
@@ -29,9 +34,9 @@ export function getBtLifecycleState(task: Aria2Task): BtLifecycleState {
   }
 
   if (task.status === 'paused') {
-    return task.seeder === 'true' ? 'paused-seeding' : 'paused-download'
+    return hasFinishedPayload ? 'paused-seeding' : 'paused-download'
   }
-  if (task.status === 'active' && task.seeder === 'true') return 'seeding'
+  if (hasFinishedPayload) return 'seeding'
   return 'downloading'
 }
 

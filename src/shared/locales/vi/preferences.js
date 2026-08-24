@@ -327,8 +327,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Thay đổi tăng tốc phần cứng WebKitGTK yêu cầu khởi động lại ứng dụng. Nếu ứng dụng không thể khởi động sau khi bật, hãy chỉnh sửa config.json thủ công và đặt preferences.hardwareRendering thành false.',
   'session-path': 'Tập tin bộ nhớ đệm tác vụ',
-  'clear-all-tasks': 'Xóa tất cả tác vụ',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Đặt lại trạng thái động cơ',
+  'reset-engine-state-confirm':
     'Tất cả tác vụ tải xuống sẽ bị xóa khỏi công cụ và tập tin bộ nhớ đệm tác vụ sẽ được xóa. Lịch sử tải xuống đã hoàn thành sẽ không bị ảnh hưởng.',
   'log-section': 'Nhật ký',
   'log-path': 'Tập tin nhật ký',
@@ -353,7 +353,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Mở thư mục cấu hình',
-  'clear-all-tasks-success': 'Đã xóa tất cả tác vụ tải xuống',
+  'reset-engine-state-success': 'Đã đặt lại trạng thái động cơ',
   'ua-unsafe-chars-detected': 'Phát hiện ký tự điều khiển (ngắt dòng) — có thể gây lỗi tải xuống',
   'ua-sanitize': 'Làm sạch',
   'system-info': 'Thông tin hệ thống',

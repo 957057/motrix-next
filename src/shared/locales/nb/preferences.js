@@ -331,8 +331,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Endring av WebKitGTK maskinvareakselerasjon krever omstart av appen. Hvis appen ikke kan starte etter aktivering, rediger config.json manuelt og sett preferences.hardwareRendering til false.',
   'session-path': 'Hurtigbufferfil for oppgaver',
-  'clear-all-tasks': 'Fjern alle oppgaver',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Tilbakestill motorstatus',
+  'reset-engine-state-confirm':
     'Alle nedlastingsoppgaver fjernes fra motoren og hurtigbufferfilen for oppgaver slettes. Historikk over fullførte nedlastinger påvirkes ikke.',
   'log-section': 'Appliksjonslogg',
   'log-path': 'Loggfil',
@@ -357,7 +357,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Åpne konfigurasjonsmappe',
-  'clear-all-tasks-success': 'Alle nedlastingsoppgaver er fjernet',
+  'reset-engine-state-success': 'Motorstatusen er tilbakestilt',
   'ua-unsafe-chars-detected': 'Kontrolltegn (linjeskift) oppdaget — kan forårsake nedlastingsfeil',
   'ua-sanitize': 'Rens',
   'system-info': 'Systeminformasjon',

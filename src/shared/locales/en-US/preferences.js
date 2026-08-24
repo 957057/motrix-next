@@ -327,8 +327,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Changing WebKitGTK hardware acceleration requires an app restart. If the app cannot start after enabling it, edit config.json manually and set preferences.hardwareRendering to false.',
   'session-path': 'Task Cache File',
-  'clear-all-tasks': 'Clear All Tasks',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Reset Engine State',
+  'reset-engine-state-confirm':
     'This will remove all download tasks from the engine and clear the task cache. Completed download history will not be affected.',
   'log-section': 'App Log',
   'log-path': 'Log File',
@@ -353,7 +353,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Open Config Folder',
-  'clear-all-tasks-success': 'All download tasks cleared',
+  'reset-engine-state-success': 'Engine state reset',
   'ua-unsafe-chars-detected': 'Line breaks detected — may cause download failures',
   'ua-sanitize': 'Clean',
   'system-info': 'System Information',

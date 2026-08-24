@@ -333,8 +333,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Zmiana przyspieszenia sprzętowego WebKitGTK wymaga ponownego uruchomienia aplikacji. Jeśli aplikacja nie uruchamia się po włączeniu, edytuj ręcznie config.json i ustaw preferences.hardwareRendering na false.',
   'session-path': 'Plik pamięci podręcznej zadań',
-  'clear-all-tasks': 'Usuń wszystkie zadania',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Zresetuj stan silnika',
+  'reset-engine-state-confirm':
     'Wszystkie zadania pobierania zostaną usunięte z silnika, a plik pamięci podręcznej zadań zostanie skasowany. Historia ukończonych pobrań nie zostanie naruszona.',
   'log-section': 'Dziennik',
   'log-path': 'Plik dziennika',
@@ -359,7 +359,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Otwórz folder konfiguracji',
-  'clear-all-tasks-success': 'Wszystkie zadania pobierania zostały usunięte',
+  'reset-engine-state-success': 'Stan silnika został zresetowany',
   'ua-unsafe-chars-detected': 'Wykryto znaki sterujące (znaki nowej linii) — może powodować błędy pobierania',
   'ua-sanitize': 'Wyczyść',
   'system-info': 'Informacje o systemie',

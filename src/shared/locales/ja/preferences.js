@@ -328,8 +328,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'WebKitGTK ハードウェアアクセラレーションの変更にはアプリの再起動が必要です。有効化後にアプリを起動できない場合は、config.json を手動で編集し、preferences.hardwareRendering を false に設定してください。',
   'session-path': 'タスクキャッシュファイル',
-  'clear-all-tasks': 'すべてのタスクを消去',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'エンジン状態をリセット',
+  'reset-engine-state-confirm':
     'すべてのダウンロードタスクがエンジンから削除され、タスクキャッシュファイルが消去されます。完了済みダウンロードの履歴は影響を受けません。',
   'log-section': 'アプリログ',
   'log-path': 'ログファイル',
@@ -354,7 +354,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': '設定フォルダーを開く',
-  'clear-all-tasks-success': 'すべてのダウンロードタスクを消去しました',
+  'reset-engine-state-success': 'エンジン状態をリセットしました',
   'ua-unsafe-chars-detected': '制御文字（改行）が検出されました — ダウンロード失敗の原因になる可能性があります',
   'ua-sanitize': 'クリーン',
   'system-info': 'システム情報',

@@ -338,8 +338,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Modifier l’accélération matérielle WebKitGTK nécessite un redémarrage de l’application. Si l’application ne démarre plus après l’activation, modifiez config.json manuellement et définissez preferences.hardwareRendering sur false.',
   'session-path': 'Fichier de session',
-  'clear-all-tasks': 'Supprimer toutes les tâches',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Réinitialiser l’état du moteur',
+  'reset-engine-state-confirm':
     "Toutes les tâches de téléchargement seront supprimées du moteur et le fichier de session sera effacé. L'historique des téléchargements terminés ne sera pas affecté.",
   'log-section': 'Journal',
   'log-path': 'Fichier journal',
@@ -364,7 +364,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Ouvrir le dossier de configuration',
-  'clear-all-tasks-success': 'Toutes les tâches de téléchargement ont été supprimées',
+  'reset-engine-state-success': 'L’état du moteur a été réinitialisé',
   'ua-unsafe-chars-detected':
     'Caractères de contrôle (sauts de ligne) détectés — peut provoquer des échecs de téléchargement',
   'ua-sanitize': 'Nettoyer',

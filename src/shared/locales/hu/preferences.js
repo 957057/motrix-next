@@ -333,8 +333,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'A WebKitGTK hardveres gyorsítás módosításához újra kell indítani az alkalmazást. Ha az alkalmazás a bekapcsolás után nem indul el, szerkessze kézzel a config.json fájlt, és állítsa a preferences.hardwareRendering értékét false-ra.',
   'session-path': 'Feladat-gyorsítótár fájl',
-  'clear-all-tasks': 'Összes feladat törlése',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Motorállapot visszaállítása',
+  'reset-engine-state-confirm':
     'Minden letöltési feladat eltávolításra kerül a motorból, és a feladat-gyorsítótár fájl törlődik. A befejezett letöltések előzményei nem érintettek.',
   'log-section': 'Naplófájl',
   'log-path': 'Naplófájl',
@@ -359,7 +359,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Konfigurációs mappa megnyitása',
-  'clear-all-tasks-success': 'Minden letöltési feladat törölve',
+  'reset-engine-state-success': 'A motor állapota visszaállítva',
   'ua-unsafe-chars-detected': 'Vezérlőkarakterek (sortörések) észlelve — letöltési hibákat okozhat',
   'ua-sanitize': 'Tisztítás',
   'system-info': 'Rendszerinformáció',

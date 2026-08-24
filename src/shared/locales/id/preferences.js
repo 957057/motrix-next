@@ -332,8 +332,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Mengubah akselerasi perangkat keras WebKitGTK memerlukan restart aplikasi. Jika aplikasi tidak dapat dimulai setelah diaktifkan, edit config.json secara manual dan setel preferences.hardwareRendering ke false.',
   'session-path': 'File Cache Tugas',
-  'clear-all-tasks': 'Hapus Semua Tugas',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Atur Ulang Status Mesin',
+  'reset-engine-state-confirm':
     'Semua tugas unduhan akan dihapus dari mesin dan file cache tugas akan dihapus. Riwayat unduhan yang sudah selesai tidak akan terpengaruh.',
   'log-section': 'Log Aplikasi',
   'log-path': 'File Log',
@@ -358,7 +358,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Buka Folder Konfigurasi',
-  'clear-all-tasks-success': 'Semua tugas unduhan telah dihapus',
+  'reset-engine-state-success': 'Status mesin telah diatur ulang',
   'ua-unsafe-chars-detected': 'Karakter kontrol (baris baru) terdeteksi — dapat menyebabkan kegagalan unduhan',
   'ua-sanitize': 'Bersihkan',
   'system-info': 'Informasi Sistem',

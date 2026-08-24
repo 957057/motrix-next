@@ -97,6 +97,18 @@ describe('TaskItemActions', () => {
     expect(paused.find('[aria-label="task.finish-seeding"]').exists()).toBe(true)
   })
 
+  it('keeps the stop-seeding action during the resume transition', () => {
+    const wrapper = mountActions(
+      makeTask('active', {
+        completedLength: '1024',
+        seeder: 'false',
+        bittorrent: { state: 'adding', finishedTime: '17' },
+      }),
+    )
+
+    expect(wrapper.find('[aria-label="task.finish-seeding"]').exists()).toBe(true)
+  })
+
   it('keeps terminal actions accessible', () => {
     const wrapper = mountActions(makeTask('complete'))
     const actions = wrapper.findAll('.task-item-action')

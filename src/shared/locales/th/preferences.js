@@ -324,8 +324,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'การเปลี่ยนการเร่งความเร็วฮาร์ดแวร์ WebKitGTK ต้องรีสตาร์ตแอป หากแอปเริ่มไม่ได้หลังเปิดใช้งาน ให้แก้ไข config.json ด้วยตนเองและตั้ง preferences.hardwareRendering เป็น false',
   'session-path': 'ไฟล์แคชงาน',
-  'clear-all-tasks': 'ล้างงานทั้งหมด',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'รีเซ็ตสถานะเอนจิน',
+  'reset-engine-state-confirm':
     'งานดาวน์โหลดทั้งหมดจะถูกลบออกจากเอนจินและไฟล์แคชงานจะถูกลบ ประวัติการดาวน์โหลดที่เสร็จสิ้นแล้วจะไม่ได้รับผลกระทบ',
   'log-section': 'บันทึก',
   'log-path': 'ไฟล์บันทึก',
@@ -350,7 +350,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'เปิดโฟลเดอร์การตั้งค่า',
-  'clear-all-tasks-success': 'ล้างงานดาวน์โหลดทั้งหมดแล้ว',
+  'reset-engine-state-success': 'รีเซ็ตสถานะเอนจินแล้ว',
   'ua-unsafe-chars-detected': 'ตรวจพบอักขระควบคุม (ขึ้นบรรทัดใหม่) — อาจทำให้ดาวน์โหลดล้มเหลว',
   'ua-sanitize': 'ล้าง',
   'system-info': 'ข้อมูลระบบ',

@@ -333,8 +333,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Het wijzigen van WebKitGTK-hardwareversnelling vereist een herstart van de app. Als de app na inschakelen niet kan starten, bewerk config.json handmatig en zet preferences.hardwareRendering op false.',
   'session-path': 'Taakcachebestand',
-  'clear-all-tasks': 'Alle taken verwijderen',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Engine-status resetten',
+  'reset-engine-state-confirm':
     'Alle downloadtaken worden uit de engine verwijderd en het taakcachebestand wordt gewist. De geschiedenis van voltooide downloads wordt niet beïnvloed.',
   'log-section': 'App-log',
   'log-path': 'Logbestand',
@@ -359,7 +359,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Configuratiemap openen',
-  'clear-all-tasks-success': 'Alle downloadtaken zijn verwijderd',
+  'reset-engine-state-success': 'Engine-status is gereset',
   'ua-unsafe-chars-detected': 'Controle-tekens (regeleinden) gedetecteerd — kan downloadfouten veroorzaken',
   'ua-sanitize': 'Opschonen',
   'system-info': 'Systeeminformatie',

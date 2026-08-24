@@ -334,8 +334,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Alterar a aceleração de hardware WebKitGTK exige reiniciar o app. Se o app não iniciar após ativá-la, edite config.json manualmente e defina preferences.hardwareRendering como false.',
   'session-path': 'Arquivo de cache de tarefas',
-  'clear-all-tasks': 'Limpar todas as tarefas',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Redefinir estado do mecanismo',
+  'reset-engine-state-confirm':
     'Todas as tarefas de download serão removidas do motor e o arquivo de cache de tarefas será excluído. O histórico de downloads concluídos não será afetado.',
   'log-section': 'Log do aplicativo',
   'log-path': 'Arquivo de log',
@@ -360,7 +360,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Abrir pasta de configuração',
-  'clear-all-tasks-success': 'Todas as tarefas de download foram removidas',
+  'reset-engine-state-success': 'Estado do mecanismo redefinido',
   'ua-unsafe-chars-detected': 'Caracteres de controle (quebras de linha) detectados — pode causar falhas no download',
   'ua-sanitize': 'Limpar',
   'system-info': 'Informações do sistema',

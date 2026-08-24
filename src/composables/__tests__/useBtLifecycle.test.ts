@@ -51,6 +51,18 @@ describe('getBtLifecycleState', () => {
     ).toBe('seeding')
   })
 
+  it('preserves seeding semantics while a completed torrent resumes through adding', () => {
+    expect(
+      getBtLifecycleState(
+        task({
+          status: 'active',
+          seeder: 'false',
+          bittorrent: { state: 'adding', finishedTime: '17' },
+        }),
+      ),
+    ).toBe('seeding')
+  })
+
   it('formats multi-day seeding time without truncating it', () => {
     expect(formatBtDuration(183900, { day: 'd', hour: 'h', minute: 'm', second: 's' })).toBe('2d 3h')
   })

@@ -161,10 +161,10 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
 
   // ── Handlers ─────────────────────────────────────────────────────────
 
-  function handleSessionReset() {
+  function handleEngineStateReset() {
     dialog.error({
-      title: t('preferences.clear-all-tasks'),
-      content: t('preferences.clear-all-tasks-confirm'),
+      title: t('preferences.reset-engine-state'),
+      content: t('preferences.reset-engine-state-confirm'),
       positiveText: t('app.yes'),
       negativeText: t('app.no'),
       onPositiveClick: async () => {
@@ -180,9 +180,9 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
           }
           await taskStore.purgeTaskRecord()
           await invoke('clear_engine_runtime_state')
-          message.success(t('preferences.clear-all-tasks-success'))
+          message.success(t('preferences.reset-engine-state-success'))
         } catch (e) {
-          logger.error('Advanced.sessionReset', e)
+          logger.error('Advanced.engineStateReset', e)
         }
       },
     })
@@ -468,7 +468,7 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
     exportingSettings,
     importingSettings,
     // Handlers
-    handleSessionReset,
+    handleEngineStateReset,
     handleRestoreDefaults,
     handleFactoryReset,
     handleDbIntegrityCheck,

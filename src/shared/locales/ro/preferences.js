@@ -332,8 +332,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Schimbarea accelerării hardware WebKitGTK necesită repornirea aplicației. Dacă aplicația nu poate porni după activare, editați manual config.json și setați preferences.hardwareRendering la false.',
   'session-path': 'Fișier cache sarcini',
-  'clear-all-tasks': 'Șterge toate sarcinile',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Resetează starea motorului',
+  'reset-engine-state-confirm':
     'Toate sarcinile de descărcare vor fi eliminate din motor și fișierul cache al sarcinilor va fi șters. Istoricul descărcărilor finalizate nu va fi afectat.',
   'log-section': 'Jurnal',
   'log-path': 'Fișier jurnal',
@@ -358,7 +358,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Deschide dosarul de configurare',
-  'clear-all-tasks-success': 'Toate sarcinile de descărcare au fost șterse',
+  'reset-engine-state-success': 'Starea motorului a fost resetată',
   'ua-unsafe-chars-detected': 'Caractere de control (linii noi) detectate — poate cauza erori de descărcare',
   'ua-sanitize': 'Curăță',
   'system-info': 'Informații despre sistem',

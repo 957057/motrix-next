@@ -336,8 +336,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Canviar l’acceleració de maquinari WebKitGTK requereix reiniciar l’aplicació. Si l’aplicació no pot iniciar-se després d’activar-la, editeu config.json manualment i establiu preferences.hardwareRendering a false.',
   'session-path': 'Fitxer de sessió',
-  'clear-all-tasks': 'Esborra totes les tasques',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': "Restableix l'estat del motor",
+  'reset-engine-state-confirm':
     "S'eliminaran totes les tasques de descàrrega del motor i el fitxer de sessió. L'historial de descàrregues completades no es veurà afectat.",
   'log-section': 'Registre',
   'log-path': 'Fitxer de registre',
@@ -362,7 +362,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Obrir carpeta de configuració',
-  'clear-all-tasks-success': 'Totes les tasques de descàrrega han estat esborrades',
+  'reset-engine-state-success': "S'ha restablert l'estat del motor",
   'ua-unsafe-chars-detected': "S'han detectat caràcters de control (salts de línia) — pot causar errors de descàrrega",
   'ua-sanitize': 'Neteja',
   'system-info': 'Informació del sistema',

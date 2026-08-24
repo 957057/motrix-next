@@ -329,8 +329,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'تغییر شتاب‌دهی سخت‌افزاری WebKitGTK نیازمند راه‌اندازی مجدد برنامه است. اگر برنامه پس از فعال‌سازی اجرا نشد، config.json را دستی ویرایش کنید و preferences.hardwareRendering را روی false بگذارید.',
   'session-path': 'فایل حافظه پنهان وظایف',
-  'clear-all-tasks': 'پاک کردن همه وظایف',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'بازنشانی وضعیت موتور',
+  'reset-engine-state-confirm':
     'تمام وظایف دانلود از موتور حذف شده و فایل حافظه پنهان وظایف پاک می‌شود. تاریخچه دانلودهای تکمیل‌شده تحت تأثیر قرار نمی‌گیرد.',
   'log-section': 'گزارش برنامه',
   'log-path': 'فایل گزارش',
@@ -355,7 +355,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'باز کردن پوشه تنظیمات',
-  'clear-all-tasks-success': 'همه وظایف دانلود پاک شدند',
+  'reset-engine-state-success': 'وضعیت موتور بازنشانی شد',
   'ua-unsafe-chars-detected': 'کاراکترهای کنترلی (خطوط جدید) شناسایی شد — ممکن است باعث خطای دانلود شود',
   'ua-sanitize': 'پاکسازی',
   'system-info': 'اطلاعات سیستم',

@@ -330,8 +330,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'WebKitGTK donanım hızlandırmasını değiştirmek uygulamanın yeniden başlatılmasını gerektirir. Etkinleştirdikten sonra uygulama başlayamazsa config.json dosyasını elle düzenleyin ve preferences.hardwareRendering değerini false yapın.',
   'session-path': 'Görev Önbellek Dosyası',
-  'clear-all-tasks': 'Tüm Görevleri Sil',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Motor Durumunu Sıfırla',
+  'reset-engine-state-confirm':
     'Tüm indirme görevleri motordan kaldırılacak ve görev önbellek dosyası silinecektir. Tamamlanan indirme geçmişi etkilenmeyecektir.',
   'log-section': 'Uygulama Günlüğü',
   'log-path': 'Günlük Dosyası',
@@ -356,7 +356,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Yapılandırma Klasörünü Aç',
-  'clear-all-tasks-success': 'Tüm indirme görevleri silindi',
+  'reset-engine-state-success': 'Motor durumu sıfırlandı',
   'ua-unsafe-chars-detected': 'Kontrol karakterleri (satır sonları) algılandı — indirme hatalarına neden olabilir',
   'ua-sanitize': 'Temizle',
   'system-info': 'Sistem Bilgileri',

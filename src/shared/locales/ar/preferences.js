@@ -325,8 +325,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'يتطلب تغيير تسريع WebKitGTK العتادي إعادة تشغيل التطبيق. إذا تعذر تشغيل التطبيق بعد تفعيله، فعدّل config.json يدويًا واجعل preferences.hardwareRendering تساوي false.',
   'session-path': 'ملف ذاكرة التخزين المؤقت للمهام',
-  'clear-all-tasks': 'مسح جميع المهام',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'إعادة تعيين حالة المحرك',
+  'reset-engine-state-confirm':
     'سيؤدي هذا إلى إزالة جميع مهام التنزيل من المحرك وحذف ملف ذاكرة التخزين المؤقت. لن تتأثر سجلات التنزيل المكتملة.',
   'log-section': 'سجل التطبيق',
   'log-path': 'ملف السجل',
@@ -350,7 +350,7 @@ export default {
   'settings-imported': 'تم استيراد الإعدادات',
   'import-settings-restart-confirm': 'أعد تشغيل التطبيق لتطبيق كل تغييرات المحرك وواجهة API.',
   'open-config-folder': 'فتح مجلد الإعدادات',
-  'clear-all-tasks-success': 'تم مسح جميع مهام التنزيل',
+  'reset-engine-state-success': 'تمت إعادة تعيين حالة المحرك',
   'ua-unsafe-chars-detected': 'تم اكتشاف أحرف تحكم (أسطر جديدة) — قد يتسبب في فشل التنزيل',
   'ua-sanitize': 'تنظيف',
   'system-info': 'معلومات النظام',

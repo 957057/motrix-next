@@ -334,8 +334,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Das Ändern der WebKitGTK-Hardwarebeschleunigung erfordert einen App-Neustart. Wenn die App nach dem Aktivieren nicht starten kann, bearbeiten Sie config.json manuell und setzen Sie preferences.hardwareRendering auf false.',
   'session-path': 'Aufgaben-Cache-Datei',
-  'clear-all-tasks': 'Alle Aufgaben löschen',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Engine-Status zurücksetzen',
+  'reset-engine-state-confirm':
     'Alle Download-Aufgaben werden aus der Engine entfernt und die Aufgaben-Cache-Datei gelöscht. Der Verlauf abgeschlossener Downloads bleibt erhalten.',
   'log-section': 'Protokoll',
   'log-path': 'Protokolldatei',
@@ -360,7 +360,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Konfigurationsordner öffnen',
-  'clear-all-tasks-success': 'Alle Download-Aufgaben wurden gelöscht',
+  'reset-engine-state-success': 'Engine-Status wurde zurückgesetzt',
   'ua-unsafe-chars-detected': 'Steuerzeichen (Zeilenumbrüche) erkannt — kann Download-Fehler verursachen',
   'ua-sanitize': 'Bereinigen',
   'system-info': 'Systeminformationen',

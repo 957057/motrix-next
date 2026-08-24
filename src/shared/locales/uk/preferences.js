@@ -332,8 +332,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Зміна апаратного прискорення WebKitGTK потребує перезапуску застосунку. Якщо застосунок не запускається після ввімкнення, вручну відредагуйте config.json і встановіть preferences.hardwareRendering у false.',
   'session-path': 'Файл кешу завдань',
-  'clear-all-tasks': 'Очистити всі завдання',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Скинути стан рушія',
+  'reset-engine-state-confirm':
     'Усі завдання завантаження буде видалено з рушія, файл кешу завдань буде очищено. Історія завершених завантажень не постраждає.',
   'log-section': 'Журнал',
   'log-path': 'Файл журналу',
@@ -358,7 +358,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Відкрити теку конфігурації',
-  'clear-all-tasks-success': 'Усі завдання завантаження очищено',
+  'reset-engine-state-success': 'Стан рушія скинуто',
   'ua-unsafe-chars-detected': 'Виявлено керуючі символи (переноси рядків) — може спричинити помилки завантаження',
   'ua-sanitize': 'Очистити',
   'system-info': 'Інформація про систему',

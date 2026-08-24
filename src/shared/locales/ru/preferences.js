@@ -332,8 +332,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Изменение аппаратного ускорения WebKitGTK требует перезапуска приложения. Если приложение не запускается после включения, вручную отредактируйте config.json и задайте preferences.hardwareRendering значение false.',
   'session-path': 'Файл кэша задач',
-  'clear-all-tasks': 'Очистить все задачи',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Сбросить состояние движка',
+  'reset-engine-state-confirm':
     'Все задачи загрузки будут удалены из движка, файл кэша задач будет очищен. История завершённых загрузок не будет затронута.',
   'log-section': 'Журнал',
   'log-path': 'Файл журнала',
@@ -358,7 +358,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Открыть папку конфигурации',
-  'clear-all-tasks-success': 'Все задачи загрузки очищены',
+  'reset-engine-state-success': 'Состояние движка сброшено',
   'ua-unsafe-chars-detected': 'Обнаружены управляющие символы (переводы строк) — может вызвать ошибки загрузки',
   'ua-sanitize': 'Очистить',
   'system-info': 'Информация о системе',

@@ -331,8 +331,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Промяната на хардуерното ускорение на WebKitGTK изисква рестартиране на приложението. Ако приложението не може да стартира след включването му, редактирайте config.json ръчно и задайте preferences.hardwareRendering на false.',
   'session-path': 'Кеш файл на задачите',
-  'clear-all-tasks': 'Изчисти всички задачи',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Нулиране на състоянието на двигателя',
+  'reset-engine-state-confirm':
     'Това ще премахне всички задачи за изтегляне от двигателя и ще изтрие кеш файла на задачите. Историята на завършените изтегляния няма да бъде засегната.',
   'log-section': 'Дневник',
   'log-path': 'Файл на дневника',
@@ -357,7 +357,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Отвори папката с настройки',
-  'clear-all-tasks-success': 'Всички задачи за изтегляне бяха изчистени',
+  'reset-engine-state-success': 'Състоянието на двигателя е нулирано',
   'ua-unsafe-chars-detected': 'Открити са контролни символи (нови редове) — може да причини грешки при изтегляне',
   'ua-sanitize': 'Почисти',
   'system-info': 'Системна информация',

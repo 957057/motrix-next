@@ -327,8 +327,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'WebKitGTK 하드웨어 가속을 변경하려면 앱을 다시 시작해야 합니다. 활성화한 뒤 앱이 시작되지 않으면 config.json을 직접 편집하고 preferences.hardwareRendering을 false로 설정하세요.',
   'session-path': '작업 캐시 파일',
-  'clear-all-tasks': '모든 작업 삭제',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': '엔진 상태 초기화',
+  'reset-engine-state-confirm':
     '모든 다운로드 작업이 엔진에서 제거되고 작업 캐시 파일이 삭제됩니다. 완료된 다운로드 기록에는 영향을 미치지 않습니다.',
   'log-section': '앱 로그',
   'log-path': '로그 파일',
@@ -353,7 +353,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': '설정 폴더 열기',
-  'clear-all-tasks-success': '모든 다운로드 작업이 삭제되었습니다',
+  'reset-engine-state-success': '엔진 상태가 초기화되었습니다',
   'ua-unsafe-chars-detected': '제어 문자(줄바꿈)가 감지됨 — 다운로드 실패를 유발할 수 있습니다',
   'ua-sanitize': '정리',
   'system-info': '시스템 정보',

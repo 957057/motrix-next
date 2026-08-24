@@ -326,7 +326,7 @@ const {
   exportingLogs,
   exportingSettings,
   importingSettings,
-  handleSessionReset,
+  handleEngineStateReset,
   handleRestoreDefaults,
   handleFactoryReset,
   handleDbIntegrityCheck,
@@ -526,8 +526,8 @@ watch(protocolHandlers.lastError, (error) => {
           </NInputGroup>
         </NFormItem>
         <NFormItem label=" ">
-          <NButton type="error" ghost @click="handleSessionReset">
-            {{ t('preferences.clear-all-tasks') }}
+          <NButton type="error" ghost @click="handleEngineStateReset">
+            {{ t('preferences.reset-engine-state') }}
           </NButton>
         </NFormItem>
 

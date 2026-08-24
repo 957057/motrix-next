@@ -338,8 +338,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Cambiar la aceleración por hardware de WebKitGTK requiere reiniciar la aplicación. Si la aplicación no puede iniciarse después de activarla, edite config.json manualmente y establezca preferences.hardwareRendering en false.',
   'session-path': 'Archivo de caché de tareas',
-  'clear-all-tasks': 'Borrar todas las tareas',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Restablecer estado del motor',
+  'reset-engine-state-confirm':
     'Se eliminarán todas las tareas de descarga del motor y se borrará el archivo de caché de tareas. El historial de descargas completadas no se verá afectado.',
   'log-section': 'Registro',
   'log-path': 'Archivo de registro',
@@ -364,7 +364,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Abrir carpeta de configuración',
-  'clear-all-tasks-success': 'Se han borrado todas las tareas de descarga',
+  'reset-engine-state-success': 'Se restableció el estado del motor',
   'ua-unsafe-chars-detected':
     'Se detectaron caracteres de control (saltos de línea) — puede causar errores de descarga',
   'ua-sanitize': 'Limpiar',

@@ -169,7 +169,7 @@ function onAction(event: string) {
     class="task-item-actions"
     :class="{ 'task-item-actions--compact': props.density === 'compact' }"
   >
-    <li v-for="action in actions" :key="action.key" class="task-item-action-slot">
+    <li v-for="(action, index) in actions" :key="index" class="task-item-action-slot">
       <MTooltip>
         <template #trigger>
           <button
@@ -330,7 +330,6 @@ function onAction(event: string) {
     opacity 0.15s ease-in,
     max-width 0.15s ease-in,
     margin 0.15s ease-in;
-  position: absolute;
 }
 
 .action-item-enter-from {

@@ -328,8 +328,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'WebKitGTK hardware acceleration बदलने के लिए app restart जरूरी है। Enable करने के बाद app start न हो तो config.json को manually edit करें और preferences.hardwareRendering को false set करें।',
   'session-path': 'Task cache file',
-  'clear-all-tasks': 'सभी कार्य साफ करें',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'इंजन स्थिति रीसेट करें',
+  'reset-engine-state-confirm':
     'यह download engine से सभी download tasks हटाएगा और task cache साफ करेगा। Completed download history प्रभावित नहीं होगी।',
   'log-section': 'App log',
   'log-path': 'Log file',
@@ -354,7 +354,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Config Folder खोलें',
-  'clear-all-tasks-success': 'सभी download tasks साफ हुए',
+  'reset-engine-state-success': 'इंजन स्थिति रीसेट हो गई',
   'ua-unsafe-chars-detected': 'Line breaks मिले, download failures हो सकते हैं',
   'ua-sanitize': 'साफ करें',
   'system-info': 'System information',

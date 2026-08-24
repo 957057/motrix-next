@@ -336,8 +336,8 @@ export default {
   'hardware-rendering-restart-confirm':
     'Η αλλαγή της επιτάχυνσης υλικού WebKitGTK απαιτεί επανεκκίνηση της εφαρμογής. Αν η εφαρμογή δεν μπορεί να ξεκινήσει μετά την ενεργοποίηση, επεξεργαστείτε χειροκίνητα το config.json και ορίστε το preferences.hardwareRendering σε false.',
   'session-path': 'Αρχείο προσωρινής μνήμης εργασιών',
-  'clear-all-tasks': 'Εκκαθάριση όλων των εργασιών',
-  'clear-all-tasks-confirm':
+  'reset-engine-state': 'Επαναφορά κατάστασης μηχανής',
+  'reset-engine-state-confirm':
     'Θα αφαιρεθούν όλες οι εργασίες λήψης από τη μηχανή και θα διαγραφεί το αρχείο προσωρινής μνήμης εργασιών. Το ιστορικό ολοκληρωμένων λήψεων δεν θα επηρεαστεί.',
   'log-section': 'Αρχείο καταγραφής',
   'log-path': 'Αρχείο καταγραφής',
@@ -362,7 +362,7 @@ export default {
   'settings-imported': 'Settings Imported',
   'import-settings-restart-confirm': 'Restart the app to apply all engine and API changes.',
   'open-config-folder': 'Άνοιγμα φακέλου ρυθμίσεων',
-  'clear-all-tasks-success': 'Όλες οι εργασίες λήψης εκκαθαρίστηκαν',
+  'reset-engine-state-success': 'Η κατάσταση της μηχανής επαναφέρθηκε',
   'ua-unsafe-chars-detected': 'Εντοπίστηκαν χαρακτήρες ελέγχου (αλλαγές γραμμής) — μπορεί να προκαλέσει αποτυχία λήψης',
   'ua-sanitize': 'Καθαρισμός',
   'system-info': 'Πληροφορίες συστήματος',
