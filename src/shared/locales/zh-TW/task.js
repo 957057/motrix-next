@@ -135,7 +135,7 @@ export default {
   'task-removed': '已移除',
   seeding: '做種中',
   'awaiting-file-selection': '等待選擇檔案',
-  'seeding-paused': '做種已暫停',
+  'seeding-paused': '做種暫停',
   'pause-seeding': '暫停做種',
   'resume-seeding': '繼續做種',
   'finish-seeding': '停止做種',

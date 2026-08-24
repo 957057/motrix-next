@@ -827,6 +827,21 @@ describe('buildHistoryMeta', () => {
     expect(buildHistoryMeta(task).magnetLink).toBe('magnet:?xt=urn:btih:deadbeef&dn=Ubuntu%2024.04')
   })
 
+  it('round-trips the final BitTorrent sharing duration', () => {
+    const task = makeTask({
+      bittorrent: {
+        info: { name: 'Ubuntu 24.04' },
+        finishedTime: '3600',
+      },
+    })
+
+    const meta = buildHistoryMeta(task)
+    expect(meta.finishedTime).toBe('3600')
+
+    const restored = historyRecordToTask(makeRecord({ task_type: 'bt', meta: JSON.stringify(meta) }))
+    expect(restored.bittorrent?.finishedTime).toBe('3600')
+  })
+
   it('stores engine-provided ed2kLink in structured ED2K history meta', () => {
     const ed2kLink = 'ed2k://|file|movie.mkv|42|31313131313131313131313131313131|/'
     const task = makeTask({

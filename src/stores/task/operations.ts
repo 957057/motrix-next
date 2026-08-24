@@ -30,24 +30,9 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
   const { api, taskList, currentTaskGid, hideTaskDetail, fetchList } = deps
   const setTaskRemoving = deps.setTaskRemoving ?? (() => undefined)
 
-  async function requiresMagnetFileSelection(task: Aria2Task): Promise<boolean> {
-    if (!isAwaitingBtFileSelection(task)) return false
-
-    try {
-      const options = await api.getOption({ gid: task.gid })
-      return !options.selectFile?.trim()
-    } catch (e) {
-      logger.warn('TaskOps.resumeTask', `getOption gid=${task.gid} failed; keeping file selection pause: ${e}`)
-      return true
-    }
-  }
-
   async function resumeTasks(tasks: Aria2Task[]): Promise<{ resumed: number; blocked: number }> {
-    const checks = await Promise.all(
-      tasks.map(async (task) => ({ task, blocked: await requiresMagnetFileSelection(task) })),
-    )
-    const resumableGids = checks.filter(({ blocked }) => !blocked).map(({ task }) => task.gid)
-    const blocked = checks.length - resumableGids.length
+    const resumableGids = tasks.filter((task) => !isAwaitingBtFileSelection(task)).map((task) => task.gid)
+    const blocked = tasks.length - resumableGids.length
 
     if (resumableGids.length > 0) {
       await api.batchResumeTask({ gids: resumableGids })
@@ -95,7 +80,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
   }
 
   async function resumeTask(task: Aria2Task): Promise<boolean> {
-    if (await requiresMagnetFileSelection(task)) {
+    if (isAwaitingBtFileSelection(task)) {
       logger.info('TaskOps.resumeTask', `gid=${task.gid} blocked=file-selection-required`)
       deps.requestMagnetSelection?.(task.gid)
       return false

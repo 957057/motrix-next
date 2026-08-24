@@ -492,6 +492,7 @@ mod tests {
             completed_length: "1".to_string(),
             info_hash: None,
             magnet_link: None,
+            finished_time: None,
             ed2k_link: None,
             is_bt: false,
             is_ed2k: false,

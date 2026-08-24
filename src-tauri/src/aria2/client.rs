@@ -196,26 +196,14 @@ impl Aria2Client {
         };
 
         for task in paused_tasks {
-            let requires_file_selection =
-                task.bittorrent.as_ref().and_then(|bt| bt.state.as_deref())
-                    == Some("awaitingFileSelection");
+            let requires_file_selection = task
+                .bittorrent
+                .as_ref()
+                .and_then(|bt| bt.file_selection_state.as_deref())
+                == Some("awaiting");
             if requires_file_selection {
-                let has_selection = self
-                    .get_option(&task.gid)
-                    .await
-                    .ok()
-                    .and_then(|options| {
-                        options
-                            .get("select-file")
-                            .and_then(serde_json::Value::as_str)
-                            .map(str::trim)
-                            .map(str::to_owned)
-                    })
-                    .is_some_and(|selection| !selection.is_empty());
-                if !has_selection {
-                    result.blocked += 1;
-                    continue;
-                }
+                result.blocked += 1;
+                continue;
             }
 
             self.unpause(&task.gid).await?;

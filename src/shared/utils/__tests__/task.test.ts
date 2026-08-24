@@ -379,7 +379,7 @@ describe('isBtMetadataTask', () => {
 
   it('returns false for native aria2 task awaiting file selection', () => {
     const task = createMockTask({
-      bittorrent: { info: { name: 'Archive' }, state: 'awaitingFileSelection' },
+      bittorrent: { info: { name: 'Archive' }, state: 'paused', fileSelectionState: 'awaiting' },
     })
 
     expect(isBtMetadataTask(task)).toBe(false)

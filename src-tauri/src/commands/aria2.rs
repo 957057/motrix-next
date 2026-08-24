@@ -534,9 +534,7 @@ async fn remove_engine_task(client: &Aria2Client, gid: &str) -> Result<(), AppEr
 }
 
 fn is_bt_seeding_task(task: &Aria2Task) -> bool {
-    task.bittorrent.is_some()
-        && (task.seeder.as_deref() == Some("true")
-            || task.bittorrent.as_ref().and_then(|bt| bt.state.as_deref()) == Some("seeding"))
+    task.bittorrent.is_some() && task.seeder.as_deref() == Some("true")
 }
 
 /// Delete a task regardless of whether it is live, transitioning, or stopped.
@@ -1002,8 +1000,8 @@ mod tests {
             ..Aria2Task::default()
         };
         let paused = Aria2Task {
+            seeder: Some("true".to_string()),
             bittorrent: Some(Aria2BtInfo {
-                state: Some("seeding".to_string()),
                 ..Aria2BtInfo::default()
             }),
             ..Aria2Task::default()

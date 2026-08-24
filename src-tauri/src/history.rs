@@ -111,8 +111,16 @@ impl HistoryDb {
                 status = excluded.status,
                 task_type = excluded.task_type,
                 added_at = COALESCE(download_history.added_at, excluded.added_at),
-                completed_at = excluded.completed_at,
-                meta = excluded.meta",
+                completed_at = CASE
+                    WHEN download_history.status = 'complete' AND excluded.status = 'complete'
+                    THEN COALESCE(download_history.completed_at, excluded.completed_at)
+                    ELSE excluded.completed_at
+                END,
+                meta = CASE
+                    WHEN download_history.meta IS NULL THEN excluded.meta
+                    WHEN excluded.meta IS NULL THEN download_history.meta
+                    ELSE json_patch(download_history.meta, excluded.meta)
+                END",
             params![
                 record.gid,
                 record.name,
@@ -345,17 +353,20 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn upsert_preserves_added_at() {
+    async fn upsert_preserves_completion_timestamps_and_merges_meta() {
         let db = HistoryDb::open_in_memory().unwrap();
         let rec1 = HistoryRecord {
             added_at: Some("2025-01-01T00:00:00Z".to_string()),
-            ..make_record("gid001", "test.zip", "active")
+            meta: Some(r#"{"infoHash":"abc"}"#.to_string()),
+            ..make_record("gid001", "test.zip", "complete")
         };
         db.add_record(&rec1).await.unwrap();
 
         // Upsert with a different added_at — COALESCE should preserve the original
         let rec2 = HistoryRecord {
             added_at: Some("2025-06-01T00:00:00Z".to_string()),
+            completed_at: Some("2025-06-01T01:00:00Z".to_string()),
+            meta: Some(r#"{"finishedTime":"3600"}"#.to_string()),
             status: "complete".to_string(),
             ..make_record("gid001", "test-updated.zip", "complete")
         };
@@ -365,8 +376,15 @@ mod tests {
         assert_eq!(records.len(), 1);
         assert_eq!(records[0].name, "test-updated.zip");
         assert_eq!(records[0].status, "complete");
-        // added_at preserved from first insert (COALESCE keeps original)
         assert_eq!(records[0].added_at.as_deref(), Some("2025-01-01T00:00:00Z"));
+        assert_eq!(
+            records[0].completed_at.as_deref(),
+            Some("2025-01-01T01:00:00Z")
+        );
+        let meta: serde_json::Value =
+            serde_json::from_str(records[0].meta.as_deref().unwrap()).unwrap();
+        assert_eq!(meta["infoHash"], "abc");
+        assert_eq!(meta["finishedTime"], "3600");
     }
 
     #[tokio::test]

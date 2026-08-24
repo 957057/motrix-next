@@ -8,7 +8,6 @@ import type { Aria2Task, Aria2File, Aria2Peer, Aria2EngineOptions, TaskApi } fro
 
 import { historyRecordToTask, mergeHistoryIntoTasks, isMetadataTask } from '@/composables/useTaskLifecycle'
 import { buildMetadataOnlyOptions } from '@/composables/useMagnetFlow'
-import { preserveBtSeedingPresentation } from '@/composables/useBtLifecycle'
 import {
   registerAddedAt,
   trackFirstSeen,
@@ -233,7 +232,6 @@ export const useTaskStore = defineStore('task', () => {
         }
       }
 
-      data = preserveBtSeedingPresentation(taskList.value, data)
       const removing = new Set(removingGids.value)
       data = data.filter((task) => !removing.has(task.gid))
       taskList.value = data

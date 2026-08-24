@@ -42,7 +42,6 @@ interface TaskCardModel {
   remaining: ComputedRef<number>
   remainingText: ComputedRef<string>
   transferSummary: ComputedRef<ReturnType<typeof buildTaskTransferSummary>>
-  seedingTimeText: ComputedRef<string>
 }
 
 export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
@@ -52,8 +51,8 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
     getTaskDisplayName(task.value, { defaultName: t('task.get-task-name') || 'Unknown' }),
   )
   const btLifecycle = computed(() => getBtLifecycleState(task.value))
-  const seedingTimeText = computed(() =>
-    formatBtDuration(Number(task.value.bittorrent?.seedingTime ?? 0), {
+  const sharingDurationText = computed(() =>
+    formatBtDuration(Number(task.value.bittorrent?.finishedTime ?? 0), {
       day: t('task.seeding-day-unit'),
       hour: t('app.hour') || 'h',
       minute: t('app.minute') || 'm',
@@ -78,7 +77,7 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
       }
     }
     if (btLifecycle.value === 'paused-seeding') {
-      const duration = seedingTimeText.value
+      const duration = sharingDurationText.value
       return {
         key: 'bt-seeding-paused',
         label: duration ? `${t('task.seeding-paused')} · ${duration}` : t('task.seeding-paused'),
@@ -86,7 +85,7 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
       }
     }
     if (isSharing.value) {
-      const duration = seedingTimeText.value
+      const duration = sharingDurationText.value
       return {
         key: 'sharing',
         label: duration ? `${sharingLabel.value} · ${duration}` : sharingLabel.value,
@@ -114,16 +113,7 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
     }
   })
   const isActive = computed(() => task.value.status === TASK_STATUS.ACTIVE)
-  const completedLengthValue = computed(() => {
-    if (
-      btLifecycle.value === 'seeding' ||
-      btLifecycle.value === 'restoring-seeding' ||
-      btLifecycle.value === 'paused-seeding'
-    ) {
-      return Number(task.value.totalLength)
-    }
-    return getTaskCompletedLength(task.value)
-  })
+  const completedLengthValue = computed(() => getTaskCompletedLength(task.value))
   const percent = computed(() => calcProgress(task.value.totalLength, completedLengthValue.value))
   const completedSize = computed(() => bytesToSize(completedLengthValue.value, 2))
   const totalSize = computed(() => bytesToSize(task.value.totalLength, 2))
@@ -167,6 +157,5 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
     remaining,
     remainingText,
     transferSummary,
-    seedingTimeText,
   }
 }

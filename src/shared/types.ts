@@ -28,7 +28,6 @@ export interface Aria2File {
 export type Aria2BtState =
   | 'adding'
   | 'downloadingMetadata'
-  | 'awaitingFileSelection'
   | 'checking'
   | 'downloading'
   | 'finished'
@@ -36,7 +35,18 @@ export type Aria2BtState =
   | 'paused'
   | 'stopping'
   | 'stopped'
-  | 'error'
+
+export type Aria2BtFileSelectionState = 'none' | 'awaiting' | 'ready' | 'applying'
+
+export interface Aria2BtError {
+  code: string
+  kind: string
+  category: string
+  message: string
+  recoverable: string
+  operation?: string
+  file?: string
+}
 
 export interface Aria2BtInfo {
   info?: { name: string }
@@ -47,6 +57,8 @@ export interface Aria2BtInfo {
   mode?: string
   privateTorrent?: string
   state?: Aria2BtState
+  fileSelectionState?: Aria2BtFileSelectionState
+  error?: Aria2BtError
   infoHashV1?: string
   infoHashV2?: string
   currentTracker?: string
@@ -671,6 +683,8 @@ export interface HistoryMeta {
   ed2kHash?: string
   /** BT announce tiers — used to restore tracker-aware magnet restart links. */
   announceList?: string[][]
+  /** Final duration spent in the completed BitTorrent sharing state. */
+  finishedTime?: string
   /** Complete file list with all URIs — present when files.length > 1. */
   files?: HistoryFileSnapshot[]
 }

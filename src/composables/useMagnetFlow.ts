@@ -51,7 +51,7 @@ export function buildSelectFileOption(indices: number[]): string {
 }
 
 export function isPendingMagnetSelectionTask(task: Aria2Task): boolean {
-  return Boolean(task.bittorrent && task.status === 'paused' && task.bittorrent.state === 'awaitingFileSelection')
+  return Boolean(task.bittorrent && task.bittorrent.fileSelectionState === 'awaiting')
 }
 
 export function getPendingMagnetSelectionGids(tasks: Aria2Task[]): string[] {

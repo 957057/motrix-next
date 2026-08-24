@@ -18,6 +18,7 @@ const props = defineProps<{
   onCopy: (value: string, label: string) => void
   gid?: string
   editable?: boolean
+  terminal?: boolean
 }>()
 
 const { t } = useI18n()
@@ -56,7 +57,7 @@ async function updatePriority(row: FileDetailRow, priority: BtFilePriority) {
 
 const columns = computed(() => {
   const data = rows.value
-  return [
+  const result = [
     {
       title: t('task.file-index') || '#',
       key: 'idx',
@@ -136,6 +137,7 @@ const columns = computed(() => {
       render: (row: FileDetailRow) => bytesToSize(String(row.length)),
     },
   ]
+  return props.terminal ? result.filter((column) => column.key !== 'priority') : result
 })
 </script>
 

@@ -184,22 +184,28 @@ interface TabDef {
   btOnly?: boolean
   protocolOnly?: boolean
   uriOnly?: boolean
+  liveOnly?: boolean
 }
 const allTabs: TabDef[] = [
   { key: 'general', labelKey: 'task.task-tab-general', icon: InformationCircleOutline },
-  { key: 'activity', labelKey: 'task.task-tab-activity', icon: PulseOutline },
+  { key: 'activity', labelKey: 'task.task-tab-activity', icon: PulseOutline, liveOnly: true },
   { key: 'files', labelKey: 'task.task-tab-files', icon: DocumentOutline },
-  { key: 'options', labelKey: 'task.task-tab-options', icon: SettingsOutline, uriOnly: true },
+  { key: 'options', labelKey: 'task.task-tab-options', icon: SettingsOutline, uriOnly: true, liveOnly: true },
   { key: 'sources', labelKey: 'task.task-tab-sources', icon: ServerOutline, uriOnly: true },
-  { key: 'status', labelKey: 'task.task-tab-status', icon: PulseOutline, protocolOnly: true },
-  { key: 'peers', labelKey: 'task.task-tab-peers', icon: PeopleOutline, btOnly: true },
-  { key: 'trackers', labelKey: 'task.task-tab-trackers', icon: ServerOutline, btOnly: true },
+  { key: 'status', labelKey: 'task.task-tab-status', icon: PulseOutline, protocolOnly: true, liveOnly: true },
+  { key: 'peers', labelKey: 'task.task-tab-peers', icon: PeopleOutline, btOnly: true, liveOnly: true },
+  { key: 'trackers', labelKey: 'task.task-tab-trackers', icon: ServerOutline, btOnly: true, liveOnly: true },
 ]
+
+const isTerminal = computed(() => ['complete', 'error', 'removed'].includes(props.task?.status ?? ''))
 
 const visibleTabs = computed(() =>
   allTabs.filter(
     (tab) =>
-      (!tab.btOnly || isBT.value) && (!tab.protocolOnly || isBT.value || isED2K.value) && (!tab.uriOnly || isURI.value),
+      (!tab.btOnly || isBT.value) &&
+      (!tab.protocolOnly || isBT.value || isED2K.value) &&
+      (!tab.uriOnly || isURI.value) &&
+      (!tab.liveOnly || !isTerminal.value),
   ),
 )
 
@@ -295,13 +301,29 @@ const btInfo = computed(() => {
   if (!isBT.value || !props.task) return null
   return props.task.bittorrent ?? null
 })
-const seedingTime = computed(() =>
-  formatBtDuration(Number(btInfo.value?.seedingTime ?? 0), {
+const sharingDuration = computed(() =>
+  formatBtDuration(Number(btInfo.value?.finishedTime ?? 0), {
     day: t('task.seeding-day-unit'),
     hour: t('app.hour') || 'h',
     minute: t('app.minute') || 'm',
     second: t('app.second') || 's',
   }),
+)
+const hasPieceLength = computed(
+  () => Number.isFinite(Number(props.task?.pieceLength)) && Number(props.task?.pieceLength) > 0,
+)
+const hasPieceCount = computed(
+  () => Number.isFinite(Number(props.task?.numPieces)) && Number(props.task?.numPieces) > 0,
+)
+const hasBtOverviewDetails = computed(() =>
+  Boolean(
+    props.task?.infoHash ||
+    hasPieceLength.value ||
+    hasPieceCount.value ||
+    sharingDuration.value ||
+    btInfo.value?.creationDate ||
+    btInfo.value?.comment,
+  ),
 )
 
 const ed2kInfo = computed(() => {
@@ -384,7 +406,7 @@ function handleClose() {
                 <NDescriptionsItem :label="t('task.task-name') || 'Name'">
                   <CopyableValue :value="taskFullName" :label="copyLabel(t('task.task-name'), 'Name')" />
                 </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-dir') || 'Directory'">
+                <NDescriptionsItem v-if="task.dir" :label="t('task.task-dir') || 'Directory'">
                   <CopyableValue :value="task.dir" :label="copyLabel(t('task.task-dir'), 'Directory')" />
                 </NDescriptionsItem>
                 <NDescriptionsItem :label="t('task.task-status') || 'Status'">
@@ -406,7 +428,7 @@ function handleClose() {
                   {{ taskCompletedAt }}
                 </NDescriptionsItem>
               </NDescriptions>
-              <template v-if="isBT && btInfo">
+              <template v-if="isBT && btInfo && hasBtOverviewDetails">
                 <div class="section-divider">BitTorrent</div>
                 <NDescriptions
                   :column="1"
@@ -415,17 +437,17 @@ function handleClose() {
                   size="small"
                   :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
                 >
-                  <NDescriptionsItem :label="t('task.task-info-hash') || 'Hash'">
-                    <CopyableValue :value="task.infoHash || '-'" :label="copyLabel(t('task.task-info-hash'), 'Hash')" />
+                  <NDescriptionsItem v-if="task.infoHash" :label="t('task.task-info-hash') || 'Hash'">
+                    <CopyableValue :value="task.infoHash" :label="copyLabel(t('task.task-info-hash'), 'Hash')" />
                   </NDescriptionsItem>
-                  <NDescriptionsItem :label="t('task.task-piece-length') || 'Piece Size'">
+                  <NDescriptionsItem v-if="hasPieceLength" :label="t('task.task-piece-length') || 'Piece Size'">
                     {{ bytesToSize(String(task.pieceLength)) }}
                   </NDescriptionsItem>
-                  <NDescriptionsItem :label="t('task.task-num-pieces') || 'Pieces'">
+                  <NDescriptionsItem v-if="hasPieceCount" :label="t('task.task-num-pieces') || 'Pieces'">
                     {{ task.numPieces }}
                   </NDescriptionsItem>
-                  <NDescriptionsItem v-if="seedingTime" :label="t('task.seeding-time')">
-                    {{ seedingTime }}
+                  <NDescriptionsItem v-if="sharingDuration" :label="t('task.seeding-time')">
+                    {{ sharingDuration }}
                   </NDescriptionsItem>
                   <NDescriptionsItem
                     v-if="btInfo?.creationDate"
@@ -438,7 +460,7 @@ function handleClose() {
                   </NDescriptionsItem>
                 </NDescriptions>
               </template>
-              <template v-if="isED2K && ed2kInfo">
+              <template v-if="isED2K && ed2kInfo?.hash">
                 <div class="section-divider">ED2K</div>
                 <NDescriptions
                   :column="1"
@@ -447,8 +469,8 @@ function handleClose() {
                   size="small"
                   :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
                 >
-                  <NDescriptionsItem :label="t('task.task-ed2k-hash')">
-                    <CopyableValue :value="ed2kInfo.hash || '-'" :label="t('task.task-ed2k-hash')" />
+                  <NDescriptionsItem v-if="ed2kInfo.hash" :label="t('task.task-ed2k-hash')">
+                    <CopyableValue :value="ed2kInfo.hash" :label="t('task.task-ed2k-hash')" />
                   </NDescriptionsItem>
                 </NDescriptions>
               </template>
@@ -511,6 +533,7 @@ function handleClose() {
               :files="files"
               :gid="task?.gid"
               :editable="optCanModify && isBT"
+              :terminal="isTerminal"
               :tooltip="t('about.click-to-copy')"
               :on-copy="copyDetailValue"
             />
@@ -521,6 +544,7 @@ function handleClose() {
               v-if="task && isURI"
               :task="task"
               :summary="uriSummary"
+              :terminal="isTerminal"
               :tooltip="t('about.click-to-copy')"
               :on-copy="copyDetailValue"
             />

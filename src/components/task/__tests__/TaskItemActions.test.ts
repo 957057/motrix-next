@@ -60,7 +60,7 @@ describe('TaskItemActions', () => {
   it('renders an icon-only file-selection action for pending magnets', async () => {
     const wrapper = mountActions(
       makeTask('paused', {
-        bittorrent: { state: 'awaitingFileSelection', info: { name: 'Torrent' } },
+        bittorrent: { state: 'paused', fileSelectionState: 'awaiting', info: { name: 'Torrent' } },
       }),
     )
 
@@ -95,19 +95,6 @@ describe('TaskItemActions', () => {
     await paused.find('[aria-label="task.resume-seeding"]').trigger('click')
     expect(paused.emitted('resume')).toBeTruthy()
     expect(paused.find('[aria-label="task.finish-seeding"]').exists()).toBe(true)
-  })
-
-  it('preserves seeding controls while the engine restores the task', () => {
-    const restoring = mountActions(
-      makeTask('active', {
-        completedLength: '1024',
-        seeder: 'true',
-        bittorrent: { state: 'checking' },
-      }),
-    )
-
-    expect(restoring.find('[aria-label="task.pause-seeding"]').exists()).toBe(true)
-    expect(restoring.find('[aria-label="task.finish-seeding"]').attributes('disabled')).toBeDefined()
   })
 
   it('keeps terminal actions accessible', () => {

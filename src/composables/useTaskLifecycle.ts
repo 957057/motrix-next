@@ -33,6 +33,8 @@ export function buildHistoryMeta(task: Aria2Task): HistoryMeta {
   if (task.bittorrent?.announceList && task.bittorrent.announceList.length > 0) {
     meta.announceList = task.bittorrent.announceList.map((tier) => [...tier])
   }
+  const finishedTime = Number(task.bittorrent?.finishedTime)
+  if (Number.isFinite(finishedTime) && finishedTime > 0) meta.finishedTime = String(Math.floor(finishedTime))
 
   // Snapshot trigger: multi-file OR any file with multiple mirror URIs.
   // Multi-file: enables correct delete (all files) and stale cleanup.
@@ -188,6 +190,9 @@ export function historyRecordToTask(record: HistoryRecord): Aria2Task {
     if (meta.announceList && meta.announceList.length > 0) {
       task.bittorrent.announceList = meta.announceList.map((tier) => [...tier])
     }
+    if (meta.finishedTime) {
+      task.bittorrent.finishedTime = meta.finishedTime
+    }
   }
 
   if (record.task_type === 'ed2k') {
@@ -197,6 +202,9 @@ export function historyRecordToTask(record: HistoryRecord): Aria2Task {
     }
     if (meta.ed2kLink) {
       task.ed2k.ed2kLink = meta.ed2kLink
+    }
+    if (meta.ed2kHash) {
+      task.ed2k.hash = meta.ed2kHash
     }
   }
 

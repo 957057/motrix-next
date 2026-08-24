@@ -78,6 +78,7 @@ pub struct TaskEvent {
     pub completed_length: String,
     pub info_hash: Option<String>,
     pub magnet_link: Option<String>,
+    pub finished_time: Option<String>,
     pub ed2k_link: Option<String>,
     pub is_bt: bool,
     pub is_ed2k: bool,
@@ -103,6 +104,13 @@ impl TaskEvent {
             .as_ref()
             .and_then(|bt| bt.magnet_link.clone())
             .filter(|value| !value.is_empty());
+        let finished_time = task
+            .bittorrent
+            .as_ref()
+            .and_then(|bt| bt.finished_time.clone())
+            .and_then(|value| value.parse::<u64>().ok())
+            .filter(|value| *value > 0)
+            .map(|value| value.to_string());
         let ed2k_link = task
             .ed2k
             .as_ref()
@@ -137,6 +145,7 @@ impl TaskEvent {
             completed_length: task.completed_length.clone(),
             info_hash,
             magnet_link,
+            finished_time,
             ed2k_link,
             is_bt,
             is_ed2k,
@@ -209,6 +218,12 @@ fn build_history_meta_json(event: &TaskEvent) -> Option<String> {
         meta.insert(
             "magnetLink".to_string(),
             serde_json::Value::String(magnet_link.clone()),
+        );
+    }
+    if let Some(ref finished_time) = event.finished_time {
+        meta.insert(
+            "finishedTime".to_string(),
+            serde_json::Value::String(finished_time.clone()),
         );
     }
     if let Some(ref ed2k_link) = event.ed2k_link {
@@ -1196,7 +1211,8 @@ mod tests {
 
     #[test]
     fn build_history_record_sets_complete_status_for_bt_complete() {
-        let task = make_bt_task("g2", "active", true);
+        let mut task = make_bt_task("g2", "active", true);
+        task.bittorrent.as_mut().unwrap().finished_time = Some("3600".to_string());
         let event = TaskEvent::from_aria2(&task);
         let record = build_history_record(&event, events::SHARING_COMPLETE);
 
@@ -1210,6 +1226,7 @@ mod tests {
         let meta: serde_json::Value =
             serde_json::from_str(meta_str).expect("meta must be valid JSON");
         assert_eq!(meta["infoHash"], "abcdef1234567890");
+        assert_eq!(meta["finishedTime"], "3600");
     }
 
     #[test]

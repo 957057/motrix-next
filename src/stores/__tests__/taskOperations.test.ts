@@ -207,12 +207,12 @@ describe('resumeTask', () => {
     const task = makeTask({
       gid: 'magnet-download',
       status: TASK_STATUS.PAUSED,
-      bittorrent: { info: { name: 'Archive' }, state: 'awaitingFileSelection' },
+      bittorrent: { info: { name: 'Archive' }, state: 'paused', fileSelectionState: 'awaiting' },
       files: [{ index: '1', path: '/downloads/file.bin', length: '1024' }],
     })
 
     await expect(ops.resumeTask(task)).resolves.toBe(false)
-    expect(api.getOption).toHaveBeenCalledWith({ gid: 'magnet-download' })
+    expect(api.getOption).not.toHaveBeenCalled()
     expect(api.resumeTask).not.toHaveBeenCalled()
   })
 

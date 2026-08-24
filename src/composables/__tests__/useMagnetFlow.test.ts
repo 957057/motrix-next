@@ -186,7 +186,8 @@ describe('useMagnetFlow', () => {
             info: {
               name: 'Movie',
             },
-            state: 'awaitingFileSelection',
+            state: 'paused',
+            fileSelectionState: 'awaiting',
           },
         },
       ])

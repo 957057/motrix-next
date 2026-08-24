@@ -47,6 +47,10 @@ pub struct Aria2BtInfo {
     pub private_torrent: Option<String>,
     #[serde(default)]
     pub state: Option<String>,
+    #[serde(default, rename = "fileSelectionState")]
+    pub file_selection_state: Option<String>,
+    #[serde(default)]
+    pub error: Option<Aria2BtError>,
     #[serde(default, rename = "infoHashV1")]
     pub info_hash_v1: Option<String>,
     #[serde(default, rename = "infoHashV2")]
@@ -85,6 +89,21 @@ pub struct Aria2BtInfo {
     pub num_complete: Option<String>,
     #[serde(default, rename = "numIncomplete")]
     pub num_incomplete: Option<String>,
+}
+
+/// Structured BitTorrent operation error emitted independently from task state.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Aria2BtError {
+    pub code: String,
+    pub kind: String,
+    pub category: String,
+    pub message: String,
+    pub recoverable: String,
+    #[serde(default)]
+    pub operation: Option<String>,
+    #[serde(default)]
+    pub file: Option<String>,
 }
 
 /// Name sub-object within `Aria2BtInfo.info`.
@@ -602,6 +621,29 @@ mod tests {
         assert_eq!(tracker.source, "global");
         assert_eq!(tracker.next_announce, "600");
         assert_eq!(tracker.endpoints[0].min_announce, "300");
+    }
+
+    #[test]
+    fn deserialize_bt_file_selection_and_error_contract() {
+        let info: Aria2BtInfo = serde_json::from_value(serde_json::json!({
+            "state": "paused",
+            "fileSelectionState": "awaiting",
+            "error": {
+                "code": "1",
+                "kind": "invalidFileSelection",
+                "category": "configuration",
+                "message": "select-file is required",
+                "recoverable": "true",
+                "operation": "resume"
+            }
+        }))
+        .expect("deserialize BT file selection contract");
+
+        assert_eq!(info.file_selection_state.as_deref(), Some("awaiting"));
+        let error = info.error.expect("structured BT error");
+        assert_eq!(error.kind, "invalidFileSelection");
+        assert_eq!(error.recoverable, "true");
+        assert_eq!(error.operation.as_deref(), Some("resume"));
     }
 
     // ── Aria2File deserialization ────────────────────────────────────

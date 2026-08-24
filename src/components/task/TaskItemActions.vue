@@ -69,18 +69,6 @@ const actions = computed(() => {
       { key: 'finish-seeding', icon: StopCircleOutline, label: t('task.finish-seeding'), event: 'finish-seeding' },
       { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
-  } else if (lifecycle === 'restoring-seeding') {
-    primary = [
-      { key: 'toggle', icon: PauseOutline, label: t('task.pause-seeding'), event: 'pause' },
-      {
-        key: 'finish-seeding',
-        icon: StopCircleOutline,
-        label: t('task.finish-seeding'),
-        event: 'finish-seeding',
-        disabled: true,
-      },
-      { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
-    ]
   } else if (lifecycle === 'paused-seeding') {
     primary = [
       { key: 'toggle', icon: PlayOutline, label: t('task.resume-seeding'), event: 'resume' },

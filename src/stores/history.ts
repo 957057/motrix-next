@@ -215,8 +215,16 @@ export const useHistoryStore = defineStore('history', () => {
          status = excluded.status,
          task_type = excluded.task_type,
          added_at = COALESCE(download_history.added_at, excluded.added_at),
-         completed_at = excluded.completed_at,
-         meta = excluded.meta`,
+         completed_at = CASE
+           WHEN download_history.status = 'complete' AND excluded.status = 'complete'
+           THEN COALESCE(download_history.completed_at, excluded.completed_at)
+           ELSE excluded.completed_at
+         END,
+         meta = CASE
+           WHEN download_history.meta IS NULL THEN excluded.meta
+           WHEN excluded.meta IS NULL THEN download_history.meta
+           ELSE json_patch(download_history.meta, excluded.meta)
+         END`,
       [
         record.gid,
         record.name,

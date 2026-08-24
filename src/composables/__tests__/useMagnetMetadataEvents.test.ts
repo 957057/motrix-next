@@ -37,7 +37,7 @@ function makeTask(gid: string, extra: Partial<Aria2Task> = {}): Aria2Task {
 function makeSelectionTask(gid: string, name = 'Ubuntu ISO'): Aria2Task {
   return makeTask(gid, {
     status: 'paused',
-    bittorrent: { info: { name }, state: 'awaitingFileSelection' },
+    bittorrent: { info: { name }, state: 'paused', fileSelectionState: 'awaiting' },
     files: [
       {
         index: '1',
@@ -117,7 +117,8 @@ describe('useMagnetMetadataEvents', () => {
     const sparseTask = makeTask('metadata-gid', {
       status: 'paused',
       bittorrent: {
-        state: 'awaitingFileSelection',
+        state: 'paused',
+        fileSelectionState: 'awaiting',
         magnetLink: 'magnet:?xt=urn:btih:abc&dn=Recovered%20Torrent',
       },
       files: [],

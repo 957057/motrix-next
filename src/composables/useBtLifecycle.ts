@@ -1,4 +1,4 @@
-import type { Aria2BtState, Aria2Task } from '@shared/types'
+import type { Aria2Task } from '@shared/types'
 
 export type BtLifecycleState =
   | 'none'
@@ -8,70 +8,20 @@ export type BtLifecycleState =
   | 'downloading'
   | 'paused-download'
   | 'seeding'
-  | 'restoring-seeding'
   | 'paused-seeding'
   | 'terminal'
-
-function isCompletePayload(task: Aria2Task): boolean {
-  const total = Number(task.totalLength)
-  return total > 0 && Number(task.completedLength) >= total
-}
-
-const BT_RESTORE_STATES = new Set<Aria2BtState>(['adding', 'checking'])
-
-/** Keeps completed seeding tasks visually stable while libtorrent restores their runtime state. */
-export function preserveBtSeedingPresentation(previousTasks: Aria2Task[], nextTasks: Aria2Task[]): Aria2Task[] {
-  const previousByGid = new Map(previousTasks.map((task) => [task.gid, task]))
-
-  return nextTasks.map((nextTask) => {
-    const previousTask = previousByGid.get(nextTask.gid)
-    const nextBtState = nextTask.bittorrent?.state
-    if (
-      !previousTask ||
-      nextTask.status !== 'active' ||
-      !nextBtState ||
-      !BT_RESTORE_STATES.has(nextBtState) ||
-      !isCompletePayload(previousTask) ||
-      !['seeding', 'restoring-seeding', 'paused-seeding'].includes(getBtLifecycleState(previousTask))
-    ) {
-      return nextTask
-    }
-
-    const totalLength = Number(nextTask.totalLength) > 0 ? nextTask.totalLength : previousTask.totalLength
-    return {
-      ...nextTask,
-      totalLength,
-      completedLength: totalLength,
-      seeder: 'true',
-      bittorrent: {
-        ...nextTask.bittorrent,
-        progress: '1.000000',
-      },
-    }
-  })
-}
 
 export function getBtLifecycleState(task: Aria2Task): BtLifecycleState {
   if (!task.bittorrent) return 'none'
 
   if (task.status === 'complete' || task.status === 'error' || task.status === 'removed') return 'terminal'
 
-  if (
-    task.status === 'active' &&
-    task.bittorrent.state &&
-    BT_RESTORE_STATES.has(task.bittorrent.state) &&
-    task.seeder === 'true' &&
-    isCompletePayload(task)
-  ) {
-    return 'restoring-seeding'
-  }
+  if (task.bittorrent.fileSelectionState === 'awaiting') return 'selection'
 
   switch (task.bittorrent.state) {
     case 'adding':
     case 'downloadingMetadata':
       return 'metadata'
-    case 'awaitingFileSelection':
-      return 'selection'
     case 'checking':
       return 'checking'
     case 'seeding':
@@ -79,9 +29,9 @@ export function getBtLifecycleState(task: Aria2Task): BtLifecycleState {
   }
 
   if (task.status === 'paused') {
-    return task.seeder === 'true' || isCompletePayload(task) ? 'paused-seeding' : 'paused-download'
+    return task.seeder === 'true' ? 'paused-seeding' : 'paused-download'
   }
-  if (task.status === 'active' && (task.seeder === 'true' || isCompletePayload(task))) return 'seeding'
+  if (task.status === 'active' && task.seeder === 'true') return 'seeding'
   return 'downloading'
 }
 
