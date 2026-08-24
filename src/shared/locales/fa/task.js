@@ -286,6 +286,7 @@ export default {
   'status-error': 'خطا',
   'status-removed': 'حذف شده',
   'status-sharing': 'در حال اشتراک‌گذاری',
+  'bt-recovering': 'بازیابی داده‌های BitTorrent',
   'bt-metadata-fetching': 'دریافت تورنت',
   'no-paused-tasks': 'هیچ وظیفه متوقفی وجود ندارد',
   'no-active-tasks': 'هیچ وظیفه فعالی وجود ندارد',

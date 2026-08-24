@@ -174,12 +174,12 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
             fetchTaskList({ type: 'active' }),
             fetchTaskList({ type: 'stopped' }),
           ])
-          const allGids = [...activeTasks, ...stoppedTasks].map((t) => t.gid)
+          const allGids = [...activeTasks, ...stoppedTasks].map((task) => task.gid)
           if (allGids.length > 0) {
             await taskStore.batchRemoveTask(allGids)
           }
           await taskStore.purgeTaskRecord()
-          await invoke('clear_engine_runtime_state')
+          await engineStore.recoverRuntimeState()
           message.success(t('preferences.reset-engine-state-success'))
         } catch (e) {
           logger.error('Advanced.engineStateReset', e)
@@ -223,8 +223,8 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
       negativeText: t('app.no'),
       onPositiveClick: async () => {
         try {
-          await invoke('factory_reset')
           await engineStore.stop('appRelaunch')
+          await invoke('factory_reset')
           relaunch()
         } catch (e) {
           logger.error('Advanced.factoryReset', e)

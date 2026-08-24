@@ -479,6 +479,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ED2K 引导文件已同步',
   'ed2k-bootstrap-sync-failed': 'ED2K 引导文件同步失败',
   'ed2k-invalid-bootstrap-url': 'ED2K 引导 URL 必须使用 HTTP 或 HTTPS',
+  'ed2k-preview-priority': '优先下载 ED2K 首尾分片',
   'ed2k-upload-slots': '上传槽位',
   'ed2k-search': 'ED2K 搜索',
   'ed2k-search-keyword': '关键词',

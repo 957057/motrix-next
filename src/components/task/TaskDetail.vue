@@ -250,15 +250,19 @@ const btLifecycle = computed(() => (props.task ? getBtLifecycleState(props.task)
 const taskStatusKey = computed(() =>
   btLifecycle.value === 'selection'
     ? 'awaiting-file-selection'
-    : btLifecycle.value === 'paused-seeding'
-      ? 'seeding-paused'
-      : isSharing.value
-        ? sharingKind.value === 'bt'
-          ? 'seeding'
-          : 'sharing'
-        : isMetadataFetching.value
-          ? 'bt-metadata-fetching'
-          : props.task?.status,
+    : btLifecycle.value === 'recovering'
+      ? 'bt-recovering'
+      : btLifecycle.value === 'error'
+        ? 'error'
+        : btLifecycle.value === 'paused-seeding'
+          ? 'seeding-paused'
+          : isSharing.value
+            ? sharingKind.value === 'bt'
+              ? 'seeding'
+              : 'sharing'
+            : isMetadataFetching.value
+              ? 'bt-metadata-fetching'
+              : props.task?.status,
 )
 const taskStatus = computed(() => {
   const key = taskStatusKey.value
@@ -301,8 +305,10 @@ const btInfo = computed(() => {
   if (!isBT.value || !props.task) return null
   return props.task.bittorrent ?? null
 })
+const taskErrorMessage = computed(() => props.task?.errorMessage || btInfo.value?.error?.message || '')
+const taskErrorCode = computed(() => props.task?.errorCode || btInfo.value?.error?.code || '')
 const sharingDuration = computed(() =>
-  formatBtDuration(Number(btInfo.value?.finishedTime ?? 0), {
+  formatBtDuration(Number(btInfo.value?.seedingTime ?? 0), {
     day: t('task.seeding-day-unit'),
     hour: t('app.hour') || 'h',
     minute: t('app.minute') || 'm',
@@ -345,6 +351,7 @@ const statusTagType = computed<TaskStatusTagType>(() => {
     case 'waiting':
     case 'bt-metadata-fetching':
     case 'awaiting-file-selection':
+    case 'bt-recovering':
       return 'warning'
     case 'seeding':
     case 'sharing':
@@ -415,11 +422,8 @@ function handleClose() {
                 <NDescriptionsItem :label="t('task.task-type') || 'Type'">
                   {{ t(`task.task-type-${detailKind}`) }}
                 </NDescriptionsItem>
-                <NDescriptionsItem
-                  v-if="task.errorCode && task.errorCode !== '0'"
-                  :label="t('task.task-error-info') || 'Error'"
-                >
-                  {{ task.errorCode }} {{ task.errorMessage }}
+                <NDescriptionsItem v-if="taskErrorMessage" :label="t('task.task-error-info') || 'Error'">
+                  {{ taskErrorCode && taskErrorCode !== '0' ? `${taskErrorCode} ` : '' }}{{ taskErrorMessage }}
                 </NDescriptionsItem>
                 <NDescriptionsItem v-if="taskAddedAt" :label="t('task.task-added-at') || 'Added At'">
                   {{ taskAddedAt }}

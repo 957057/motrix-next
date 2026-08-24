@@ -488,6 +488,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ซิงค์ไฟล์เริ่มต้น ED2K แล้ว',
   'ed2k-bootstrap-sync-failed': 'ซิงค์ไฟล์เริ่มต้น ED2K ไม่สำเร็จ',
   'ed2k-invalid-bootstrap-url': 'URL เริ่มต้น ED2K ต้องใช้ HTTP หรือ HTTPS',
+  'ed2k-preview-priority': 'ให้ความสำคัญกับตัวอย่าง ED2K',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

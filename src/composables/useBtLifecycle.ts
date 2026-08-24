@@ -5,38 +5,40 @@ export type BtLifecycleState =
   | 'metadata'
   | 'selection'
   | 'checking'
+  | 'recovering'
   | 'downloading'
   | 'paused-download'
   | 'seeding'
   | 'paused-seeding'
+  | 'error'
   | 'terminal'
 
 export function getBtLifecycleState(task: Aria2Task): BtLifecycleState {
   if (!task.bittorrent) return 'none'
 
-  if (task.status === 'complete' || task.status === 'error' || task.status === 'removed') return 'terminal'
-
+  if (task.bittorrent.state === 'error' || task.bittorrent.error) return 'error'
   if (task.bittorrent.fileSelectionState === 'awaiting') return 'selection'
-
-  const finishedTime = Number(task.bittorrent.finishedTime)
-  const hasFinishedPayload = task.seeder === 'true' || (Number.isFinite(finishedTime) && finishedTime > 0)
+  if (task.status === 'complete' || task.status === 'error' || task.status === 'removed') return 'terminal'
 
   switch (task.bittorrent.state) {
     case 'downloadingMetadata':
       return 'metadata'
     case 'adding':
-      if (!hasFinishedPayload) return 'metadata'
-      break
+      return 'metadata'
     case 'checking':
       return 'checking'
+    case 'recovering':
+      return 'recovering'
     case 'seeding':
+      return task.status === 'paused' ? 'paused-seeding' : 'seeding'
+    case 'finished':
       return task.status === 'paused' ? 'paused-seeding' : 'seeding'
   }
 
   if (task.status === 'paused') {
-    return hasFinishedPayload ? 'paused-seeding' : 'paused-download'
+    return task.seeder === 'true' ? 'paused-seeding' : 'paused-download'
   }
-  if (hasFinishedPayload) return 'seeding'
+  if (task.seeder === 'true') return 'seeding'
   return 'downloading'
 }
 

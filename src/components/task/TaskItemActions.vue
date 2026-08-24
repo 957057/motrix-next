@@ -63,6 +63,13 @@ const actions = computed(() => {
       },
       { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
+  } else if (lifecycle === 'recovering') {
+    primary = [{ key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' }]
+  } else if (lifecycle === 'error') {
+    primary = [
+      { key: 'info', icon: InformationCircleOutline, label: t('task.task-detail-title'), event: 'show-info' },
+      { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
+    ]
   } else if (lifecycle === 'seeding') {
     primary = [
       { key: 'toggle', icon: PauseOutline, label: t('task.pause-seeding'), event: 'pause' },

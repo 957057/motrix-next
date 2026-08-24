@@ -480,6 +480,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ED2K 引導檔案已同步',
   'ed2k-bootstrap-sync-failed': 'ED2K 引導檔案同步失敗',
   'ed2k-invalid-bootstrap-url': 'ED2K 引導 URL 必須使用 HTTP 或 HTTPS',
+  'ed2k-preview-priority': '優先下載 ED2K 首尾分片',
   'ed2k-upload-slots': '上傳槽位',
   'ed2k-search': 'ED2K 搜尋',
   'ed2k-search-keyword': '關鍵字',

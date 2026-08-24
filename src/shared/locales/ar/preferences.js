@@ -488,6 +488,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'تمت مزامنة ملفات تمهيد ED2K',
   'ed2k-bootstrap-sync-failed': 'فشلت مزامنة ملفات تمهيد ED2K',
   'ed2k-invalid-bootstrap-url': 'يجب أن يستخدم رابط تمهيد ED2K HTTP أو HTTPS',
+  'ed2k-preview-priority': 'أولوية معاينة ED2K',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

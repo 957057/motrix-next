@@ -344,6 +344,7 @@ export const DEFAULT_APP_CONFIG = {
   ed2kServerMetUrl: ED2K_SERVER_MET_URL,
   ed2kNodesDatUrl: ED2K_NODES_DAT_URL,
   ed2kUploadSlots: 3,
+  ed2kPreviewPriority: false,
   ed2kSearchTimeout: 20,
   proxy: {
     mode: 'direct' as const,

@@ -37,6 +37,7 @@
     "dir",
     "dry-run",
     "ed2k-listen-port",
+    "ed2k-preview-priority",
     "ed2k-server",
     "ed2k-udp-listen-port",
     "ed2k-upload-slots",

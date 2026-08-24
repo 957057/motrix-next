@@ -30,11 +30,13 @@ export type Aria2BtState =
   | 'downloadingMetadata'
   | 'checking'
   | 'downloading'
+  | 'recovering'
   | 'finished'
   | 'seeding'
   | 'paused'
   | 'stopping'
   | 'stopped'
+  | 'error'
 
 export type Aria2BtFileSelectionState = 'none' | 'awaiting' | 'ready' | 'applying'
 
@@ -502,6 +504,7 @@ export interface AppConfig {
   ed2kBootstrapAutoSync: boolean
   ed2kBootstrapSyncIntervalHours: number
   ed2kUploadSlots: number
+  ed2kPreviewPriority: boolean
   ed2kSearchTimeout: number
   btTracker: string
   btEncryption: BtEncryptionMode
@@ -683,8 +686,8 @@ export interface HistoryMeta {
   ed2kHash?: string
   /** BT announce tiers — used to restore tracker-aware magnet restart links. */
   announceList?: string[][]
-  /** Final duration spent in the completed BitTorrent sharing state. */
-  finishedTime?: string
+  /** Final duration spent seeding a BitTorrent task. */
+  seedingTime?: string
   /** Complete file list with all URIs — present when files.length > 1. */
   files?: HistoryFileSnapshot[]
 }

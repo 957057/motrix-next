@@ -287,6 +287,7 @@ export default {
   'status-error': 'Error',
   'status-removed': 'Removed',
   'status-sharing': 'साझा हो रहा है',
+  'bt-recovering': 'BitTorrent डेटा पुनर्प्राप्त किया जा रहा है',
   'bt-metadata-fetching': 'Torrent fetch हो रहा है',
   'no-paused-tasks': 'कोई paused task नहीं',
   'no-active-tasks': 'कोई active task नहीं',

@@ -287,6 +287,7 @@ export default {
   'status-error': 'Hiba',
   'status-removed': 'Eltávolítva',
   'status-sharing': 'Megosztás',
+  'bt-recovering': 'BitTorrent-adatok helyreállítása',
   'bt-metadata-fetching': 'Torrent lekérése',
   'no-paused-tasks': 'Nincsenek szüneteltetett feladatok',
   'no-active-tasks': 'Nincsenek aktív feladatok',

@@ -286,6 +286,7 @@ export default {
   'status-error': 'Грешка',
   'status-removed': 'Премахнато',
   'status-sharing': 'Споделяне',
+  'bt-recovering': 'Възстановяване на BitTorrent данни',
   'bt-metadata-fetching': 'Изтегляне на торент',
   'no-paused-tasks': 'Няма паузирани задачи',
   'no-active-tasks': 'Няма активни задачи',

@@ -497,6 +497,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ED2K файловете за стартиране са синхронизирани',
   'ed2k-bootstrap-sync-failed': 'Синхронизирането на ED2K файловете за стартиране не бе успешно',
   'ed2k-invalid-bootstrap-url': 'URL адресът за ED2K стартиране трябва да използва HTTP или HTTPS',
+  'ed2k-preview-priority': 'Приоритет за преглед на ED2K',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

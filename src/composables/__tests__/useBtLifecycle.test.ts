@@ -51,16 +51,30 @@ describe('getBtLifecycleState', () => {
     ).toBe('seeding')
   })
 
-  it('preserves seeding semantics while a completed torrent resumes through adding', () => {
+  it('keeps native recovery states distinct from metadata and downloads', () => {
     expect(
       getBtLifecycleState(
         task({
           status: 'active',
           seeder: 'false',
-          bittorrent: { state: 'adding', finishedTime: '17' },
+          bittorrent: { state: 'recovering' },
         }),
       ),
-    ).toBe('seeding')
+    ).toBe('recovering')
+  })
+
+  it('uses the structured BitTorrent error independently from task status', () => {
+    expect(
+      getBtLifecycleState(
+        task({
+          status: 'paused',
+          bittorrent: {
+            state: 'error',
+            error: { code: '1', kind: 'storage', category: 'system', message: 'disk error', recoverable: 'false' },
+          },
+        }),
+      ),
+    ).toBe('error')
   })
 
   it('formats multi-day seeding time without truncating it', () => {

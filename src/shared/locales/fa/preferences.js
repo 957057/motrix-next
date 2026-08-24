@@ -494,6 +494,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'فایل‌های راه‌اندازی ED2K همگام شدند',
   'ed2k-bootstrap-sync-failed': 'همگام‌سازی فایل‌های راه‌اندازی ED2K ناموفق بود',
   'ed2k-invalid-bootstrap-url': 'نشانی راه‌اندازی ED2K باید از HTTP یا HTTPS استفاده کند',
+  'ed2k-preview-priority': 'اولویت پیش‌نمایش ED2K',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

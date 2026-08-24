@@ -492,6 +492,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ED2K bootstrap files synced',
   'ed2k-bootstrap-sync-failed': 'Failed to sync ED2K bootstrap files',
   'ed2k-invalid-bootstrap-url': 'ED2K bootstrap URLs must use HTTP or HTTPS',
+  'ed2k-preview-priority': 'Prioritize ED2K previews',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

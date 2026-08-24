@@ -498,6 +498,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'Файли запуску ED2K синхронізовано',
   'ed2k-bootstrap-sync-failed': 'Не вдалося синхронізувати файли запуску ED2K',
   'ed2k-invalid-bootstrap-url': 'URL запуску ED2K мають використовувати HTTP або HTTPS',
+  'ed2k-preview-priority': 'Пріоритет попереднього перегляду ED2K',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

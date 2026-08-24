@@ -496,6 +496,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ED2K-oppstartsfiler synkronisert',
   'ed2k-bootstrap-sync-failed': 'Kunne ikke synkronisere ED2K-oppstartsfiler',
   'ed2k-invalid-bootstrap-url': 'ED2K-oppstarts-URL-er må bruke HTTP eller HTTPS',
+  'ed2k-preview-priority': 'Prioriter ED2K-forhåndsvisning',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

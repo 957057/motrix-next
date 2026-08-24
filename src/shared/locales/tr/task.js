@@ -286,6 +286,7 @@ export default {
   'status-error': 'Hata',
   'status-removed': 'Kaldırıldı',
   'status-sharing': 'Paylaşılıyor',
+  'bt-recovering': 'BitTorrent verileri kurtarılıyor',
   'bt-metadata-fetching': 'Torrent alınıyor',
   'no-paused-tasks': 'Duraklatılmış görev yok',
   'no-active-tasks': 'Aktif görev yok',

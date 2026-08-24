@@ -288,6 +288,7 @@ export default {
   'status-error': 'Fehler',
   'status-removed': 'Entfernt',
   'status-sharing': 'Teilen',
+  'bt-recovering': 'BitTorrent-Daten werden wiederhergestellt',
   'bt-metadata-fetching': 'Torrent laden',
   'no-paused-tasks': 'Keine pausierten Aufgaben',
   'no-active-tasks': 'Keine aktiven Aufgaben',

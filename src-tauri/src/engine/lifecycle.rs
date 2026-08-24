@@ -142,12 +142,10 @@ fn prepare_engine_args(
     let session_path = data_dir.join("download.session");
     ensure_download_session(&session_path)?;
     let session_path_string = path_to_safe_string(&session_path);
-    let bt_session_state_file = data_dir.join("engine").join("bittorrent.session");
-    if let Some(directory) = bt_session_state_file.parent() {
-        std::fs::create_dir_all(directory)
-            .map_err(|error| format!("Failed to create BitTorrent state directory: {error}"))?;
-    }
-    let bt_session_state_file_string = path_to_safe_string(&bt_session_state_file);
+    let state_dir = data_dir.join("engine").join("state");
+    std::fs::create_dir_all(&state_dir)
+        .map_err(|error| format!("Failed to create engine state directory: {error}"))?;
+    let state_dir_string = path_to_safe_string(&state_dir);
 
     let (log_file_path, log_level) = engine_log_config(app)?;
     let ed2k_bootstrap = crate::commands::ed2k::ensure_ed2k_bootstrap_cache(app)
@@ -159,7 +157,7 @@ fn prepare_engine_args(
         config,
         ManagedEngineConfig {
             session_path: &session_path_string,
-            bt_session_state_file: &bt_session_state_file_string,
+            state_dir: &state_dir_string,
             log_file_path: &log_file_path,
             log_level: &log_level,
             ed2k_server_list: &ed2k_bootstrap.0,

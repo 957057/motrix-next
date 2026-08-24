@@ -831,15 +831,15 @@ describe('buildHistoryMeta', () => {
     const task = makeTask({
       bittorrent: {
         info: { name: 'Ubuntu 24.04' },
-        finishedTime: '3600',
+        seedingTime: '3600',
       },
     })
 
     const meta = buildHistoryMeta(task)
-    expect(meta.finishedTime).toBe('3600')
+    expect(meta.seedingTime).toBe('3600')
 
     const restored = historyRecordToTask(makeRecord({ task_type: 'bt', meta: JSON.stringify(meta) }))
-    expect(restored.bittorrent?.finishedTime).toBe('3600')
+    expect(restored.bittorrent?.seedingTime).toBe('3600')
   })
 
   it('stores engine-provided ed2kLink in structured ED2K history meta', () => {

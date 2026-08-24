@@ -97,16 +97,17 @@ describe('TaskItemActions', () => {
     expect(paused.find('[aria-label="task.finish-seeding"]').exists()).toBe(true)
   })
 
-  it('keeps the stop-seeding action during the resume transition', () => {
+  it('limits recovery actions to details and deletion', () => {
     const wrapper = mountActions(
       makeTask('active', {
         completedLength: '1024',
         seeder: 'false',
-        bittorrent: { state: 'adding', finishedTime: '17' },
+        bittorrent: { state: 'recovering' },
       }),
     )
 
-    expect(wrapper.find('[aria-label="task.finish-seeding"]').exists()).toBe(true)
+    expect(wrapper.find('[aria-label="task.finish-seeding"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label="task.delete-task"]').exists()).toBe(true)
   })
 
   it('keeps terminal actions accessible', () => {

@@ -492,6 +492,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'Đã đồng bộ tệp khởi tạo ED2K',
   'ed2k-bootstrap-sync-failed': 'Không thể đồng bộ tệp khởi tạo ED2K',
   'ed2k-invalid-bootstrap-url': 'URL khởi tạo ED2K phải dùng HTTP hoặc HTTPS',
+  'ed2k-preview-priority': 'Ưu tiên xem trước ED2K',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

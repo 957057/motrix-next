@@ -495,6 +495,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ED2K ブートストラップファイルを同期しました',
   'ed2k-bootstrap-sync-failed': 'ED2K ブートストラップファイルの同期に失敗しました',
   'ed2k-invalid-bootstrap-url': 'ED2K ブートストラップ URL は HTTP または HTTPS を使用してください',
+  'ed2k-preview-priority': 'ED2K プレビューを優先',
   'ed2k-upload-slots': 'アップロードスロット',
   'ed2k-search': 'ED2K 検索',
   'ed2k-search-keyword': 'キーワード',

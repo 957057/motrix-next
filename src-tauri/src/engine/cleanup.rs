@@ -3,15 +3,12 @@ use std::path::{Path, PathBuf};
 use tauri::Manager;
 
 const DOWNLOAD_SESSION_FILE: &str = "download.session";
-const BT_SESSION_FILE: &str = "bittorrent.session";
-const BT_RESUME_DIR: &str = "torrents";
-const RECOVERY_BACKUP_DIR: &str = "recovery-backup";
+const ENGINE_STATE_DIR: &str = "state";
 
-fn engine_runtime_paths(data_dir: &Path) -> [PathBuf; 3] {
+fn engine_runtime_paths(data_dir: &Path) -> [PathBuf; 2] {
     [
         data_dir.join(DOWNLOAD_SESSION_FILE),
-        data_dir.join("engine").join(BT_SESSION_FILE),
-        data_dir.join("engine").join(BT_RESUME_DIR),
+        data_dir.join("engine").join(ENGINE_STATE_DIR),
     ]
 }
 
@@ -31,7 +28,6 @@ fn clear_runtime_paths(data_dir: &Path) -> Result<(), String> {
     for path in engine_runtime_paths(data_dir) {
         remove_path(&path)?;
     }
-    remove_path(&data_dir.join("engine").join(RECOVERY_BACKUP_DIR))?;
     Ok(())
 }
 
@@ -210,17 +206,20 @@ mod tests {
     use super::*;
 
     fn create_runtime_fixture(data_dir: &Path) {
-        std::fs::create_dir_all(data_dir.join("engine").join(BT_RESUME_DIR)).unwrap();
+        let state_dir = data_dir.join("engine").join(ENGINE_STATE_DIR);
+        std::fs::create_dir_all(state_dir.join("bittorrent").join("torrents")).unwrap();
+        std::fs::create_dir_all(state_dir.join("ed2k")).unwrap();
         std::fs::write(data_dir.join(DOWNLOAD_SESSION_FILE), "session").unwrap();
-        std::fs::write(data_dir.join("engine").join(BT_SESSION_FILE), "bt-state").unwrap();
+        std::fs::write(state_dir.join("bittorrent").join("session"), "bt-state").unwrap();
         std::fs::write(
-            data_dir
-                .join("engine")
-                .join(BT_RESUME_DIR)
+            state_dir
+                .join("bittorrent")
+                .join("torrents")
                 .join("resume.dat"),
             "resume",
         )
         .unwrap();
+        std::fs::write(state_dir.join("ed2k").join("state.db"), "ed2k-state").unwrap();
     }
 
     #[test]
@@ -229,10 +228,6 @@ mod tests {
         create_runtime_fixture(temp.path());
         std::fs::write(temp.path().join("history.db"), "history").unwrap();
         std::fs::write(temp.path().join("config.json"), "settings").unwrap();
-        let old_backup = temp.path().join("engine").join(RECOVERY_BACKUP_DIR);
-        std::fs::create_dir_all(&old_backup).unwrap();
-        std::fs::write(old_backup.join("old.session"), "old").unwrap();
-
         clear_runtime_paths(temp.path()).unwrap();
 
         for path in engine_runtime_paths(temp.path()) {
@@ -240,7 +235,6 @@ mod tests {
         }
         assert!(temp.path().join("history.db").exists());
         assert!(temp.path().join("config.json").exists());
-        assert!(!old_backup.exists());
     }
 
     #[test]

@@ -500,6 +500,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ED2K-bootstrapbestanden gesynchroniseerd',
   'ed2k-bootstrap-sync-failed': 'Synchronisatie van ED2K-bootstrapbestanden mislukt',
   'ed2k-invalid-bootstrap-url': "ED2K-bootstrap-URL's moeten HTTP of HTTPS gebruiken",
+  'ed2k-preview-priority': 'ED2K-voorbeelden prioriteren',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

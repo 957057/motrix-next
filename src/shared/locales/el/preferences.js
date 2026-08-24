@@ -506,6 +506,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'Τα αρχεία εκκίνησης ED2K συγχρονίστηκαν',
   'ed2k-bootstrap-sync-failed': 'Ο συγχρονισμός των αρχείων εκκίνησης ED2K απέτυχε',
   'ed2k-invalid-bootstrap-url': 'Το URL εκκίνησης ED2K πρέπει να χρησιμοποιεί HTTP ή HTTPS',
+  'ed2k-preview-priority': 'Προτεραιότητα προεπισκόπησης ED2K',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

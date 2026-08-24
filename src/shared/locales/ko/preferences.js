@@ -490,6 +490,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ED2K 부트스트랩 파일이 동기화되었습니다',
   'ed2k-bootstrap-sync-failed': 'ED2K 부트스트랩 파일 동기화 실패',
   'ed2k-invalid-bootstrap-url': 'ED2K 부트스트랩 URL은 HTTP 또는 HTTPS를 사용해야 합니다',
+  'ed2k-preview-priority': 'ED2K 미리보기 우선',
   'ed2k-upload-slots': '업로드 슬롯',
   'ed2k-search': 'ED2K 검색',
   'ed2k-search-keyword': '키워드',

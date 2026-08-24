@@ -78,8 +78,9 @@ pub struct TaskEvent {
     pub completed_length: String,
     pub info_hash: Option<String>,
     pub magnet_link: Option<String>,
-    pub finished_time: Option<String>,
+    pub seeding_time: Option<String>,
     pub ed2k_link: Option<String>,
+    pub ed2k_hash: Option<String>,
     pub is_bt: bool,
     pub is_ed2k: bool,
     pub sharing_kind: Option<&'static str>,
@@ -104,10 +105,10 @@ impl TaskEvent {
             .as_ref()
             .and_then(|bt| bt.magnet_link.clone())
             .filter(|value| !value.is_empty());
-        let finished_time = task
+        let seeding_time = task
             .bittorrent
             .as_ref()
-            .and_then(|bt| bt.finished_time.clone())
+            .and_then(|bt| bt.seeding_time.clone())
             .and_then(|value| value.parse::<u64>().ok())
             .filter(|value| *value > 0)
             .map(|value| value.to_string());
@@ -115,6 +116,11 @@ impl TaskEvent {
             .ed2k
             .as_ref()
             .and_then(|ed2k| ed2k.ed2k_link.clone())
+            .filter(|value| !value.is_empty());
+        let ed2k_hash = task
+            .ed2k
+            .as_ref()
+            .and_then(|ed2k| ed2k.hash.clone())
             .filter(|value| !value.is_empty());
 
         let files: Vec<TaskEventFile> = task
@@ -145,8 +151,9 @@ impl TaskEvent {
             completed_length: task.completed_length.clone(),
             info_hash,
             magnet_link,
-            finished_time,
+            seeding_time,
             ed2k_link,
+            ed2k_hash,
             is_bt,
             is_ed2k,
             sharing_kind: sharing_kind(task).map(SharingKind::as_str),
@@ -220,16 +227,22 @@ fn build_history_meta_json(event: &TaskEvent) -> Option<String> {
             serde_json::Value::String(magnet_link.clone()),
         );
     }
-    if let Some(ref finished_time) = event.finished_time {
+    if let Some(ref seeding_time) = event.seeding_time {
         meta.insert(
-            "finishedTime".to_string(),
-            serde_json::Value::String(finished_time.clone()),
+            "seedingTime".to_string(),
+            serde_json::Value::String(seeding_time.clone()),
         );
     }
     if let Some(ref ed2k_link) = event.ed2k_link {
         meta.insert(
             "ed2kLink".to_string(),
             serde_json::Value::String(ed2k_link.clone()),
+        );
+    }
+    if let Some(ref ed2k_hash) = event.ed2k_hash {
+        meta.insert(
+            "ed2kHash".to_string(),
+            serde_json::Value::String(ed2k_hash.clone()),
         );
     }
 
@@ -1212,7 +1225,7 @@ mod tests {
     #[test]
     fn build_history_record_sets_complete_status_for_bt_complete() {
         let mut task = make_bt_task("g2", "active", true);
-        task.bittorrent.as_mut().unwrap().finished_time = Some("3600".to_string());
+        task.bittorrent.as_mut().unwrap().seeding_time = Some("3600".to_string());
         let event = TaskEvent::from_aria2(&task);
         let record = build_history_record(&event, events::SHARING_COMPLETE);
 
@@ -1226,7 +1239,7 @@ mod tests {
         let meta: serde_json::Value =
             serde_json::from_str(meta_str).expect("meta must be valid JSON");
         assert_eq!(meta["infoHash"], "abcdef1234567890");
-        assert_eq!(meta["finishedTime"], "3600");
+        assert_eq!(meta["seedingTime"], "3600");
     }
 
     #[test]

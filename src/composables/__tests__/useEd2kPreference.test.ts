@@ -28,6 +28,7 @@ const baseForm: Ed2kForm = {
   ed2kBootstrapAutoSync: true,
   ed2kBootstrapSyncIntervalHours: 24,
   ed2kUploadSlots: 3,
+  ed2kPreviewPriority: false,
   ed2kSearchTimeout: 20,
 }
 
@@ -43,6 +44,7 @@ describe('buildEd2kForm', () => {
     expect(form.ed2kBootstrapAutoSync).toBe(true)
     expect(form.ed2kBootstrapSyncIntervalHours).toBe(24)
     expect(form.ed2kUploadSlots).toBe(3)
+    expect(form.ed2kPreviewPriority).toBe(false)
     expect(form.ed2kSearchTimeout).toBe(20)
   })
 
@@ -67,6 +69,7 @@ describe('buildEd2kSystemConfig', () => {
       'ed2k-udp-listen-port': '29150',
       'ed2k-server': 'server-one.example:4661,server-two.example:4661',
       'ed2k-upload-slots': '3',
+      'ed2k-preview-priority': 'false',
     })
   })
 })
@@ -92,6 +95,7 @@ describe('transformEd2kForStore', () => {
       ed2kBootstrapAutoSync: false,
       ed2kBootstrapSyncIntervalHours: 168,
       ed2kUploadSlots: 3,
+      ed2kPreviewPriority: false,
       ed2kSearchTimeout: 120,
     })
   })

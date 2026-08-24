@@ -508,6 +508,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': "Fichiers d'amorçage ED2K synchronisés",
   'ed2k-bootstrap-sync-failed': "Échec de la synchronisation des fichiers d'amorçage ED2K",
   'ed2k-invalid-bootstrap-url': "Les URL d'amorçage ED2K doivent utiliser HTTP ou HTTPS",
+  'ed2k-preview-priority': 'Prioriser les aperçus ED2K',
   'ed2k-upload-slots': 'Emplacements d’envoi',
   'ed2k-search': 'Recherche ED2K',
   'ed2k-search-keyword': 'Mot-clé',

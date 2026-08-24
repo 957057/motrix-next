@@ -498,6 +498,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'File bootstrap ED2K disinkronkan',
   'ed2k-bootstrap-sync-failed': 'Gagal menyinkronkan file bootstrap ED2K',
   'ed2k-invalid-bootstrap-url': 'URL bootstrap ED2K harus memakai HTTP atau HTTPS',
+  'ed2k-preview-priority': 'Prioritaskan pratinjau ED2K',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

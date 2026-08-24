@@ -505,6 +505,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': "Fitxers d'arrencada ED2K sincronitzats",
   'ed2k-bootstrap-sync-failed': "No s'han pogut sincronitzar els fitxers d'arrencada ED2K",
   'ed2k-invalid-bootstrap-url': "L'URL d'arrencada ED2K ha d'usar HTTP o HTTPS",
+  'ed2k-preview-priority': 'Prioritat de previsualització ED2K',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

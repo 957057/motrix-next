@@ -31,7 +31,6 @@ const PROXY_CLEAR_KEYS: &[&str] = &[
 const MANAGED_KEYS: &[&str] = &[
     "allow-remote-access",
     "bt-peer-blocklist",
-    "bt-session-state-file",
     "ed2k-node-list",
     "ed2k-server-list",
     "enable-rpc",
@@ -46,6 +45,7 @@ const MANAGED_KEYS: &[&str] = &[
     "rpc-allow-origin-all",
     "rpc-listen-all",
     "save-session",
+    "state-dir",
 ];
 
 #[derive(serde::Deserialize)]
@@ -88,7 +88,7 @@ pub(crate) fn non_hot_reloadable_keys() -> &'static HashSet<&'static str> {
 #[derive(Clone, Copy)]
 pub(crate) struct ManagedEngineConfig<'a> {
     pub session_path: &'a str,
-    pub bt_session_state_file: &'a str,
+    pub state_dir: &'a str,
     pub log_file_path: &'a str,
     pub log_level: &'a str,
     pub ed2k_server_list: &'a str,
@@ -211,11 +211,7 @@ pub(crate) fn build_runtime_config(
     )?;
     insert_option(&mut options, "rpc-allow-origin-all", "true")?;
     insert_option(&mut options, "save-session", managed.session_path)?;
-    insert_option(
-        &mut options,
-        "bt-session-state-file",
-        managed.bt_session_state_file,
-    )?;
+    insert_option(&mut options, "state-dir", managed.state_dir)?;
     insert_option(&mut options, "input-file", managed.session_path)?;
     insert_option(&mut options, "log", managed.log_file_path)?;
     insert_option(&mut options, "log-level", managed.log_level)?;
@@ -331,7 +327,7 @@ mod tests {
     fn managed<'a>() -> ManagedEngineConfig<'a> {
         ManagedEngineConfig {
             session_path: "/data/download.session",
-            bt_session_state_file: "/data/engine/bittorrent.session",
+            state_dir: "/data/engine/state",
             log_file_path: "/logs/aria2-next.log",
             log_level: "warn",
             ed2k_server_list: "/data/server.met",
@@ -374,9 +370,10 @@ mod tests {
             Some("/data/download.session")
         );
         assert_eq!(
-            option_value(&content, "bt-session-state-file"),
-            Some("/data/engine/bittorrent.session")
+            option_value(&content, "state-dir"),
+            Some("/data/engine/state")
         );
+        assert_eq!(option_value(&content, "bt-session-state-file"), None);
         assert_eq!(
             option_value(&content, "bt-peer-blocklist"),
             Some("/data/peer-blocklist.txt")

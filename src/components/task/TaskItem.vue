@@ -69,6 +69,7 @@ const statusColorMap: Record<string, string> = {
 
 const progressColor = computed(() => statusColorMap[taskStatus.value] || 'var(--m3-status-active)')
 const hasStatusLine = computed(() => Boolean(statusBadge.value || fileMissing.value))
+const displayErrorMessage = computed(() => props.task.errorMessage || props.task.bittorrent?.error?.message || '')
 
 const statusBadgeStyle = computed(() => {
   switch (statusBadge.value?.tone) {
@@ -90,6 +91,7 @@ const statusBadgeIcon = computed(() => {
     case TASK_STATUS.COMPLETE:
       return CheckmarkCircleOutline
     case TASK_STATUS.ERROR:
+    case 'bt-error':
       return AlertCircleOutline
     case TASK_STATUS.REMOVED:
       return TrashOutline
@@ -188,7 +190,7 @@ watch(isSharing, (now, was) => {
           <div class="progress-left" :class="{ 'info-hidden': !hasSizeInfo }">
             <span>
               {{ completedSize }}
-              <span v-if="Number(task.totalLength) > 0"> / {{ totalSize }}</span>
+              <span v-if="hasSizeInfo"> / {{ totalSize }}</span>
             </span>
           </div>
           <div class="progress-right" :class="{ 'info-hidden': !isActive }">
@@ -212,8 +214,8 @@ watch(isSharing, (now, was) => {
               <span>{{ task.connections }}</span>
             </span>
           </div>
-          <div class="error-message technical-text-wrap" :class="{ 'info-hidden': !task.errorMessage }">
-            {{ task.errorMessage }}
+          <div class="error-message technical-text-wrap" :class="{ 'info-hidden': !displayErrorMessage }">
+            {{ displayErrorMessage }}
           </div>
         </div>
       </div>

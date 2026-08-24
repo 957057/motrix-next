@@ -734,7 +734,6 @@ pub fn run() {
             commands::engine_recover_runtime_state,
             commands::resolve_bt_listen_port,
             commands::factory_reset,
-            commands::clear_engine_runtime_state,
             commands::update_tray_title,
             commands::update_tray_menu_labels,
             commands::update_menu_labels,

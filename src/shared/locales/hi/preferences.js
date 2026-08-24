@@ -492,6 +492,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ED2K बूटस्ट्रैप फ़ाइलें सिंक हो गईं',
   'ed2k-bootstrap-sync-failed': 'ED2K बूटस्ट्रैप फ़ाइलें सिंक नहीं हो सकीं',
   'ed2k-invalid-bootstrap-url': 'ED2K बूटस्ट्रैप URL में HTTP या HTTPS होना चाहिए',
+  'ed2k-preview-priority': 'ED2K पूर्वावलोकन को प्राथमिकता दें',
   'ed2k-upload-slots': 'Upload slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

@@ -74,12 +74,6 @@ pub fn factory_reset(app: AppHandle) -> Result<(), AppError> {
     Ok(())
 }
 
-/// Removes resumable engine state without touching settings, history, or downloaded files.
-#[tauri::command]
-pub fn clear_engine_runtime_state(app: AppHandle) -> Result<(), AppError> {
-    engine::clear_engine_runtime_state(&app).map_err(AppError::Io)
-}
-
 /// Returns the managed runtime aria2.conf path.
 #[tauri::command]
 pub fn get_engine_conf_path(app: AppHandle) -> Result<String, AppError> {

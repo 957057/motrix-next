@@ -286,6 +286,7 @@ export default {
   'status-error': 'Feil',
   'status-removed': 'Fjernet',
   'status-sharing': 'Deler',
+  'bt-recovering': 'Gjenoppretter BitTorrent-data',
   'bt-metadata-fetching': 'Henter torrent',
   'no-paused-tasks': 'Ingen oppgaver på pause',
   'no-active-tasks': 'Ingen aktive oppgaver',

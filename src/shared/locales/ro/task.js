@@ -286,6 +286,7 @@ export default {
   'status-error': 'Eroare',
   'status-removed': 'Eliminat',
   'status-sharing': 'Se distribuie',
+  'bt-recovering': 'Se recuperează datele BitTorrent',
   'bt-metadata-fetching': 'Se preia torrentul',
   'no-paused-tasks': 'Nu există sarcini în pauză',
   'no-active-tasks': 'Nu există sarcini active',

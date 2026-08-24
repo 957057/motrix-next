@@ -286,6 +286,7 @@ export default {
   'status-error': 'Lỗi',
   'status-removed': 'Đã xóa',
   'status-sharing': 'Đang chia sẻ',
+  'bt-recovering': 'Đang khôi phục dữ liệu BitTorrent',
   'bt-metadata-fetching': 'Đang lấy torrent',
   'no-paused-tasks': 'Không có tác vụ tạm dừng',
   'no-active-tasks': 'Không có tác vụ đang hoạt động',

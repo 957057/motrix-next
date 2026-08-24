@@ -286,6 +286,7 @@ export default {
   'status-error': '错误',
   'status-removed': '已删除',
   'status-sharing': '共享中',
+  'bt-recovering': '正在恢复 BitTorrent 数据',
   'bt-metadata-fetching': '获取种子中',
   'no-paused-tasks': '没有暂停中的任务',
   'no-active-tasks': '没有进行中的任务',

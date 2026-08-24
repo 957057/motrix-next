@@ -287,6 +287,7 @@ export default {
   'status-error': 'Σφάλμα',
   'status-removed': 'Αφαιρέθηκε',
   'status-sharing': 'Διαμοιρασμός',
+  'bt-recovering': 'Ανάκτηση δεδομένων BitTorrent',
   'bt-metadata-fetching': 'Λήψη torrent',
   'no-paused-tasks': 'Δεν υπάρχουν εργασίες σε παύση',
   'no-active-tasks': 'Δεν υπάρχουν ενεργές εργασίες',

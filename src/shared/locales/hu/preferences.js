@@ -499,6 +499,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ED2K indítófájlok szinkronizálva',
   'ed2k-bootstrap-sync-failed': 'Az ED2K indítófájlok szinkronizálása sikertelen',
   'ed2k-invalid-bootstrap-url': 'Az ED2K indító URL-nek HTTP-t vagy HTTPS-t kell használnia',
+  'ed2k-preview-priority': 'ED2K-előnézetek előnyben részesítése',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

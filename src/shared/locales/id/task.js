@@ -286,6 +286,7 @@ export default {
   'status-error': 'Kesalahan',
   'status-removed': 'Dihapus',
   'status-sharing': 'Berbagi',
+  'bt-recovering': 'Memulihkan data BitTorrent',
   'bt-metadata-fetching': 'Mengambil torrent',
   'no-paused-tasks': 'Tidak ada tugas yang dijeda',
   'no-active-tasks': 'Tidak ada tugas aktif',

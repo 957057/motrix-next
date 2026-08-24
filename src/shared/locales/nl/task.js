@@ -286,6 +286,7 @@ export default {
   'status-error': 'Fout',
   'status-removed': 'Verwijderd',
   'status-sharing': 'Delen',
+  'bt-recovering': 'BitTorrent-gegevens herstellen',
   'bt-metadata-fetching': 'Torrent ophalen',
   'no-paused-tasks': 'Geen gepauzeerde taken',
   'no-active-tasks': 'Geen actieve taken',

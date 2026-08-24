@@ -496,6 +496,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ED2K başlatma dosyaları eşitlendi',
   'ed2k-bootstrap-sync-failed': 'ED2K başlatma dosyaları eşitlenemedi',
   'ed2k-invalid-bootstrap-url': "ED2K başlatma URL'leri HTTP veya HTTPS kullanmalıdır",
+  'ed2k-preview-priority': 'ED2K önizlemelerine öncelik ver',
   'ed2k-upload-slots': 'Upload Slots',
   'ed2k-search': 'ED2K Search',
   'ed2k-search-keyword': 'Keyword',

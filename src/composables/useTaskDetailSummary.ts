@@ -56,6 +56,7 @@ export function getTaskDetailStatusLabelKey(status: string | undefined): string 
   return status === 'seeding' ||
     status === 'sharing' ||
     status === 'bt-metadata-fetching' ||
+    status === 'bt-recovering' ||
     status === 'awaiting-file-selection' ||
     status === 'seeding-paused'
     ? `task.${status}`

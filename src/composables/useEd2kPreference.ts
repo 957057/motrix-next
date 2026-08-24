@@ -28,6 +28,7 @@ export interface Ed2kForm {
   ed2kBootstrapAutoSync: boolean
   ed2kBootstrapSyncIntervalHours: number
   ed2kUploadSlots: number
+  ed2kPreviewPriority: boolean
   ed2kSearchTimeout: number
 }
 
@@ -52,6 +53,7 @@ export function buildEd2kForm(config: AppConfig): Ed2kForm {
     ed2kBootstrapAutoSync: config.ed2kBootstrapAutoSync ?? D.ed2kBootstrapAutoSync,
     ed2kBootstrapSyncIntervalHours: Number(config.ed2kBootstrapSyncIntervalHours ?? D.ed2kBootstrapSyncIntervalHours),
     ed2kUploadSlots: Number(config.ed2kUploadSlots ?? D.ed2kUploadSlots),
+    ed2kPreviewPriority: config.ed2kPreviewPriority ?? D.ed2kPreviewPriority,
     ed2kSearchTimeout: Number(config.ed2kSearchTimeout ?? D.ed2kSearchTimeout),
   }
 }
@@ -62,6 +64,7 @@ export function buildEd2kSystemConfig(f: Ed2kForm): Record<string, string> {
     'ed2k-udp-listen-port': String(f.ed2kUdpListenPort),
     'ed2k-server': convertLineToComma(joinLines(f.ed2kServer)),
     'ed2k-upload-slots': String(f.ed2kUploadSlots),
+    'ed2k-preview-priority': String(f.ed2kPreviewPriority),
   }
 }
 
@@ -75,6 +78,7 @@ export function transformEd2kForStore(f: Ed2kForm): Partial<AppConfig> {
     ed2kBootstrapAutoSync: !!f.ed2kBootstrapAutoSync,
     ed2kBootstrapSyncIntervalHours: Number(f.ed2kBootstrapSyncIntervalHours),
     ed2kUploadSlots: Number(f.ed2kUploadSlots),
+    ed2kPreviewPriority: !!f.ed2kPreviewPriority,
     ed2kSearchTimeout: Number(f.ed2kSearchTimeout),
   }
 }

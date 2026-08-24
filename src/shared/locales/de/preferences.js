@@ -501,6 +501,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'ED2K-Startdateien synchronisiert',
   'ed2k-bootstrap-sync-failed': 'ED2K-Startdateien konnten nicht synchronisiert werden',
   'ed2k-invalid-bootstrap-url': 'Die ED2K-Start-URL muss HTTP oder HTTPS verwenden',
+  'ed2k-preview-priority': 'ED2K-Vorschau priorisieren',
   'ed2k-upload-slots': 'Upload-Slots',
   'ed2k-search': 'ED2K-Suche',
   'ed2k-search-keyword': 'Suchbegriff',

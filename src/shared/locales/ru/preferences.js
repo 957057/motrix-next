@@ -499,6 +499,7 @@ export default {
   'ed2k-bootstrap-sync-succeed': 'Файлы подключения ED2K синхронизированы',
   'ed2k-bootstrap-sync-failed': 'Не удалось синхронизировать файлы подключения ED2K',
   'ed2k-invalid-bootstrap-url': 'URL подключения ED2K должен использовать HTTP или HTTPS',
+  'ed2k-preview-priority': 'Приоритет предпросмотра ED2K',
   'ed2k-upload-slots': 'Слоты отдачи',
   'ed2k-search': 'Поиск ED2K',
   'ed2k-search-keyword': 'Ключевое слово',
