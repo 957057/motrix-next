@@ -37,6 +37,7 @@ export default {
   'confirm-exit-title': '終了確認',
   'confirm-exit-message': '終了してもよろしいですか？進行中のダウンロードは一時停止されます。',
   'engine-not-ready': 'エンジンを起動中です。お待ちください...',
+  'engine-ready': 'Aria2 Next エンジンの準備が完了しました',
   'engine-failed': 'エンジンの起動に失敗しました',
   'new-version-available': 'アップデートがあります',
   'older-version-available': '旧バージョンが利用可能',

@@ -37,6 +37,7 @@ export default {
   'confirm-exit-title': 'Confirmă ieșirea',
   'confirm-exit-message': 'Sigur doriți să ieșiți? Descărcările active vor fi suspendate.',
   'engine-not-ready': 'Motorul pornește, vă rugăm așteptați...',
+  'engine-ready': 'Motorul Aria2 Next este gata',
   'engine-failed': 'Pornirea motorului a eșuat',
   'new-version-available': 'Actualizare disponibilă',
   'older-version-available': 'Versiune mai veche disponibilă',

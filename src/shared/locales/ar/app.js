@@ -37,6 +37,7 @@ export default {
   'confirm-exit-title': 'تأكيد الخروج',
   'confirm-exit-message': 'هل أنت متأكد من الخروج؟ سيتم إيقاف التنزيلات النشطة مؤقتًا.',
   'engine-not-ready': 'المحرك قيد التشغيل، يرجى الانتظار...',
+  'engine-ready': 'محرك Aria2 Next جاهز',
   'engine-failed': 'فشل في بدء المحرك',
   'new-version-available': 'تحديث متاح',
   'older-version-available': 'إصدار أقدم متاح',

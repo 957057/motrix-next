@@ -37,6 +37,7 @@ export default {
   'confirm-exit-title': 'Conferma uscita',
   'confirm-exit-message': 'Sicuro di voler uscire? I download attivi verranno sospesi.',
   'engine-not-ready': 'Il motore si sta avviando, attendere...',
+  'engine-ready': 'Il motore Aria2 Next è pronto',
   'engine-failed': 'Avvio del motore non riuscito',
   'new-version-available': 'Aggiornamento disponibile',
   'older-version-available': 'Versione precedente disponibile',

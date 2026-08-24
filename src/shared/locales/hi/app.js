@@ -37,6 +37,7 @@ export default {
   'confirm-exit-title': 'बाहर निकलने की पुष्टि करें',
   'confirm-exit-message': 'क्या आप सच में छोड़ना चाहते हैं? सक्रिय डाउनलोड रोक दिए जाएंगे।',
   'engine-not-ready': 'इंजन शुरू हो रहा है, कृपया प्रतीक्षा करें...',
+  'engine-ready': 'Aria2 Next इंजन तैयार है',
   'engine-failed': 'इंजन शुरू नहीं हो सका',
   'new-version-available': 'अपडेट उपलब्ध है',
   'older-version-available': 'पुराना संस्करण उपलब्ध है',

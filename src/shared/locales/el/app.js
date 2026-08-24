@@ -37,6 +37,7 @@ export default {
   'confirm-exit-title': 'Επιβεβαίωση εξόδου',
   'confirm-exit-message': 'Σίγουρα θέλετε να βγείτε; Οι ενεργές λήψεις θα τεθούν σε παύση.',
   'engine-not-ready': 'Η μηχανή εκκινεί, παρακαλώ περιμένετε...',
+  'engine-ready': 'Η μηχανή Aria2 Next είναι έτοιμη',
   'engine-failed': 'Αποτυχία εκκίνησης κινητήρα',
   'new-version-available': 'Διαθέσιμη ενημέρωση',
   'older-version-available': 'Διαθέσιμη παλαιότερη έκδοση',

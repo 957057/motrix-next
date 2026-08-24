@@ -363,6 +363,7 @@ if (import.meta.env.PROD) {
       if (ok) {
         await preferenceStore.reloadPreferenceFromDisk()
         logger.info('Engine', 'Rust on_engine_ready completed: options synced, services spawned')
+        emitAppToast({ type: 'success', key: 'app.engine-ready' })
       }
     } catch (e) {
       logger.error('Engine', `unexpected startup error: ${getErrorMessage(e)}`)

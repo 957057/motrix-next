@@ -37,6 +37,7 @@ export default {
   'confirm-exit-title': 'Afsluiten bevestigen',
   'confirm-exit-message': 'Weet u zeker dat u wilt afsluiten? Actieve downloads worden gepauzeerd.',
   'engine-not-ready': 'Engine wordt gestart, even geduld...',
+  'engine-ready': 'De Aria2 Next-engine is gereed',
   'engine-failed': 'Engine starten mislukt',
   'new-version-available': 'Update beschikbaar',
   'older-version-available': 'Oudere versie beschikbaar',

@@ -37,6 +37,7 @@ export default {
   'confirm-exit-title': 'Çıkışı onayla',
   'confirm-exit-message': 'Çıkmak istediğinizden emin misiniz? Aktif indirmeler duraklatılacak.',
   'engine-not-ready': 'Motor başlatılıyor, lütfen bekleyin...',
+  'engine-ready': 'Aria2 Next motoru hazır',
   'engine-failed': 'Motor başlatılamadı',
   'new-version-available': 'Güncelleme mevcut',
   'older-version-available': 'Eski sürüm mevcut',

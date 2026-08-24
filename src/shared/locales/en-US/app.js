@@ -37,6 +37,7 @@ export default {
   'confirm-exit-title': 'Confirm Exit',
   'confirm-exit-message': 'Are you sure you want to quit? Active downloads will be paused.',
   'engine-not-ready': 'Engine is starting, please wait...',
+  'engine-ready': 'Aria2 Next engine is ready',
   'engine-failed': 'Engine failed to start',
   'new-version-available': 'Update Available',
   'older-version-available': 'Older Version Available',
