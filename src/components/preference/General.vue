@@ -3,6 +3,7 @@
 import { ref, computed, watch, onMounted, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
+import { useAppStore } from '@/stores/app'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
 import { useEngineStore } from '@/stores/engine'
 import { relaunch } from '@tauri-apps/plugin-process'
@@ -43,12 +44,12 @@ import {
 import PreferenceActionBar from './PreferenceActionBar.vue'
 import MTooltip from '@/components/common/MTooltip.vue'
 import { CloudDownloadOutline } from '@vicons/ionicons5'
-import UpdateDialog from '@/components/preference/UpdateDialog.vue'
 import type { UpdateChannel } from '@shared/types'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 
 const { t, locale } = useI18n()
 const preferenceStore = usePreferenceStore()
+const appStore = useAppStore()
 const dialog = useDialog()
 const message = useAppMessage()
 const { isMac, isLinux, platformLabel, archLabel: getArchLabel } = usePlatform()
@@ -69,8 +70,6 @@ async function copyVersionToClipboard(text: string, label: string) {
     logger.debug('General.clipboard', `writeText failed: ${e}`)
   }
 }
-const updateDialogRef = ref<InstanceType<typeof UpdateDialog> | null>(null)
-
 const checkIntervalOptions = [
   { label: t('preferences.interval-every-startup'), value: 0 },
   { label: t('preferences.interval-daily'), value: 24 },
@@ -251,7 +250,7 @@ const taskCardModeOptions = computed(() => [
 ])
 
 function handleCheckUpdate() {
-  updateDialogRef.value?.open()
+  appStore.requestUpdateCheck()
 }
 
 const engineStore = useEngineStore()
@@ -402,8 +401,6 @@ onMounted(async () => {
             <NText v-else depth="3" class="pref-inline-row__meta">—</NText>
           </div>
         </NFormItem>
-        <UpdateDialog ref="updateDialogRef" />
-
         <!-- ④ Appearance -->
         <NDivider title-placement="left">{{ t('preferences.appearance-section') }}</NDivider>
         <NFormItem :label="t('preferences.appearance')">

@@ -452,8 +452,17 @@ watch(
   () => appStore.pendingUpdate,
   (update) => {
     if (update) {
-      nextTick(() => updateDialogRef.value?.open())
+      nextTick(() => updateDialogRef.value?.present(update))
       appStore.pendingUpdate = null
+    }
+  },
+)
+
+watch(
+  () => appStore.updateCheckRequestId,
+  (requestId) => {
+    if (requestId > 0) {
+      nextTick(() => updateDialogRef.value?.open())
     }
   },
 )
