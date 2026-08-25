@@ -74,7 +74,7 @@ function createMockApi() {
     getFiles: vi.fn().mockResolvedValue([]),
     removeTask: vi.fn().mockResolvedValue('gid1'),
     deleteTask: vi.fn().mockResolvedValue(undefined),
-    finishSeeding: vi.fn().mockResolvedValue(undefined),
+    finishSharing: vi.fn().mockResolvedValue(undefined),
     forcePauseTask: vi.fn().mockResolvedValue('gid1'),
     pauseTask: vi.fn().mockResolvedValue('gid1'),
     resumeTask: vi.fn().mockResolvedValue('gid1'),

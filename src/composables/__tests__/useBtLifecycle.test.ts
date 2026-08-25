@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatBtDuration, getBtLifecycleState } from '@/composables/useBtLifecycle'
+import { formatSharingDuration, getBtLifecycleState } from '@/composables/useBtLifecycle'
 import type { Aria2Task } from '@shared/types'
 
 function task(overrides: Partial<Aria2Task>): Aria2Task {
@@ -78,6 +78,6 @@ describe('getBtLifecycleState', () => {
   })
 
   it('formats multi-day seeding time without truncating it', () => {
-    expect(formatBtDuration(183900, { day: 'd', hour: 'h', minute: 'm', second: 's' })).toBe('2d 3h')
+    expect(formatSharingDuration(183900, { day: 'd', hour: 'h', minute: 'm', second: 's' })).toBe('2d 3h')
   })
 })

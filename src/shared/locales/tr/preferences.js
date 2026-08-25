@@ -54,7 +54,6 @@ export default {
   'bt-discovery-section': 'Eş keşfi',
   'p2p-sharing-section': 'P2P Paylaşım Politikası',
   'sharing-mode': 'Paylaşım Politikası',
-  'sharing-mode-scope-hint': 'BT seed ve ED2K paylaşımı için geçerlidir',
   'sharing-mode-stop-by-condition': 'Koşullardan Sonra Durdur',
   'sharing-mode-manual-stop': 'Elle Durdur',
   'sharing-mode-manual-stop-tips': 'Tamamlanan indirmeler görevi elle durdurana kadar paylaşmaya devam eder',
@@ -328,7 +327,7 @@ export default {
     'Etkinleştirmek arayüz işleme performansını artırabilir, ancak bazı GPU’lar, sürücüler veya masaüstü ortamları WebKitGTK’nin çökmesine neden olabilir',
   'hardware-rendering-restart-confirm':
     'WebKitGTK donanım hızlandırmasını değiştirmek uygulamanın yeniden başlatılmasını gerektirir. Etkinleştirdikten sonra uygulama başlayamazsa config.json dosyasını elle düzenleyin ve preferences.hardwareRendering değerini false yapın.',
-  'session-path': 'Görev Önbellek Dosyası',
+  'engine-state-path': 'Motor Durumu Dizini',
   'reset-engine-state': 'Motor Durumunu Sıfırla',
   'reset-engine-state-confirm':
     'Tüm indirme görevleri motordan kaldırılacak ve görev önbellek dosyası silinecektir. Tamamlanan indirme geçmişi etkilenmeyecektir.',
@@ -471,9 +470,6 @@ export default {
   'connect-timeout': 'Bağlantı zaman aşımı',
   timeout: 'Aktarım zaman aşımı',
   'file-allocation': 'Dosya ön tahsisi',
-  'async-dns': 'Asenkron DNS',
-  'async-dns-hint':
-    'Etkinleştirildiğinde DNS çözümleme performansını artırabilir, ancak indirmeleri kararsız hale de getirebilir',
   'startup-behavior': 'Başlangıç',
   'tray-and-dock': 'Tepsi ve Dock',
   'unit-seconds': 'sn',

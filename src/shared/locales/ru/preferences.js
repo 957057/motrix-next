@@ -56,7 +56,6 @@ export default {
   'bt-discovery-section': 'Поиск peers',
   'p2p-sharing-section': 'Политика P2P-раздачи',
   'sharing-mode': 'Политика раздачи',
-  'sharing-mode-scope-hint': 'Применяется к BT-раздаче и ED2K-шерингу',
   'sharing-mode-stop-by-condition': 'Остановить по условиям',
   'sharing-mode-manual-stop': 'Остановить вручную',
   'sharing-mode-manual-stop-tips': 'Завершенные загрузки продолжают раздаваться, пока вы вручную не остановите задачу',
@@ -330,7 +329,7 @@ export default {
     'Включение может повысить производительность отрисовки интерфейса, но некоторые GPU, драйверы или рабочие среды могут вызывать сбой WebKitGTK',
   'hardware-rendering-restart-confirm':
     'Изменение аппаратного ускорения WebKitGTK требует перезапуска приложения. Если приложение не запускается после включения, вручную отредактируйте config.json и задайте preferences.hardwareRendering значение false.',
-  'session-path': 'Файл кэша задач',
+  'engine-state-path': 'Каталог состояния движка',
   'reset-engine-state': 'Сбросить состояние движка',
   'reset-engine-state-confirm':
     'Все задачи загрузки будут удалены из движка, файл кэша задач будет очищен. История завершённых загрузок не будет затронута.',
@@ -474,9 +473,6 @@ export default {
   'connect-timeout': 'Тайм-аут подключения',
   timeout: 'Тайм-аут передачи',
   'file-allocation': 'Предварительное выделение файла',
-  'async-dns': 'Асинхронный DNS',
-  'async-dns-hint':
-    'После включения может повысить производительность DNS-разрешения, но также может сделать загрузки нестабильными',
   'startup-behavior': 'Запуск',
   'tray-and-dock': 'Трей и Dock',
   'unit-seconds': 'сек',

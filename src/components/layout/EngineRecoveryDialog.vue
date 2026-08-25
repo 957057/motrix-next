@@ -286,6 +286,10 @@ async function cleanupAndRetry() {
   box-shadow: 0 18px 56px var(--m3-shadow);
 }
 
+.engine-dialog[data-state='complete'] {
+  border-color: transparent;
+}
+
 .engine-error-label {
   color: var(--m3-on-surface-variant);
   font-size: 11px;

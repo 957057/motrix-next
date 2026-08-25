@@ -543,8 +543,8 @@ async fn remove_uploaded_torrent_metadata(client: &Aria2Client, gid: &str) {
     }
 }
 
-fn is_bt_seeding_task(task: &Aria2Task) -> bool {
-    task.bittorrent.is_some() && task.seeder.as_deref() == Some("true")
+fn is_p2p_sharing_task(task: &Aria2Task) -> bool {
+    (task.bittorrent.is_some() || task.ed2k.is_some()) && task.seeder.as_deref() == Some("true")
 }
 
 /// Delete a task regardless of whether it is live, transitioning, or stopped.
@@ -565,26 +565,26 @@ pub async fn aria2_delete_task(
     Ok(())
 }
 
-/// End seeding while preserving downloaded files and the completed history record.
+/// End P2P sharing while preserving downloaded files and the completed history record.
 #[tauri::command]
-pub async fn aria2_finish_seeding(
+pub async fn aria2_finish_sharing(
     state: State<'_, Aria2State>,
     history: State<'_, HistoryDbState>,
     gid: String,
 ) -> Result<(), AppError> {
     let task = state.0.tell_status(&gid).await?;
-    if !is_bt_seeding_task(&task) {
+    if !is_p2p_sharing_task(&task) {
         return Err(AppError::Aria2(format!(
-            "GID {gid} is not a BitTorrent seeding task"
+            "GID {gid} is not a P2P sharing task"
         )));
     }
 
-    log::info!("aria2:finish-seeding gid={gid}");
+    log::info!("aria2:finish-sharing gid={gid}");
     let event = crate::services::monitor::TaskEvent::from_aria2(&task);
     let added_at = history.0.get_task_birth(&gid).await?;
     let record = crate::services::monitor::build_history_record_with_added_at(
         &event,
-        crate::services::monitor::events::SHARING_COMPLETE,
+        crate::services::monitor::events::P2P_DOWNLOAD_COMPLETE,
         added_at,
     );
     history.0.add_record(&record).await?;
@@ -693,10 +693,10 @@ pub async fn aria2_batch_force_remove(
 #[cfg(test)]
 mod tests {
     use super::{
-        is_bt_seeding_task, is_download_result_transitioning, is_missing_download,
+        is_download_result_transitioning, is_missing_download, is_p2p_sharing_task,
         is_terminal_download_status, sanitize_out_option, uploaded_torrent_metadata_path, AppError,
     };
-    use crate::aria2::types::{Aria2BtInfo, Aria2Task};
+    use crate::aria2::types::{Aria2BtInfo, Aria2Ed2kInfo, Aria2Task};
 
     #[test]
     fn uploaded_torrent_metadata_accepts_engine_hash_names() {
@@ -980,21 +980,19 @@ mod tests {
     }
 
     #[test]
-    fn finish_seeding_accepts_active_and_paused_bt_seeders() {
-        let active = Aria2Task {
+    fn finish_sharing_accepts_bt_and_ed2k_seeders() {
+        let bt = Aria2Task {
             seeder: Some("true".to_string()),
             bittorrent: Some(Aria2BtInfo::default()),
             ..Aria2Task::default()
         };
-        let paused = Aria2Task {
+        let ed2k = Aria2Task {
             seeder: Some("true".to_string()),
-            bittorrent: Some(Aria2BtInfo {
-                ..Aria2BtInfo::default()
-            }),
+            ed2k: Some(Aria2Ed2kInfo::default()),
             ..Aria2Task::default()
         };
-        assert!(is_bt_seeding_task(&active));
-        assert!(is_bt_seeding_task(&paused));
-        assert!(!is_bt_seeding_task(&Aria2Task::default()));
+        assert!(is_p2p_sharing_task(&bt));
+        assert!(is_p2p_sharing_task(&ed2k));
+        assert!(!is_p2p_sharing_task(&Aria2Task::default()));
     }
 }

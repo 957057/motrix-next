@@ -50,7 +50,7 @@ pub fn write_settings_backup_file(path: String, content: String) -> Result<(), A
 }
 
 /// Clears user, system, and preference stores, resetting the app to defaults.
-/// Also removes the aria2 session file to prevent tasks from resurrecting.
+/// Also removes engine runtime state and managed network caches.
 #[tauri::command]
 pub fn factory_reset(app: AppHandle) -> Result<(), AppError> {
     log::warn!("config:factory-reset");
@@ -68,9 +68,9 @@ pub fn factory_reset(app: AppHandle) -> Result<(), AppError> {
         .map_err(|e| AppError::Store(e.to_string()))?;
     config_store.clear();
 
-    // Remove aria2 session file so downloads don't reappear after restart
     engine::clear_engine_runtime_state(&app).map_err(AppError::Io)?;
     crate::commands::bt_blocklist::remove_bt_peer_blocklist_cache(&app)?;
+    crate::commands::ed2k::remove_ed2k_bootstrap_cache(&app)?;
 
     Ok(())
 }

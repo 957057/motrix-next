@@ -9,7 +9,6 @@ import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
 import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
 import { useEngineStore } from '@/stores/engine'
-import { useTaskStore } from '@/stores/task'
 import { useHistoryStore } from '@/stores/history'
 import { useAdvancedActions } from '@/composables/useAdvancedActions'
 import { useEngineRestart } from '@/composables/useEngineRestart'
@@ -64,7 +63,6 @@ const { restartEngine } = useEngineRestart()
 
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
-const taskStore = useTaskStore()
 const historyStore = useHistoryStore()
 const message = useAppMessage()
 const { constraint, configFieldProps, areConfigFieldsValid } = usePreferenceNumericValidation()
@@ -110,7 +108,7 @@ const selectedClipboardTypes = computed<string[]>({
 })
 
 const aria2ConfPath = ref('')
-const sessionPath = ref('')
+const engineStatePath = ref('')
 const logPath = ref('')
 const defaultTempPath = ref('')
 
@@ -274,7 +272,7 @@ async function loadPaths() {
   }
   try {
     const dataDir = await appDataDir()
-    sessionPath.value = await join(dataDir, 'download.session')
+    engineStatePath.value = await join(dataDir, 'engine', 'state')
   } catch (e) {
     logger.debug('Advanced.loadPaths', e)
   }
@@ -349,7 +347,6 @@ const {
 } = useAdvancedActions({
   t,
   message,
-  taskStore,
   historyStore,
   preferenceStore,
   form,
@@ -534,15 +531,18 @@ watch(protocolHandlers.lastError, (error) => {
             </NButton>
           </NInputGroup>
         </NFormItem>
-        <NFormItem :label="t('preferences.session-path')">
+        <NFormItem :label="t('preferences.engine-state-path')">
           <NInputGroup>
-            <NInput :value="sessionPath" readonly class="pref-control-full" />
-            <NButton class="pref-icon-button" @click="copyToClipboard(sessionPath, t('preferences.session-path'))">
+            <NInput :value="engineStatePath" readonly class="pref-control-full" />
+            <NButton
+              class="pref-icon-button"
+              @click="copyToClipboard(engineStatePath, t('preferences.engine-state-path'))"
+            >
               <template #icon>
                 <NIcon :size="14"><CopyOutline /></NIcon>
               </template>
             </NButton>
-            <NButton class="pref-icon-button" @click="handleRevealPath(sessionPath)">
+            <NButton class="pref-icon-button" @click="handleRevealPath(engineStatePath)">
               <template #icon>
                 <NIcon :size="14"><FolderOpenOutline /></NIcon>
               </template>

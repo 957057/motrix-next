@@ -68,11 +68,11 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
     }
   }
 
-  async function finishSeeding(task: Aria2Task): Promise<void> {
+  async function finishSharing(task: Aria2Task): Promise<void> {
     if (task.gid === currentTaskGid.value) hideTaskDetail()
     try {
-      await api.finishSeeding({ gid: task.gid })
-      logger.info('TaskOps.finishSeeding', `gid=${task.gid}`)
+      await api.finishSharing({ gid: task.gid })
+      logger.info('TaskOps.finishSharing', `gid=${task.gid}`)
     } finally {
       await fetchList()
       await api.saveSession()
@@ -207,7 +207,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
   return {
     removeTask,
     pauseTask,
-    finishSeeding,
+    finishSharing,
     resumeTask,
     applyMagnetFileSelection,
     resumeTasks,

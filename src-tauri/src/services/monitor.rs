@@ -34,7 +34,7 @@ const DEFAULT_INTERVAL_MS: u64 = 2000;
 pub mod events {
     pub const TASK_ERROR: &str = "task-monitor:error";
     pub const TASK_COMPLETE: &str = "task-monitor:complete";
-    pub const SHARING_COMPLETE: &str = "task-monitor:sharing-complete";
+    pub const P2P_DOWNLOAD_COMPLETE: &str = "task-monitor:p2p-download-complete";
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -78,7 +78,7 @@ pub struct TaskEvent {
     pub completed_length: String,
     pub info_hash: Option<String>,
     pub magnet_link: Option<String>,
-    pub seeding_time: Option<String>,
+    pub sharing_time: Option<String>,
     pub ed2k_link: Option<String>,
     pub ed2k_hash: Option<String>,
     pub is_bt: bool,
@@ -105,10 +105,15 @@ impl TaskEvent {
             .as_ref()
             .and_then(|bt| bt.magnet_link.clone())
             .filter(|value| !value.is_empty());
-        let seeding_time = task
+        let sharing_time = task
             .bittorrent
             .as_ref()
             .and_then(|bt| bt.seeding_time.clone())
+            .or_else(|| {
+                task.ed2k
+                    .as_ref()
+                    .and_then(|ed2k| ed2k.sharing_time.clone())
+            })
             .and_then(|value| value.parse::<u64>().ok())
             .filter(|value| *value > 0)
             .map(|value| value.to_string());
@@ -151,7 +156,7 @@ impl TaskEvent {
             completed_length: task.completed_length.clone(),
             info_hash,
             magnet_link,
-            seeding_time,
+            sharing_time,
             ed2k_link,
             ed2k_hash,
             is_bt,
@@ -227,10 +232,10 @@ fn build_history_meta_json(event: &TaskEvent) -> Option<String> {
             serde_json::Value::String(magnet_link.clone()),
         );
     }
-    if let Some(ref seeding_time) = event.seeding_time {
+    if let Some(ref sharing_time) = event.sharing_time {
         meta.insert(
-            "seedingTime".to_string(),
-            serde_json::Value::String(seeding_time.clone()),
+            "sharingTime".to_string(),
+            serde_json::Value::String(sharing_time.clone()),
         );
     }
     if let Some(ref ed2k_link) = event.ed2k_link {
@@ -308,7 +313,7 @@ pub fn build_history_record_with_added_at(
     added_at: Option<String>,
 ) -> crate::history::HistoryRecord {
     let status = match event_name {
-        events::TASK_COMPLETE | events::SHARING_COMPLETE => "complete",
+        events::TASK_COMPLETE | events::P2P_DOWNLOAD_COMPLETE => "complete",
         events::TASK_ERROR => "error",
         _ => "unknown",
     };
@@ -428,7 +433,7 @@ impl TaskNotifier {
                     self.notified_sharing_completes.insert(key.clone());
                     if self.initial_scan_done() && !self.is_restored_sharing(task, kind) {
                         emit.push((
-                            events::SHARING_COMPLETE.to_string(),
+                            events::P2P_DOWNLOAD_COMPLETE.to_string(),
                             TaskEvent::from_aria2(task),
                         ));
                     }
@@ -593,7 +598,7 @@ async fn monitor_loop(
         // that complete within a single poll window.
         let has_new_completion = events
             .iter()
-            .any(|(n, _)| n == events::TASK_COMPLETE || n == events::SHARING_COMPLETE);
+            .any(|(n, _)| n == events::TASK_COMPLETE || n == events::P2P_DOWNLOAD_COMPLETE);
 
         if !events.is_empty() {
             // ── Rust-side history persistence (lightweight mode safety) ──
@@ -604,7 +609,7 @@ async fn monitor_loop(
             if let Some(db_state) = app.try_state::<HistoryDbState>() {
                 for (event_name, payload) in &events {
                     if event_name == events::TASK_COMPLETE
-                        || event_name == events::SHARING_COMPLETE
+                        || event_name == events::P2P_DOWNLOAD_COMPLETE
                         || event_name == events::TASK_ERROR
                     {
                         let db = db_state.0.clone();
@@ -1007,7 +1012,7 @@ mod tests {
 
         let events = notifier.scan(&[make_bt_task("g1", "active", true)]);
         assert_eq!(events.len(), 1);
-        assert_eq!(events[0].0, events::SHARING_COMPLETE);
+        assert_eq!(events[0].0, events::P2P_DOWNLOAD_COMPLETE);
         assert!(events[0].1.is_bt);
     }
 
@@ -1018,7 +1023,7 @@ mod tests {
 
         let events = notifier.scan(&[make_ed2k_task("ed2k1", "active", true)]);
         assert_eq!(events.len(), 1);
-        assert_eq!(events[0].0, events::SHARING_COMPLETE);
+        assert_eq!(events[0].0, events::P2P_DOWNLOAD_COMPLETE);
         assert_eq!(events[0].1.sharing_kind, Some("ed2k"));
     }
 
@@ -1093,7 +1098,7 @@ mod tests {
         let events = notifier.scan(&[make_bt_task("g1", "active", true)]);
 
         assert_eq!(events.len(), 1);
-        assert_eq!(events[0].0, events::SHARING_COMPLETE);
+        assert_eq!(events[0].0, events::P2P_DOWNLOAD_COMPLETE);
     }
 
     #[test]
@@ -1186,7 +1191,7 @@ mod tests {
         let types: Vec<&str> = events.iter().map(|(t, _)| t.as_str()).collect();
         assert!(types.contains(&events::TASK_COMPLETE));
         assert!(types.contains(&events::TASK_ERROR));
-        assert!(types.contains(&events::SHARING_COMPLETE));
+        assert!(types.contains(&events::P2P_DOWNLOAD_COMPLETE));
     }
 
     // ── build_history_record unit tests ─────────────────────────────
@@ -1227,7 +1232,7 @@ mod tests {
         let mut task = make_bt_task("g2", "active", true);
         task.bittorrent.as_mut().unwrap().seeding_time = Some("3600".to_string());
         let event = TaskEvent::from_aria2(&task);
-        let record = build_history_record(&event, events::SHARING_COMPLETE);
+        let record = build_history_record(&event, events::P2P_DOWNLOAD_COMPLETE);
 
         assert_eq!(record.gid, "g2");
         assert_eq!(record.status, "complete");
@@ -1239,7 +1244,7 @@ mod tests {
         let meta: serde_json::Value =
             serde_json::from_str(meta_str).expect("meta must be valid JSON");
         assert_eq!(meta["infoHash"], "abcdef1234567890");
-        assert_eq!(meta["seedingTime"], "3600");
+        assert_eq!(meta["sharingTime"], "3600");
     }
 
     #[test]
@@ -1251,6 +1256,18 @@ mod tests {
         assert_eq!(record.gid, "g3");
         assert_eq!(record.status, "error");
         assert!(record.completed_at.is_some());
+    }
+
+    #[test]
+    fn build_history_record_preserves_ed2k_sharing_time() {
+        let mut task = make_ed2k_task("ed2k-time", "active", true);
+        task.ed2k.as_mut().unwrap().sharing_time = Some("1800".to_string());
+        let event = TaskEvent::from_aria2(&task);
+        let record = build_history_record(&event, events::P2P_DOWNLOAD_COMPLETE);
+        let meta: serde_json::Value =
+            serde_json::from_str(record.meta.as_deref().unwrap()).unwrap();
+
+        assert_eq!(meta["sharingTime"], "1800");
     }
 
     #[test]
@@ -1284,7 +1301,7 @@ mod tests {
     fn build_history_record_derives_task_type_for_bt() {
         let task = make_bt_task("g1", "active", true);
         let event = TaskEvent::from_aria2(&task);
-        let record = build_history_record(&event, events::SHARING_COMPLETE);
+        let record = build_history_record(&event, events::P2P_DOWNLOAD_COMPLETE);
 
         assert_eq!(record.task_type, Some("bt".to_string()));
     }
@@ -1319,7 +1336,7 @@ mod tests {
     fn bt_meta_is_valid_json_with_info_hash() {
         let task = make_bt_task("g1", "active", true);
         let event = TaskEvent::from_aria2(&task);
-        let record = build_history_record(&event, events::SHARING_COMPLETE);
+        let record = build_history_record(&event, events::P2P_DOWNLOAD_COMPLETE);
 
         let meta_str = record.meta.as_ref().unwrap();
         let meta: serde_json::Value =
@@ -1332,7 +1349,7 @@ mod tests {
     fn bt_meta_contains_announce_list() {
         let task = make_bt_task("g1", "active", true);
         let event = TaskEvent::from_aria2(&task);
-        let record = build_history_record(&event, events::SHARING_COMPLETE);
+        let record = build_history_record(&event, events::P2P_DOWNLOAD_COMPLETE);
 
         let meta: serde_json::Value = serde_json::from_str(record.meta.as_ref().unwrap()).unwrap();
         let al = meta["announceList"].as_array().unwrap();
@@ -1344,7 +1361,7 @@ mod tests {
     fn bt_meta_contains_engine_magnet_link() {
         let task = make_bt_task("g1", "active", true);
         let event = TaskEvent::from_aria2(&task);
-        let record = build_history_record(&event, events::SHARING_COMPLETE);
+        let record = build_history_record(&event, events::P2P_DOWNLOAD_COMPLETE);
 
         let meta: serde_json::Value = serde_json::from_str(record.meta.as_ref().unwrap()).unwrap();
         assert_eq!(
@@ -1357,7 +1374,7 @@ mod tests {
     fn ed2k_meta_contains_engine_ed2k_link() {
         let task = make_ed2k_task("g1", "active", true);
         let event = TaskEvent::from_aria2(&task);
-        let record = build_history_record(&event, events::SHARING_COMPLETE);
+        let record = build_history_record(&event, events::P2P_DOWNLOAD_COMPLETE);
 
         let meta: serde_json::Value = serde_json::from_str(record.meta.as_ref().unwrap()).unwrap();
         assert_eq!(
@@ -1370,7 +1387,7 @@ mod tests {
     fn multi_file_bt_meta_contains_files_snapshot() {
         let task = make_multi_file_bt_task("g1");
         let event = TaskEvent::from_aria2(&task);
-        let record = build_history_record(&event, events::SHARING_COMPLETE);
+        let record = build_history_record(&event, events::P2P_DOWNLOAD_COMPLETE);
 
         let meta: serde_json::Value = serde_json::from_str(record.meta.as_ref().unwrap()).unwrap();
 
@@ -1389,7 +1406,7 @@ mod tests {
     fn multi_file_bt_meta_has_announce_list_and_info_hash() {
         let task = make_multi_file_bt_task("g1");
         let event = TaskEvent::from_aria2(&task);
-        let record = build_history_record(&event, events::SHARING_COMPLETE);
+        let record = build_history_record(&event, events::P2P_DOWNLOAD_COMPLETE);
 
         let meta: serde_json::Value = serde_json::from_str(record.meta.as_ref().unwrap()).unwrap();
 
@@ -1418,7 +1435,7 @@ mod tests {
         // (files snapshot only needed for multi-file or multi-mirror)
         let task = make_bt_task("g1", "active", true);
         let event = TaskEvent::from_aria2(&task);
-        let record = build_history_record(&event, events::SHARING_COMPLETE);
+        let record = build_history_record(&event, events::P2P_DOWNLOAD_COMPLETE);
 
         let meta: serde_json::Value = serde_json::from_str(record.meta.as_ref().unwrap()).unwrap();
         assert!(meta.get("infoHash").is_some());

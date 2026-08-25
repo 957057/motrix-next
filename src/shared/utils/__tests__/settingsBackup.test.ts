@@ -65,7 +65,6 @@ describe('buildSystemConfigFromAppConfig', () => {
       maxConcurrentDownloads: 9,
       streamMaxConnections: 12,
       btMaxPeers: 88,
-      asyncDns: true,
       rpcListenPort: 29199,
       rpcSecret: 'imported-rpc',
       extensionApiSecret: 'imported-api',
@@ -78,7 +77,6 @@ describe('buildSystemConfigFromAppConfig', () => {
     expect(system['max-concurrent-downloads']).toBe('9')
     expect(system['stream-max-connections']).toBe('12')
     expect(system['bt-max-peers']).toBe('88')
-    expect(system['async-dns']).toBe('true')
     expect(system['rpc-listen-port']).toBe('29199')
     expect(system['rpc-secret']).toBe('imported-rpc')
     expect(system['bt-tracker']).toBe(config.btTracker)

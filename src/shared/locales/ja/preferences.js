@@ -55,7 +55,6 @@ export default {
   'bt-discovery-section': 'ピア検出',
   'p2p-sharing-section': 'P2P共有ポリシー',
   'sharing-mode': '共有ポリシー',
-  'sharing-mode-scope-hint': 'BTシードとED2K共有に適用されます',
   'sharing-mode-stop-by-condition': '条件到達で停止',
   'sharing-mode-manual-stop': '手動停止',
   'sharing-mode-manual-stop-tips': '完了したダウンロードは、タスクを手動で停止するまで共有を続けます',
@@ -326,7 +325,7 @@ export default {
     '有効にすると UI の描画性能が向上する場合がありますが、一部の GPU、ドライバー、デスクトップ環境では WebKitGTK がクラッシュする可能性があります',
   'hardware-rendering-restart-confirm':
     'WebKitGTK ハードウェアアクセラレーションの変更にはアプリの再起動が必要です。有効化後にアプリを起動できない場合は、config.json を手動で編集し、preferences.hardwareRendering を false に設定してください。',
-  'session-path': 'タスクキャッシュファイル',
+  'engine-state-path': 'エンジン状態ディレクトリ',
   'reset-engine-state': 'エンジン状態をリセット',
   'reset-engine-state-confirm':
     'すべてのダウンロードタスクがエンジンから削除され、タスクキャッシュファイルが消去されます。完了済みダウンロードの履歴は影響を受けません。',
@@ -471,8 +470,6 @@ export default {
   'connect-timeout': '接続タイムアウト',
   timeout: '転送タイムアウト',
   'file-allocation': 'ファイル事前割り当て',
-  'async-dns': '非同期 DNS',
-  'async-dns-hint': '有効にすると DNS 解決の性能が向上する場合がありますが、ダウンロードが不安定になることもあります',
   'startup-behavior': '起動',
   'tray-and-dock': 'トレイと Dock',
   'unit-seconds': '秒',

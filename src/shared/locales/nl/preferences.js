@@ -56,7 +56,6 @@ export default {
   'bt-discovery-section': 'Peer-detectie',
   'p2p-sharing-section': 'P2P-deelbeleid',
   'sharing-mode': 'Deelbeleid',
-  'sharing-mode-scope-hint': 'Geldt voor BT-seeding en ED2K-delen',
   'sharing-mode-stop-by-condition': 'Stoppen na voorwaarden',
   'sharing-mode-manual-stop': 'Handmatig stoppen',
   'sharing-mode-manual-stop-tips': 'Voltooide downloads blijven delen totdat je de taak handmatig stopt',
@@ -331,7 +330,7 @@ export default {
     'Inschakelen kan de renderprestaties van de interface verbeteren, maar sommige GPU’s, stuurprogramma’s of desktopomgevingen kunnen WebKitGTK laten crashen',
   'hardware-rendering-restart-confirm':
     'Het wijzigen van WebKitGTK-hardwareversnelling vereist een herstart van de app. Als de app na inschakelen niet kan starten, bewerk config.json handmatig en zet preferences.hardwareRendering op false.',
-  'session-path': 'Taakcachebestand',
+  'engine-state-path': 'Map voor enginestatus',
   'reset-engine-state': 'Engine-status resetten',
   'reset-engine-state-confirm':
     'Alle downloadtaken worden uit de engine verwijderd en het taakcachebestand wordt gewist. De geschiedenis van voltooide downloads wordt niet beïnvloed.',
@@ -475,9 +474,6 @@ export default {
   'connect-timeout': 'Verbindingstime-out',
   timeout: 'Overdrachtstime-out',
   'file-allocation': 'Bestandsvoorallocatie',
-  'async-dns': 'Asynchrone DNS',
-  'async-dns-hint':
-    'Kan na inschakelen de prestaties van DNS-resolutie verbeteren, maar kan downloads ook instabiel maken',
   'startup-behavior': 'Opstarten',
   'tray-and-dock': 'Systeemvak en Dock',
   'unit-seconds': 'sec',

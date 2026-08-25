@@ -127,7 +127,7 @@ fn trim_linux_notifications_to_limit(
 pub enum TaskNotificationKind {
     Start,
     Complete,
-    SharingComplete,
+    P2pDownloadComplete,
     Error,
 }
 
@@ -164,7 +164,7 @@ pub fn linux_notification_identity() -> LinuxNotificationIdentity {
 fn kind_for_event(event_name: &str) -> Option<TaskNotificationKind> {
     match event_name {
         events::TASK_COMPLETE => Some(TaskNotificationKind::Complete),
-        events::SHARING_COMPLETE => Some(TaskNotificationKind::SharingComplete),
+        events::P2P_DOWNLOAD_COMPLETE => Some(TaskNotificationKind::P2pDownloadComplete),
         events::TASK_ERROR => Some(TaskNotificationKind::Error),
         _ => None,
     }
@@ -177,7 +177,7 @@ fn notification_enabled(kind: TaskNotificationKind, config: &RuntimeConfig) -> b
 
     match kind {
         TaskNotificationKind::Start => config.notify_on_start,
-        TaskNotificationKind::Complete | TaskNotificationKind::SharingComplete => {
+        TaskNotificationKind::Complete | TaskNotificationKind::P2pDownloadComplete => {
             config.notify_on_complete
         }
         TaskNotificationKind::Error => true,
@@ -209,7 +209,7 @@ pub fn build_task_notification(
             texts.download_complete_title.to_string(),
             format_task_message(texts.download_complete_body, task_name),
         ),
-        TaskNotificationKind::SharingComplete => {
+        TaskNotificationKind::P2pDownloadComplete => {
             if event.sharing_kind == Some("ed2k") {
                 (
                     texts.ed2k_complete_title.to_string(),
@@ -492,7 +492,7 @@ mod tests {
             completed_length: "1".to_string(),
             info_hash: None,
             magnet_link: None,
-            seeding_time: None,
+            sharing_time: None,
             ed2k_link: None,
             ed2k_hash: None,
             is_bt: false,
@@ -517,8 +517,8 @@ mod tests {
         let mut ev = event();
         ev.is_bt = true;
         ev.sharing_kind = Some("bt");
-        let content = build_task_notification(events::SHARING_COMPLETE, &ev, &cfg()).unwrap();
-        assert_eq!(content.kind, TaskNotificationKind::SharingComplete);
+        let content = build_task_notification(events::P2P_DOWNLOAD_COMPLETE, &ev, &cfg()).unwrap();
+        assert_eq!(content.kind, TaskNotificationKind::P2pDownloadComplete);
         assert_eq!(content.title, "BT Download Complete");
         assert_eq!(content.body, "Seeding: file.zip");
     }
@@ -528,8 +528,8 @@ mod tests {
         let mut ev = event();
         ev.is_ed2k = true;
         ev.sharing_kind = Some("ed2k");
-        let content = build_task_notification(events::SHARING_COMPLETE, &ev, &cfg()).unwrap();
-        assert_eq!(content.kind, TaskNotificationKind::SharingComplete);
+        let content = build_task_notification(events::P2P_DOWNLOAD_COMPLETE, &ev, &cfg()).unwrap();
+        assert_eq!(content.kind, TaskNotificationKind::P2pDownloadComplete);
         assert_eq!(content.title, "ED2K Download Complete");
         assert_eq!(content.body, "Sharing: file.zip");
     }
@@ -542,9 +542,9 @@ mod tests {
         let mut config = cfg();
         config.locale = "zh-CN".to_string();
 
-        let content = build_task_notification(events::SHARING_COMPLETE, &ev, &config).unwrap();
+        let content = build_task_notification(events::P2P_DOWNLOAD_COMPLETE, &ev, &config).unwrap();
 
-        assert_eq!(content.kind, TaskNotificationKind::SharingComplete);
+        assert_eq!(content.kind, TaskNotificationKind::P2pDownloadComplete);
         assert_eq!(content.title, "ED2K 下载完成");
         assert_eq!(content.body, "共享中：file.zip");
         assert_eq!(content.locale, "zh-CN");

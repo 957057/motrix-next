@@ -57,7 +57,6 @@ export default {
   'bt-discovery-section': 'Εντοπισμός peers',
   'p2p-sharing-section': 'Πολιτική κοινής χρήσης P2P',
   'sharing-mode': 'Πολιτική κοινής χρήσης',
-  'sharing-mode-scope-hint': 'Ισχύει για BT seeding και ED2K sharing',
   'sharing-mode-stop-by-condition': 'Διακοπή βάσει συνθηκών',
   'sharing-mode-manual-stop': 'Μη αυτόματη διακοπή',
   'sharing-mode-manual-stop-tips':
@@ -334,7 +333,7 @@ export default {
     'Η ενεργοποίηση μπορεί να βελτιώσει την απόδοση απεικόνισης της διεπαφής, αλλά ορισμένες GPU, οδηγοί ή περιβάλλοντα επιφάνειας εργασίας μπορεί να προκαλέσουν κατάρρευση του WebKitGTK',
   'hardware-rendering-restart-confirm':
     'Η αλλαγή της επιτάχυνσης υλικού WebKitGTK απαιτεί επανεκκίνηση της εφαρμογής. Αν η εφαρμογή δεν μπορεί να ξεκινήσει μετά την ενεργοποίηση, επεξεργαστείτε χειροκίνητα το config.json και ορίστε το preferences.hardwareRendering σε false.',
-  'session-path': 'Αρχείο προσωρινής μνήμης εργασιών',
+  'engine-state-path': 'Κατάλογος κατάστασης μηχανής',
   'reset-engine-state': 'Επαναφορά κατάστασης μηχανής',
   'reset-engine-state-confirm':
     'Θα αφαιρεθούν όλες οι εργασίες λήψης από τη μηχανή και θα διαγραφεί το αρχείο προσωρινής μνήμης εργασιών. Το ιστορικό ολοκληρωμένων λήψεων δεν θα επηρεαστεί.',
@@ -481,9 +480,6 @@ export default {
   'connect-timeout': 'Χρονικό όριο σύνδεσης',
   timeout: 'Χρονικό όριο μεταφοράς',
   'file-allocation': 'Προ-εκχώρηση αρχείου',
-  'async-dns': 'Ασύγχρονο DNS',
-  'async-dns-hint':
-    'Μετά την ενεργοποίηση μπορεί να βελτιώσει την απόδοση της ανάλυσης DNS, αλλά μπορεί να κάνει τις λήψεις ασταθείς',
   'startup-behavior': 'Εκκίνηση',
   'tray-and-dock': 'Περιοχή ειδοποιήσεων & Dock',
   'unit-seconds': 'δευτ',

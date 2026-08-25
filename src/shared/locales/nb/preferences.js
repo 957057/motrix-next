@@ -56,7 +56,6 @@ export default {
   'bt-discovery-section': 'Peer-oppdaging',
   'p2p-sharing-section': 'P2P-delingspolicy',
   'sharing-mode': 'Delingspolicy',
-  'sharing-mode-scope-hint': 'Gjelder BT-seeding og ED2K-deling',
   'sharing-mode-stop-by-condition': 'Stopp etter vilkår',
   'sharing-mode-manual-stop': 'Manuell stopp',
   'sharing-mode-manual-stop-tips': 'Fullførte nedlastinger fortsetter å deles til du stopper oppgaven manuelt',
@@ -329,7 +328,7 @@ export default {
     'Aktivering kan forbedre gjengivelsesytelsen i grensesnittet, men enkelte GPU-er, drivere eller skrivebordsmiljøer kan få WebKitGTK til å krasje',
   'hardware-rendering-restart-confirm':
     'Endring av WebKitGTK maskinvareakselerasjon krever omstart av appen. Hvis appen ikke kan starte etter aktivering, rediger config.json manuelt og sett preferences.hardwareRendering til false.',
-  'session-path': 'Hurtigbufferfil for oppgaver',
+  'engine-state-path': 'Mappe for motorstatus',
   'reset-engine-state': 'Tilbakestill motorstatus',
   'reset-engine-state-confirm':
     'Alle nedlastingsoppgaver fjernes fra motoren og hurtigbufferfilen for oppgaver slettes. Historikk over fullførte nedlastinger påvirkes ikke.',
@@ -471,9 +470,6 @@ export default {
   'connect-timeout': 'Tilkoblingsavbrudd',
   timeout: 'Overføringsavbrudd',
   'file-allocation': 'Forhåndstildeling av fil',
-  'async-dns': 'Asynkron DNS',
-  'async-dns-hint':
-    'Kan forbedre ytelsen for DNS-oppslag når det er aktivert, men kan også gjøre nedlastinger ustabile',
   'startup-behavior': 'Oppstart',
   'tray-and-dock': 'Systemstatusfeltet og Dock',
   'unit-seconds': 'sek',

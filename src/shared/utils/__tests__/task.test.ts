@@ -11,6 +11,8 @@ import {
   checkTaskIsEd2kSearch,
   checkTaskIsSharing,
   getTaskSharingKind,
+  getTaskSharingState,
+  getTaskSharingTime,
   getFileNameFromFile,
   getTaskDisplayName,
   getTaskUri,
@@ -465,13 +467,20 @@ describe('task sharing state', () => {
     expect(getTaskSharingKind(task)).toBeNull()
   })
 
-  it('returns false when seeder is true but task is paused', () => {
+  it('preserves the protocol and paused sharing phase', () => {
     const task = createMockTask({
       status: 'paused',
       bittorrent: { info: { name: 'test' } },
       seeder: 'true',
     })
-    expect(getTaskSharingKind(task)).toBeNull()
+    expect(getTaskSharingKind(task)).toBe('bt')
+    expect(getTaskSharingState(task)).toEqual({ kind: 'bt', phase: 'paused' })
+    expect(checkTaskIsSharing(task)).toBe(false)
+  })
+
+  it('reads native sharing time from both P2P protocols', () => {
+    expect(getTaskSharingTime(createMockTask({ bittorrent: { seedingTime: '42' } }))).toBe(42)
+    expect(getTaskSharingTime(createMockTask({ ed2k: { sharingTime: '84' } }))).toBe(84)
   })
 })
 

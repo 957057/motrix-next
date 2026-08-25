@@ -11,12 +11,12 @@ import { listen } from '@tauri-apps/api/event'
 import { logger } from '@shared/logger'
 import {
   buildHistoryRecord,
-  buildSharingCompletionRecord,
+  buildP2pDownloadCompletionRecord,
   isMetadataTask,
   updateHistoryFilePath,
 } from '@/composables/useTaskLifecycle'
 import { setArchivedPath, resolveTaskFilePath, requestFileRecheck } from '@/composables/useArchivedPaths'
-import { handleTaskComplete, handleSharingComplete, handleTaskError } from '@/composables/useTaskNotifyHandlers'
+import { handleTaskComplete, handleP2pDownloadComplete, handleTaskError } from '@/composables/useTaskNotifyHandlers'
 import { shouldDeleteTorrent, trashTorrentFile } from '@/composables/useDownloadCleanup'
 import { getTaskDisplayName, resolveOpenTarget, checkTaskIsSharing, getTaskSharingKind } from '@shared/utils'
 import type { TaskSharingKind } from '@shared/utils/task'
@@ -593,7 +593,7 @@ function skipShutdownOnce() {
 /**
  * Event-driven shutdown condition check.
  *
- * Called from lifecycle callbacks (onTaskComplete / onSharingComplete) instead
+ * Called from lifecycle callbacks instead
  * of a stat watcher. Queries aria2 directly for real-time task state,
  * bypassing the stale taskStore.taskList and the unreliable
  * appStore.stat.numActive (which counts seeders as active).
@@ -792,19 +792,19 @@ onMounted(async () => {
     checkShutdownCondition()
   }
 
-  async function onSharingComplete(task: Aria2Task, kind: TaskSharingKind): Promise<void> {
+  async function onP2pDownloadComplete(task: Aria2Task, kind: TaskSharingKind): Promise<void> {
     // Persist immediately — download is complete, sharing is just uploading.
     // INSERT OR REPLACE: safe if onTaskComplete later writes the same GID.
     if (!isMetadataTask(task)) {
       if (kind === 'bt' && task.infoHash) {
         historyStore
           .removeByInfoHash(task.infoHash, task.gid)
-          .catch((e) => logger.debug('Lifecycle.sharingComplete.cleanStale', e))
+          .catch((e) => logger.debug('Lifecycle.p2pDownloadComplete.cleanStale', e))
       }
-      const record = buildSharingCompletionRecord(task)
-      historyStore.addRecord(record).catch((e) => logger.debug('Lifecycle.sharingComplete.history', e))
+      const record = buildP2pDownloadCompletionRecord(task)
+      historyStore.addRecord(record).catch((e) => logger.debug('Lifecycle.p2pDownloadComplete.history', e))
     }
-    handleSharingComplete(task, kind, {
+    handleP2pDownloadComplete(task, kind, {
       messageSuccess: message.success,
       messageError: message.error,
       t,
@@ -838,12 +838,12 @@ onMounted(async () => {
       if (task) await onTaskComplete(task)
     }),
     await listen<{ gid: string; sharingKind?: TaskSharingKind }>(
-      'task-monitor:sharing-complete',
+      'task-monitor:p2p-download-complete',
       async ({ payload }) => {
         const task = await fetchTaskForEvent(payload.gid)
         if (!task) return
         const kind = payload.sharingKind ?? getTaskSharingKind(task)
-        if (kind) await onSharingComplete(task, kind)
+        if (kind) await onP2pDownloadComplete(task, kind)
       },
     ),
   ]

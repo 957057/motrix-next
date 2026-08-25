@@ -8,13 +8,15 @@ import {
   checkTaskIsSharing,
   getTaskCompletedLength,
   getTaskDisplayName,
-  getTaskSharingKind,
+  getSharingStatusLabelKey,
+  getTaskSharingState,
+  getTaskSharingTime,
   isBtMetadataTask,
   timeFormat,
   timeRemaining,
 } from '@shared/utils'
 import { buildTaskTransferSummary } from '@/composables/useTaskDetailSummary'
-import { formatBtDuration, getBtLifecycleState } from '@/composables/useBtLifecycle'
+import { formatSharingDuration, getBtLifecycleState } from '@/composables/useBtLifecycle'
 import type { Aria2Task } from '@shared/types'
 
 export interface TaskCardStatusBadge {
@@ -71,20 +73,17 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
     { immediate: true },
   )
   const sharingDurationText = computed(() =>
-    formatBtDuration(Number(task.value.bittorrent?.seedingTime ?? 0), {
-      day: t('task.seeding-day-unit'),
+    formatSharingDuration(getTaskSharingTime(task.value), {
+      day: t('task.sharing-day-unit'),
       hour: t('app.hour') || 'h',
       minute: t('app.minute') || 'm',
       second: t('app.second') || 's',
     }),
   )
-  const sharingKind = computed(() => getTaskSharingKind(task.value))
+  const sharingState = computed(() => getTaskSharingState(task.value))
+  const sharingKind = computed(() => sharingState.value?.kind ?? null)
   const isSharing = computed(() => checkTaskIsSharing(task.value))
-  const sharingLabel = computed(() => {
-    if (sharingKind.value === 'bt') return t('task.seeding') || 'Seeding'
-    if (sharingKind.value === 'ed2k') return t('task.sharing') || 'Sharing'
-    return ''
-  })
+  const sharingLabel = computed(() => (sharingState.value ? t(getSharingStatusLabelKey(sharingState.value)) : ''))
   const isMetadataFetching = computed(() => isBtMetadataTask(task.value))
   const taskStatus = computed(() => (isSharing.value ? TASK_STATUS.SHARING : task.value.status))
   const statusBadge = computed<TaskCardStatusBadge | null>(() => {
@@ -109,11 +108,11 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
         tone: 'error',
       }
     }
-    if (btLifecycle.value === 'paused-seeding') {
+    if (sharingState.value?.phase === 'paused') {
       const duration = sharingDurationText.value
       return {
-        key: 'bt-seeding-paused',
-        label: duration ? `${t('task.seeding-paused')} · ${duration}` : t('task.seeding-paused'),
+        key: 'sharing-paused',
+        label: duration ? `${sharingLabel.value} · ${duration}` : sharingLabel.value,
         tone: 'muted',
       }
     }

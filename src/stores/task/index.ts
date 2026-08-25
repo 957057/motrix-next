@@ -535,7 +535,7 @@ export const useTaskStore = defineStore('task', () => {
     changeTaskOption,
     removeTask: (task: Aria2Task) => taskOps.removeTask(task),
     pauseTask: (task: Aria2Task) => taskOps.pauseTask(task),
-    finishSeeding: (task: Aria2Task) => taskOps.finishSeeding(task),
+    finishSharing: (task: Aria2Task) => taskOps.finishSharing(task),
     resumeTask: (task: Aria2Task) => taskOps.resumeTask(task),
     applyMagnetFileSelection: (task: Aria2Task, selectFile: string) =>
       taskOps.applyMagnetFileSelection(task, selectFile),

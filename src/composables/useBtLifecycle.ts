@@ -54,7 +54,7 @@ export function isBtSeedingPaused(task: Aria2Task): boolean {
   return getBtLifecycleState(task) === 'paused-seeding'
 }
 
-export function formatBtDuration(
+export function formatSharingDuration(
   seconds: number,
   units: { day: string; hour: string; minute: string; second: string },
 ): string {

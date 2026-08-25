@@ -56,7 +56,6 @@ export default {
   'bt-discovery-section': 'Peer-Erkennung',
   'p2p-sharing-section': 'P2P-Freigaberichtlinie',
   'sharing-mode': 'Freigaberichtlinie',
-  'sharing-mode-scope-hint': 'Gilt für BT-Seeding und ED2K-Freigabe',
   'sharing-mode-stop-by-condition': 'Bei Bedingungen stoppen',
   'sharing-mode-manual-stop': 'Manuell stoppen',
   'sharing-mode-manual-stop-tips': 'Abgeschlossene Downloads teilen weiter, bis Sie die Aufgabe manuell stoppen',
@@ -332,7 +331,7 @@ export default {
     'Das Aktivieren kann die Renderleistung der Oberfläche verbessern, aber einige GPUs, Treiber oder Desktop-Umgebungen können WebKitGTK zum Absturz bringen',
   'hardware-rendering-restart-confirm':
     'Das Ändern der WebKitGTK-Hardwarebeschleunigung erfordert einen App-Neustart. Wenn die App nach dem Aktivieren nicht starten kann, bearbeiten Sie config.json manuell und setzen Sie preferences.hardwareRendering auf false.',
-  'session-path': 'Aufgaben-Cache-Datei',
+  'engine-state-path': 'Engine-Statusverzeichnis',
   'reset-engine-state': 'Engine-Status zurücksetzen',
   'reset-engine-state-confirm':
     'Alle Download-Aufgaben werden aus der Engine entfernt und die Aufgaben-Cache-Datei gelöscht. Der Verlauf abgeschlossener Downloads bleibt erhalten.',
@@ -477,8 +476,6 @@ export default {
   'connect-timeout': 'Verbindungs-Zeitlimit',
   timeout: 'Übertragungs-Zeitlimit',
   'file-allocation': 'Datei-Vorabzuweisung',
-  'async-dns': 'Asynchrones DNS',
-  'async-dns-hint': 'Kann nach dem Aktivieren die DNS-Auflösung beschleunigen, Downloads aber instabil machen',
   'startup-behavior': 'Autostart',
   'tray-and-dock': 'Taskleiste & Dock',
   'unit-seconds': 'Sek',

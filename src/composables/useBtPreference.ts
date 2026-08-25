@@ -2,7 +2,7 @@
  * @fileoverview Pure functions for the BitTorrent preference tab.
  *
  * Manages BT-specific config: file selection, encryption,
- * connection, discovery, seeding, max peers, and tracker management. Key business logic:
+ * connection, discovery, max peers, and tracker management. Key business logic:
  * - BitTorrent file-selection presentation
  * - Tracker comma ↔ newline format conversion
  *
@@ -54,9 +54,6 @@ export interface BtForm {
   listenPort: number
   btExternalIp: string
   btExternalPort: number
-  sharingMode: 'stop-by-condition' | 'manual-stop'
-  shareRatio: number
-  shareTime: number
   btPeerBlocklistEnabled: boolean
   btPeerBlocklistUrl: string
   btPeerBlocklistAutoSync: boolean
@@ -93,9 +90,6 @@ export function buildBtForm(config: AppConfig): BtForm {
     listenPort: Number(config.listenPort ?? D.listenPort),
     btExternalIp: config.btExternalIp ?? D.btExternalIp,
     btExternalPort: Number(config.btExternalPort ?? D.btExternalPort),
-    sharingMode: (config.keepSharing ?? D.keepSharing) ? 'manual-stop' : 'stop-by-condition',
-    shareRatio: config.shareRatio ?? D.shareRatio,
-    shareTime: config.shareTime ?? D.shareTime,
     btPeerBlocklistEnabled: config.btPeerBlocklistEnabled ?? D.btPeerBlocklistEnabled,
     btPeerBlocklistUrl: config.btPeerBlocklistUrl ?? D.btPeerBlocklistUrl,
     btPeerBlocklistAutoSync: config.btPeerBlocklistAutoSync ?? D.btPeerBlocklistAutoSync,
@@ -120,12 +114,8 @@ export function buildBtForm(config: AppConfig): BtForm {
  * re-downloading completed HTTP tasks on restart.
  */
 export function buildBtSystemConfig(f: BtForm): Record<string, string> {
-  const keepSharing = f.sharingMode === 'manual-stop'
   return {
     'detach-share-only': 'true',
-    'seed-ratio': keepSharing ? '0' : String(f.shareRatio),
-    'seed-time': keepSharing ? '' : String(f.shareTime),
-    'keep-sharing': String(keepSharing),
     'bt-max-peers': String(f.btMaxPeers),
     'listen-port': String(f.listenPort),
     'bt-external-ip': f.btExternalIp.trim(),
@@ -171,10 +161,7 @@ export function randomBtPort(): number {
 export function transformBtForStore(f: BtForm): Partial<AppConfig> {
   const data = { ...f } as Partial<AppConfig> & Record<string, unknown>
 
-  delete data.sharingMode
-
   data.btTracker = convertLineToComma(f.btTracker)
-  data.keepSharing = f.sharingMode === 'manual-stop'
 
   return data
 }

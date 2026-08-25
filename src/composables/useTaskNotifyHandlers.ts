@@ -65,7 +65,7 @@ export function handleTaskComplete(task: Aria2Task, deps: NotifyDeps): void {
  * When action callbacks are provided, the toast includes inline buttons
  * for "Open File" and "Show in Folder".
  */
-export function handleSharingComplete(task: Aria2Task, kind: TaskSharingKind, deps: NotifyDeps): void {
+export function handleP2pDownloadComplete(task: Aria2Task, kind: TaskSharingKind, deps: NotifyDeps): void {
   const taskName = getTaskDisplayName(task)
   const bodyKey = kind === 'bt' ? 'task.bt-download-complete-message' : 'task.ed2k-download-complete-message'
   const body = deps.t(bodyKey, { taskName })
@@ -77,7 +77,7 @@ export function handleSharingComplete(task: Aria2Task, kind: TaskSharingKind, de
     onShowInFolder: deps.onShowInFolder ? () => deps.onShowInFolder!(task) : undefined,
   })
   deps.messageSuccess(toastContent)
-  logger.info('TaskNotify.sharingComplete', `gid=${task.gid} kind=${kind} name="${taskName}"`)
+  logger.info('TaskNotify.p2pDownloadComplete', `gid=${task.gid} kind=${kind} name="${taskName}"`)
 }
 
 /**

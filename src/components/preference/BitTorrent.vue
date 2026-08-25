@@ -38,9 +38,6 @@ import {
   NCheckbox,
   NCheckboxGroup,
   NText,
-  NRadioButton,
-  NRadioGroup,
-  NCollapseTransition,
   useDialog,
 } from 'naive-ui'
 import PreferenceActionBar from './PreferenceActionBar.vue'
@@ -270,8 +267,6 @@ const numericFieldsValid = computed(() =>
     btMaxUploadsPerTorrent: form.value.btMaxUploadsPerTorrent,
     listenPort: form.value.listenPort,
     btExternalPort: form.value.btExternalPort,
-    shareRatio: form.value.shareRatio,
-    shareTime: form.value.shareTime,
   }),
 )
 
@@ -555,54 +550,6 @@ onMounted(() => {
           </template>
           <NSwitch v-model:value="form.btAnonymousMode" />
         </NFormItem>
-
-        <NDivider title-placement="left">{{ t('preferences.p2p-sharing-section') }}</NDivider>
-        <NFormItem>
-          <template #label>
-            <PreferenceHintLabel
-              :label="t('preferences.sharing-mode')"
-              :hint="t('preferences.sharing-mode-scope-hint')"
-            />
-          </template>
-          <NRadioGroup v-model:value="form.sharingMode" size="small">
-            <NRadioButton value="stop-by-condition">
-              {{ t('preferences.sharing-mode-stop-by-condition') }}
-            </NRadioButton>
-            <NRadioButton value="manual-stop">{{ t('preferences.sharing-mode-manual-stop') }}</NRadioButton>
-          </NRadioGroup>
-        </NFormItem>
-        <NCollapseTransition :show="form.sharingMode === 'stop-by-condition'" class="collapse-indent">
-          <NFormItem :label="t('preferences.share-ratio')" v-bind="configFieldProps('shareRatio', form.shareRatio)">
-            <NInputNumber
-              v-model:value="form.shareRatio"
-              :min="constraint('shareRatio').min"
-              :max="constraint('shareRatio').max"
-              :step="0.1"
-              class="pref-number"
-            />
-          </NFormItem>
-          <NFormItem
-            :label="t('preferences.share-time') + ' (' + t('preferences.share-time-unit') + ')'"
-            v-bind="configFieldProps('shareTime', form.shareTime)"
-          >
-            <NInputNumber
-              v-model:value="form.shareTime"
-              :min="constraint('shareTime').min"
-              :max="constraint('shareTime').max"
-              class="pref-number"
-            />
-          </NFormItem>
-        </NCollapseTransition>
-        <NCollapseTransition :show="form.sharingMode === 'manual-stop'" class="collapse-indent">
-          <NFormItem>
-            <template #label>
-              <PreferenceHintLabel
-                :label="t('preferences.sharing-mode-manual-stop')"
-                :hint="t('preferences.sharing-mode-manual-stop-tips')"
-              />
-            </template>
-          </NFormItem>
-        </NCollapseTransition>
 
         <NDivider title-placement="left">{{ t('preferences.bt-peer-blocklist') }}</NDivider>
         <NFormItem :label="t('preferences.bt-peer-blocklist-enable')">

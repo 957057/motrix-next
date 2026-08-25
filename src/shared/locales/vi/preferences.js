@@ -54,7 +54,6 @@ export default {
   'bt-discovery-section': 'Phát hiện peer',
   'p2p-sharing-section': 'Chính sách chia sẻ P2P',
   'sharing-mode': 'Chính sách chia sẻ',
-  'sharing-mode-scope-hint': 'Áp dụng cho BT seeding và chia sẻ ED2K',
   'sharing-mode-stop-by-condition': 'Dừng sau điều kiện',
   'sharing-mode-manual-stop': 'Dừng thủ công',
   'sharing-mode-manual-stop-tips': 'Tải xuống hoàn tất tiếp tục chia sẻ cho đến khi bạn dừng tác vụ thủ công',
@@ -325,7 +324,7 @@ export default {
     'Bật tùy chọn này có thể cải thiện hiệu năng kết xuất giao diện, nhưng một số GPU, driver hoặc môi trường desktop có thể làm WebKitGTK bị sập',
   'hardware-rendering-restart-confirm':
     'Thay đổi tăng tốc phần cứng WebKitGTK yêu cầu khởi động lại ứng dụng. Nếu ứng dụng không thể khởi động sau khi bật, hãy chỉnh sửa config.json thủ công và đặt preferences.hardwareRendering thành false.',
-  'session-path': 'Tập tin bộ nhớ đệm tác vụ',
+  'engine-state-path': 'Thư mục trạng thái động cơ',
   'reset-engine-state': 'Đặt lại trạng thái động cơ',
   'reset-engine-state-confirm':
     'Tất cả tác vụ tải xuống sẽ bị xóa khỏi công cụ và tập tin bộ nhớ đệm tác vụ sẽ được xóa. Lịch sử tải xuống đã hoàn thành sẽ không bị ảnh hưởng.',
@@ -468,8 +467,6 @@ export default {
   'connect-timeout': 'Hết hạn kết nối',
   timeout: 'Hết hạn truyền tải',
   'file-allocation': 'Phân bổ trước tệp',
-  'async-dns': 'DNS bất đồng bộ',
-  'async-dns-hint': 'Khi bật, có thể cải thiện hiệu năng phân giải DNS, nhưng cũng có thể làm tải xuống không ổn định',
   'startup-behavior': 'Khởi động',
   'tray-and-dock': 'Khay hệ thống và Dock',
   'unit-seconds': 'giây',

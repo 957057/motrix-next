@@ -55,7 +55,6 @@ export default {
   'bt-discovery-section': 'Peer Discovery',
   'p2p-sharing-section': 'P2P Sharing Policy',
   'sharing-mode': 'Sharing Policy',
-  'sharing-mode-scope-hint': 'Applies to BT seeding and ED2K sharing',
   'sharing-mode-stop-by-condition': 'Stop After Conditions',
   'sharing-mode-manual-stop': 'Manual Stop',
   'sharing-mode-manual-stop-tips': 'Completed downloads keep sharing until you stop the task manually',
@@ -325,7 +324,7 @@ export default {
     'Enabling it may improve UI rendering performance, but some GPUs, drivers, or desktop environments may cause WebKitGTK to crash',
   'hardware-rendering-restart-confirm':
     'Changing WebKitGTK hardware acceleration requires an app restart. If the app cannot start after enabling it, edit config.json manually and set preferences.hardwareRendering to false.',
-  'session-path': 'Task Cache File',
+  'engine-state-path': 'Engine State Directory',
   'reset-engine-state': 'Reset Engine State',
   'reset-engine-state-confirm':
     'This will remove all download tasks from the engine and clear the task cache. Completed download history will not be affected.',
@@ -468,8 +467,6 @@ export default {
   'connect-timeout': 'Connection Timeout',
   timeout: 'Transfer Timeout',
   'file-allocation': 'File Pre-allocation',
-  'async-dns': 'Async DNS',
-  'async-dns-hint': 'May improve DNS resolution performance when enabled, but may also make downloads unstable',
   'startup-behavior': 'Startup',
   'tray-and-dock': 'Tray & Dock',
   'unit-seconds': 'sec',

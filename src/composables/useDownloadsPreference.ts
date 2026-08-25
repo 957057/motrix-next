@@ -24,6 +24,9 @@ export interface DownloadsForm {
   fileCategories: FileCategory[]
   maxConcurrentDownloads: number
   streamMaxConnections: number
+  sharingMode: 'stop-by-condition' | 'manual-stop'
+  shareRatio: number
+  shareTime: number
   continue: boolean
   maxTries: number
   retryWait: number
@@ -92,6 +95,9 @@ export function buildDownloadsForm(config: AppConfig, defaultDir: string = ''): 
         : buildDefaultCategories(config.dir || defaultDir),
     maxConcurrentDownloads: config.maxConcurrentDownloads ?? D.maxConcurrentDownloads,
     streamMaxConnections: config.streamMaxConnections ?? D.streamMaxConnections,
+    sharingMode: (config.keepSharing ?? D.keepSharing) ? 'manual-stop' : 'stop-by-condition',
+    shareRatio: config.shareRatio ?? D.shareRatio,
+    shareTime: config.shareTime ?? D.shareTime,
     continue: config.continue ?? D.continue,
     maxTries: config.maxTries ?? D.maxTries,
     retryWait: config.retryWait ?? D.retryWait,
@@ -124,6 +130,7 @@ export function buildDownloadsForm(config: AppConfig, defaultDir: string = ''): 
  * are excluded.
  */
 export function buildDownloadsSystemConfig(f: DownloadsForm): Record<string, string> {
+  const keepSharing = f.sharingMode === 'manual-stop'
   return {
     dir: f.dir,
     'max-concurrent-downloads': String(f.maxConcurrentDownloads),
@@ -134,6 +141,9 @@ export function buildDownloadsSystemConfig(f: DownloadsForm): Record<string, str
     'remote-time': String(!!f.remoteTime),
     'max-tries': String(f.maxTries),
     'retry-wait': String(f.retryWait),
+    'seed-ratio': keepSharing ? '0' : String(f.shareRatio),
+    'seed-time': keepSharing ? '' : String(f.shareTime),
+    'keep-sharing': String(keepSharing),
   }
 }
 
@@ -143,6 +153,8 @@ export function buildDownloadsSystemConfig(f: DownloadsForm): Record<string, str
  */
 export function transformDownloadsForStore(f: DownloadsForm): Partial<AppConfig> {
   const data = { ...f } as Partial<AppConfig> & Record<string, unknown>
+  delete data.sharingMode
+  data.keepSharing = f.sharingMode === 'manual-stop'
 
   // Guard: auto-populate default categories when classification is enabled but
   // the categories array is empty (edge case from GitHub issue #229).

@@ -15,7 +15,7 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
 
 const {
   buildHistoryRecord,
-  buildSharingCompletionRecord,
+  buildP2pDownloadCompletionRecord,
   isMetadataTask,
   shouldRunStaleCleanup,
   historyRecordToTask,
@@ -257,16 +257,16 @@ describe('buildHistoryRecord', () => {
   })
 })
 
-// ── buildSharingCompletionRecord ──────────────────────────────────────────
+// ── buildP2pDownloadCompletionRecord ──────────────────────────────────────
 
-describe('buildSharingCompletionRecord', () => {
+describe('buildP2pDownloadCompletionRecord', () => {
   it('overrides status to "complete" for a shared-upload task (aria2 status=active)', () => {
     const task = makeTask({
       status: 'active',
       bittorrent: { info: { name: 'Ubuntu 24.04' } },
       seeder: 'true',
     } as Partial<Aria2Task>)
-    const record = buildSharingCompletionRecord(task)
+    const record = buildP2pDownloadCompletionRecord(task)
     expect(record.status).toBe('complete')
   })
 
@@ -279,7 +279,7 @@ describe('buildSharingCompletionRecord', () => {
       bittorrent: { info: { name: 'Big Archive' } },
       infoHash: 'abc123def456',
     } as Partial<Aria2Task>)
-    const record = buildSharingCompletionRecord(task)
+    const record = buildP2pDownloadCompletionRecord(task)
 
     // status overridden
     expect(record.status).toBe('complete')
@@ -296,7 +296,7 @@ describe('buildSharingCompletionRecord', () => {
 
   it('works for active tasks defensively', () => {
     const task = makeTask({ status: 'active' })
-    const record = buildSharingCompletionRecord(task)
+    const record = buildP2pDownloadCompletionRecord(task)
     expect(record.status).toBe('complete')
   })
 })
@@ -836,10 +836,25 @@ describe('buildHistoryMeta', () => {
     })
 
     const meta = buildHistoryMeta(task)
-    expect(meta.seedingTime).toBe('3600')
+    expect(meta.sharingTime).toBe('3600')
 
     const restored = historyRecordToTask(makeRecord({ task_type: 'bt', meta: JSON.stringify(meta) }))
     expect(restored.bittorrent?.seedingTime).toBe('3600')
+  })
+
+  it('round-trips the final ED2K sharing duration', () => {
+    const task = makeTask({
+      ed2k: {
+        hash: '31313131313131313131313131313131',
+        sharingTime: '1800',
+      },
+    })
+
+    const meta = buildHistoryMeta(task)
+    expect(meta.sharingTime).toBe('1800')
+
+    const restored = historyRecordToTask(makeRecord({ task_type: 'ed2k', meta: JSON.stringify(meta) }))
+    expect(restored.ed2k?.sharingTime).toBe('1800')
   })
 
   it('stores engine-provided ed2kLink in structured ED2K history meta', () => {

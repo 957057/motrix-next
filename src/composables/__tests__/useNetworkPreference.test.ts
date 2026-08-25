@@ -199,17 +199,6 @@ describe('buildNetworkForm', () => {
     expect(form.userAgent).toBe(DEFAULT_APP_CONFIG.userAgent)
   })
 
-  it('defaults asyncDns to false', () => {
-    const form = buildNetworkForm(emptyConfig)
-    expect(form.asyncDns).toBe(false)
-  })
-
-  it('reads asyncDns from config', () => {
-    const config = { asyncDns: true } as AppConfig
-    const form = buildNetworkForm(config)
-    expect(form.asyncDns).toBe(true)
-  })
-
   it('reads userAgent from config', () => {
     const config = { userAgent: 'Mozilla/5.0 Custom' } as AppConfig
     const form = buildNetworkForm(config)
@@ -228,7 +217,6 @@ describe('buildNetworkForm', () => {
     expect(form).toHaveProperty('timeout')
     expect(form).toHaveProperty('fileAllocation')
     expect(form).toHaveProperty('userAgent')
-    expect(form).toHaveProperty('asyncDns')
   })
 
   it('defaults port conflict recovery to enabled for every managed port type', () => {
@@ -266,7 +254,6 @@ describe('buildNetworkSystemConfig', () => {
     userAgentProfiles: [],
     userAgentRules: [],
     recentUserAgentProfileIds: [],
-    asyncDns: false,
   }
 
   it('does not emit protocol-specific options', () => {
@@ -306,11 +293,6 @@ describe('buildNetworkSystemConfig', () => {
   it('maps user-agent to aria2 config', () => {
     const config = buildNetworkSystemConfig({ ...baseForm, userAgent: 'Custom/1.0' })
     expect(config['user-agent']).toBe('Custom/1.0')
-  })
-
-  it('maps async-dns to aria2 config', () => {
-    expect(buildNetworkSystemConfig(baseForm)['async-dns']).toBe('false')
-    expect(buildNetworkSystemConfig({ ...baseForm, asyncDns: true })['async-dns']).toBe('true')
   })
 
   // ── Proxy flow ──────────────────────────────────────────────────
@@ -422,7 +404,6 @@ describe('transformNetworkForStore', () => {
     userAgentProfiles: [],
     userAgentRules: [],
     recentUserAgentProfileIds: [],
-    asyncDns: false,
   }
 
   it('does not persist BitTorrent-owned fields', () => {
@@ -464,11 +445,6 @@ describe('transformNetworkForStore', () => {
     const result = transformNetworkForStore({ ...baseForm, fileAllocation: 'prealloc' })
     expect(result.fileAllocation).toBe('prealloc')
   })
-
-  it('preserves asyncDns through transform', () => {
-    const result = transformNetworkForStore({ ...baseForm, asyncDns: true })
-    expect(result.asyncDns).toBe(true)
-  })
 })
 
 // ── validateNetworkForm ─────────────────────────────────────────────
@@ -486,7 +462,6 @@ describe('validateNetworkForm', () => {
     userAgentProfiles: [],
     userAgentRules: [],
     recentUserAgentProfileIds: [],
-    asyncDns: false,
   }
 
   it('returns null for valid form', () => {

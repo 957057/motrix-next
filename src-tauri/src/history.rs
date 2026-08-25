@@ -366,7 +366,7 @@ mod tests {
         let rec2 = HistoryRecord {
             added_at: Some("2025-06-01T00:00:00Z".to_string()),
             completed_at: Some("2025-06-01T01:00:00Z".to_string()),
-            meta: Some(r#"{"seedingTime":"3600"}"#.to_string()),
+            meta: Some(r#"{"sharingTime":"3600"}"#.to_string()),
             status: "complete".to_string(),
             ..make_record("gid001", "test-updated.zip", "complete")
         };
@@ -384,7 +384,7 @@ mod tests {
         let meta: serde_json::Value =
             serde_json::from_str(records[0].meta.as_deref().unwrap()).unwrap();
         assert_eq!(meta["infoHash"], "abc");
-        assert_eq!(meta["seedingTime"], "3600");
+        assert_eq!(meta["sharingTime"], "3600");
     }
 
     #[tokio::test]

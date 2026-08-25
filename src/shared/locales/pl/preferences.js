@@ -56,7 +56,6 @@ export default {
   'bt-discovery-section': 'Wykrywanie peerów',
   'p2p-sharing-section': 'Zasady udostępniania P2P',
   'sharing-mode': 'Zasady udostępniania',
-  'sharing-mode-scope-hint': 'Dotyczy seedowania BT i udostępniania ED2K',
   'sharing-mode-stop-by-condition': 'Zatrzymaj po warunkach',
   'sharing-mode-manual-stop': 'Zatrzymaj ręcznie',
   'sharing-mode-manual-stop-tips': 'Ukończone pobrania pozostają udostępniane, dopóki ręcznie nie zatrzymasz zadania',
@@ -331,7 +330,7 @@ export default {
     'Włączenie może poprawić wydajność renderowania interfejsu, ale niektóre GPU, sterowniki lub środowiska pulpitu mogą powodować awarię WebKitGTK',
   'hardware-rendering-restart-confirm':
     'Zmiana przyspieszenia sprzętowego WebKitGTK wymaga ponownego uruchomienia aplikacji. Jeśli aplikacja nie uruchamia się po włączeniu, edytuj ręcznie config.json i ustaw preferences.hardwareRendering na false.',
-  'session-path': 'Plik pamięci podręcznej zadań',
+  'engine-state-path': 'Katalog stanu silnika',
   'reset-engine-state': 'Zresetuj stan silnika',
   'reset-engine-state-confirm':
     'Wszystkie zadania pobierania zostaną usunięte z silnika, a plik pamięci podręcznej zadań zostanie skasowany. Historia ukończonych pobrań nie zostanie naruszona.',
@@ -475,9 +474,6 @@ export default {
   'connect-timeout': 'Limit czasu połączenia',
   timeout: 'Limit czasu transferu',
   'file-allocation': 'Wstępna alokacja pliku',
-  'async-dns': 'Asynchroniczny DNS',
-  'async-dns-hint':
-    'Po włączeniu może poprawić wydajność rozwiązywania DNS, ale może też powodować niestabilne pobieranie',
   'startup-behavior': 'Uruchamianie',
   'tray-and-dock': 'Zasobnik i Dock',
   'unit-seconds': 'sek',

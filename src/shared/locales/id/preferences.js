@@ -55,7 +55,6 @@ export default {
   'bt-discovery-section': 'Penemuan peer',
   'p2p-sharing-section': 'Kebijakan Berbagi P2P',
   'sharing-mode': 'Kebijakan Berbagi',
-  'sharing-mode-scope-hint': 'Berlaku untuk seeding BT dan berbagi ED2K',
   'sharing-mode-stop-by-condition': 'Berhenti Setelah Kondisi',
   'sharing-mode-manual-stop': 'Berhenti Manual',
   'sharing-mode-manual-stop-tips': 'Unduhan selesai tetap berbagi sampai Anda menghentikan tugas secara manual',
@@ -330,7 +329,7 @@ export default {
     'Mengaktifkannya dapat meningkatkan performa rendering antarmuka, tetapi beberapa GPU, driver, atau lingkungan desktop dapat membuat WebKitGTK crash',
   'hardware-rendering-restart-confirm':
     'Mengubah akselerasi perangkat keras WebKitGTK memerlukan restart aplikasi. Jika aplikasi tidak dapat dimulai setelah diaktifkan, edit config.json secara manual dan setel preferences.hardwareRendering ke false.',
-  'session-path': 'File Cache Tugas',
+  'engine-state-path': 'Direktori Status Mesin',
   'reset-engine-state': 'Atur Ulang Status Mesin',
   'reset-engine-state-confirm':
     'Semua tugas unduhan akan dihapus dari mesin dan file cache tugas akan dihapus. Riwayat unduhan yang sudah selesai tidak akan terpengaruh.',
@@ -473,9 +472,6 @@ export default {
   'connect-timeout': 'Batas waktu koneksi',
   timeout: 'Batas waktu transfer',
   'file-allocation': 'Pra-alokasi file',
-  'async-dns': 'DNS asinkron',
-  'async-dns-hint':
-    'Saat diaktifkan, dapat meningkatkan kinerja resolusi DNS, tetapi juga dapat membuat unduhan tidak stabil',
   'startup-behavior': 'Mulai',
   'tray-and-dock': 'Baki & Dock',
   'unit-seconds': 'dtk',

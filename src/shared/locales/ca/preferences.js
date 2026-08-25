@@ -57,7 +57,6 @@ export default {
   'bt-discovery-section': 'Descoberta de parells',
   'p2p-sharing-section': 'Política de compartició P2P',
   'sharing-mode': 'Política de compartició',
-  'sharing-mode-scope-hint': "S'aplica a la sembra BT i a la compartició ED2K",
   'sharing-mode-stop-by-condition': 'Atura segons condicions',
   'sharing-mode-manual-stop': 'Aturada manual',
   'sharing-mode-manual-stop-tips':
@@ -334,7 +333,7 @@ export default {
     'Activar-ho pot millorar el rendiment de renderització de la interfície, però algunes GPU, controladors o entorns d’escriptori poden fer fallar WebKitGTK',
   'hardware-rendering-restart-confirm':
     'Canviar l’acceleració de maquinari WebKitGTK requereix reiniciar l’aplicació. Si l’aplicació no pot iniciar-se després d’activar-la, editeu config.json manualment i establiu preferences.hardwareRendering a false.',
-  'session-path': 'Fitxer de sessió',
+  'engine-state-path': 'Directori d\'estat del motor',
   'reset-engine-state': "Restableix l'estat del motor",
   'reset-engine-state-confirm':
     "S'eliminaran totes les tasques de descàrrega del motor i el fitxer de sessió. L'historial de descàrregues completades no es veurà afectat.",
@@ -480,9 +479,6 @@ export default {
   'connect-timeout': "Temps d'espera de connexió",
   timeout: "Temps d'espera de transferència",
   'file-allocation': 'Preasignació de fitxer',
-  'async-dns': 'DNS asíncron',
-  'async-dns-hint':
-    'En activar-ho, pot millorar el rendiment de la resolució DNS, però també pot fer que les baixades siguin inestables',
   'startup-behavior': 'Inici',
   'tray-and-dock': 'Safata i Dock',
   'unit-seconds': 'seg',

@@ -54,7 +54,6 @@ export default {
   'bt-discovery-section': 'पीयर खोज',
   'p2p-sharing-section': 'P2P शेयरिंग नीति',
   'sharing-mode': 'शेयरिंग नीति',
-  'sharing-mode-scope-hint': 'BT सीडिंग और ED2K शेयरिंग पर लागू',
   'sharing-mode-stop-by-condition': 'शर्तें पूरी होने पर रोकें',
   'sharing-mode-manual-stop': 'मैन्युअल रोकें',
   'sharing-mode-manual-stop-tips': 'पूर्ण डाउनलोड तब तक शेयर होते रहेंगे जब तक आप कार्य को मैन्युअल रूप से नहीं रोकते',
@@ -326,7 +325,7 @@ export default {
     'इसे चालू करने से UI rendering performance बेहतर हो सकती है, लेकिन कुछ GPU, drivers या desktop environments WebKitGTK को crash कर सकते हैं',
   'hardware-rendering-restart-confirm':
     'WebKitGTK hardware acceleration बदलने के लिए app restart जरूरी है। Enable करने के बाद app start न हो तो config.json को manually edit करें और preferences.hardwareRendering को false set करें।',
-  'session-path': 'Task cache file',
+  'engine-state-path': 'इंजन स्थिति निर्देशिका',
   'reset-engine-state': 'इंजन स्थिति रीसेट करें',
   'reset-engine-state-confirm':
     'यह download engine से सभी download tasks हटाएगा और task cache साफ करेगा। Completed download history प्रभावित नहीं होगी।',
@@ -468,8 +467,6 @@ export default {
   'connect-timeout': 'Connection timeout',
   timeout: 'Transfer timeout',
   'file-allocation': 'File pre-allocation',
-  'async-dns': 'Async DNS',
-  'async-dns-hint': 'चालू करने पर DNS रिज़ॉल्यूशन प्रदर्शन बेहतर हो सकता है, लेकिन डाउनलोड अस्थिर भी हो सकते हैं',
   'startup-behavior': 'शुरुआत',
   'tray-and-dock': 'Tray और Dock',
   'unit-seconds': 'सेकंड',

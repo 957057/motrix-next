@@ -55,7 +55,7 @@ vi.mock('@/composables/useTaskActions', () => ({
     handleShowInfo: vi.fn(),
     handleShowInFolder: vi.fn(),
     handleOpenFile: vi.fn(),
-    handleFinishSeeding: vi.fn(),
+    handleFinishSharing: vi.fn(),
     handleSelectFiles: vi.fn(),
   }),
 }))

@@ -35,6 +35,8 @@ import {
   NText,
   NCollapseTransition,
   NIcon,
+  NRadioButton,
+  NRadioGroup,
 } from 'naive-ui'
 import PreferenceActionBar from './PreferenceActionBar.vue'
 import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
@@ -153,6 +155,8 @@ const numericFieldsValid = computed(
       streamMaxConnections: form.value.streamMaxConnections,
       maxTries: form.value.maxTries,
       retryWait: form.value.retryWait,
+      shareRatio: form.value.shareRatio,
+      shareTime: form.value.shareTime,
       completedRecordRetentionDays: form.value.completedRecordRetentionDays,
     }) &&
     (completedRecordRetentionSelectValue.value !== -1 ||
@@ -291,6 +295,42 @@ onMounted(async () => {
             class="pref-number"
           />
         </NFormItem>
+        <NDivider title-placement="left">{{ t('preferences.p2p-sharing-section') }}</NDivider>
+        <NFormItem :label="t('preferences.sharing-mode')">
+          <NRadioGroup v-model:value="form.sharingMode" size="small">
+            <NRadioButton value="stop-by-condition">
+              {{ t('preferences.sharing-mode-stop-by-condition') }}
+            </NRadioButton>
+            <NRadioButton value="manual-stop">{{ t('preferences.sharing-mode-manual-stop') }}</NRadioButton>
+          </NRadioGroup>
+        </NFormItem>
+        <NCollapseTransition :show="form.sharingMode === 'stop-by-condition'" class="collapse-indent">
+          <NFormItem :label="t('preferences.share-ratio')" v-bind="configFieldProps('shareRatio', form.shareRatio)">
+            <NInputNumber
+              v-model:value="form.shareRatio"
+              :min="constraint('shareRatio').min"
+              :max="constraint('shareRatio').max"
+              :step="0.1"
+              class="pref-number"
+            />
+          </NFormItem>
+          <NFormItem
+            :label="t('preferences.share-time') + ' (' + t('preferences.share-time-unit') + ')'"
+            v-bind="configFieldProps('shareTime', form.shareTime)"
+          >
+            <NInputNumber
+              v-model:value="form.shareTime"
+              :min="constraint('shareTime').min"
+              :max="constraint('shareTime').max"
+              class="pref-number"
+            />
+          </NFormItem>
+        </NCollapseTransition>
+        <NCollapseTransition :show="form.sharingMode === 'manual-stop'" class="collapse-indent">
+          <NFormItem label=" ">
+            <NText depth="3">{{ t('preferences.sharing-mode-manual-stop-tips') }}</NText>
+          </NFormItem>
+        </NCollapseTransition>
         <!-- Retry & File Options -->
         <NDivider title-placement="left">{{ t('preferences.retry-and-file-behavior') }}</NDivider>
         <NFormItem :label="t('preferences.max-tries')" v-bind="configFieldProps('maxTries', form.maxTries)">

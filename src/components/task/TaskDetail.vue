@@ -7,7 +7,8 @@ import { writeAppClipboardText } from '@shared/utils'
 import {
   checkTaskIsBT,
   checkTaskIsSharing,
-  getTaskSharingKind,
+  getTaskSharingState,
+  getTaskSharingTime,
   getTaskDisplayName,
   bytesToSize,
   localeDateTimeFormat,
@@ -62,7 +63,7 @@ import TaskDetailSources from './detail/TaskDetailSources.vue'
 import TaskDetailTrackers from './detail/TaskDetailTrackers.vue'
 import { forceBtRecheck } from '@/api/aria2'
 import { getErrorMessage } from '@shared/utils/errorMessage'
-import { formatBtDuration, getBtLifecycleState } from '@/composables/useBtLifecycle'
+import { formatSharingDuration, getBtLifecycleState } from '@/composables/useBtLifecycle'
 
 const props = defineProps<{
   show: boolean
@@ -243,7 +244,8 @@ watch(visibleTabs, (tabs) => {
     prevTabIndex.value = 0
   }
 })
-const sharingKind = computed(() => (props.task ? getTaskSharingKind(props.task) : null))
+const sharingState = computed(() => (props.task ? getTaskSharingState(props.task) : null))
+const sharingKind = computed(() => sharingState.value?.kind ?? null)
 const isSharing = computed(() => (props.task ? checkTaskIsSharing(props.task) : false))
 const isMetadataFetching = computed(() => (props.task ? isBtMetadataTask(props.task) : false))
 const btLifecycle = computed(() => (props.task ? getBtLifecycleState(props.task) : 'none'))
@@ -254,8 +256,10 @@ const taskStatusKey = computed(() =>
       ? 'bt-recovering'
       : btLifecycle.value === 'error'
         ? 'error'
-        : btLifecycle.value === 'paused-seeding'
-          ? 'seeding-paused'
+        : sharingState.value?.phase === 'paused'
+          ? sharingState.value.kind === 'bt'
+            ? 'seeding-paused'
+            : 'sharing-paused'
           : isSharing.value
             ? sharingKind.value === 'bt'
               ? 'seeding'
@@ -308,8 +312,8 @@ const btInfo = computed(() => {
 const taskErrorMessage = computed(() => props.task?.errorMessage || btInfo.value?.error?.message || '')
 const taskErrorCode = computed(() => props.task?.errorCode || btInfo.value?.error?.code || '')
 const sharingDuration = computed(() =>
-  formatBtDuration(Number(btInfo.value?.seedingTime ?? 0), {
-    day: t('task.seeding-day-unit'),
+  formatSharingDuration(props.task ? getTaskSharingTime(props.task) : 0, {
+    day: t('task.sharing-day-unit'),
     hour: t('app.hour') || 'h',
     minute: t('app.minute') || 'm',
     second: t('app.second') || 's',
@@ -336,6 +340,7 @@ const ed2kInfo = computed(() => {
   if (!isED2K.value || !props.task) return null
   return props.task.ed2k
 })
+const sharingDurationLabel = computed(() => (isED2K.value ? t('task.sharing-time') : t('task.seeding-time')))
 
 function yesNo(value?: boolean | string): string {
   if (value === undefined || value === '') return '-'
@@ -450,7 +455,7 @@ function handleClose() {
                   <NDescriptionsItem v-if="hasPieceCount" :label="t('task.task-num-pieces') || 'Pieces'">
                     {{ task.numPieces }}
                   </NDescriptionsItem>
-                  <NDescriptionsItem v-if="sharingDuration" :label="t('task.seeding-time')">
+                  <NDescriptionsItem v-if="sharingDuration" :label="sharingDurationLabel">
                     {{ sharingDuration }}
                   </NDescriptionsItem>
                   <NDescriptionsItem
@@ -475,6 +480,9 @@ function handleClose() {
                 >
                   <NDescriptionsItem v-if="ed2kInfo.hash" :label="t('task.task-ed2k-hash')">
                     <CopyableValue :value="ed2kInfo.hash" :label="t('task.task-ed2k-hash')" />
+                  </NDescriptionsItem>
+                  <NDescriptionsItem v-if="sharingDuration" :label="sharingDurationLabel">
+                    {{ sharingDuration }}
                   </NDescriptionsItem>
                 </NDescriptions>
               </template>

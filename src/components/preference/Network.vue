@@ -402,12 +402,6 @@ onMounted(() => {
         <NFormItem :label="t('preferences.file-allocation')">
           <NSelect v-model:value="form.fileAllocation" :options="fileAllocationOptions" class="pref-control-auto" />
         </NFormItem>
-        <NFormItem>
-          <template #label>
-            <PreferenceHintLabel :label="t('preferences.async-dns')" :hint="t('preferences.async-dns-hint')" />
-          </template>
-          <NSwitch v-model:value="form.asyncDns" />
-        </NFormItem>
       </NForm>
     </div>
     <UserAgentManager

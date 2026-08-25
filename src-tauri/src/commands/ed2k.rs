@@ -33,6 +33,17 @@ pub(crate) fn ed2k_bootstrap_paths(app: &AppHandle) -> Result<(PathBuf, PathBuf)
     Ok((dir.join(SERVER_MET_FILE), dir.join(NODES_DAT_FILE)))
 }
 
+pub(crate) fn remove_ed2k_bootstrap_cache(app: &AppHandle) -> Result<(), AppError> {
+    let (server, _) = ed2k_bootstrap_paths(app)?;
+    let Some(directory) = server.parent() else {
+        return Ok(());
+    };
+    if directory.exists() {
+        std::fs::remove_dir_all(directory)?;
+    }
+    Ok(())
+}
+
 fn bundled_bootstrap_paths(app: &AppHandle) -> Result<(PathBuf, PathBuf), AppError> {
     let server = app
         .path()

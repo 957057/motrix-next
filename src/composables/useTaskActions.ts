@@ -6,7 +6,15 @@
  * i18n, dialog, and message are passed in via the options object.
  */
 import { ref, h } from 'vue'
-import { getTaskUri, getTaskDisplayName, resolveOpenTarget, canRestart, writeAppClipboardText } from '@shared/utils'
+import {
+  getTaskUri,
+  getTaskDisplayName,
+  resolveOpenTarget,
+  canRestart,
+  writeAppClipboardText,
+  getSharingResultLabelKey,
+  getTaskSharingKind,
+} from '@shared/utils'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { invoke } from '@tauri-apps/api/core'
 import { deleteTaskFiles } from '@/composables/useFileDelete'
@@ -20,7 +28,7 @@ interface TaskActionsDeps {
   taskStore: {
     pauseTask: (task: Aria2Task) => Promise<unknown>
     resumeTask: (task: Aria2Task) => Promise<unknown>
-    finishSeeding: (task: Aria2Task) => Promise<unknown>
+    finishSharing: (task: Aria2Task) => Promise<unknown>
     removeTask: (task: Aria2Task) => Promise<unknown>
     removeTaskRecord: (task: Aria2Task) => Promise<unknown>
     restartTask: (task: Aria2Task) => Promise<unknown>
@@ -89,14 +97,16 @@ export function useTaskActions(deps: TaskActionsDeps) {
     }
   }
 
-  function handleFinishSeeding(task: Aria2Task) {
+  function handleFinishSharing(task: Aria2Task) {
     const taskName = getTaskDisplayName(task, { defaultName: 'Unknown' })
+    const kind = getTaskSharingKind(task)
+    if (!kind) return
     taskStore
-      .finishSeeding(task)
-      .then(() => message.success(t('task.finish-seeding-success', { taskName })))
+      .finishSharing(task)
+      .then(() => message.success(t(getSharingResultLabelKey(kind, 'success'), { taskName })))
       .catch((error) => {
-        logger.warn('TaskView.finishSeeding', getErrorMessage(error))
-        message.error(t('task.finish-seeding-fail', { taskName }))
+        logger.warn('TaskView.finishSharing', getErrorMessage(error))
+        message.error(t(getSharingResultLabelKey(kind, 'fail'), { taskName }))
       })
   }
 
@@ -318,7 +328,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
   return {
     handlePauseTask,
     handleResumeTask,
-    handleFinishSeeding,
+    handleFinishSharing,
     handleDeleteTask,
     handleDeleteRecord,
     handleCopyLink,

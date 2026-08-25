@@ -83,7 +83,7 @@ describe('TaskItemActions', () => {
     await seeding.find('[aria-label="task.pause-seeding"]').trigger('click')
     expect(seeding.emitted('pause')).toBeTruthy()
     await seeding.find('[aria-label="task.finish-seeding"]').trigger('click')
-    expect(seeding.emitted('finish-seeding')).toBeTruthy()
+    expect(seeding.emitted('finish-sharing')).toBeTruthy()
 
     const paused = mountActions(
       makeTask('paused', {
@@ -95,6 +95,29 @@ describe('TaskItemActions', () => {
     await paused.find('[aria-label="task.resume-seeding"]').trigger('click')
     expect(paused.emitted('resume')).toBeTruthy()
     expect(paused.find('[aria-label="task.finish-seeding"]').exists()).toBe(true)
+  })
+
+  it('supports the complete ED2K sharing lifecycle', async () => {
+    const active = mountActions(
+      makeTask('active', {
+        completedLength: '1024',
+        seeder: 'true',
+        ed2k: { hash: 'ed2k-hash' },
+      }),
+    )
+    expect(active.find('[aria-label="task.pause-sharing"]').exists()).toBe(true)
+    await active.find('[aria-label="task.finish-sharing"]').trigger('click')
+    expect(active.emitted('finish-sharing')).toBeTruthy()
+
+    const paused = mountActions(
+      makeTask('paused', {
+        completedLength: '1024',
+        seeder: 'true',
+        ed2k: { hash: 'ed2k-hash' },
+      }),
+    )
+    expect(paused.find('[aria-label="task.resume-sharing"]').exists()).toBe(true)
+    expect(paused.find('[aria-label="task.finish-sharing"]').exists()).toBe(true)
   })
 
   it('limits recovery actions to details and deletion', () => {

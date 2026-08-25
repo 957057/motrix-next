@@ -17,7 +17,8 @@ Application data is stored locally on your device and is not synced by Motrix Ne
 | Preferences       | `config.json` (app data directory)      | User settings                      |
 | Engine options    | `system.json` (app data directory)      | Aria2 Next runtime configuration   |
 | Download history  | `history.db` (local SQLite database)    | Task records                       |
-| Task resume cache | `download.session` (app data directory) | Resume active and paused downloads |
+| Engine task manifest | `download.session` (app data directory) | Restore the task list |
+| Engine transfer state | `engine/state` (app data directory) | Restore protocol progress and sharing state |
 | Application logs  | app log directory                       | Diagnostics and troubleshooting    |
 | Download files    | User-specified directory                | Downloaded content                 |
 

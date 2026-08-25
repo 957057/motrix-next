@@ -54,7 +54,6 @@ export default {
   'bt-discovery-section': '피어 검색',
   'p2p-sharing-section': 'P2P 공유 정책',
   'sharing-mode': '공유 정책',
-  'sharing-mode-scope-hint': 'BT 시딩과 ED2K 공유에 적용됩니다',
   'sharing-mode-stop-by-condition': '조건 충족 시 중지',
   'sharing-mode-manual-stop': '수동 중지',
   'sharing-mode-manual-stop-tips': '완료된 다운로드는 작업을 수동으로 중지할 때까지 계속 공유됩니다',
@@ -325,7 +324,7 @@ export default {
     '활성화하면 UI 렌더링 성능이 향상될 수 있지만 일부 GPU, 드라이버 또는 데스크톱 환경에서는 WebKitGTK가 충돌할 수 있습니다',
   'hardware-rendering-restart-confirm':
     'WebKitGTK 하드웨어 가속을 변경하려면 앱을 다시 시작해야 합니다. 활성화한 뒤 앱이 시작되지 않으면 config.json을 직접 편집하고 preferences.hardwareRendering을 false로 설정하세요.',
-  'session-path': '작업 캐시 파일',
+  'engine-state-path': '엔진 상태 디렉터리',
   'reset-engine-state': '엔진 상태 초기화',
   'reset-engine-state-confirm':
     '모든 다운로드 작업이 엔진에서 제거되고 작업 캐시 파일이 삭제됩니다. 완료된 다운로드 기록에는 영향을 미치지 않습니다.',
@@ -466,8 +465,6 @@ export default {
   'connect-timeout': '연결 시간 초과',
   timeout: '전송 시간 초과',
   'file-allocation': '파일 사전 할당',
-  'async-dns': '비동기 DNS',
-  'async-dns-hint': '켜면 DNS 확인 성능이 향상될 수 있지만 다운로드가 불안정해질 수도 있습니다',
   'startup-behavior': '시작',
   'tray-and-dock': '트레이 및 Dock',
   'unit-seconds': '초',

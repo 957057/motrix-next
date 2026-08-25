@@ -396,8 +396,6 @@ export const DEFAULT_APP_CONFIG = {
   connectTimeout: 10, // seconds to establish connection
   timeout: 10, // seconds for data transfer after connection
   fileAllocation: 'trunc' as const, // 'none' | 'trunc' | 'prealloc' | 'falloc'
-  asyncDns: false, // aria2-next default=true; keep Motrix default conservative
-
   // ── Task Sorting ─────────────────────────────────────────────
   taskSort: DEFAULT_TASK_SORT,
   taskManualOrder: DEFAULT_TASK_MANUAL_ORDER,

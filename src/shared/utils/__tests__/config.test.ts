@@ -174,7 +174,6 @@ describe('filterHotReloadableKeys', () => {
       'max-concurrent-downloads': '10',
       'stream-max-connections': '16',
       'max-overall-download-limit': '0',
-      'async-dns': 'false',
       dir: '/downloads',
     }
     expect(filterHotReloadableKeys(config)).toEqual(config)

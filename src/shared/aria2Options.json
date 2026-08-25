@@ -5,7 +5,6 @@
     "all-proxy-user",
     "allow-overwrite",
     "always-resume",
-    "async-dns",
     "auto-file-renaming",
     "bt-enable-lpd",
     "bt-exclude-tracker",

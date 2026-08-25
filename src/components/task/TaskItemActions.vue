@@ -21,6 +21,7 @@ import {
 import { type Component } from 'vue'
 import type { Aria2Task } from '@shared/types'
 import { getBtLifecycleState } from '@/composables/useBtLifecycle'
+import { getSharingActionLabelKey, getTaskSharingState } from '@shared/utils/task'
 
 const props = withDefaults(defineProps<{ task: Aria2Task; fileMissing?: boolean; density?: 'full' | 'compact' }>(), {
   density: 'full',
@@ -28,7 +29,7 @@ const props = withDefaults(defineProps<{ task: Aria2Task; fileMissing?: boolean;
 const emit = defineEmits<{
   pause: []
   resume: []
-  'finish-seeding': []
+  'finish-sharing': []
   delete: []
   'delete-record': []
   'copy-link': []
@@ -51,6 +52,7 @@ interface ActionDef {
 
 const actions = computed(() => {
   const lifecycle = getBtLifecycleState(props.task)
+  const sharing = getTaskSharingState(props.task)
   let primary: ActionDef[]
   if (lifecycle === 'selection') {
     primary = [
@@ -70,16 +72,26 @@ const actions = computed(() => {
       { key: 'info', icon: InformationCircleOutline, label: t('task.task-detail-title'), event: 'show-info' },
       { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
-  } else if (lifecycle === 'seeding') {
+  } else if (sharing?.phase === 'active') {
     primary = [
-      { key: 'toggle', icon: PauseOutline, label: t('task.pause-seeding'), event: 'pause' },
-      { key: 'finish-seeding', icon: StopCircleOutline, label: t('task.finish-seeding'), event: 'finish-seeding' },
+      { key: 'toggle', icon: PauseOutline, label: t(getSharingActionLabelKey(sharing.kind, 'pause')), event: 'pause' },
+      {
+        key: 'finish-sharing',
+        icon: StopCircleOutline,
+        label: t(getSharingActionLabelKey(sharing.kind, 'finish')),
+        event: 'finish-sharing',
+      },
       { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
-  } else if (lifecycle === 'paused-seeding') {
+  } else if (sharing?.phase === 'paused') {
     primary = [
-      { key: 'toggle', icon: PlayOutline, label: t('task.resume-seeding'), event: 'resume' },
-      { key: 'finish-seeding', icon: StopCircleOutline, label: t('task.finish-seeding'), event: 'finish-seeding' },
+      { key: 'toggle', icon: PlayOutline, label: t(getSharingActionLabelKey(sharing.kind, 'resume')), event: 'resume' },
+      {
+        key: 'finish-sharing',
+        icon: StopCircleOutline,
+        label: t(getSharingActionLabelKey(sharing.kind, 'finish')),
+        event: 'finish-sharing',
+      },
       { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
   } else {
@@ -141,8 +153,8 @@ function onAction(event: string) {
     case 'resume':
       emit('resume')
       break
-    case 'finish-seeding':
-      emit('finish-seeding')
+    case 'finish-sharing':
+      emit('finish-sharing')
       break
     case 'delete':
       emit('delete')

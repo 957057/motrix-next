@@ -218,8 +218,8 @@ export async function deleteTask(params: { gid: string; infoHash?: string }): Pr
 }
 
 /** Ends BitTorrent seeding while preserving files and completed history. */
-export async function finishSeeding(params: { gid: string }): Promise<void> {
-  return invoke<void>('aria2_finish_seeding', params)
+export async function finishSharing(params: { gid: string }): Promise<void> {
+  return invoke<void>('aria2_finish_sharing', params)
 }
 
 /** Forcefully pauses a download task by GID. */
@@ -292,7 +292,7 @@ const api = {
   cleanupEd2kSearch,
   removeTask,
   deleteTask,
-  finishSeeding,
+  finishSharing,
   forcePauseTask,
   pauseTask,
   resumeTask,

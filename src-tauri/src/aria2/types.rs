@@ -161,6 +161,8 @@ pub struct Aria2Ed2kInfo {
     #[serde(default)]
     pub search_result_count: Option<String>,
     #[serde(default)]
+    pub sharing_time: Option<String>,
+    #[serde(default)]
     pub uploading_peer_count: Option<String>,
     #[serde(default)]
     pub waiting_upload_peer_count: Option<String>,
@@ -445,12 +447,14 @@ mod tests {
                 "hash": "3D366ED505B977FC61C9A6EE01E96329",
                 "completedLength": "0",
                 "lowIdPeerCount": "2",
-                "callbackWaitingPeerCount": "1"
+                "callbackWaitingPeerCount": "1",
+                "sharingTime": "84"
             }
         });
         let task: Aria2Task = serde_json::from_value(json).expect("deserialize");
         let ed2k = task.ed2k.as_ref().unwrap();
         assert_eq!(ed2k.completed_length.as_deref(), Some("0"));
+        assert_eq!(ed2k.sharing_time.as_deref(), Some("84"));
         assert_eq!(
             ed2k.hash.as_deref(),
             Some("3D366ED505B977FC61C9A6EE01E96329")

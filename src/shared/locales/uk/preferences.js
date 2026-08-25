@@ -56,7 +56,6 @@ export default {
   'bt-discovery-section': 'Пошук peers',
   'p2p-sharing-section': 'Політика P2P-поширення',
   'sharing-mode': 'Політика поширення',
-  'sharing-mode-scope-hint': 'Застосовується до BT-роздачі та ED2K-поширення',
   'sharing-mode-stop-by-condition': 'Зупинити за умовами',
   'sharing-mode-manual-stop': 'Зупинити вручну',
   'sharing-mode-manual-stop-tips': 'Завершені завантаження продовжують поширення, доки ви вручну не зупините завдання',
@@ -330,7 +329,7 @@ export default {
     'Увімкнення може покращити продуктивність рендерингу інтерфейсу, але деякі GPU, драйвери або середовища стільниці можуть спричинити збій WebKitGTK',
   'hardware-rendering-restart-confirm':
     'Зміна апаратного прискорення WebKitGTK потребує перезапуску застосунку. Якщо застосунок не запускається після ввімкнення, вручну відредагуйте config.json і встановіть preferences.hardwareRendering у false.',
-  'session-path': 'Файл кешу завдань',
+  'engine-state-path': 'Каталог стану рушія',
   'reset-engine-state': 'Скинути стан рушія',
   'reset-engine-state-confirm':
     'Усі завдання завантаження буде видалено з рушія, файл кешу завдань буде очищено. Історія завершених завантажень не постраждає.',
@@ -473,9 +472,6 @@ export default {
   'connect-timeout': "Тайм-аут з'єднання",
   timeout: 'Тайм-аут передачі',
   'file-allocation': 'Попереднє виділення файлу',
-  'async-dns': 'Асинхронний DNS',
-  'async-dns-hint':
-    'Після ввімкнення може покращити продуктивність DNS-розв’язання, але також може зробити завантаження нестабільними',
   'startup-behavior': 'Запуск',
   'tray-and-dock': 'Трей та Dock',
   'unit-seconds': 'сек',

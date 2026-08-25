@@ -31,10 +31,6 @@ interface AdvancedActionsDeps {
     warning: (msg: string) => void
     info: (msg: string, opts?: Record<string, unknown>) => void
   }
-  taskStore: {
-    batchRemoveTask: (gids: string[]) => Promise<unknown>
-    purgeTaskRecord: () => Promise<unknown>
-  }
   historyStore: {
     checkIntegrity: () => Promise<string>
     getRecordsPage: (input: {
@@ -62,7 +58,7 @@ const STATUS_I18N_MAP: Record<string, string> = {
 }
 
 export function useAdvancedActions(deps: AdvancedActionsDeps) {
-  const { t, message, taskStore, historyStore, preferenceStore, form, buildForm, resetSnapshot } = deps
+  const { t, message, historyStore, preferenceStore, form, buildForm, resetSnapshot } = deps
 
   const dialog = useDialog()
   const engineStore = useEngineStore()
@@ -169,16 +165,6 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
       negativeText: t('app.no'),
       onPositiveClick: async () => {
         try {
-          const { fetchTaskList } = await import('@/api/aria2')
-          const [activeTasks, stoppedTasks] = await Promise.all([
-            fetchTaskList({ type: 'active' }),
-            fetchTaskList({ type: 'stopped' }),
-          ])
-          const allGids = [...activeTasks, ...stoppedTasks].map((task) => task.gid)
-          if (allGids.length > 0) {
-            await taskStore.batchRemoveTask(allGids)
-          }
-          await taskStore.purgeTaskRecord()
           await engineStore.recoverRuntimeState()
           message.success(t('preferences.reset-engine-state-success'))
         } catch (e) {

@@ -56,7 +56,6 @@ export default {
   'bt-discovery-section': 'Descoperire peeri',
   'p2p-sharing-section': 'Politică de partajare P2P',
   'sharing-mode': 'Politică de partajare',
-  'sharing-mode-scope-hint': 'Se aplică seedării BT și partajării ED2K',
   'sharing-mode-stop-by-condition': 'Oprește după condiții',
   'sharing-mode-manual-stop': 'Oprire manuală',
   'sharing-mode-manual-stop-tips': 'Descărcările finalizate continuă să partajeze până oprești manual sarcina',
@@ -330,7 +329,7 @@ export default {
     'Activarea poate îmbunătăți performanța de randare a interfeței, dar unele GPU-uri, drivere sau medii desktop pot cauza blocarea WebKitGTK',
   'hardware-rendering-restart-confirm':
     'Schimbarea accelerării hardware WebKitGTK necesită repornirea aplicației. Dacă aplicația nu poate porni după activare, editați manual config.json și setați preferences.hardwareRendering la false.',
-  'session-path': 'Fișier cache sarcini',
+  'engine-state-path': 'Directorul stării motorului',
   'reset-engine-state': 'Resetează starea motorului',
   'reset-engine-state-confirm':
     'Toate sarcinile de descărcare vor fi eliminate din motor și fișierul cache al sarcinilor va fi șters. Istoricul descărcărilor finalizate nu va fi afectat.',
@@ -475,8 +474,6 @@ export default {
   'connect-timeout': 'Timeout conexiune',
   timeout: 'Timeout transfer',
   'file-allocation': 'Pre-alocare fișier',
-  'async-dns': 'DNS asincron',
-  'async-dns-hint': 'După activare poate îmbunătăți performanța rezolvării DNS, dar poate face descărcările instabile',
   'startup-behavior': 'Pornire',
   'tray-and-dock': 'Tavă și Dock',
   'unit-seconds': 'sec',

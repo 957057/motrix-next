@@ -18,7 +18,6 @@ describe('BitTorrent preference contract', () => {
     const config = buildBtSystemConfig({
       ...createForm(),
       btTracker: 'udp://one.example:6969\nudp://two.example:6969',
-      sharingMode: 'manual-stop',
     })
 
     expect(config).toMatchObject({
@@ -26,7 +25,6 @@ describe('BitTorrent preference contract', () => {
       'bt-transport': 'both',
       'enable-dht': 'true',
       'pause-metadata': 'true',
-      'keep-sharing': 'true',
       'bt-tracker': 'udp://one.example:6969,udp://two.example:6969',
     })
     expect(config).not.toHaveProperty('force-save')
@@ -38,14 +36,11 @@ describe('BitTorrent preference contract', () => {
     const stored = transformBtForStore({
       ...createForm(),
       btFileSelectionMode: 'manual',
-      sharingMode: 'manual-stop',
       btTracker: 'udp://one.example:6969\nudp://two.example:6969',
     })
 
     expect(stored.btFileSelectionMode).toBe('manual')
-    expect(stored.keepSharing).toBe(true)
     expect(stored.btTracker).toBe('udp://one.example:6969,udp://two.example:6969')
-    expect(stored).not.toHaveProperty('sharingMode')
   })
 
   it('rejects invalid local and external endpoints', () => {

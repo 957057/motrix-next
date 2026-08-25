@@ -38,7 +38,6 @@ export interface NetworkForm {
   connectTimeout: number
   timeout: number
   fileAllocation: string
-  asyncDns: boolean
   userAgent: string
   userAgentProfiles: UserAgentProfile[]
   userAgentRules: UserAgentRule[]
@@ -83,7 +82,6 @@ export function buildNetworkForm(config: AppConfig): NetworkForm {
     connectTimeout: config.connectTimeout ?? D.connectTimeout,
     timeout: config.timeout ?? D.timeout,
     fileAllocation: config.fileAllocation ?? D.fileAllocation,
-    asyncDns: config.asyncDns ?? D.asyncDns,
     userAgent: config.userAgent ?? D.userAgent,
     userAgentProfiles: config.userAgentProfiles ?? D.userAgentProfiles,
     userAgentRules: config.userAgentRules ?? D.userAgentRules,
@@ -101,7 +99,6 @@ export function buildNetworkSystemConfig(f: NetworkForm): Record<string, string>
     'connect-timeout': String(f.connectTimeout),
     timeout: String(f.timeout),
     'file-allocation': f.fileAllocation || D.fileAllocation,
-    'async-dns': String(!!f.asyncDns),
     'bt-port-mapping': String(!!f.enableUpnp),
     ...buildDownloadProxyOptions(f.proxy),
   }

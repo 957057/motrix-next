@@ -106,6 +106,7 @@ export interface Aria2Ed2kInfo {
   searchActive?: boolean
   searchMoreResults?: boolean
   searchResultCount?: string
+  sharingTime?: string
   uploadingPeerCount?: string
   waitingUploadPeerCount?: string
   peerCreditCount?: string
@@ -536,8 +537,6 @@ export interface AppConfig {
   /** Disk space pre-allocation method. Maps to aria2 --file-allocation.
    *  Values: 'none' | 'trunc' | 'prealloc' | 'falloc' */
   fileAllocation: string
-  /** Enables c-ares based asynchronous DNS resolution. Maps to aria2 --async-dns. */
-  asyncDns: boolean
   /** Per-tab sort configuration (field + direction), persisted independently per tab. */
   taskSort: import('@/composables/useTaskSort').TaskSortConfig
   /** Per-tab manual task order. Unknown tasks are inserted above stored tasks. */
@@ -681,8 +680,8 @@ export interface HistoryMeta {
   ed2kHash?: string
   /** BT announce tiers — used to restore tracker-aware magnet restart links. */
   announceList?: string[][]
-  /** Final duration spent seeding a BitTorrent task. */
-  seedingTime?: string
+  /** Final duration spent actively sharing a P2P task. */
+  sharingTime?: string
   /** Complete file list with all URIs — present when files.length > 1. */
   files?: HistoryFileSnapshot[]
 }
@@ -730,7 +729,7 @@ export interface TaskApi {
   getFiles: (params: { gid: string }) => Promise<Aria2File[]>
   removeTask: (params: { gid: string }) => Promise<string>
   deleteTask: (params: { gid: string; infoHash?: string }) => Promise<void>
-  finishSeeding: (params: { gid: string }) => Promise<void>
+  finishSharing: (params: { gid: string }) => Promise<void>
   forcePauseTask: (params: { gid: string }) => Promise<string>
   pauseTask: (params: { gid: string }) => Promise<string>
   resumeTask: (params: { gid: string }) => Promise<string>

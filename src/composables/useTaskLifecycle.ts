@@ -33,8 +33,8 @@ export function buildHistoryMeta(task: Aria2Task): HistoryMeta {
   if (task.bittorrent?.announceList && task.bittorrent.announceList.length > 0) {
     meta.announceList = task.bittorrent.announceList.map((tier) => [...tier])
   }
-  const seedingTime = Number(task.bittorrent?.seedingTime)
-  if (Number.isFinite(seedingTime) && seedingTime > 0) meta.seedingTime = String(Math.floor(seedingTime))
+  const sharingTime = Number(task.bittorrent?.seedingTime ?? task.ed2k?.sharingTime)
+  if (Number.isFinite(sharingTime) && sharingTime > 0) meta.sharingTime = String(Math.floor(sharingTime))
 
   // Snapshot trigger: multi-file OR any file with multiple mirror URIs.
   // Multi-file: enables correct delete (all files) and stale cleanup.
@@ -120,7 +120,7 @@ export function buildHistoryRecord(task: Aria2Task): HistoryRecord {
  * 'complete' so the record correctly reflects download completion.
  *
  * Used by the lifecycle service when a task first enters shared-upload state. */
-export function buildSharingCompletionRecord(task: Aria2Task): HistoryRecord {
+export function buildP2pDownloadCompletionRecord(task: Aria2Task): HistoryRecord {
   const record = buildHistoryRecord(task)
   record.status = 'complete'
   return record
@@ -190,8 +190,8 @@ export function historyRecordToTask(record: HistoryRecord): Aria2Task {
     if (meta.announceList && meta.announceList.length > 0) {
       task.bittorrent.announceList = meta.announceList.map((tier) => [...tier])
     }
-    if (meta.seedingTime) {
-      task.bittorrent.seedingTime = meta.seedingTime
+    if (meta.sharingTime) {
+      task.bittorrent.seedingTime = meta.sharingTime
     }
   }
 
@@ -205,6 +205,9 @@ export function historyRecordToTask(record: HistoryRecord): Aria2Task {
     }
     if (meta.ed2kHash) {
       task.ed2k.hash = meta.ed2kHash
+    }
+    if (meta.sharingTime) {
+      task.ed2k.sharingTime = meta.sharingTime
     }
   }
 

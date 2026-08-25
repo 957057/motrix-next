@@ -503,7 +503,6 @@ mod tests {
     fn runtime_config_contains_each_option_once() {
         let content = build_runtime_config(
             &json!({
-                "async-dns": true,
                 "bt-max-peers": 64,
                 "remote-time": false
             }),
@@ -518,7 +517,6 @@ mod tests {
         let unique = keys.iter().copied().collect::<HashSet<_>>();
 
         assert_eq!(keys.len(), unique.len());
-        assert_eq!(option_value(&content, "async-dns"), Some("true"));
         assert_eq!(option_value(&content, "bt-max-peers"), Some("64"));
         assert_eq!(option_value(&content, "remote-time"), Some("false"));
     }

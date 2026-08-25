@@ -54,7 +54,6 @@ export default {
   'bt-discovery-section': 'การค้นหา peer',
   'p2p-sharing-section': 'นโยบายการแชร์ P2P',
   'sharing-mode': 'นโยบายการแชร์',
-  'sharing-mode-scope-hint': 'ใช้กับการ seed BT และการแชร์ ED2K',
   'sharing-mode-stop-by-condition': 'หยุดเมื่อถึงเงื่อนไข',
   'sharing-mode-manual-stop': 'หยุดด้วยตนเอง',
   'sharing-mode-manual-stop-tips': 'ดาวน์โหลดที่เสร็จแล้วจะแชร์ต่อจนกว่าคุณจะหยุดงานด้วยตนเอง',
@@ -322,7 +321,7 @@ export default {
     'การเปิดใช้งานอาจช่วยเพิ่มประสิทธิภาพการเรนเดอร์ UI แต่ GPU ไดรเวอร์ หรือเดสก์ท็อปบางแบบอาจทำให้ WebKitGTK แครช',
   'hardware-rendering-restart-confirm':
     'การเปลี่ยนการเร่งความเร็วฮาร์ดแวร์ WebKitGTK ต้องรีสตาร์ตแอป หากแอปเริ่มไม่ได้หลังเปิดใช้งาน ให้แก้ไข config.json ด้วยตนเองและตั้ง preferences.hardwareRendering เป็น false',
-  'session-path': 'ไฟล์แคชงาน',
+  'engine-state-path': 'ไดเรกทอรีสถานะเอนจิน',
   'reset-engine-state': 'รีเซ็ตสถานะเอนจิน',
   'reset-engine-state-confirm':
     'งานดาวน์โหลดทั้งหมดจะถูกลบออกจากเอนจินและไฟล์แคชงานจะถูกลบ ประวัติการดาวน์โหลดที่เสร็จสิ้นแล้วจะไม่ได้รับผลกระทบ',
@@ -464,8 +463,6 @@ export default {
   'connect-timeout': 'หมดเวลาเชื่อมต่อ',
   timeout: 'หมดเวลาถ่ายโอน',
   'file-allocation': 'จัดสรรไฟล์ล่วงหน้า',
-  'async-dns': 'DNS แบบอะซิงโครนัส',
-  'async-dns-hint': 'เมื่อเปิดใช้งาน อาจช่วยเพิ่มประสิทธิภาพการแปลง DNS แต่ก็อาจทำให้การดาวน์โหลดไม่เสถียร',
   'startup-behavior': 'การเริ่มต้น',
   'tray-and-dock': 'ถาดและ Dock',
   'unit-seconds': 'วินาที',

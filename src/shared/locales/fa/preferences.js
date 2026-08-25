@@ -54,7 +54,6 @@ export default {
   'bt-discovery-section': 'کشف همتا',
   'p2p-sharing-section': 'سیاست اشتراک‌گذاری P2P',
   'sharing-mode': 'سیاست اشتراک‌گذاری',
-  'sharing-mode-scope-hint': 'برای سید کردن BT و اشتراک‌گذاری ED2K اعمال می‌شود',
   'sharing-mode-stop-by-condition': 'توقف پس از شرایط',
   'sharing-mode-manual-stop': 'توقف دستی',
   'sharing-mode-manual-stop-tips':
@@ -327,7 +326,7 @@ export default {
     'فعال‌سازی آن ممکن است عملکرد رندر رابط کاربری را بهتر کند، اما بعضی GPUها، درایورها یا محیط‌های دسکتاپ ممکن است باعث خرابی WebKitGTK شوند',
   'hardware-rendering-restart-confirm':
     'تغییر شتاب‌دهی سخت‌افزاری WebKitGTK نیازمند راه‌اندازی مجدد برنامه است. اگر برنامه پس از فعال‌سازی اجرا نشد، config.json را دستی ویرایش کنید و preferences.hardwareRendering را روی false بگذارید.',
-  'session-path': 'فایل حافظه پنهان وظایف',
+  'engine-state-path': 'پوشه وضعیت موتور',
   'reset-engine-state': 'بازنشانی وضعیت موتور',
   'reset-engine-state-confirm':
     'تمام وظایف دانلود از موتور حذف شده و فایل حافظه پنهان وظایف پاک می‌شود. تاریخچه دانلودهای تکمیل‌شده تحت تأثیر قرار نمی‌گیرد.',
@@ -470,8 +469,6 @@ export default {
   'connect-timeout': 'مهلت اتصال',
   timeout: 'مهلت انتقال',
   'file-allocation': 'پیش‌تخصیص فایل',
-  'async-dns': 'DNS ناهمگام',
-  'async-dns-hint': 'پس از فعال شدن ممکن است کارایی تحلیل DNS را بهتر کند، اما ممکن است دانلودها را ناپایدار کند',
   'startup-behavior': 'راه‌اندازی',
   'tray-and-dock': 'سینی و Dock',
   'unit-seconds': 'ثانیه',

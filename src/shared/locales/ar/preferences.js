@@ -54,7 +54,6 @@ export default {
   'bt-discovery-section': 'اكتشاف الأقران',
   'p2p-sharing-section': 'سياسة مشاركة P2P',
   'sharing-mode': 'سياسة المشاركة',
-  'sharing-mode-scope-hint': 'ينطبق على مشاركة BT ومشاركة ED2K',
   'sharing-mode-stop-by-condition': 'التوقف عند بلوغ الشروط',
   'sharing-mode-manual-stop': 'إيقاف يدوي',
   'sharing-mode-manual-stop-tips': 'سيستمر التنزيل المكتمل في المشاركة حتى توقف المهمة يدوياً',
@@ -323,7 +322,7 @@ export default {
     'قد يؤدي تفعيله إلى تحسين أداء عرض الواجهة، لكن بعض البطاقات أو التعريفات أو بيئات سطح المكتب قد تسبب تعطل WebKitGTK',
   'hardware-rendering-restart-confirm':
     'يتطلب تغيير تسريع WebKitGTK العتادي إعادة تشغيل التطبيق. إذا تعذر تشغيل التطبيق بعد تفعيله، فعدّل config.json يدويًا واجعل preferences.hardwareRendering تساوي false.',
-  'session-path': 'ملف ذاكرة التخزين المؤقت للمهام',
+  'engine-state-path': 'دليل حالة المحرك',
   'reset-engine-state': 'إعادة تعيين حالة المحرك',
   'reset-engine-state-confirm':
     'سيؤدي هذا إلى إزالة جميع مهام التنزيل من المحرك وحذف ملف ذاكرة التخزين المؤقت. لن تتأثر سجلات التنزيل المكتملة.',
@@ -464,8 +463,6 @@ export default {
   'connect-timeout': 'مهلة الاتصال',
   timeout: 'مهلة النقل',
   'file-allocation': 'تخصيص الملف المسبق',
-  'async-dns': 'DNS غير المتزامن',
-  'async-dns-hint': 'قد يحسّن أداء تحليل DNS بعد تفعيله، لكنه قد يجعل التنزيل غير مستقر',
   'startup-behavior': 'التشغيل',
   'tray-and-dock': 'شريط المهام والـ Dock',
   'unit-seconds': 'ثانية',

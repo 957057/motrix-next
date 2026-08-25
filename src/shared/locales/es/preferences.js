@@ -57,7 +57,6 @@ export default {
   'bt-discovery-section': 'Descubrimiento de pares',
   'p2p-sharing-section': 'Política de compartición P2P',
   'sharing-mode': 'Política de compartición',
-  'sharing-mode-scope-hint': 'Se aplica a la siembra BT y a la compartición ED2K',
   'sharing-mode-stop-by-condition': 'Detener por condiciones',
   'sharing-mode-manual-stop': 'Detener manualmente',
   'sharing-mode-manual-stop-tips':
@@ -336,7 +335,7 @@ export default {
     'Activarla puede mejorar el rendimiento de renderizado de la interfaz, pero algunas GPU, controladores o entornos de escritorio pueden hacer que WebKitGTK falle',
   'hardware-rendering-restart-confirm':
     'Cambiar la aceleración por hardware de WebKitGTK requiere reiniciar la aplicación. Si la aplicación no puede iniciarse después de activarla, edite config.json manualmente y establezca preferences.hardwareRendering en false.',
-  'session-path': 'Archivo de caché de tareas',
+  'engine-state-path': 'Directorio de estado del motor',
   'reset-engine-state': 'Restablecer estado del motor',
   'reset-engine-state-confirm':
     'Se eliminarán todas las tareas de descarga del motor y se borrará el archivo de caché de tareas. El historial de descargas completadas no se verá afectado.',
@@ -483,9 +482,6 @@ export default {
   'connect-timeout': 'Tiempo de espera de conexión',
   timeout: 'Tiempo de espera de transferencia',
   'file-allocation': 'Preasignación de archivo',
-  'async-dns': 'DNS asíncrono',
-  'async-dns-hint':
-    'Al activarlo, puede mejorar el rendimiento de la resolución DNS, pero también puede hacer que las descargas sean inestables',
   'startup-behavior': 'Inicio',
   'tray-and-dock': 'Bandeja y Dock',
   'unit-seconds': 'seg',

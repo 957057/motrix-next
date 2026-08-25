@@ -31,7 +31,7 @@ vi.mock('@/stores/history', () => ({
   }),
 }))
 
-// ── Mock buildSharingCompletionRecord ───────────────────────────────
+// ── Mock P2P completion record ──────────────────────────────────────
 // ── Helpers ────────────────────────────────────────────────────────
 
 function createMockApi(): TaskApi {
@@ -48,7 +48,7 @@ function createMockApi(): TaskApi {
     getFiles: vi.fn().mockResolvedValue([]),
     removeTask: vi.fn().mockResolvedValue('OK'),
     deleteTask: vi.fn().mockResolvedValue(undefined),
-    finishSeeding: vi.fn().mockResolvedValue(undefined),
+    finishSharing: vi.fn().mockResolvedValue(undefined),
     forcePauseTask: vi.fn().mockResolvedValue('OK'),
     pauseTask: vi.fn().mockResolvedValue('OK'),
     resumeTask: vi.fn().mockResolvedValue('OK'),
@@ -115,16 +115,16 @@ describe('removeTask', () => {
 // ═══════════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════════
-describe('finishSeeding', () => {
+describe('finishSharing', () => {
   it('finishes seeding without deleting the completed record', async () => {
     const api = createMockApi()
     const deps = createDeps(api)
     const ops = createTaskOperations(deps)
     const task = makeTask({ gid: 'seed-1', seeder: 'true', bittorrent: { state: 'seeding' } })
 
-    await ops.finishSeeding(task)
+    await ops.finishSharing(task)
 
-    expect(api.finishSeeding).toHaveBeenCalledWith({ gid: 'seed-1' })
+    expect(api.finishSharing).toHaveBeenCalledWith({ gid: 'seed-1' })
     expect(api.deleteTask).not.toHaveBeenCalled()
     expect(deps.setTaskRemoving).not.toHaveBeenCalled()
     expect(deps.fetchList).toHaveBeenCalledOnce()

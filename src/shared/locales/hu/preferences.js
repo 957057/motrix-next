@@ -56,7 +56,6 @@ export default {
   'bt-discovery-section': 'Peer felderítés',
   'p2p-sharing-section': 'P2P megosztási szabály',
   'sharing-mode': 'Megosztási szabály',
-  'sharing-mode-scope-hint': 'BT seedelésre és ED2K megosztásra vonatkozik',
   'sharing-mode-stop-by-condition': 'Leállítás feltételek után',
   'sharing-mode-manual-stop': 'Kézi leállítás',
   'sharing-mode-manual-stop-tips':
@@ -331,7 +330,7 @@ export default {
     'Bekapcsolása javíthatja a felület renderelési teljesítményét, de egyes GPU-k, illesztőprogramok vagy asztali környezetek összeomlaszthatják a WebKitGTK-t',
   'hardware-rendering-restart-confirm':
     'A WebKitGTK hardveres gyorsítás módosításához újra kell indítani az alkalmazást. Ha az alkalmazás a bekapcsolás után nem indul el, szerkessze kézzel a config.json fájlt, és állítsa a preferences.hardwareRendering értékét false-ra.',
-  'session-path': 'Feladat-gyorsítótár fájl',
+  'engine-state-path': 'Motorállapot könyvtára',
   'reset-engine-state': 'Motorállapot visszaállítása',
   'reset-engine-state-confirm':
     'Minden letöltési feladat eltávolításra kerül a motorból, és a feladat-gyorsítótár fájl törlődik. A befejezett letöltések előzményei nem érintettek.',
@@ -475,8 +474,6 @@ export default {
   'connect-timeout': 'Kapcsolódási időtúllépés',
   timeout: 'Átviteli időtúllépés',
   'file-allocation': 'Fájl előfoglalás',
-  'async-dns': 'Aszinkron DNS',
-  'async-dns-hint': 'Bekapcsolva javíthatja a DNS-feloldás teljesítményét, de instabillá teheti a letöltéseket',
   'startup-behavior': 'Indítás',
   'tray-and-dock': 'Tálca és Dock',
   'unit-seconds': 'mp',
