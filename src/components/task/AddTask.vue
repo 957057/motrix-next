@@ -768,22 +768,20 @@ async function handleSubmit() {
 
         <!-- ── Download settings: always visible ──────────────── -->
         <div class="download-settings">
-          <div v-if="activeTab === ADD_TASK_TYPE.URI">
-            <NFormItem :label="t('task.task-out') + ':'">
-              <NInput v-model:value="form.out" :placeholder="t('task.task-out-tips')" :autofocus="false" />
-            </NFormItem>
-            <NFormItem
-              :label="t('task.task-connections') + ':'"
-              v-bind="configFieldProps('streamMaxConnections', form.streamMaxConnections)"
-            >
-              <NInputNumber
-                v-model:value="form.streamMaxConnections"
-                :min="constraint('streamMaxConnections').min"
-                :max="constraint('streamMaxConnections').max"
-                style="width: 120px"
-              />
-            </NFormItem>
-          </div>
+          <NFormItem :label="t('task.task-out') + ':'">
+            <NInput v-model:value="form.out" :placeholder="t('task.task-out-tips')" :autofocus="false" />
+          </NFormItem>
+          <NFormItem
+            :label="t('task.task-connections') + ':'"
+            v-bind="configFieldProps('streamMaxConnections', form.streamMaxConnections)"
+          >
+            <NInputNumber
+              v-model:value="form.streamMaxConnections"
+              :min="constraint('streamMaxConnections').min"
+              :max="constraint('streamMaxConnections').max"
+              style="width: 120px"
+            />
+          </NFormItem>
           <NFormItem :label="dirLabel + ':'">
             <div style="width: 100%">
               <NInputGroup>
@@ -812,7 +810,6 @@ async function handleSubmit() {
             </div>
           </NFormItem>
           <AdvancedOptions
-            v-if="activeTab === ADD_TASK_TYPE.URI"
             v-model:show="showAdvanced"
             v-model:authorization="form.authorization"
             v-model:http-auth-username="form.httpAuthUsername"
