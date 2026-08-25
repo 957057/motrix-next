@@ -7,6 +7,7 @@ export default {
   save: 'Desar i aplicar',
   'save-success-message': 'Preferències desades',
   'save-fail-message': 'Error en desar les preferències',
+  'value-range-error': 'Introduïu un valor entre {min} i {max}.',
   'changes-restored': 'Canvis restaurats',
   discard: 'Descartar',
   startup: 'Inici',

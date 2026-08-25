@@ -7,6 +7,7 @@ export default {
   save: 'Сохранить и применить',
   'save-success-message': 'Настройки сохранены',
   'save-fail-message': 'Не удалось сохранить настройки',
+  'value-range-error': 'Введите значение от {min} до {max}.',
   'changes-restored': 'Изменения восстановлены',
   discard: 'Отменить',
   startup: 'Запуск',

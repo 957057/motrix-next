@@ -6,8 +6,9 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceStore } from '@/stores/preference'
+import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
 import { useHttpAuthStore } from '@/stores/httpAuth'
-import { ADD_TASK_TYPE, ENGINE_MAX_STREAM_CONNECTIONS } from '@shared/constants'
+import { ADD_TASK_TYPE } from '@shared/constants'
 import { detectResource } from '@shared/utils'
 import { mergeRawUriLines, normalizeUriLines, extractMagnetDisplayName } from '@shared/utils/batchHelpers'
 import { resolveDownloadCategory } from '@shared/utils/fileCategory'
@@ -69,6 +70,7 @@ const taskStore = useTaskStore()
 const preferenceStore = usePreferenceStore()
 const httpAuthStore = useHttpAuthStore()
 const message = useAppMessage()
+const { constraint, configFieldProps, areConfigFieldsValid } = usePreferenceNumericValidation()
 /** Tracks whether the user manually edited the download directory in this session. */
 const dirUserModified = ref(false)
 
@@ -495,7 +497,7 @@ function handleClose() {
 }
 
 async function handleSubmit() {
-  if (submitting.value) return
+  if (submitting.value || !areConfigFieldsValid({ streamMaxConnections: form.value.streamMaxConnections })) return
   submitting.value = true
 
   try {
@@ -711,11 +713,14 @@ async function handleSubmit() {
           <NFormItem :label="t('task.task-out') + ':'">
             <NInput v-model:value="form.out" :placeholder="t('task.task-out-tips')" :autofocus="false" />
           </NFormItem>
-          <NFormItem :label="t('preferences.stream-max-connections') + ':'">
+          <NFormItem
+            :label="t('preferences.stream-max-connections') + ':'"
+            v-bind="configFieldProps('streamMaxConnections', form.streamMaxConnections)"
+          >
             <NInputNumber
               v-model:value="form.streamMaxConnections"
-              :min="1"
-              :max="ENGINE_MAX_STREAM_CONNECTIONS"
+              :min="constraint('streamMaxConnections').min"
+              :max="constraint('streamMaxConnections').max"
               style="width: 120px"
             />
           </NFormItem>
@@ -772,7 +777,13 @@ async function handleSubmit() {
       <template #footer>
         <NSpace justify="end">
           <NButton @click="handleClose">{{ t('app.cancel') }}</NButton>
-          <NButton data-testid="submit-button" type="primary" :loading="submitting" @click="handleSubmit">
+          <NButton
+            data-testid="submit-button"
+            type="primary"
+            :loading="submitting"
+            :disabled="!areConfigFieldsValid({ streamMaxConnections: form.streamMaxConnections })"
+            @click="handleSubmit"
+          >
             {{ submitLabel }}
           </NButton>
         </NSpace>

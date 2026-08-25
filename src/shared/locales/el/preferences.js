@@ -7,6 +7,7 @@ export default {
   save: 'Αποθήκευση και εφαρμογή',
   'save-success-message': 'Οι προτιμήσεις αποθηκεύτηκαν',
   'save-fail-message': 'Αποτυχία αποθήκευσης',
+  'value-range-error': 'Εισαγάγετε μια τιμή από {min} έως {max}.',
   'changes-restored': 'Οι αλλαγές επαναφέρθηκαν',
   discard: 'Απόρριψη',
   startup: 'Εκκίνηση',

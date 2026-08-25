@@ -123,7 +123,10 @@ if (import.meta.env.PROD) {
       })
 
       const { invoke } = await import('@tauri-apps/api/core')
-      await invoke('save_system_config', { config: { 'bt-tracker': comma } })
+      const { buildSystemConfigFromAppConfig } = await import('@shared/utils/systemConfig')
+      await invoke('replace_system_config', {
+        config: buildSystemConfigFromAppConfig(preferenceStore.config, preferenceStore.config.dir),
+      })
       if (engineStore.isReady) {
         await aria2Api.changeGlobalOption({ 'bt-tracker': comma } as Partial<AppConfig>)
       }
@@ -225,7 +228,7 @@ if (import.meta.env.PROD) {
       // preferences already exist in system.json and will be merged (not overwritten).
       const { buildSystemConfigFromAppConfig } = await import('@shared/utils/systemConfig')
 
-      await invoke('save_system_config', {
+      await invoke('replace_system_config', {
         config: {
           ...buildSystemConfigFromAppConfig(config, defaultDir),
           // Override with runtime values — secret may have been auto-generated

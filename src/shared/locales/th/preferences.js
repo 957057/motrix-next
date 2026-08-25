@@ -7,6 +7,7 @@ export default {
   save: 'บันทึกและใช้งาน',
   'save-success-message': 'บันทึกการตั้งค่าแล้ว',
   'save-fail-message': 'บันทึกการตั้งค่าไม่สำเร็จ',
+  'value-range-error': 'ป้อนค่าระหว่าง {min} ถึง {max}',
   'changes-restored': 'คืนค่าการเปลี่ยนแปลงแล้ว',
   discard: 'ยกเลิก',
   startup: 'การเริ่มต้น',

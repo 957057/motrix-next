@@ -22,6 +22,7 @@ import { DiceOutline, DownloadOutline, RefreshOutline, SearchOutline } from '@vi
 import { usePreferenceStore } from '@/stores/preference'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
+import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
 import { useAppMessage } from '@/composables/useAppMessage'
 import { useEngineRestart } from '@/composables/useEngineRestart'
 import {
@@ -47,6 +48,7 @@ const preferenceStore = usePreferenceStore()
 const taskStore = useTaskStore()
 const dialog = useDialog()
 const message = useAppMessage()
+const { constraint, configFieldProps, areConfigFieldsValid } = usePreferenceNumericValidation()
 const { restartEngine } = useEngineRestart()
 
 const needsRestart = ref(false)
@@ -167,6 +169,15 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
     }
   },
 })
+const numericFieldsValid = computed(() =>
+  areConfigFieldsValid({
+    ed2kSearchTimeout: form.value.ed2kSearchTimeout,
+    ed2kListenPort: form.value.ed2kListenPort,
+    ed2kUdpListenPort: form.value.ed2kUdpListenPort,
+    ed2kUploadSlots: form.value.ed2kUploadSlots,
+    ed2kMaxConnections: form.value.ed2kMaxConnections,
+  }),
+)
 
 function onPortDice() {
   form.value.ed2kListenPort = randomEd2kPort()
@@ -336,8 +347,16 @@ onMounted(() => {
         <NFormItem :label="t('preferences.ed2k-search-min-sources')">
           <NInputNumber v-model:value="searchMinSources" :min="1" :max="9999" class="pref-port" />
         </NFormItem>
-        <NFormItem :label="t('preferences.ed2k-search-timeout')">
-          <NInputNumber v-model:value="form.ed2kSearchTimeout" :min="10" :max="600" class="pref-port" />
+        <NFormItem
+          :label="t('preferences.ed2k-search-timeout')"
+          v-bind="configFieldProps('ed2kSearchTimeout', form.ed2kSearchTimeout)"
+        >
+          <NInputNumber
+            v-model:value="form.ed2kSearchTimeout"
+            :min="constraint('ed2kSearchTimeout').min"
+            :max="constraint('ed2kSearchTimeout').max"
+            class="pref-port"
+          />
           <NText depth="3" class="pref-inline-note">{{ t('preferences.unit-seconds') }}</NText>
         </NFormItem>
         <NFormItem :show-label="false">
@@ -352,9 +371,17 @@ onMounted(() => {
         </NFormItem>
 
         <NDivider title-placement="left">{{ t('preferences.ed2k-settings') }}</NDivider>
-        <NFormItem :label="t('preferences.ed2k-listen-port')">
+        <NFormItem
+          :label="t('preferences.ed2k-listen-port')"
+          v-bind="configFieldProps('ed2kListenPort', form.ed2kListenPort)"
+        >
           <NInputGroup>
-            <NInputNumber v-model:value="form.ed2kListenPort" :min="0" :max="65535" class="pref-port" />
+            <NInputNumber
+              v-model:value="form.ed2kListenPort"
+              :min="constraint('ed2kListenPort').min"
+              :max="constraint('ed2kListenPort').max"
+              class="pref-port"
+            />
             <NButton secondary class="pref-action-button pref-action-button--compact" @click="onPortDice">
               <template #icon>
                 <NIcon><DiceOutline /></NIcon>
@@ -363,9 +390,17 @@ onMounted(() => {
             </NButton>
           </NInputGroup>
         </NFormItem>
-        <NFormItem :label="t('preferences.ed2k-udp-listen-port')">
+        <NFormItem
+          :label="t('preferences.ed2k-udp-listen-port')"
+          v-bind="configFieldProps('ed2kUdpListenPort', form.ed2kUdpListenPort)"
+        >
           <NInputGroup>
-            <NInputNumber v-model:value="form.ed2kUdpListenPort" :min="0" :max="65535" class="pref-port" />
+            <NInputNumber
+              v-model:value="form.ed2kUdpListenPort"
+              :min="constraint('ed2kUdpListenPort').min"
+              :max="constraint('ed2kUdpListenPort').max"
+              class="pref-port"
+            />
             <NButton secondary class="pref-action-button pref-action-button--compact" @click="onUdpPortDice">
               <template #icon>
                 <NIcon><DiceOutline /></NIcon>
@@ -374,11 +409,27 @@ onMounted(() => {
             </NButton>
           </NInputGroup>
         </NFormItem>
-        <NFormItem :label="t('preferences.ed2k-upload-slots')">
-          <NInputNumber v-model:value="form.ed2kUploadSlots" :min="1" :max="100" class="pref-port" />
+        <NFormItem
+          :label="t('preferences.ed2k-upload-slots')"
+          v-bind="configFieldProps('ed2kUploadSlots', form.ed2kUploadSlots)"
+        >
+          <NInputNumber
+            v-model:value="form.ed2kUploadSlots"
+            :min="constraint('ed2kUploadSlots').min"
+            :max="constraint('ed2kUploadSlots').max"
+            class="pref-port"
+          />
         </NFormItem>
-        <NFormItem :label="t('preferences.ed2k-max-connections')">
-          <NInputNumber v-model:value="form.ed2kMaxConnections" :min="1" :max="1024" class="pref-port" />
+        <NFormItem
+          :label="t('preferences.ed2k-max-connections')"
+          v-bind="configFieldProps('ed2kMaxConnections', form.ed2kMaxConnections)"
+        >
+          <NInputNumber
+            v-model:value="form.ed2kMaxConnections"
+            :min="constraint('ed2kMaxConnections').min"
+            :max="constraint('ed2kMaxConnections').max"
+            class="pref-port"
+          />
         </NFormItem>
         <NFormItem :label="t('preferences.ed2k-preview-priority')">
           <NSwitch v-model:value="form.ed2kPreviewPriority" />
@@ -442,7 +493,7 @@ onMounted(() => {
         </NFormItem>
       </NForm>
     </div>
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 

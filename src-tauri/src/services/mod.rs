@@ -40,7 +40,7 @@ use tauri_plugin_store::StoreExt;
 /// flat `Map<String, String>`, filtered to only hot-reloadable keys.
 ///
 /// `system.json` stores aria2 engine options in kebab-case as a flat
-/// JSON object (written by the `save_system_config` command).
+/// JSON object (written by the `replace_system_config` command).
 fn read_system_options(
     app: &tauri::AppHandle,
 ) -> Result<serde_json::Map<String, serde_json::Value>, AppError> {

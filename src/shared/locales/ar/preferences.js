@@ -7,6 +7,7 @@ export default {
   save: 'حفظ وتطبيق',
   'save-success-message': 'تم حفظ التفضيلات',
   'save-fail-message': 'فشل حفظ التفضيلات',
+  'value-range-error': 'أدخل قيمة بين {min} و{max}.',
   'changes-restored': 'تمت استعادة التغييرات',
   discard: 'تجاهل',
   startup: 'بدء التشغيل',

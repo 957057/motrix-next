@@ -722,8 +722,7 @@ pub fn run() {
         .manage(std::sync::Arc::new(DownloadedUpdate::new()))
         .manage(std::sync::Arc::new(ShutdownCancelState::new()))
         .invoke_handler(tauri::generate_handler![
-            commands::get_system_config,
-            commands::save_system_config,
+            commands::replace_system_config,
             commands::read_settings_backup_file,
             commands::write_settings_backup_file,
             commands::engine_supervisor_state,

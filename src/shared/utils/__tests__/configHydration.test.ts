@@ -11,6 +11,7 @@ import {
 } from '@shared/constants'
 import { CONFIG_VERSION } from '@shared/utils/configMigration'
 import { hydrateAppConfig } from '@shared/utils/configHydration'
+import { NUMERIC_CONFIG_CONSTRAINTS } from '@shared/configConstraints'
 import type { AppConfig } from '@shared/types'
 
 describe('hydrateAppConfig', () => {
@@ -157,6 +158,22 @@ describe('hydrateAppConfig', () => {
     expect(result.config.btExternalIp).toBe(DEFAULT_APP_CONFIG.btExternalIp)
     expect(result.config.btExternalPort).toBe(DEFAULT_APP_CONFIG.btExternalPort)
     expect(result.repairs).toEqual(expect.arrayContaining(['btExternalIp', 'btExternalPort']))
+  })
+
+  it('preserves stream connection values accepted by the engine', () => {
+    const valid = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
+      streamMaxConnections: 128,
+    })
+    const invalid = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
+      streamMaxConnections: NUMERIC_CONFIG_CONSTRAINTS.streamMaxConnections.max + 1,
+    })
+
+    expect(valid.config.streamMaxConnections).toBe(128)
+    expect(valid.repairs).not.toContain('streamMaxConnections')
+    expect(invalid.config.streamMaxConnections).toBe(DEFAULT_APP_CONFIG.streamMaxConnections)
+    expect(invalid.repairs).toContain('streamMaxConnections')
   })
 
   it('repairs invalid nested values and keeps valid nested values', () => {

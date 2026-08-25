@@ -4,9 +4,8 @@ use serde_json::Value;
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
 
-/// Reads all system-level configuration from the `system.json` store.
-#[tauri::command]
-pub fn get_system_config(app: AppHandle) -> Result<Value, AppError> {
+/// Reads the generated engine-option snapshot from `system.json`.
+pub(crate) fn read_engine_config_snapshot(app: AppHandle) -> Result<Value, AppError> {
     let store = app
         .store("system.json")
         .map_err(|e| AppError::Store(e.to_string()))?;
@@ -18,19 +17,21 @@ pub fn get_system_config(app: AppHandle) -> Result<Value, AppError> {
     Ok(Value::Object(entries))
 }
 
-/// Merges the given key-value pairs into the `system.json` store.
+/// Replaces the generated engine-option snapshot in `system.json`.
 #[tauri::command]
-pub fn save_system_config(app: AppHandle, config: Value) -> Result<(), AppError> {
+pub fn replace_system_config(app: AppHandle, config: Value) -> Result<(), AppError> {
     let store = app
         .store("system.json")
         .map_err(|e| AppError::Store(e.to_string()))?;
+    store.clear();
     if let Some(obj) = config.as_object() {
         for (key, value) in obj {
             store.set(key.clone(), value.clone());
         }
     }
+    store.save().map_err(|e| AppError::Store(e.to_string()))?;
     log::debug!(
-        "config:save-system keys={}",
+        "config:replace-system keys={}",
         config.as_object().map_or(0, serde_json::Map::len)
     );
     Ok(())

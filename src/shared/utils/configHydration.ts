@@ -7,6 +7,13 @@ import {
   PROXY_SCOPE_OPTIONS,
   UPDATE_CHANNELS,
 } from '@shared/constants'
+import {
+  NUMERIC_CONFIG_CONSTRAINTS,
+  NUMERIC_CONFIG_ENUM_VALUES,
+  PORT_RECOVERY_CONSTRAINT,
+  type NumericConfigKey,
+  isNumericValueValid,
+} from '@shared/configConstraints'
 import { getAllowedColorSchemeIds, normalizeCustomColorScheme } from '@shared/utils/colorSchemeConfig'
 import { runMigrations, type MigrationResult } from '@shared/utils/configMigration'
 import { normalizeProxyMode } from '@shared/utils/proxy'
@@ -66,25 +73,6 @@ function repairEnum<T extends readonly string[]>(
   repairs.push(key)
 }
 
-function normalizePort(value: unknown, fallback: number, key: string, repairs: string[]): number {
-  const port = Number(value)
-  if (Number.isInteger(port) && port >= 0 && port <= 65535) return port
-  repairs.push(key)
-  return fallback
-}
-
-function isValidPort(value: unknown): boolean {
-  const port = Number(value)
-  return Number.isInteger(port) && port >= 0 && port <= 65535
-}
-
-function normalizePositiveNumber(value: unknown, fallback: number, key: string, repairs: string[]): number {
-  const number = Number(value)
-  if (Number.isFinite(number) && number >= 0) return number
-  repairs.push(key)
-  return fallback
-}
-
 function normalizeHttpUrl(value: unknown, fallback: string, key: string, repairs: string[]): string {
   if (typeof value === 'string') {
     try {
@@ -94,20 +82,6 @@ function normalizeHttpUrl(value: unknown, fallback: string, key: string, repairs
       // Repaired below.
     }
   }
-  repairs.push(key)
-  return fallback
-}
-
-function normalizeBoundedInteger(
-  value: unknown,
-  fallback: number,
-  min: number,
-  max: number,
-  key: string,
-  repairs: string[],
-): number {
-  const number = Number(value)
-  if (Number.isInteger(number) && number >= min && number <= max) return number
   repairs.push(key)
   return fallback
 }
@@ -156,10 +130,10 @@ function normalizePortRecovery(value: unknown, repairs: string[]): PortConflictR
   const defaults = DEFAULT_APP_CONFIG.portConflictRecovery
   const saved = isRecord(value) ? value : {}
   const endpointsAreValid =
-    (saved.rangeStart === undefined || isValidPort(saved.rangeStart)) &&
-    (saved.rangeEnd === undefined || isValidPort(saved.rangeEnd))
-  const rangeStart = normalizePort(saved.rangeStart, defaults.rangeStart, 'portConflictRecovery.range', repairs)
-  const rangeEnd = normalizePort(saved.rangeEnd, defaults.rangeEnd, 'portConflictRecovery.range', repairs)
+    (saved.rangeStart === undefined || isNumericValueValid(saved.rangeStart, PORT_RECOVERY_CONSTRAINT)) &&
+    (saved.rangeEnd === undefined || isNumericValueValid(saved.rangeEnd, PORT_RECOVERY_CONSTRAINT))
+  const rangeStart = endpointsAreValid ? Number(saved.rangeStart ?? defaults.rangeStart) : defaults.rangeStart
+  const rangeEnd = endpointsAreValid ? Number(saved.rangeEnd ?? defaults.rangeEnd) : defaults.rangeEnd
   const validRange = endpointsAreValid && rangeStart <= rangeEnd
 
   if (!validRange) {
@@ -233,118 +207,30 @@ function normalizeScalarValues(config: Record<string, unknown>, repairs: string[
     repairs,
   )
 
-  config.rpcListenPort = normalizePort(config.rpcListenPort, DEFAULT_APP_CONFIG.rpcListenPort, 'rpcListenPort', repairs)
-  config.extensionApiPort = normalizePort(
-    config.extensionApiPort,
-    DEFAULT_APP_CONFIG.extensionApiPort,
-    'extensionApiPort',
-    repairs,
-  )
-  config.listenPort = normalizePort(config.listenPort, DEFAULT_APP_CONFIG.listenPort, 'listenPort', repairs)
-  config.btExternalPort = normalizePort(
-    config.btExternalPort,
-    DEFAULT_APP_CONFIG.btExternalPort,
-    'btExternalPort',
-    repairs,
-  )
   if (typeof config.btExternalIp !== 'string' || !isValidOptionalIpAddress(config.btExternalIp)) {
     config.btExternalIp = DEFAULT_APP_CONFIG.btExternalIp
     repairs.push('btExternalIp')
   } else {
     config.btExternalIp = config.btExternalIp.trim()
   }
-  config.ed2kListenPort = normalizePort(
-    config.ed2kListenPort,
-    DEFAULT_APP_CONFIG.ed2kListenPort,
-    'ed2kListenPort',
-    repairs,
-  )
-  config.ed2kUdpListenPort = normalizePort(
-    config.ed2kUdpListenPort,
-    DEFAULT_APP_CONFIG.ed2kUdpListenPort,
-    'ed2kUdpListenPort',
-    repairs,
-  )
-
-  config.streamMaxConnections = normalizeBoundedInteger(
-    config.streamMaxConnections,
-    DEFAULT_APP_CONFIG.streamMaxConnections,
-    1,
-    32,
-    'streamMaxConnections',
-    repairs,
-  )
-  config.taskPageSize = normalizeBoundedInteger(
-    config.taskPageSize,
-    DEFAULT_APP_CONFIG.taskPageSize,
-    1,
-    100,
-    'taskPageSize',
-    repairs,
-  )
-  config.maxConcurrentDownloads = normalizePositiveNumber(
-    config.maxConcurrentDownloads,
-    DEFAULT_APP_CONFIG.maxConcurrentDownloads,
-    'maxConcurrentDownloads',
-    repairs,
-  )
-  config.ed2kMaxConnections = normalizeBoundedInteger(
-    config.ed2kMaxConnections,
-    DEFAULT_APP_CONFIG.ed2kMaxConnections,
-    1,
-    1024,
-    'ed2kMaxConnections',
-    repairs,
-  )
-  config.btMaxPeers = normalizePositiveNumber(config.btMaxPeers, DEFAULT_APP_CONFIG.btMaxPeers, 'btMaxPeers', repairs)
-  config.btMaxConnections = normalizeBoundedInteger(
-    config.btMaxConnections,
-    DEFAULT_APP_CONFIG.btMaxConnections,
-    2,
-    100000,
-    'btMaxConnections',
-    repairs,
-  )
-  config.btMaxUploads = normalizeBoundedInteger(
-    config.btMaxUploads,
-    DEFAULT_APP_CONFIG.btMaxUploads,
-    1,
-    100000,
-    'btMaxUploads',
-    repairs,
-  )
-  config.btMaxUploadsPerTorrent = normalizeBoundedInteger(
-    config.btMaxUploadsPerTorrent,
-    DEFAULT_APP_CONFIG.btMaxUploadsPerTorrent,
-    1,
-    100000,
-    'btMaxUploadsPerTorrent',
-    repairs,
-  )
-  config.btTrackerSyncIntervalHours = normalizePositiveNumber(
-    config.btTrackerSyncIntervalHours,
-    DEFAULT_APP_CONFIG.btTrackerSyncIntervalHours,
-    'btTrackerSyncIntervalHours',
-    repairs,
-  )
-  config.btPeerBlocklistSyncIntervalHours = normalizeBoundedInteger(
-    config.btPeerBlocklistSyncIntervalHours,
-    DEFAULT_APP_CONFIG.btPeerBlocklistSyncIntervalHours,
-    0,
-    8760,
-    'btPeerBlocklistSyncIntervalHours',
-    repairs,
-  )
+  for (const key of Object.keys(NUMERIC_CONFIG_CONSTRAINTS) as NumericConfigKey[]) {
+    const constraint = NUMERIC_CONFIG_CONSTRAINTS[key]
+    if (isNumericValueValid(config[key], constraint)) {
+      config[key] = Number(config[key])
+      continue
+    }
+    config[key] = DEFAULT_APP_CONFIG[key]
+    repairs.push(key)
+  }
+  for (const [key, allowed] of Object.entries(NUMERIC_CONFIG_ENUM_VALUES)) {
+    if (allowed.includes(Number(config[key]) as never)) continue
+    config[key] = DEFAULT_APP_CONFIG[key as keyof typeof DEFAULT_APP_CONFIG]
+    repairs.push(key)
+  }
   config.btPeerBlocklistUrl = normalizeHttpUrl(
     config.btPeerBlocklistUrl,
     DEFAULT_APP_CONFIG.btPeerBlocklistUrl,
     'btPeerBlocklistUrl',
-    repairs,
-  )
-  config.ed2kBootstrapSyncIntervalHours = normalizePositiveNumber(
-    config.ed2kBootstrapSyncIntervalHours,
-    DEFAULT_APP_CONFIG.ed2kBootstrapSyncIntervalHours,
-    'ed2kBootstrapSyncIntervalHours',
     repairs,
   )
 }

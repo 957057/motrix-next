@@ -7,6 +7,7 @@ export default {
   save: 'Lagre og bruk',
   'save-success-message': 'Innstillinger lagret',
   'save-fail-message': 'Kunne ikke lagre innstillinger',
+  'value-range-error': 'Angi en verdi mellom {min} og {max}.',
   'changes-restored': 'Endringer gjenopprettet',
   discard: 'Forkast',
   startup: 'Oppstart',

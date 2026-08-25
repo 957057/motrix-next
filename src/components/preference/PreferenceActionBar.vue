@@ -5,7 +5,7 @@ import { NButton, NSpace, NIcon } from 'naive-ui'
 import { RefreshOutline } from '@vicons/ionicons5'
 import { useEngineRestart } from '@/composables/useEngineRestart'
 
-defineProps<{ isDirty: boolean }>()
+withDefaults(defineProps<{ isDirty: boolean; isValid?: boolean }>(), { isValid: true })
 defineEmits<{ save: []; discard: [] }>()
 
 const { t } = useI18n()
@@ -15,7 +15,11 @@ const { confirmManualRestart } = useEngineRestart()
 <template>
   <div class="form-actions">
     <NSpace :size="12" align="center">
-      <NButton :type="isDirty ? 'primary' : 'default'" :disabled="!isDirty" @click="$emit('save')">
+      <NButton
+        :type="isDirty && isValid ? 'primary' : 'default'"
+        :disabled="!isDirty || !isValid"
+        @click="$emit('save')"
+      >
         {{ t('preferences.save') }}
       </NButton>
       <NButton :type="isDirty ? 'error' : 'default'" :ghost="isDirty" :disabled="!isDirty" @click="$emit('discard')">

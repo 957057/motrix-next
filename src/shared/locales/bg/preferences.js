@@ -7,6 +7,7 @@ export default {
   save: 'Запиши и приложи',
   'save-success-message': 'Настройките са запазени',
   'save-fail-message': 'Неуспешно запазване на настройките',
+  'value-range-error': 'Въведете стойност между {min} и {max}.',
   'changes-restored': 'Промените са възстановени',
   discard: 'Отхвърли',
   startup: 'Стартиране',

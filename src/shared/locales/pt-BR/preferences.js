@@ -7,6 +7,7 @@ export default {
   save: 'Salvar e aplicar',
   'save-success-message': 'Preferências salvas',
   'save-fail-message': 'Falha ao salvar preferências',
+  'value-range-error': 'Insira um valor entre {min} e {max}.',
   'changes-restored': 'Alterações restauradas',
   discard: 'Descartar',
   startup: 'Inicialização',

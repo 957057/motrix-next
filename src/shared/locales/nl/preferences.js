@@ -7,6 +7,7 @@ export default {
   save: 'Opslaan en toepassen',
   'save-success-message': 'Instellingen opgeslagen',
   'save-fail-message': 'Opslaan mislukt',
+  'value-range-error': 'Voer een waarde tussen {min} en {max} in.',
   'changes-restored': 'Wijzigingen hersteld',
   discard: 'Verwerpen',
   startup: 'Opstarten',

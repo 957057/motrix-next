@@ -7,6 +7,7 @@ export default {
   save: 'Salvează și aplică',
   'save-success-message': 'Preferințele au fost salvate',
   'save-fail-message': 'Salvarea preferințelor a eșuat',
+  'value-range-error': 'Introduceți o valoare între {min} și {max}.',
   'changes-restored': 'Modificări restaurate',
   discard: 'Renunță',
   startup: 'Pornire',

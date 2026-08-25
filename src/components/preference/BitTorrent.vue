@@ -7,17 +7,14 @@ import { openUrl } from '@tauri-apps/plugin-opener'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
+import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
 import { changeGlobalOption, isEngineReady } from '@/api/aria2'
 import { convertTrackerDataToComma, convertTrackerDataToLine } from '@shared/utils/tracker'
 import { SYNC_MIN_DURATION } from '@shared/timing'
-import {
-  DEFAULT_TRACKER_SOURCE,
-  ENGINE_MAX_BT_MAX_PEERS,
-  SAFE_LIMIT_BT_MAX_PEERS,
-  TRACKER_SOURCE_OPTIONS,
-} from '@shared/constants'
+import { DEFAULT_TRACKER_SOURCE, SAFE_LIMIT_BT_MAX_PEERS, TRACKER_SOURCE_OPTIONS } from '@shared/constants'
 import { logger } from '@shared/logger'
 import { getErrorMessage } from '@shared/utils/errorMessage'
+import { buildSystemConfigFromAppConfig } from '@shared/utils/systemConfig'
 import { useAppMessage } from '@/composables/useAppMessage'
 import {
   buildBtForm,
@@ -54,6 +51,7 @@ const { t, locale } = useI18n()
 const preferenceStore = usePreferenceStore()
 const dialog = useDialog()
 const message = useAppMessage()
+const { constraint, configFieldProps, areConfigFieldsValid } = usePreferenceNumericValidation()
 const syncingTracker = ref(false)
 const syncingBlocklist = ref(false)
 const customTrackerInput = ref('')
@@ -264,6 +262,18 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } =
     reconcileBlocklistInBackground()
   },
 })
+const numericFieldsValid = computed(() =>
+  areConfigFieldsValid({
+    btMaxPeers: form.value.btMaxPeers,
+    btMaxConnections: form.value.btMaxConnections,
+    btMaxUploads: form.value.btMaxUploads,
+    btMaxUploadsPerTorrent: form.value.btMaxUploadsPerTorrent,
+    listenPort: form.value.listenPort,
+    btExternalPort: form.value.btExternalPort,
+    shareRatio: form.value.shareRatio,
+    shareTime: form.value.shareTime,
+  }),
+)
 
 function onBtPortDice() {
   form.value.listenPort = randomBtPort()
@@ -346,7 +356,9 @@ async function applySyncedTrackers(text: string, data: string[]) {
   form.value.lastSyncTrackerTime = now
   await preferenceStore.updateAndSave({ btTracker: comma, lastSyncTrackerTime: now })
   patchSnapshot({ btTracker: text, lastSyncTrackerTime: now } as Partial<typeof form.value>)
-  await invoke('save_system_config', { config: { 'bt-tracker': comma } })
+  await invoke('replace_system_config', {
+    config: buildSystemConfigFromAppConfig(preferenceStore.config, preferenceStore.config.dir),
+  })
   if (isEngineReady()) {
     await changeGlobalOption({ 'bt-tracker': comma } as Partial<typeof preferenceStore.config>)
   }
@@ -431,26 +443,60 @@ onMounted(() => {
         </NFormItem>
 
         <NDivider title-placement="left">{{ t('preferences.bt-connection-section') }}</NDivider>
-        <NFormItem :label="t('preferences.bt-max-peers')">
-          <NInputNumber v-model:value="form.btMaxPeers" :min="0" :max="ENGINE_MAX_BT_MAX_PEERS" class="pref-number" />
+        <NFormItem :label="t('preferences.bt-max-peers')" v-bind="configFieldProps('btMaxPeers', form.btMaxPeers)">
+          <NInputNumber
+            v-model:value="form.btMaxPeers"
+            :min="constraint('btMaxPeers').min"
+            :max="constraint('btMaxPeers').max"
+            class="pref-number"
+          />
         </NFormItem>
-        <NFormItem :label="t('preferences.bt-max-connections')">
-          <NInputNumber v-model:value="form.btMaxConnections" :min="2" class="pref-number" />
+        <NFormItem
+          :label="t('preferences.bt-max-connections')"
+          v-bind="configFieldProps('btMaxConnections', form.btMaxConnections)"
+        >
+          <NInputNumber
+            v-model:value="form.btMaxConnections"
+            :min="constraint('btMaxConnections').min"
+            :max="constraint('btMaxConnections').max"
+            class="pref-number"
+          />
         </NFormItem>
-        <NFormItem :label="t('preferences.bt-max-uploads')">
-          <NInputNumber v-model:value="form.btMaxUploads" :min="1" class="pref-number" />
+        <NFormItem
+          :label="t('preferences.bt-max-uploads')"
+          v-bind="configFieldProps('btMaxUploads', form.btMaxUploads)"
+        >
+          <NInputNumber
+            v-model:value="form.btMaxUploads"
+            :min="constraint('btMaxUploads').min"
+            :max="constraint('btMaxUploads').max"
+            class="pref-number"
+          />
         </NFormItem>
-        <NFormItem :label="t('preferences.bt-max-uploads-per-torrent')">
-          <NInputNumber v-model:value="form.btMaxUploadsPerTorrent" :min="1" class="pref-number" />
+        <NFormItem
+          :label="t('preferences.bt-max-uploads-per-torrent')"
+          v-bind="configFieldProps('btMaxUploadsPerTorrent', form.btMaxUploadsPerTorrent)"
+        >
+          <NInputNumber
+            v-model:value="form.btMaxUploadsPerTorrent"
+            :min="constraint('btMaxUploadsPerTorrent').min"
+            :max="constraint('btMaxUploadsPerTorrent').max"
+            class="pref-number"
+          />
         </NFormItem>
         <NFormItem :label="t('preferences.bt-rate-limit-overhead')">
           <NSwitch v-model:value="form.btRateLimitOverhead" />
         </NFormItem>
 
         <NDivider title-placement="left">{{ t('preferences.bt-endpoint-section') }}</NDivider>
-        <NFormItem :label="t('preferences.bt-port')">
+        <NFormItem :label="t('preferences.bt-port')" v-bind="configFieldProps('listenPort', form.listenPort)">
           <NInputGroup>
-            <NInputNumber v-model:value="form.listenPort" :min="1024" :max="65535" class="pref-port" />
+            <NInputNumber
+              v-model:value="form.listenPort"
+              :min="constraint('listenPort').min"
+              :max="constraint('listenPort').max"
+              class="pref-port"
+            />
             <NButton secondary class="pref-action-button pref-action-button--compact" @click="onBtPortDice">
               <template #icon>
                 <NIcon><DiceOutline /></NIcon>
@@ -459,7 +505,7 @@ onMounted(() => {
             </NButton>
           </NInputGroup>
         </NFormItem>
-        <NFormItem>
+        <NFormItem v-bind="configFieldProps('btExternalPort', form.btExternalPort)">
           <template #label>
             <PreferenceHintLabel
               :label="t('preferences.bt-external-ip')"
@@ -480,7 +526,12 @@ onMounted(() => {
               :hint="t('preferences.bt-external-port-hint')"
             />
           </template>
-          <NInputNumber v-model:value="form.btExternalPort" :min="0" :max="65535" class="pref-port" />
+          <NInputNumber
+            v-model:value="form.btExternalPort"
+            :min="constraint('btExternalPort').min"
+            :max="constraint('btExternalPort').max"
+            class="pref-port"
+          />
         </NFormItem>
 
         <NDivider title-placement="left">{{ t('preferences.bt-discovery-section') }}</NDivider>
@@ -521,11 +572,25 @@ onMounted(() => {
           </NRadioGroup>
         </NFormItem>
         <NCollapseTransition :show="form.sharingMode === 'stop-by-condition'" class="collapse-indent">
-          <NFormItem :label="t('preferences.share-ratio')">
-            <NInputNumber v-model:value="form.shareRatio" :min="1" :max="100" :step="0.1" class="pref-number" />
+          <NFormItem :label="t('preferences.share-ratio')" v-bind="configFieldProps('shareRatio', form.shareRatio)">
+            <NInputNumber
+              v-model:value="form.shareRatio"
+              :min="constraint('shareRatio').min"
+              :max="constraint('shareRatio').max"
+              :step="0.1"
+              class="pref-number"
+            />
           </NFormItem>
-          <NFormItem :label="t('preferences.share-time') + ' (' + t('preferences.share-time-unit') + ')'">
-            <NInputNumber v-model:value="form.shareTime" :min="60" :max="525600" class="pref-number" />
+          <NFormItem
+            :label="t('preferences.share-time') + ' (' + t('preferences.share-time-unit') + ')'"
+            v-bind="configFieldProps('shareTime', form.shareTime)"
+          >
+            <NInputNumber
+              v-model:value="form.shareTime"
+              :min="constraint('shareTime').min"
+              :max="constraint('shareTime').max"
+              class="pref-number"
+            />
           </NFormItem>
         </NCollapseTransition>
         <NCollapseTransition :show="form.sharingMode === 'manual-stop'" class="collapse-indent">
@@ -693,7 +758,7 @@ onMounted(() => {
         </NFormItem>
       </NForm>
     </div>
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 

@@ -69,7 +69,7 @@ export function buildGeneralForm(config: AppConfig): GeneralForm {
 
 /**
  * General tab has NO aria2 engine keys — all config stays in the app store.
- * Returns an empty object so usePreferenceForm skips the save_system_config call.
+ * Returns an empty object because this tab has no engine options.
  */
 export function buildGeneralSystemConfig(_f: GeneralForm): Record<string, string> {
   return {}

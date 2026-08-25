@@ -7,6 +7,7 @@ export default {
   save: 'Enregistrer et appliquer',
   'save-success-message': 'Préférences enregistrées',
   'save-fail-message': "Échec de l'enregistrement",
+  'value-range-error': 'Saisissez une valeur comprise entre {min} et {max}.',
   'changes-restored': 'Modifications restaurées',
   discard: 'Annuler',
   startup: 'Démarrage',

@@ -7,6 +7,7 @@ export default {
   save: 'Zapisz i zastosuj',
   'save-success-message': 'Ustawienia zapisane',
   'save-fail-message': 'Nie udało się zapisać ustawień',
+  'value-range-error': 'Wprowadź wartość od {min} do {max}.',
   'changes-restored': 'Zmiany przywrócone',
   discard: 'Odrzuć',
   startup: 'Uruchamianie',

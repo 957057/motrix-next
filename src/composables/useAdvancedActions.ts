@@ -386,7 +386,7 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
             message.error(t('preferences.import-settings-failed'))
             return
           }
-          await invoke('save_system_config', { config: buildSystemConfigFromAppConfig(imported, imported.dir) })
+          await invoke('replace_system_config', { config: buildSystemConfigFromAppConfig(imported, imported.dir) })
           Object.assign(form.value, buildForm())
           resetSnapshot()
           message.success(t('preferences.import-settings-success'))

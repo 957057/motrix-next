@@ -4,13 +4,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
+import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { extractSpeedUnit } from '@shared/utils'
 import { logger } from '@shared/logger'
 import { resolveUserVisibleDownloadDir } from '@shared/utils/userVisibleDirectory'
 import { toggleSpeedLimit } from '@/composables/useSpeedLimiter'
 import { changeGlobalOption, isEngineReady } from '@/api/aria2'
-import { ENGINE_MAX_CONCURRENT_DOWNLOADS, ENGINE_MAX_STREAM_CONNECTIONS, SCHEDULE_DAY } from '@shared/constants'
+import { SCHEDULE_DAY } from '@shared/constants'
 import { useAppMessage } from '@/composables/useAppMessage'
 import {
   buildDownloadsForm,
@@ -45,6 +46,7 @@ import { FolderOpenOutline } from '@vicons/ionicons5'
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
 const message = useAppMessage()
+const { constraint, configFieldProps, fieldProps, areConfigFieldsValid } = usePreferenceNumericValidation()
 const defaultDownloadDir = ref('')
 
 // ── File timestamp strategy ─────────────────────────────────────────
@@ -144,6 +146,18 @@ const selectedNotificationTypes = computed<string[]>({
     form.value.notifyOnComplete = selected.has('complete')
   },
 })
+const numericFieldsValid = computed(
+  () =>
+    areConfigFieldsValid({
+      maxConcurrentDownloads: form.value.maxConcurrentDownloads,
+      streamMaxConnections: form.value.streamMaxConnections,
+      maxTries: form.value.maxTries,
+      retryWait: form.value.retryWait,
+      completedRecordRetentionDays: form.value.completedRecordRetentionDays,
+    }) &&
+    (completedRecordRetentionSelectValue.value !== -1 ||
+      !fieldProps(form.value.completedRecordRetentionDays, { min: 1, max: 3650, integer: true }).validationStatus),
+)
 
 function parseSpeedLimit(value: unknown) {
   const str = String(value || '0')
@@ -255,32 +269,48 @@ onMounted(async () => {
     <div class="preference-form-scroll">
       <NForm label-placement="left" label-align="left" label-width="260px" size="small" class="form-preference">
         <NDivider title-placement="left">{{ t('preferences.download-concurrency') }}</NDivider>
-        <NFormItem :label="t('preferences.max-concurrent-downloads')">
+        <NFormItem
+          :label="t('preferences.max-concurrent-downloads')"
+          v-bind="configFieldProps('maxConcurrentDownloads', form.maxConcurrentDownloads)"
+        >
           <NInputNumber
             v-model:value="form.maxConcurrentDownloads"
-            :min="1"
-            :max="ENGINE_MAX_CONCURRENT_DOWNLOADS"
+            :min="constraint('maxConcurrentDownloads').min"
+            :max="constraint('maxConcurrentDownloads').max"
             class="pref-number"
           />
         </NFormItem>
-        <NFormItem :label="t('preferences.stream-max-connections')">
+        <NFormItem
+          :label="t('preferences.stream-max-connections')"
+          v-bind="configFieldProps('streamMaxConnections', form.streamMaxConnections)"
+        >
           <NInputNumber
             v-model:value="form.streamMaxConnections"
-            :min="1"
-            :max="ENGINE_MAX_STREAM_CONNECTIONS"
+            :min="constraint('streamMaxConnections').min"
+            :max="constraint('streamMaxConnections').max"
             class="pref-number"
           />
         </NFormItem>
         <!-- Retry & File Options -->
         <NDivider title-placement="left">{{ t('preferences.retry-and-file-behavior') }}</NDivider>
-        <NFormItem :label="t('preferences.max-tries')">
-          <NInputNumber v-model:value="form.maxTries" :min="0" :max="60" class="pref-number" />
+        <NFormItem :label="t('preferences.max-tries')" v-bind="configFieldProps('maxTries', form.maxTries)">
+          <NInputNumber
+            v-model:value="form.maxTries"
+            :min="constraint('maxTries').min"
+            :max="constraint('maxTries').max"
+            class="pref-number"
+          />
           <NText depth="3" class="pref-inline-note">
             {{ t('preferences.max-tries-hint') }}
           </NText>
         </NFormItem>
-        <NFormItem :label="t('preferences.retry-wait')">
-          <NInputNumber v-model:value="form.retryWait" :min="0" :max="600" class="pref-number" />
+        <NFormItem :label="t('preferences.retry-wait')" v-bind="configFieldProps('retryWait', form.retryWait)">
+          <NInputNumber
+            v-model:value="form.retryWait"
+            :min="constraint('retryWait').min"
+            :max="constraint('retryWait').max"
+            class="pref-number"
+          />
           <NText depth="3" class="pref-inline-note">{{ t('preferences.unit-seconds') }}</NText>
         </NFormItem>
         <NFormItem :label="t('preferences.continue')">
@@ -454,7 +484,10 @@ onMounted(async () => {
           />
         </NFormItem>
         <NCollapseTransition :show="completedRecordRetentionSelectValue === -1">
-          <NFormItem :label="t('preferences.completed-record-retention-custom-days')">
+          <NFormItem
+            :label="t('preferences.completed-record-retention-custom-days')"
+            v-bind="fieldProps(form.completedRecordRetentionDays, { min: 1, max: 3650, integer: true })"
+          >
             <NInputNumber v-model:value="form.completedRecordRetentionDays" :min="1" :max="3650" class="pref-number" />
             <NText depth="3" class="pref-inline-note">
               {{ t('preferences.completed-record-retention-days-unit') }}
@@ -463,7 +496,7 @@ onMounted(async () => {
         </NCollapseTransition>
       </NForm>
     </div>
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
     <FileCategoryManager
       v-model:show="showCategoryManager"
       :categories="form.fileCategories"

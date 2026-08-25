@@ -7,6 +7,7 @@ export default {
   save: 'Kaydet ve uygula',
   'save-success-message': 'Tercihler kaydedildi',
   'save-fail-message': 'Tercihler kaydedilemedi',
+  'value-range-error': '{min} ile {max} arasında bir değer girin.',
   'changes-restored': 'Değişiklikler geri yüklendi',
   discard: 'Vazgeç',
   startup: 'Başlangıç',

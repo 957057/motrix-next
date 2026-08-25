@@ -86,11 +86,8 @@ export const ED2K_NODES_DAT_URL = 'https://upd.emule-security.org/nodes.dat'
 export const BT_PEER_BLOCKLIST_URL = 'https://bcr.pbh-btn.com/combine/all.txt'
 export const PORT_RECOVERY_RANGE_START = 29000
 export const PORT_RECOVERY_RANGE_END = 29999
-export const ENGINE_MAX_CONCURRENT_DOWNLOADS = 100
-export const ENGINE_MAX_STREAM_CONNECTIONS = 256
 export const ENGINE_DEFAULT_STREAM_CONNECTIONS = 6
 export const ENGINE_DEFAULT_BT_MAX_PEERS = 128
-export const ENGINE_MAX_BT_MAX_PEERS = 500
 
 // Safe thresholds — values above these trigger a user confirmation warning.
 // These are "recommended" values displayed in UI labels; exceeding them is allowed

@@ -7,6 +7,7 @@ export default {
   save: 'सहेजें और लागू करें',
   'save-success-message': 'प्राथमिकताएं सहेजी गईं',
   'save-fail-message': 'प्राथमिकताएं सहेजने में विफल',
+  'value-range-error': '{min} से {max} के बीच कोई मान दर्ज करें।',
   'changes-restored': 'बदलाव बहाल किए गए',
   discard: 'छोड़ें',
   startup: 'शुरुआत',

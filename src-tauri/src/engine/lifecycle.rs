@@ -255,8 +255,8 @@ pub fn start_engine(app: &tauri::AppHandle) -> Result<(), String> {
         return Ok(());
     }
 
-    let config =
-        crate::commands::config::get_system_config(app.clone()).map_err(|e| e.to_string())?;
+    let config = crate::commands::config::read_engine_config_snapshot(app.clone())
+        .map_err(|e| e.to_string())?;
 
     // Kill any leftover supported engine process on the RPC port before starting
     let port = config

@@ -5,6 +5,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
+import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
 import { usePlatform } from '@/composables/usePlatform'
 import { useSystemProxyDetect } from '@/composables/useSystemProxyDetect'
 import { logger } from '@shared/logger'
@@ -45,6 +46,8 @@ import { SearchOutline } from '@vicons/ionicons5'
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
 const message = useAppMessage()
+const { constraint, configFieldProps, fieldProps, areConfigFieldsValid, portRecoveryConstraint } =
+  usePreferenceNumericValidation()
 const { isWindows } = usePlatform()
 
 const proxyScopeOptions = PROXY_SCOPE_OPTIONS.map((s: string) => ({
@@ -115,6 +118,27 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } =
   afterSave: async (f, prevConfig) => {
     if (f.enableUpnp !== prevConfig.enableUpnp) await syncUpnpState(!!f.enableUpnp)
   },
+})
+const numericFieldsValid = computed(
+  () =>
+    areConfigFieldsValid({
+      connectTimeout: form.value.connectTimeout,
+      timeout: form.value.timeout,
+    }) &&
+    !fieldProps(form.value.portConflictRecovery.rangeStart, portRecoveryConstraint).validationStatus &&
+    !fieldProps(form.value.portConflictRecovery.rangeEnd, portRecoveryConstraint).validationStatus &&
+    form.value.portConflictRecovery.rangeStart <= form.value.portConflictRecovery.rangeEnd,
+)
+const portRecoveryFieldProps = computed(() => {
+  const recovery = form.value.portConflictRecovery
+  if (recovery.rangeStart > recovery.rangeEnd) {
+    return {
+      validationStatus: 'error' as const,
+      feedback: t('preferences.port-conflict-recovery-invalid-range'),
+    }
+  }
+  const start = fieldProps(recovery.rangeStart, portRecoveryConstraint)
+  return start.validationStatus ? start : fieldProps(recovery.rangeEnd, portRecoveryConstraint)
 })
 
 // ── UPnP save-time sync ─────────────────────────────────────────────
@@ -249,7 +273,16 @@ onMounted(() => {
         </NFormItem>
         <div class="proxy-collapse" :class="{ 'proxy-collapse--open': form.proxy.mode === 'manual' }">
           <div class="proxy-collapse__inner collapse-indent">
-            <NFormItem>
+            <NFormItem
+              v-bind="
+                form.portConflictRecovery.rangeStart > form.portConflictRecovery.rangeEnd
+                  ? {
+                      validationStatus: 'error',
+                      feedback: t('preferences.port-conflict-recovery-invalid-range'),
+                    }
+                  : fieldProps(form.portConflictRecovery.rangeStart, portRecoveryConstraint)
+              "
+            >
               <template #label>
                 <PreferenceHintLabel
                   :label="t('preferences.proxy-server')"
@@ -305,7 +338,7 @@ onMounted(() => {
           :class="{ 'port-recovery-collapse--open': form.portConflictRecovery.enabled }"
         >
           <div class="port-recovery-collapse__inner collapse-indent">
-            <NFormItem>
+            <NFormItem v-bind="portRecoveryFieldProps">
               <template #label>
                 <PreferenceHintLabel
                   :label="t('preferences.port-conflict-recovery-range')"
@@ -315,15 +348,15 @@ onMounted(() => {
               <NInputGroup>
                 <NInputNumber
                   v-model:value="form.portConflictRecovery.rangeStart"
-                  :min="1024"
-                  :max="65535"
+                  :min="portRecoveryConstraint.min"
+                  :max="portRecoveryConstraint.max"
                   class="pref-port"
                 />
                 <span class="port-range-separator">to</span>
                 <NInputNumber
                   v-model:value="form.portConflictRecovery.rangeEnd"
-                  :min="1024"
-                  :max="65535"
+                  :min="portRecoveryConstraint.min"
+                  :max="portRecoveryConstraint.max"
                   class="pref-port"
                 />
               </NInputGroup>
@@ -345,12 +378,25 @@ onMounted(() => {
 
         <!-- Timeout & Disk -->
         <NDivider title-placement="left">{{ t('preferences.transfer-params') }}</NDivider>
-        <NFormItem :label="t('preferences.connect-timeout')">
-          <NInputNumber v-model:value="form.connectTimeout" :min="1" :max="600" class="pref-number" />
+        <NFormItem
+          :label="t('preferences.connect-timeout')"
+          v-bind="configFieldProps('connectTimeout', form.connectTimeout)"
+        >
+          <NInputNumber
+            v-model:value="form.connectTimeout"
+            :min="constraint('connectTimeout').min"
+            :max="constraint('connectTimeout').max"
+            class="pref-number"
+          />
           <NText depth="3" class="pref-inline-note">{{ t('preferences.unit-seconds') }}</NText>
         </NFormItem>
-        <NFormItem :label="t('preferences.timeout')">
-          <NInputNumber v-model:value="form.timeout" :min="1" :max="600" class="pref-number" />
+        <NFormItem :label="t('preferences.timeout')" v-bind="configFieldProps('timeout', form.timeout)">
+          <NInputNumber
+            v-model:value="form.timeout"
+            :min="constraint('timeout').min"
+            :max="constraint('timeout').max"
+            class="pref-number"
+          />
           <NText depth="3" class="pref-inline-note">{{ t('preferences.unit-seconds') }}</NText>
         </NFormItem>
         <NFormItem :label="t('preferences.file-allocation')">
@@ -371,7 +417,7 @@ onMounted(() => {
       :recent-profile-ids="form.recentUserAgentProfileIds"
       @save="handleUserAgentManagerSave"
     />
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 

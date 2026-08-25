@@ -7,6 +7,7 @@ export default {
   save: 'Lưu và áp dụng',
   'save-success-message': 'Đã lưu tùy chọn',
   'save-fail-message': 'Lưu tùy chọn thất bại',
+  'value-range-error': 'Nhập giá trị từ {min} đến {max}.',
   'changes-restored': 'Đã khôi phục thay đổi',
   discard: 'Hủy bỏ',
   startup: 'Khởi động',

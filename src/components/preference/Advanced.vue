@@ -7,6 +7,7 @@ import { usePlatform } from '@/composables/usePlatform'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
+import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
 import { useEngineStore } from '@/stores/engine'
 import { useTaskStore } from '@/stores/task'
 import { useHistoryStore } from '@/stores/history'
@@ -66,6 +67,7 @@ const preferenceStore = usePreferenceStore()
 const taskStore = useTaskStore()
 const historyStore = useHistoryStore()
 const message = useAppMessage()
+const { constraint, configFieldProps, areConfigFieldsValid } = usePreferenceNumericValidation()
 const dialog = useDialog()
 const protocolHandlers = useProtocolHandlers()
 const protocolStatus = protocolHandlers.status
@@ -244,6 +246,12 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
     }
   },
 })
+const numericFieldsValid = computed(() =>
+  areConfigFieldsValid({
+    extensionApiPort: form.value.extensionApiPort,
+    rpcListenPort: form.value.rpcListenPort,
+  }),
+)
 
 function buildForm() {
   return buildAdvancedForm(preferenceStore.config).form
@@ -388,8 +396,16 @@ watch(protocolHandlers.lastError, (error) => {
             <NSwitch v-model:value="form.silentAutoSubmitFromExtension" />
           </NFormItem>
         </NCollapseTransition>
-        <NFormItem :label="t('preferences.extension-api-port')">
-          <NInputNumber v-model:value="form.extensionApiPort" :min="1024" :max="65535" class="pref-port" />
+        <NFormItem
+          :label="t('preferences.extension-api-port')"
+          v-bind="configFieldProps('extensionApiPort', form.extensionApiPort)"
+        >
+          <NInputNumber
+            v-model:value="form.extensionApiPort"
+            :min="constraint('extensionApiPort').min"
+            :max="constraint('extensionApiPort').max"
+            class="pref-port"
+          />
         </NFormItem>
         <NFormItem :validation-status="form.extensionApiSecret ? undefined : 'warning'">
           <template #label>
@@ -424,9 +440,17 @@ watch(protocolHandlers.lastError, (error) => {
         </NFormItem>
 
         <NDivider title-placement="left">{{ t('preferences.rpc') }}</NDivider>
-        <NFormItem :label="t('preferences.rpc-listen-port')">
+        <NFormItem
+          :label="t('preferences.rpc-listen-port')"
+          v-bind="configFieldProps('rpcListenPort', form.rpcListenPort)"
+        >
           <NInputGroup>
-            <NInputNumber v-model:value="form.rpcListenPort" :min="1024" :max="65535" class="pref-port" />
+            <NInputNumber
+              v-model:value="form.rpcListenPort"
+              :min="constraint('rpcListenPort').min"
+              :max="constraint('rpcListenPort').max"
+              class="pref-port"
+            />
             <NButton
               class="pref-icon-button"
               @click="copyToClipboard(String(form.rpcListenPort), t('preferences.rpc-listen-port'))"
@@ -720,7 +744,7 @@ watch(protocolHandlers.lastError, (error) => {
         </NDataTable>
       </NCard>
     </NModal>
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 
