@@ -36,7 +36,7 @@ export interface NotifyDeps {
 }
 
 /**
- * Handle a completed HTTP/FTP download.
+ * Handle a completed stream download.
  * Always sends in-app toast. Native OS notification is sent by Rust monitor.
  *
  * When action callbacks are provided, the toast includes inline buttons

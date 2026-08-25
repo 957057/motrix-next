@@ -58,9 +58,6 @@ describe('proxyPolicy', () => {
       'https-proxy': '',
       'https-proxy-user': '',
       'https-proxy-passwd': '',
-      'ftp-proxy': '',
-      'ftp-proxy-user': '',
-      'ftp-proxy-passwd': '',
       'no-proxy': '',
     })
   })

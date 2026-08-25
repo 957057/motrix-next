@@ -172,7 +172,7 @@ describe('filterHotReloadableKeys', () => {
   it('passes through hot-reloadable keys unchanged', () => {
     const config = {
       'max-concurrent-downloads': '10',
-      'max-connection-per-server': '16',
+      'stream-max-connections': '16',
       'max-overall-download-limit': '0',
       'async-dns': 'false',
       dir: '/downloads',

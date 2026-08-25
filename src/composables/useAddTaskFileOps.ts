@@ -7,7 +7,6 @@
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
 import { logger } from '@shared/logger'
-import { parseTorrentBuffer, uint8ToBase64 } from '@/composables/useTorrentParser'
 import { createBatchItem, detectExternalInputKind, detectKind } from '@shared/utils/batchHelpers'
 import { sanitizeBrowserRequestHeaders, sanitizeHttpHeaderOptions } from '@shared/utils/headerSanitize'
 import type { BatchItem } from '@shared/types'
@@ -21,27 +20,20 @@ interface FileOpsDeps {
   showWarning: (msg: string) => void
 }
 
+function encodeBase64(bytes: Uint8Array): string {
+  let binary = ''
+  for (const byte of bytes) binary += String.fromCharCode(byte)
+  return btoa(binary)
+}
+
 /**
- * Resolves a single file-based batch item: reads its bytes, converts to base64,
- * and parses torrent metadata if applicable.
+ * Resolves a single file-based batch item into base64 for native engine parsing.
  */
 export async function resolveFileItem(item: BatchItem, t: (key: string) => string) {
   try {
     const bytes = await invoke<number[]>('read_local_file', { path: item.source })
     const uint8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
-    item.payload = uint8ToBase64(uint8)
-
-    if (item.kind === 'torrent') {
-      try {
-        const meta = await parseTorrentBuffer(uint8)
-        if (meta) {
-          item.torrentMeta = meta
-          item.selectedFileIndices = meta.files.map((f) => f.idx)
-        }
-      } catch (e) {
-        logger.debug('AddTask.parseTorrent', e)
-      }
-    }
+    item.payload = encodeBase64(uint8)
   } catch (e) {
     logger.error('AddTask.resolveFileItem', e)
     item.status = 'failed'
@@ -67,19 +59,7 @@ export async function resolveRemoteFileItem(item: BatchItem, t: (key: string) =>
       requestHeaders: sanitizeBrowserRequestHeaders(context?.requestHeaders ?? []),
     })
     const uint8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
-    item.payload = uint8ToBase64(uint8)
-
-    if (item.kind === 'torrent') {
-      try {
-        const meta = await parseTorrentBuffer(uint8)
-        if (meta) {
-          item.torrentMeta = meta
-          item.selectedFileIndices = meta.files.map((f) => f.idx)
-        }
-      } catch (e) {
-        logger.debug('AddTask.parseRemoteTorrent', e)
-      }
-    }
+    item.payload = encodeBase64(uint8)
   } catch (e) {
     logger.error('AddTask.resolveRemoteFileItem', e)
     item.status = 'failed'

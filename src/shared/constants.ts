@@ -87,17 +87,14 @@ export const BT_PEER_BLOCKLIST_URL = 'https://bcr.pbh-btn.com/combine/all.txt'
 export const PORT_RECOVERY_RANGE_START = 29000
 export const PORT_RECOVERY_RANGE_END = 29999
 export const ENGINE_MAX_CONCURRENT_DOWNLOADS = 100
-export const ENGINE_MAX_CONNECTION_PER_SERVER = 256
-export const ENGINE_DEFAULT_CONNECTION_PER_SERVER = 64
-export const ENGINE_DEFAULT_SPLIT = 64
+export const ENGINE_MAX_STREAM_CONNECTIONS = 256
+export const ENGINE_DEFAULT_STREAM_CONNECTIONS = 6
 export const ENGINE_DEFAULT_BT_MAX_PEERS = 128
 export const ENGINE_MAX_BT_MAX_PEERS = 500
 
 // Safe thresholds — values above these trigger a user confirmation warning.
 // These are "recommended" values displayed in UI labels; exceeding them is allowed
 // but requires explicit opt-in via a warning dialog.
-export const SAFE_LIMIT_SPLIT = 64
-export const SAFE_LIMIT_CONNECTION_PER_SERVER = 64
 export const SAFE_LIMIT_BT_MAX_PEERS = 128
 
 export const UNKNOWN_PEERID = '%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00'
@@ -124,7 +121,7 @@ export const UPDATE_CHANNELS = ['stable', 'beta', 'latest'] as const
  * buildAdvancedForm() must reference these values via `?? D.field`.
  *
  * Each value is justified by industry research:
- * - aria2 official defaults (concurrent=5, split=5, conn/server=1)
+ * - Aria2 Next native defaults and accepted ranges
  * - BT client conventions (qBittorrent, Transmission, Deluge)
  * - Download manager standards (IDM, FDM, Motrix)
  * - Security best practices (UPnP off, rpcSecret generated at runtime)
@@ -245,9 +242,8 @@ export const DEFAULT_APP_CONFIG = {
 
   // ── Download Core ─────────────────────────────────────────────────
   dir: '',
-  split: ENGINE_DEFAULT_SPLIT, // parallel segments per file; independent of maxConnectionPerServer since v2
+  streamMaxConnections: ENGINE_DEFAULT_STREAM_CONNECTIONS,
   maxConcurrentDownloads: 6,
-  maxConnectionPerServer: ENGINE_DEFAULT_CONNECTION_PER_SERVER, // per-server connection cap; independent of split since v2
   maxOverallDownloadLimit: '0',
   maxOverallUploadLimit: '0',
   speedLimitEnabled: false,
@@ -281,7 +277,7 @@ export const DEFAULT_APP_CONFIG = {
   btPeerExchangeEnabled: true, // improves peer discovery inside active swarms
   btLocalPeerDiscoveryEnabled: true,
   btEncryption: 'preferred' as const,
-  magnetFileSelectionMode: 'auto' as const,
+  btFileSelectionMode: 'auto' as const,
   continue: true, // aria2 default=true; resume incomplete downloads
   remoteTime: false, // aria2 default=false; file timestamp = download completion time
 
@@ -344,6 +340,7 @@ export const DEFAULT_APP_CONFIG = {
   ed2kServerMetUrl: ED2K_SERVER_MET_URL,
   ed2kNodesDatUrl: ED2K_NODES_DAT_URL,
   ed2kUploadSlots: 3,
+  ed2kMaxConnections: 20,
   ed2kPreviewPriority: false,
   ed2kSearchTimeout: 20,
   proxy: {
@@ -354,7 +351,7 @@ export const DEFAULT_APP_CONFIG = {
     bypass: '',
     scope: ['download', 'bittorrent', 'update-app', 'update-trackers'],
   },
-  clipboard: { enable: true, http: true, ftp: true, magnet: true, ed2k: true, thunder: true, btHash: true },
+  clipboard: { enable: true, http: true, sftp: true, magnet: true, ed2k: true, thunder: true, btHash: true },
   autoSubmitFromExtension: true,
   silentAutoSubmitFromExtension: true,
   userAgent:
@@ -366,7 +363,6 @@ export const DEFAULT_APP_CONFIG = {
   aria2LogLevel: 'warn' as const,
   cookie: '',
   runMode: '',
-  engineBinPath: '',
   tempFilesDir: '',
 
   // ── Tracker ───────────────────────────────────────────────────
@@ -448,7 +444,7 @@ export const TRAY_CANVAS_CONFIG = {
   TEXT_FONT_SIZE: 8,
 }
 
-export const COMMON_RESOURCE_TAGS = ['http://', 'https://', 'ftp://', 'magnet:', 'ed2k://']
+export const COMMON_RESOURCE_TAGS = ['http://', 'https://', 'sftp://', 'magnet:', 'ed2k://']
 export const THUNDER_RESOURCE_TAGS = ['thunder://']
 
 export const RESOURCE_TAGS = [...COMMON_RESOURCE_TAGS, ...THUNDER_RESOURCE_TAGS]
@@ -464,14 +460,13 @@ export const DETECT_RESOURCE_MAX_CHARS = 100_000
 export const DETECT_RESOURCE_MAX_LINES = 200
 
 /**
- * Matches bare BitTorrent v1 info hashes:
+ * Matches bare BitTorrent info hashes:
  * - SHA-1 hex: exactly 40 hex characters (most common format)
  * - Base32:    exactly 32 uppercase A-Z / 2-7 characters
  *
- * SHA-256 (64 hex, BitTorrent v2 / btmh) is intentionally excluded
- * because aria2 does not support the v2 protocol.
+ * - SHA-256 hex: exactly 64 hexadecimal characters (BitTorrent v2)
  */
-export const BARE_INFO_HASH_RE = /^[0-9a-fA-F]{40}$|^[A-Z2-7]{32}$/
+export const BARE_INFO_HASH_RE = /^(?:[0-9a-fA-F]{40}|[A-Z2-7]{32}|[0-9a-fA-F]{64})$/
 
 export const SUPPORT_RTL_LOCALES = [
   /* 'العربية', Arabic */

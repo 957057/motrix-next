@@ -258,7 +258,7 @@ mod tests {
     fn validates_only_http_bootstrap_urls() {
         assert!(validate_bootstrap_url("https://upd.emule-security.org/server.met").is_ok());
         assert!(validate_bootstrap_url("http://upd.emule-security.org/nodes.dat").is_ok());
-        assert!(validate_bootstrap_url("ftp://example.test/server.met").is_err());
+        assert!(validate_bootstrap_url("file:///tmp/server.met").is_err());
         assert!(validate_bootstrap_url("not-a-url").is_err());
     }
 

@@ -219,7 +219,7 @@ if (import.meta.env.PROD) {
       }
 
       // Seed system.json with the FULL set of default system config values.
-      // This ensures CLI args include --split, --max-connection-per-server,
+      // This ensures the runtime config contains every user-controlled engine option,
       // --user-agent, etc. even before the user opens the preference page.
       // On subsequent launches, saved values from Downloads/BT/Network/Advanced
       // preferences already exist in system.json and will be merged (not overwritten).

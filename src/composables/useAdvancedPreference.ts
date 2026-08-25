@@ -47,7 +47,7 @@ export interface AdvancedForm {
   // Clipboard detection (migrated from legacy Basic tab)
   clipboardEnable: boolean
   clipboardHttp: boolean
-  clipboardFtp: boolean
+  clipboardSftp: boolean
   clipboardMagnet: boolean
   clipboardEd2k: boolean
   clipboardThunder: boolean
@@ -103,7 +103,7 @@ export function buildAdvancedForm(config: AppConfig): {
       // Clipboard detection
       clipboardEnable: config.clipboard?.enable ?? D.clipboard.enable,
       clipboardHttp: config.clipboard?.http ?? D.clipboard.http,
-      clipboardFtp: config.clipboard?.ftp ?? D.clipboard.ftp,
+      clipboardSftp: config.clipboard?.sftp ?? D.clipboard.sftp,
       clipboardMagnet: config.clipboard?.magnet ?? D.clipboard.magnet,
       clipboardEd2k: config.clipboard?.ed2k ?? D.clipboard.ed2k,
       clipboardThunder: config.clipboard?.thunder ?? D.clipboard.thunder,
@@ -139,7 +139,7 @@ export function transformAdvancedForStore(f: AdvancedForm): Record<string, unkno
   const {
     clipboardEnable,
     clipboardHttp,
-    clipboardFtp,
+    clipboardSftp,
     clipboardMagnet,
     clipboardEd2k,
     clipboardThunder,
@@ -151,7 +151,7 @@ export function transformAdvancedForStore(f: AdvancedForm): Record<string, unkno
     clipboard: {
       enable: clipboardEnable,
       http: clipboardHttp,
-      ftp: clipboardFtp,
+      sftp: clipboardSftp,
       magnet: clipboardMagnet,
       ed2k: clipboardEd2k,
       thunder: clipboardThunder,

@@ -63,8 +63,7 @@ describe('buildSystemConfigFromAppConfig', () => {
       ...DEFAULT_APP_CONFIG,
       dir: '/Downloads',
       maxConcurrentDownloads: 9,
-      split: 12,
-      maxConnectionPerServer: 6,
+      streamMaxConnections: 12,
       btMaxPeers: 88,
       asyncDns: true,
       rpcListenPort: 29199,
@@ -77,8 +76,7 @@ describe('buildSystemConfigFromAppConfig', () => {
 
     expect(system.dir).toBe('/Downloads')
     expect(system['max-concurrent-downloads']).toBe('9')
-    expect(system.split).toBe('12')
-    expect(system['max-connection-per-server']).toBe('6')
+    expect(system['stream-max-connections']).toBe('12')
     expect(system['bt-max-peers']).toBe('88')
     expect(system['async-dns']).toBe('true')
     expect(system['rpc-listen-port']).toBe('29199')

@@ -225,7 +225,7 @@ describe('restartTask', () => {
     })
     api.getOption.mockResolvedValue({
       dir: '/dl',
-      'max-download-limit': '1M',
+      maxDownloadLimit: '1M',
       pauseMetadata: 'true',
       gid: 'old-gid',
       header: 'X-Custom: value',
@@ -235,7 +235,7 @@ describe('restartTask', () => {
 
     expect(api.addUriAtomic).toHaveBeenCalledWith({
       uris: ['http://x.com/f.zip'],
-      options: { dir: '/dl', 'max-download-limit': '1M', header: 'X-Custom: value' },
+      options: { dir: '/dl', maxDownloadLimit: '1M', header: 'X-Custom: value' },
     })
   })
 

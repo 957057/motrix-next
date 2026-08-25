@@ -536,7 +536,6 @@ mod tests {
         let keys = crate::engine::non_hot_reloadable_keys();
         for key in [
             "rpc-listen-port",
-            "allow-remote-access",
             "rpc-secret",
             "ed2k-listen-port",
             "ed2k-udp-listen-port",
@@ -550,7 +549,7 @@ mod tests {
         let keys = crate::engine::non_hot_reloadable_keys();
         assert!(!keys.contains("max-overall-download-limit"));
         assert!(!keys.contains("dir"));
-        assert!(!keys.contains("split"));
+        assert!(!keys.contains("stream-max-connections"));
         assert!(!keys.contains("listen-port"));
         assert!(!keys.contains("bt-external-ip"));
         assert!(!keys.contains("bt-external-port"));

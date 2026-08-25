@@ -8,6 +8,8 @@
 import { TASK_STATUS } from '@shared/constants'
 import { checkTaskIsBT, getRestartDescriptors } from '@shared/utils'
 import { logger } from '@shared/logger'
+import { changeKeysToCamelCase } from '@shared/utils/config'
+import { engineOptionKeys } from '@shared/configKeys'
 import type { Aria2Task } from '@shared/types'
 
 /** Minimal API surface needed by restartTask. */
@@ -25,14 +27,17 @@ export interface RestartHistoryApi {
   removeRecord: (gid: string) => Promise<void>
 }
 
-/** Keys that aria2 rejects on addUri — read-only or non-portable. */
-const NON_PORTABLE_KEYS = new Set(['pauseMetadata', 'gid'])
+const RESTARTABLE_KEYS = new Set(
+  Object.keys(changeKeysToCamelCase(Object.fromEntries(engineOptionKeys.map((key) => [key, true])))),
+)
+RESTARTABLE_KEYS.delete('pauseMetadata')
+RESTARTABLE_KEYS.delete('gid')
 
 /**
  * Restarts a stopped/errored/completed task by re-submitting its URI(s).
  *
  * - For BT tasks: rebuilds the magnet link → single addUri call.
- * - For multi-file HTTP/FTP tasks: submits each file URI separately.
+ * - For multi-file stream tasks: submits each file URI separately.
  * - Uses rollback on partial failure: if any URI fails, all previously
  *   created downloads are removed so no orphan tasks remain.
  * - The old stopped record is only deleted after ALL new downloads succeed.
@@ -57,7 +62,7 @@ export async function restartTask(
   try {
     const orig = await api.getOption({ gid })
     for (const [k, v] of Object.entries(orig)) {
-      if (!NON_PORTABLE_KEYS.has(k) && v !== '') {
+      if (RESTARTABLE_KEYS.has(k) && v !== '') {
         options[k] = v
       }
     }

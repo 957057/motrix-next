@@ -32,7 +32,6 @@ import type {
   ExternalDownloadContext,
   ExternalDownloadInput,
   TauriUpdate,
-  AppConfig,
   BatchItem,
 } from '@shared/types'
 import type { AddTaskForm } from '@/composables/useAddTaskSubmit'
@@ -64,11 +63,6 @@ export const useAppStore = defineStore('app', () => {
   const systemTheme = ref('light')
   const trayFocused = ref(false)
   const aboutPanelVisible = ref(false)
-  const engineInfo = ref<{ version: string; enabledFeatures: string[] }>({
-    version: '',
-    enabledFeatures: [],
-  })
-  const engineOptions = ref<Partial<AppConfig>>({})
   const interval = ref(STAT_BASE_INTERVAL)
   const stat = ref({
     downloadSpeed: 0,
@@ -219,17 +213,6 @@ export const useAppStore = defineStore('app', () => {
     })
   }
 
-  async function fetchEngineInfo(api: { getVersion: () => Promise<{ version: string; enabledFeatures: string[] }> }) {
-    const data = await api.getVersion()
-    engineInfo.value = { ...engineInfo.value, ...data }
-  }
-
-  async function fetchEngineOptions(api: { getGlobalOption: () => Promise<Record<string, string>> }) {
-    const data = await api.getGlobalOption()
-    engineOptions.value = { ...engineOptions.value, ...data }
-    return data
-  }
-
   /**
    * Normalizes deep-link / argv URLs into BatchItems and enqueues them.
    * All items land in the same batch for user review before submission.
@@ -293,7 +276,7 @@ export const useAppStore = defineStore('app', () => {
       const isRemoteUri =
         lower.startsWith('http://') ||
         lower.startsWith('https://') ||
-        lower.startsWith('ftp://') ||
+        lower.startsWith('sftp://') ||
         lower.startsWith('magnet:') ||
         lower.startsWith('ed2k://') ||
         lower.startsWith('thunder://')
@@ -462,7 +445,7 @@ export const useAppStore = defineStore('app', () => {
       uris: url,
       out: filenameHint,
       dir: preferenceStore.config.dir,
-      split: preferenceStore.config.split ?? 16,
+      streamMaxConnections: preferenceStore.config.streamMaxConnections,
       userAgent: context.userAgent || preferenceStore.config.userAgent || '',
       defaultUserAgent: preferenceStore.config.userAgent || '',
       userAgentProfiles: preferenceStore.config.userAgentProfiles,
@@ -489,8 +472,6 @@ export const useAppStore = defineStore('app', () => {
     systemTheme,
     trayFocused,
     aboutPanelVisible,
-    engineInfo,
-    engineOptions,
     interval,
     stat,
     addTaskVisible,
@@ -515,8 +496,6 @@ export const useAppStore = defineStore('app', () => {
     updateAddTaskOptions,
     handleStatEvent,
     setupStatListener,
-    fetchEngineInfo,
-    fetchEngineOptions,
     handleDeepLinkUrls,
     handleExternalInputs,
     setExternalInputErrorHandler,

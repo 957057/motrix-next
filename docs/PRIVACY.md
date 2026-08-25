@@ -53,7 +53,7 @@ The update channel can be Stable, Beta, or Latest Across Channels. If a proxy is
 
 ## User-Initiated Network Connections
 
-When you add a download task, Motrix Next and its Aria2 Next sidecar connect to the servers or peers needed for that task. This can include HTTP/FTP servers, BitTorrent trackers, DHT nodes, peers, and metadata endpoints.
+When you add a download task, Motrix Next and its Aria2 Next sidecar connect to the servers or peers needed for that task. This can include HTTP, HTTPS, or SFTP servers, BitTorrent trackers, DHT nodes, peers, and metadata endpoints.
 
 Some task creation flows resolve filenames before download. This may issue HTTP requests to the URL you submit so the app can inspect response headers such as `Content-Disposition`.
 

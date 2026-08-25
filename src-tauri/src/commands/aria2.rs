@@ -14,7 +14,6 @@ use tauri::{AppHandle, Manager, State};
 use tauri_plugin_store::StoreExt;
 
 const ED2K_SEARCH_TEMP_PREFIX: &str = "motrix-next-ed2k-search-";
-const ED2K_SEARCH_FILE_PREFIX: &str = "aria2-next-ed2k-search-";
 
 /// Fetch task list by type.
 #[tauri::command]
@@ -77,14 +76,6 @@ pub async fn aria2_get_version(
     state: State<'_, Aria2State>,
 ) -> Result<serde_json::Value, AppError> {
     state.0.get_version().await
-}
-
-/// Get global aria2 options.
-#[tauri::command]
-pub async fn aria2_get_global_option(
-    state: State<'_, Aria2State>,
-) -> Result<serde_json::Value, AppError> {
-    state.0.get_global_option().await
 }
 
 /// Get global download/upload statistics.
@@ -392,21 +383,10 @@ fn create_ed2k_search_temp_dir(app: &AppHandle) -> Result<PathBuf, AppError> {
         .map_err(AppError::from)
 }
 
-fn ed2k_search_temp_paths(search_dir: &Path, gid: &str) -> Result<[PathBuf; 2], AppError> {
-    if !is_safe_gid(gid) {
-        return Err(AppError::Aria2("Invalid ED2K search GID".into()));
-    }
-    let base = search_dir.join(format!("{ED2K_SEARCH_FILE_PREFIX}{gid}"));
-    Ok([base.clone(), base.with_extension("aria2")])
-}
-
 fn cleanup_ed2k_search_files(app: &AppHandle, gid: &str) {
     let Some(search_dir) = take_ed2k_search_dir(app, gid) else {
         return;
     };
-    if let Err(e) = ed2k_search_temp_paths(&search_dir, gid) {
-        log::debug!("ed2k: search temp path cleanup skipped gid={gid} error={e}");
-    }
     cleanup_ed2k_search_dir(&search_dir);
 }
 
@@ -533,6 +513,36 @@ async fn remove_engine_task(client: &Aria2Client, gid: &str) -> Result<(), AppEr
     }
 }
 
+fn uploaded_torrent_metadata_path(options: &serde_json::Value) -> Option<PathBuf> {
+    let path = PathBuf::from(options.get("torrent-file")?.as_str()?);
+    let name = path.file_name()?.to_str()?;
+    let hash = name.strip_suffix(".torrent")?;
+    (hash.len() == 40 && hash.bytes().all(|byte| byte.is_ascii_hexdigit())).then_some(path)
+}
+
+async fn remove_uploaded_torrent_metadata(client: &Aria2Client, gid: &str) {
+    let Some(path) = client
+        .get_option(gid)
+        .await
+        .ok()
+        .as_ref()
+        .and_then(uploaded_torrent_metadata_path)
+    else {
+        return;
+    };
+    match std::fs::remove_file(&path) {
+        Ok(()) => log::debug!(
+            "aria2: removed uploaded torrent metadata {}",
+            path.display()
+        ),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => log::warn!(
+            "aria2: failed to remove uploaded torrent metadata {}: {error}",
+            path.display()
+        ),
+    }
+}
+
 fn is_bt_seeding_task(task: &Aria2Task) -> bool {
     task.bittorrent.is_some() && task.seeder.as_deref() == Some("true")
 }
@@ -546,6 +556,7 @@ pub async fn aria2_delete_task(
     info_hash: Option<String>,
 ) -> Result<(), AppError> {
     log::info!("aria2:delete gid={gid}");
+    remove_uploaded_torrent_metadata(&state.0, &gid).await;
     remove_engine_task(&state.0, &gid).await?;
     history
         .0
@@ -577,6 +588,7 @@ pub async fn aria2_finish_seeding(
         added_at,
     );
     history.0.add_record(&record).await?;
+    remove_uploaded_torrent_metadata(&state.0, &gid).await;
     remove_engine_task(&state.0, &gid).await
 }
 
@@ -681,53 +693,28 @@ pub async fn aria2_batch_force_remove(
 #[cfg(test)]
 mod tests {
     use super::{
-        ed2k_search_temp_paths, is_bt_seeding_task, is_download_result_transitioning,
-        is_missing_download, is_terminal_download_status, sanitize_out_option, AppError,
+        is_bt_seeding_task, is_download_result_transitioning, is_missing_download,
+        is_terminal_download_status, sanitize_out_option, uploaded_torrent_metadata_path, AppError,
     };
     use crate::aria2::types::{Aria2BtInfo, Aria2Task};
-    use std::path::{Path, PathBuf};
-
-    // ── Existing #261 tests (updated for String return) ─────────────
 
     #[test]
-    fn ed2k_search_temp_paths_stay_inside_search_cache_dir() {
-        let root = PathBuf::from("/tmp/motrix-ed2k-search");
-        let paths = ed2k_search_temp_paths(&root, "75c1fb5d8979819f").expect("valid gid");
-
+    fn uploaded_torrent_metadata_accepts_engine_hash_names() {
+        let options = serde_json::json!({
+            "torrent-file": "/tmp/0123456789abcdef0123456789abcdef01234567.torrent"
+        });
         assert_eq!(
-            paths[0],
-            PathBuf::from("/tmp/motrix-ed2k-search/aria2-next-ed2k-search-75c1fb5d8979819f")
-        );
-        assert_eq!(
-            paths[1],
-            PathBuf::from("/tmp/motrix-ed2k-search/aria2-next-ed2k-search-75c1fb5d8979819f.aria2")
+            uploaded_torrent_metadata_path(&options)
+                .as_deref()
+                .and_then(std::path::Path::to_str),
+            Some("/tmp/0123456789abcdef0123456789abcdef01234567.torrent")
         );
     }
 
     #[test]
-    fn ed2k_search_temp_paths_reject_path_like_gid_values() {
-        assert!(ed2k_search_temp_paths(Path::new("/tmp/motrix-ed2k-search"), "../bad").is_err());
-        assert!(ed2k_search_temp_paths(Path::new("/tmp/motrix-ed2k-search"), "bad/path").is_err());
-        assert!(ed2k_search_temp_paths(Path::new("/tmp/motrix-ed2k-search"), "").is_err());
-    }
-
-    #[test]
-    fn ed2k_search_temp_paths_allow_per_search_temp_dirs() {
-        let root = PathBuf::from("/tmp/motrix-next-ed2k-search-abc123");
-        let paths = ed2k_search_temp_paths(&root, "75c1fb5d8979819f").expect("valid gid");
-
-        assert_eq!(
-            paths[0],
-            PathBuf::from(
-                "/tmp/motrix-next-ed2k-search-abc123/aria2-next-ed2k-search-75c1fb5d8979819f"
-            )
-        );
-        assert_eq!(
-            paths[1],
-            PathBuf::from(
-                "/tmp/motrix-next-ed2k-search-abc123/aria2-next-ed2k-search-75c1fb5d8979819f.aria2"
-            )
-        );
+    fn uploaded_torrent_metadata_rejects_user_filenames() {
+        let options = serde_json::json!({ "torrent-file": "/downloads/release.torrent" });
+        assert!(uploaded_torrent_metadata_path(&options).is_none());
     }
 
     #[test]

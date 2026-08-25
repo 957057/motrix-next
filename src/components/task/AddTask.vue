@@ -7,9 +7,8 @@ import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceStore } from '@/stores/preference'
 import { useHttpAuthStore } from '@/stores/httpAuth'
-import { ADD_TASK_TYPE, ENGINE_MAX_CONNECTION_PER_SERVER } from '@shared/constants'
-import { detectResource, bytesToSize } from '@shared/utils'
-import { calcColumnWidth } from '@shared/utils/calcColumnWidth'
+import { ADD_TASK_TYPE, ENGINE_MAX_STREAM_CONNECTIONS } from '@shared/constants'
+import { detectResource } from '@shared/utils'
 import { mergeRawUriLines, normalizeUriLines, extractMagnetDisplayName } from '@shared/utils/batchHelpers'
 import { resolveDownloadCategory } from '@shared/utils/fileCategory'
 import { buildOuts } from '@shared/utils/rename'
@@ -50,12 +49,10 @@ import {
   NSpace,
   NIcon,
   NInputGroup,
-  NDataTable,
   NTag,
   NEllipsis,
 } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
-import type { DataTableColumns } from 'naive-ui'
 import type { BatchItem, UserAgentProfile } from '@shared/types'
 import { FolderOpenOutline, CloudUploadOutline } from '@vicons/ionicons5'
 import { vMotionAutoAnimate } from '@/directives/motionAutoAnimate'
@@ -127,7 +124,7 @@ const form = ref<AddTaskForm>({
   uris: '',
   out: '',
   dir: preferenceStore.config.dir || '',
-  split: preferenceStore.config.split || 16,
+  streamMaxConnections: preferenceStore.config.streamMaxConnections,
   userAgent: '',
   authorization: '',
   httpAuthUsername: '',
@@ -144,7 +141,6 @@ const form = ref<AddTaskForm>({
   uriRequestContexts: {},
 })
 
-const maxSplit = ENGINE_MAX_CONNECTION_PER_SERVER
 const firstRegularUri = computed(
   () =>
     form.value.uris
@@ -184,61 +180,13 @@ function applyResolvedUserAgent() {
   form.value.userAgent = resolved.userAgent
 }
 
-// Real-time tracking: NInputNumber only commits v-model on blur,
-// so we capture the native `input` event via bubbling from the inner
-// <input> element. The watch covers +/− button clicks (immediate update).
-const splitAtLimit = ref(form.value.split > maxSplit)
-
-function onSplitRawInput(e: Event) {
-  const raw = (e.target as HTMLInputElement).value
-  const val = Number(raw)
-  splitAtLimit.value = raw !== '' && !isNaN(val) && val > maxSplit
-}
-
-watch(
-  () => form.value.split,
-  (v) => {
-    splitAtLimit.value = v > maxSplit
-  },
-)
-
-const fileColumns = computed<DataTableColumns>(() => {
-  const data = (selectedItem.value?.torrentMeta?.files ?? []) as Array<{ idx: number; length: number; path: string }>
-  return [
-    { type: 'selection' },
-    {
-      title: t('task.file-index'),
-      key: 'idx',
-      width: calcColumnWidth({
-        title: t('task.file-index'),
-        values: data.map((r) => String(r.idx)),
-      }),
-    },
-    { title: t('task.file-name'), key: 'path', ellipsis: { tooltip: true } },
-    {
-      title: t('task.file-size'),
-      key: 'length',
-      width: calcColumnWidth({
-        title: t('task.file-size'),
-        values: data.map((r) => bytesToSize(r.length)),
-        sortable: true,
-      }),
-      sorter: (a: Record<string, unknown>, b: Record<string, unknown>) => (a.length as number) - (b.length as number),
-      render(row: Record<string, unknown>) {
-        return bytesToSize(row.length as number)
-      },
-    },
-  ]
-})
-
 // ── Computed batch accessors ────────────────────────────────────────
 
 const batch = computed(() => appStore.pendingBatch)
 const hasBatch = computed(() => batch.value.length > 0)
 const fileItems = computed(() => batch.value.filter((i) => i.kind !== 'uri'))
-const selectedItem = computed(() => fileItems.value[selectedBatchIndex.value] || null)
 
-// Sync download dir and split with latest preference every time the dialog
+// Sync download settings with the latest preference every time the dialog
 // opens. AddTask is kept mounted (`:show` not `v-if`), so form values would
 // otherwise be stale if the user changes defaults in preferences.
 watch(
@@ -252,8 +200,7 @@ watch(
       } else {
         form.value.dir = preferenceStore.config.dir || form.value.dir
       }
-      // Sync split from the user's Basic preference value
-      form.value.split = preferenceStore.config.split ?? form.value.split
+      form.value.streamMaxConnections = preferenceStore.config.streamMaxConnections
       syncDefaultTaskProxy()
       // Reset the manual-override flag each time the dialog opens
       dirUserModified.value = false
@@ -284,14 +231,6 @@ watch(
   },
   { deep: true },
 )
-
-const checkedRowKeys = computed({
-  get: () => selectedItem.value?.selectedFileIndices || [],
-  set: (keys: number[]) => {
-    const item = selectedItem.value
-    if (item) item.selectedFileIndices = keys
-  },
-})
 
 const submitLabel = computed(() => t('app.submit'))
 
@@ -754,25 +693,6 @@ async function handleSubmit() {
                   </template>
                   {{ t('task.select-torrent') || 'Select torrent files' }}
                 </NButton>
-
-                <!-- File detail for selected torrent -->
-                <Transition name="content-fade" mode="out-in">
-                  <div
-                    v-if="selectedItem?.torrentMeta && selectedItem.torrentMeta.files.length > 0"
-                    :key="selectedItem?.id"
-                    class="torrent-file-list"
-                  >
-                    <NDataTable
-                      v-model:checked-row-keys="checkedRowKeys"
-                      :columns="fileColumns"
-                      :data="selectedItem.torrentMeta.files"
-                      :row-key="(row: any) => row.idx as number"
-                      size="small"
-                      :max-height="200"
-                      :scroll-x="400"
-                    />
-                  </div>
-                </Transition>
               </div>
 
               <!-- Upload zone: shown when no torrents loaded -->
@@ -791,18 +711,13 @@ async function handleSubmit() {
           <NFormItem :label="t('task.task-out') + ':'">
             <NInput v-model:value="form.out" :placeholder="t('task.task-out-tips')" :autofocus="false" />
           </NFormItem>
-          <NFormItem :label="t('preferences.split-count') + ':'">
-            <div class="split-field-wrapper" @input="onSplitRawInput">
-              <NInputNumber v-model:value="form.split" :min="1" :max="maxSplit" style="width: 120px" />
-              <!-- Limit hint — CSS Grid 0fr→1fr slide-in, mirrors ua-warn pattern -->
-              <div class="split-limit-collapse" :class="{ 'split-limit-collapse--open': splitAtLimit }">
-                <div class="split-limit-collapse__inner">
-                  <div class="split-limit-bar">
-                    <span class="split-limit-text">⚠ {{ t('task.split-limit-hint') }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <NFormItem :label="t('preferences.stream-max-connections') + ':'">
+            <NInputNumber
+              v-model:value="form.streamMaxConnections"
+              :min="1"
+              :max="ENGINE_MAX_STREAM_CONNECTIONS"
+              style="width: 120px"
+            />
           </NFormItem>
           <NFormItem :label="dirLabel + ':'">
             <div style="width: 100%">
@@ -867,10 +782,6 @@ async function handleSubmit() {
 </template>
 
 <style scoped>
-.torrent-file-list {
-  margin-top: 8px;
-}
-
 /* Fixed-height tab panes prevent jitter when switching tabs.
  * URI textarea rows=5 ≈ 138px — keep both panes at same min-height. */
 .tab-pane-content {
@@ -924,43 +835,6 @@ async function handleSubmit() {
 /* ── Download settings ────────────────────────────────────────────── */
 .download-settings {
   margin-top: 4px;
-}
-
-/* ── Split limit hint — CSS Grid 0fr→1fr slide-in (mirrors ua-warn) ─── */
-.split-field-wrapper {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-.split-limit-collapse {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.35s cubic-bezier(0.2, 0, 0, 1);
-}
-.split-limit-collapse--open {
-  grid-template-rows: 1fr;
-}
-.split-limit-collapse__inner {
-  overflow: hidden;
-}
-.split-limit-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  margin-top: 6px;
-  border-radius: var(--border-radius);
-  background: var(--m3-error-container);
-  opacity: 0;
-  transition: opacity 0.25s cubic-bezier(0.2, 0, 0, 1);
-}
-.split-limit-collapse--open .split-limit-bar {
-  opacity: 1;
-}
-.split-limit-text {
-  font-size: var(--font-size-sm);
-  color: var(--m3-on-error-container);
-  flex: 1;
 }
 </style>
 

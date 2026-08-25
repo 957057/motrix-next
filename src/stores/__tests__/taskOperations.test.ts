@@ -31,7 +31,6 @@ vi.mock('@/stores/history', () => ({
   }),
 }))
 
-// ── Mock cleanupAria2ControlFiles + cleanupAria2MetadataFiles ───────
 // ── Mock buildSharingCompletionRecord ───────────────────────────────
 // ── Helpers ────────────────────────────────────────────────────────
 

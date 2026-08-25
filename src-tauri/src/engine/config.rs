@@ -22,9 +22,6 @@ const PROXY_CLEAR_KEYS: &[&str] = &[
     "https-proxy",
     "https-proxy-user",
     "https-proxy-passwd",
-    "ftp-proxy",
-    "ftp-proxy-user",
-    "ftp-proxy-passwd",
     "no-proxy",
 ];
 
@@ -348,7 +345,7 @@ mod tests {
         let content = build_runtime_config(
             &json!({
                 "dir": "/downloads",
-                "split": 16,
+                "stream-max-connections": 16,
                 "allow-remote-access": true,
                 "rpc-secret": "secret"
             }),
@@ -358,7 +355,7 @@ mod tests {
 
         assert_eq!(option_value(&content, "disk-cache"), Some("64M"));
         assert_eq!(option_value(&content, "dir"), Some("/downloads"));
-        assert_eq!(option_value(&content, "split"), Some("16"));
+        assert_eq!(option_value(&content, "stream-max-connections"), Some("16"));
         assert_eq!(option_value(&content, "rpc-secret"), Some("secret"));
         assert_eq!(option_value(&content, "rpc-listen-all"), Some("true"));
         assert_eq!(

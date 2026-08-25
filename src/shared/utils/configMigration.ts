@@ -75,10 +75,6 @@ const migrations: Migration[] = [
   // engineMaxConnectionPerServer field that served as a sync anchor for
   // AddTask's maxSplit computation.
   //
-  // After v2:
-  //   - split controls aria2's --split (parallel segments per file)
-  //   - maxConnectionPerServer controls aria2's --max-connection-per-server
-  //   - Both are independently adjustable in Basic settings
   function migrateV2(config: Partial<AppConfig>): void {
     // Remove the obsolete sync anchor field
     delete (config as Record<string, unknown>).engineMaxConnectionPerServer
@@ -99,7 +95,7 @@ const migrations: Migration[] = [
   // magnet added unnecessary UX complexity without practical benefit.
   //
   // After v3, autoSubmitFromExtension is a simple boolean derived from
-  // the old master switch (enable).  URI types (HTTP/FTP/magnet) are
+  // the old master switch (enable). URI types (HTTP/SFTP/magnet) are
   // auto-submitted when true; torrent always shows the dialog.
   function migrateV3(config: Partial<AppConfig>): void {
     const old = (config as Record<string, unknown>).autoSubmitFromExtension
@@ -191,11 +187,11 @@ const migrations: Migration[] = [
     delete legacy.dhtListenPort
     delete legacy.pauseMetadata
     delete legacy.autoSelectAllBtFilesFromExtension
-    config.magnetFileSelectionMode = 'auto'
+    config.btFileSelectionMode = 'auto'
     if (config.portConflictRecovery) {
       delete (config.portConflictRecovery as unknown as Record<string, unknown>).dht
     }
-    logger.info('ConfigMigration', 'v6: adopted native BitTorrent settings and magnet dialog presentation')
+    logger.info('ConfigMigration', 'v6: adopted native BitTorrent settings and file-selection presentation')
   },
 ]
 

@@ -46,12 +46,6 @@ export async function getVersion(): Promise<{ version: string; enabledFeatures: 
   return invoke<{ version: string; enabledFeatures: string[] }>('aria2_get_version')
 }
 
-/** Fetches all global aria2 configuration options as camelCase keys. */
-export async function getGlobalOption(): Promise<Record<string, string>> {
-  const data = await invoke<Record<string, string>>('aria2_get_global_option')
-  return changeKeysToCamelCase(data) as Record<string, string>
-}
-
 /** Fetches aggregated download/upload statistics from aria2. */
 export async function getGlobalStat(): Promise<Aria2RawGlobalStat> {
   return invoke<Aria2RawGlobalStat>('aria2_get_global_stat')
@@ -280,7 +274,6 @@ export async function batchRemoveTask(params: { gids: string[] }): Promise<unkno
 
 const api = {
   getVersion,
-  getGlobalOption,
   getGlobalStat,
   changeGlobalOption,
   getOption,

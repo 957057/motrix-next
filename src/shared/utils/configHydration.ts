@@ -144,7 +144,7 @@ function normalizeClipboard(value: unknown): ClipboardConfig {
   return {
     enable: typeof saved.enable === 'boolean' ? saved.enable : defaults.enable,
     http: typeof saved.http === 'boolean' ? saved.http : defaults.http,
-    ftp: typeof saved.ftp === 'boolean' ? saved.ftp : defaults.ftp,
+    sftp: typeof saved.sftp === 'boolean' ? saved.sftp : defaults.sftp,
     magnet: typeof saved.magnet === 'boolean' ? saved.magnet : defaults.magnet,
     ed2k: typeof saved.ed2k === 'boolean' ? saved.ed2k : defaults.ed2k,
     thunder: typeof saved.thunder === 'boolean' ? saved.thunder : defaults.thunder,
@@ -220,9 +220,9 @@ function normalizeScalarValues(config: Record<string, unknown>, repairs: string[
   repairEnum(config, 'btTransport', ['tcp', 'utp', 'both'] as const, DEFAULT_APP_CONFIG.btTransport, repairs)
   repairEnum(
     config,
-    'magnetFileSelectionMode',
+    'btFileSelectionMode',
     ['auto', 'manual'] as const,
-    DEFAULT_APP_CONFIG.magnetFileSelectionMode,
+    DEFAULT_APP_CONFIG.btFileSelectionMode,
     repairs,
   )
   repairEnum(
@@ -266,7 +266,14 @@ function normalizeScalarValues(config: Record<string, unknown>, repairs: string[
     repairs,
   )
 
-  config.split = normalizePositiveNumber(config.split, DEFAULT_APP_CONFIG.split, 'split', repairs)
+  config.streamMaxConnections = normalizeBoundedInteger(
+    config.streamMaxConnections,
+    DEFAULT_APP_CONFIG.streamMaxConnections,
+    1,
+    32,
+    'streamMaxConnections',
+    repairs,
+  )
   config.taskPageSize = normalizeBoundedInteger(
     config.taskPageSize,
     DEFAULT_APP_CONFIG.taskPageSize,
@@ -281,10 +288,12 @@ function normalizeScalarValues(config: Record<string, unknown>, repairs: string[
     'maxConcurrentDownloads',
     repairs,
   )
-  config.maxConnectionPerServer = normalizePositiveNumber(
-    config.maxConnectionPerServer,
-    DEFAULT_APP_CONFIG.maxConnectionPerServer,
-    'maxConnectionPerServer',
+  config.ed2kMaxConnections = normalizeBoundedInteger(
+    config.ed2kMaxConnections,
+    DEFAULT_APP_CONFIG.ed2kMaxConnections,
+    1,
+    1024,
+    'ed2kMaxConnections',
     repairs,
   )
   config.btMaxPeers = normalizePositiveNumber(config.btMaxPeers, DEFAULT_APP_CONFIG.btMaxPeers, 'btMaxPeers', repairs)
@@ -408,6 +417,10 @@ export function hydrateAppConfig(saved?: Partial<AppConfig> | null): HydratedApp
   delete record.autoSelectAllMagnetFilesFromExtension
   delete record.autoSyncTracker
   delete record.protocols
+  delete record.split
+  delete record.maxConnectionPerServer
+  delete record.engineMaxConnectionPerServer
+  delete record.engineBinPath
 
   merged.proxy = normalizeProxy(input?.proxy ?? merged.proxy, repairs)
   merged.clipboard = normalizeClipboard(input?.clipboard ?? merged.clipboard)

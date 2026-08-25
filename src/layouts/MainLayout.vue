@@ -18,7 +18,6 @@ import {
 import { setArchivedPath, resolveTaskFilePath, requestFileRecheck } from '@/composables/useArchivedPaths'
 import { handleTaskComplete, handleSharingComplete, handleTaskError } from '@/composables/useTaskNotifyHandlers'
 import { shouldDeleteTorrent, trashTorrentFile } from '@/composables/useDownloadCleanup'
-import { cleanupAria2ControlFiles } from '@/composables/useFileDelete'
 import { getTaskDisplayName, resolveOpenTarget, checkTaskIsSharing, getTaskSharingKind } from '@shared/utils'
 import type { TaskSharingKind } from '@shared/utils/task'
 import type { Aria2Task } from '@shared/types'
@@ -209,7 +208,7 @@ const magnetSelectName = ref('')
 const magnetSelectSubmission = ref<MagnetSelectionSubmission>(null)
 const magnetSelectClosing = ref(false)
 const deferredMagnetGids = ref<string[]>([])
-const autoOpenMagnetFileSelection = computed(() => preferenceStore.config.magnetFileSelectionMode === 'auto')
+const autoOpenBtFileSelection = computed(() => preferenceStore.config.btFileSelectionMode === 'auto')
 
 const { setupListeners } = useAppEvents({
   t,
@@ -305,7 +304,7 @@ const magnetMetadataResolver = createMagnetMetadataResolver(magnetMetadataDeps)
 async function startAria2DownloadPauseListener() {
   stopAria2DownloadPauseListener()
   unlistenAria2DownloadPause = await listenForAria2DownloadPause((gid) => {
-    if (autoOpenMagnetFileSelection.value) return magnetMetadataResolver.request(gid)
+    if (autoOpenBtFileSelection.value) return magnetMetadataResolver.request(gid)
   })
 }
 
@@ -418,7 +417,7 @@ function handleMagnetDismiss() {
 function handleMagnetSelectAfterLeave() {
   if (!magnetSelectClosing.value) return
   magnetSelectClosing.value = false
-  if (autoOpenMagnetFileSelection.value && appStore.pendingMagnetGids.length > 0) {
+  if (autoOpenBtFileSelection.value && appStore.pendingMagnetGids.length > 0) {
     void magnetMetadataResolver.request()
   }
 }
@@ -789,11 +788,6 @@ onMounted(async () => {
       logger.debug('AutoArchive.result', `gid=${task.gid} action=none`)
     }
 
-    // Clean up stale .aria2 control files when P2P sharing auto-stops.
-    if (task.bittorrent || task.ed2k) {
-      cleanupAria2ControlFiles(task).catch((e) => logger.debug('Lifecycle.aria2ControlCleanup', e))
-    }
-
     // ── Auto-shutdown: check after task completion ──
     checkShutdownCondition()
   }
@@ -824,7 +818,7 @@ onMounted(async () => {
 
     if (kind !== 'bt') return
     if (!shouldDeleteTorrent(preferenceStore.config)) return
-    const sourcePath = task.infoHash ? taskStore.consumeTorrentSource(task.infoHash) : undefined
+    const sourcePath = taskStore.consumeTorrentSource(task.gid)
     if (sourcePath) {
       const ok = await trashTorrentFile(sourcePath)
       if (ok) {
@@ -867,7 +861,7 @@ onMounted(async () => {
   // metadata that resolved before the listener was ready.
   await restorePendingMagnetSelections()
   stopPendingMagnetWatch = watch(
-    [() => appStore.pendingMagnetGids, autoOpenMagnetFileSelection],
+    [() => appStore.pendingMagnetGids, autoOpenBtFileSelection],
     ([gids, autoOpen]) => {
       if (autoOpen && gids.length > 0 && !magnetSelectClosing.value) {
         void magnetMetadataResolver.request()

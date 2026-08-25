@@ -54,7 +54,7 @@ export interface AddTaskForm {
   uris: string
   out: string
   dir: string
-  split: number
+  streamMaxConnections: number
   userAgent: string
   authorization: string
   httpAuthUsername: string
@@ -121,11 +121,7 @@ export function buildEngineOptions(form: AddTaskForm, context?: ExternalDownload
   }
   const options: Aria2EngineOptions = {
     dir: form.dir,
-    split: String(form.split),
-    // max-connection-per-server is intentionally NOT set per-task.
-    // It uses the global value pushed by on_engine_ready() (Rust), allowing
-    // split (segment count) and max-conn (server connection cap) to be
-    // controlled independently. See: aria2 download_helper.cc:394-401.
+    'stream-max-connections': String(form.streamMaxConnections),
   }
   if (form.out) options.out = form.out
   if (headers.userAgent) options['user-agent'] = headers.userAgent
@@ -214,22 +210,12 @@ export async function submitBatchItems(
     if (item.status !== 'pending' && item.status !== 'failed') continue
     try {
       if (item.kind === 'torrent') {
-        const opts: Aria2EngineOptions = { ...options }
+        const opts: Aria2EngineOptions = { ...options, 'pause-metadata': 'true' }
         delete opts.out
-        if (
-          item.selectedFileIndices &&
-          item.torrentMeta &&
-          item.selectedFileIndices.length > 0 &&
-          item.selectedFileIndices.length < item.torrentMeta.files.length
-        ) {
-          opts['select-file'] = item.selectedFileIndices.join(',')
-        }
-        // Register source path by infoHash BEFORE addTorrent to avoid race:
-        // fast downloads enter seeding before addTorrent promise resolves.
-        if (item.source && item.torrentMeta?.infoHash) {
-          taskStore.registerTorrentSource(item.torrentMeta.infoHash, item.source)
-        }
-        await taskStore.addTorrent({ torrent: item.payload, options: opts })
+        const gid = await taskStore.addTorrent({ torrent: item.payload, options: opts })
+        taskStore.registerTorrentSource(gid, item.source)
+        const appStore = useAppStore()
+        appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, gid]
       }
       item.status = 'submitted'
       logger.info('submitBatchItems', `${item.kind} submitted: ${item.displayName}`)

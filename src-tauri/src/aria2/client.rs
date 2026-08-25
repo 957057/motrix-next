@@ -314,6 +314,10 @@ impl Aria2Client {
         self.call("getVersion", vec![]).await
     }
 
+    pub async fn list_methods(&self) -> Result<Vec<String>, AppError> {
+        self.call_rpc("system.listMethods", vec![]).await
+    }
+
     /// Returns peer information for a BitTorrent task.
     pub async fn get_peers(&self, gid: &str) -> Result<serde_json::Value, AppError> {
         self.call("getPeers", vec![gid.into()]).await
@@ -376,11 +380,6 @@ impl Aria2Client {
     /// Purges all completed/error/removed download results.
     pub async fn purge_download_result(&self) -> Result<String, AppError> {
         self.call("purgeDownloadResult", vec![]).await
-    }
-
-    /// Returns the global option set.
-    pub async fn get_global_option(&self) -> Result<serde_json::Value, AppError> {
-        self.call("getGlobalOption", vec![]).await
     }
 
     /// Batch execute multiple RPC calls via system.multicall.

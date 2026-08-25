@@ -19,6 +19,7 @@ export const nonHotReloadableKeys: readonly string[] = aria2Options.nonHotReload
 export const needRestartKeys = [
   'aria2-log-level',
   'ed2k-listen-port',
+  'ed2k-max-connections',
   'ed2k-server',
   'ed2k-udp-listen-port',
   'ed2k-upload-slots',

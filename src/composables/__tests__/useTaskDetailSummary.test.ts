@@ -43,7 +43,7 @@ describe('buildTaskDetailKind', () => {
     expect(buildTaskDetailKind(makeTask({ ed2k: { hash: 'abcd' } }))).toBe('ed2k')
   })
 
-  it('classifies HTTP, FTP, Thunder-decoded, and other URI tasks as uri when no protocol metadata exists', () => {
+  it('classifies HTTP, SFTP, Thunder-decoded, and other URI tasks as uri when no protocol metadata exists', () => {
     expect(buildTaskDetailKind(makeTask())).toBe('uri')
   })
 })

@@ -40,10 +40,6 @@ describe('isValidAria2ProxyUrl', () => {
     expect(isValidAria2ProxyUrl('https://proxy.example.com:443')).toBe(true)
   })
 
-  it('accepts ftp:// proxy', () => {
-    expect(isValidAria2ProxyUrl('ftp://proxy.example.com:21')).toBe(true)
-  })
-
   it('accepts http:// with user:password', () => {
     expect(isValidAria2ProxyUrl('http://user:pass@proxy.example.com:8080')).toBe(true)
   })

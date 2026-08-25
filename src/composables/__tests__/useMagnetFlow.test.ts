@@ -47,14 +47,14 @@ describe('useMagnetFlow', () => {
 
   describe('buildMetadataOnlyOptions', () => {
     it('sets pause-metadata for magnet file selection', () => {
-      const options = buildMetadataOnlyOptions({ dir: '/downloads', split: '8' })
+      const options = buildMetadataOnlyOptions({ dir: '/downloads', 'stream-max-connections': '8' })
       expect(options['pause-metadata']).toBe('true')
     })
 
     it('preserves existing options', () => {
-      const options = buildMetadataOnlyOptions({ dir: '/custom', split: '4' })
+      const options = buildMetadataOnlyOptions({ dir: '/custom', 'stream-max-connections': '4' })
       expect(options.dir).toBe('/custom')
-      expect(options.split).toBe('4')
+      expect(options['stream-max-connections']).toBe('4')
     })
   })
 

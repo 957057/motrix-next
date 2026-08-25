@@ -1,21 +1,15 @@
 /**
  * @fileoverview Pure functions for the BitTorrent preference tab.
  *
- * Manages BT-specific config: magnet file selection, encryption,
+ * Manages BT-specific config: file selection, encryption,
  * connection, discovery, seeding, max peers, and tracker management. Key business logic:
- * - Magnet file-selection presentation
+ * - BitTorrent file-selection presentation
  * - Tracker comma ↔ newline format conversion
  *
  * Tracker source URL validation (isValidTrackerSourceUrl) is co-located
  * here since it is only used in the BT tab's tracker source management.
  */
-import type {
-  AppConfig,
-  BtBlocklistScope,
-  BtEncryptionMode,
-  BtTransportMode,
-  MagnetFileSelectionMode,
-} from '@shared/types'
+import type { AppConfig, BtBlocklistScope, BtEncryptionMode, BtTransportMode, BtFileSelectionMode } from '@shared/types'
 import { DEFAULT_APP_CONFIG as D } from '@shared/constants'
 import { PORT_RECOVERY_RANGE_END, PORT_RECOVERY_RANGE_START } from '@shared/constants'
 import { convertCommaToLine, convertLineToComma, generateRandomInt } from '@shared/utils'
@@ -43,7 +37,7 @@ export function isValidTrackerSourceUrl(input: string): boolean {
 
 export interface BtForm {
   [key: string]: unknown
-  magnetFileSelectionMode: MagnetFileSelectionMode
+  btFileSelectionMode: BtFileSelectionMode
   btEncryption: BtEncryptionMode
   btTransport: BtTransportMode
   btMaxConnections: number
@@ -82,7 +76,7 @@ export interface BtForm {
  */
 export function buildBtForm(config: AppConfig): BtForm {
   return {
-    magnetFileSelectionMode: config.magnetFileSelectionMode ?? D.magnetFileSelectionMode,
+    btFileSelectionMode: config.btFileSelectionMode ?? D.btFileSelectionMode,
     btEncryption: config.btEncryption ?? D.btEncryption,
     btTransport: config.btTransport ?? D.btTransport,
     btMaxConnections: config.btMaxConnections ?? D.btMaxConnections,

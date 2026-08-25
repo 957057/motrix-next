@@ -63,7 +63,7 @@ export const UNSUPPORTED_PROXY_SCHEME_RE = /^socks[45a-z]*:\/\//i
 /**
  * Validates a proxy URL against aria2's `HttpProxyOptionHandler` whitelist.
  *
- * aria2 accepts `http://`, `https://`, `ftp://`, and bare `HOST:PORT`
+ * Aria2 Next accepts `http://`, `https://`, and bare `HOST:PORT`
  * values. SOCKS/custom schemes are rejected before they can crash the engine.
  */
 export function isValidAria2ProxyUrl(url: string): boolean {
@@ -72,7 +72,7 @@ export function isValidAria2ProxyUrl(url: string): boolean {
 
   if (UNSUPPORTED_PROXY_SCHEME_RE.test(trimmed)) return false
 
-  if (/^(https?|ftp):\/\//i.test(trimmed)) {
+  if (/^https?:\/\//i.test(trimmed)) {
     try {
       new URL(trimmed)
       return true
@@ -134,9 +134,6 @@ function clearProxyOptions(): Aria2EngineOptions {
     'https-proxy': '',
     'https-proxy-user': '',
     'https-proxy-passwd': '',
-    'ftp-proxy': '',
-    'ftp-proxy-user': '',
-    'ftp-proxy-passwd': '',
     'no-proxy': '',
   }
 }

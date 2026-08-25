@@ -79,11 +79,11 @@ import { writeAppClipboardText } from '@shared/utils'
 const appLogLevelOptions = APP_LOG_LEVELS.map((level) => ({ label: level, value: level }))
 const aria2LogLevelOptions = ARIA2_LOG_LEVELS.map((level) => ({ label: level, value: level }))
 
-type ClipboardType = 'http' | 'ftp' | 'magnet' | 'ed2k' | 'thunder' | 'btHash'
-const clipboardTypes: ClipboardType[] = ['http', 'ftp', 'magnet', 'ed2k', 'thunder', 'btHash']
+type ClipboardType = 'http' | 'sftp' | 'magnet' | 'ed2k' | 'thunder' | 'btHash'
+const clipboardTypes: ClipboardType[] = ['http', 'sftp', 'magnet', 'ed2k', 'thunder', 'btHash']
 const clipboardTypeOptions = computed(() => [
   { label: t('preferences.clipboard-http'), value: 'http' },
-  { label: t('preferences.clipboard-ftp'), value: 'ftp' },
+  { label: t('preferences.clipboard-sftp'), value: 'sftp' },
   { label: t('preferences.clipboard-magnet'), value: 'magnet' },
   { label: t('preferences.clipboard-ed2k'), value: 'ed2k' },
   { label: t('preferences.clipboard-thunder'), value: 'thunder' },
@@ -91,7 +91,7 @@ const clipboardTypeOptions = computed(() => [
 ])
 const clipboardFieldByType: Record<ClipboardType, keyof typeof form.value> = {
   http: 'clipboardHttp',
-  ftp: 'clipboardFtp',
+  sftp: 'clipboardSftp',
   magnet: 'clipboardMagnet',
   ed2k: 'clipboardEd2k',
   thunder: 'clipboardThunder',

@@ -802,7 +802,6 @@ pub fn run() {
             commands::aria2_replace_bt_web_seeds,
             commands::aria2_add_bt_peers,
             commands::aria2_get_version,
-            commands::aria2_get_global_option,
             commands::aria2_get_global_stat,
             commands::aria2_change_global_option,
             commands::aria2_get_option,

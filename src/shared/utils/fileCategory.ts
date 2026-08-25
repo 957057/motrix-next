@@ -34,7 +34,7 @@ export interface CategoryUrlPatternValidationError {
  * Extracts the lowercase file extension from a URL or bare filename.
  *
  * Handles:
- * - Standard HTTP/HTTPS/FTP URLs with path segments
+ * - Standard HTTP/HTTPS/SFTP URLs with path segments
  * - Query strings (`?token=...`) and fragments (`#page=3`)
  * - Percent-encoded filenames (`%E6%96%87%E4%BB%B6.pdf`)
  * - Bare filenames without protocol (`document.xlsx`)

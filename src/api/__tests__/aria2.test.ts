@@ -48,7 +48,6 @@ vi.mock('@shared/logger', async (importOriginal) => {
 import {
   isEngineReady,
   getVersion,
-  getGlobalOption,
   getGlobalStat,
   changeGlobalOption,
   getOption,
@@ -109,13 +108,6 @@ describe('aria2 API (invoke transport)', () => {
       const result = await getVersion()
       expect(mockInvoke).toHaveBeenCalledWith('aria2_get_version')
       expect(result.version).toBe('1.37.0')
-    })
-
-    it('getGlobalOption invokes and converts to camelCase', async () => {
-      mockInvoke.mockResolvedValueOnce({ 'max-concurrent-downloads': '5' })
-      const result = await getGlobalOption()
-      expect(mockInvoke).toHaveBeenCalledWith('aria2_get_global_option')
-      expect(result).toHaveProperty('maxConcurrentDownloads')
     })
 
     it('getGlobalStat invokes aria2_get_global_stat', async () => {
@@ -211,7 +203,7 @@ describe('aria2 API (invoke transport)', () => {
       outs: [''],
       options: {
         dir: '/downloads',
-        split: '16',
+        'stream-max-connections': '16',
         'user-agent': 'BrowserUA/1.0',
         referer: 'https://example.com/page?token=secret',
         header: ['Accept: application/octet-stream', 'Cookie: session=secret'],
@@ -509,13 +501,13 @@ describe('aria2 API (invoke transport)', () => {
 
     it('addTorrent preserves caller-supplied options', async () => {
       mockInvoke.mockResolvedValueOnce('gid-torrent')
-      await addTorrent({ torrent: 'data', options: { dir: '/custom', split: '4' } })
+      await addTorrent({ torrent: 'data', options: { dir: '/custom', 'stream-max-connections': '4' } })
       const callArgs = mockInvoke.mock.calls[0][1] as Record<string, unknown>
       const options = callArgs.options as Record<string, string>
       expect(options['force-save']).toBe('true')
       expect(options['check-integrity']).toBe('true')
       expect(options.dir).toBe('/custom')
-      expect(options.split).toBe('4')
+      expect(options['stream-max-connections']).toBe('4')
     })
 
     it('addTorrent keeps explicit caller force-save value', async () => {

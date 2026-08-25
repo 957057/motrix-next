@@ -199,7 +199,7 @@ mod tests {
             // Extra fields from AppConfig that RuntimeConfig ignores:
             "theme": "dark",
             "dir": "/downloads",
-            "split": 16,
+            "streamMaxConnections": 16,
             "rpcListenPort": 29100,
             "rpcSecret": "changeme"
         });

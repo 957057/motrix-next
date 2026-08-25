@@ -958,8 +958,8 @@ mod tests {
     #[test]
     fn delete_path_permanently_deletes_existing_file() {
         let dir = tempfile::tempdir().expect("create temp dir");
-        let file = dir.path().join("test.aria2");
-        std::fs::write(&file, "control data").expect("write test file");
+        let file = dir.path().join("test.bin");
+        std::fs::write(&file, "data").expect("write test file");
 
         let result = delete_path(
             file.to_string_lossy().to_string(),
@@ -990,7 +990,7 @@ mod tests {
     #[test]
     fn delete_path_returns_false_for_nonexistent_path() {
         let result = delete_path(
-            "/definitely/does/not/exist/file.aria2".to_string(),
+            "/definitely/does/not/exist/file.bin".to_string(),
             FileDeletionMode::Permanent,
         );
         assert!(!result.expect("missing path is a no-op"));

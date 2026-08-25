@@ -686,8 +686,8 @@ async fn probe_engine(
     let mut last_error = None;
     for index in 0..PROBE_ATTEMPTS {
         ensure_not_cancelled(cancelled)?;
-        match aria2.0.get_version().await {
-            Ok(_) => return Ok(()),
+        match probe_engine_contract(&aria2.0).await {
+            Ok(()) => return Ok(()),
             Err(error) => last_error = Some(error),
         }
         if index + 1 < PROBE_ATTEMPTS {
@@ -699,6 +699,50 @@ async fn probe_engine(
         }
     }
     Err(last_error.unwrap_or_else(|| AppError::Engine("Engine probe failed".into())))
+}
+
+async fn probe_engine_contract(client: &crate::aria2::client::Aria2Client) -> Result<(), AppError> {
+    const REQUIRED_METHODS: &[&str] = &[
+        "aria2.addBtPeers",
+        "aria2.ed2kSearch",
+        "aria2.forceBtRecheck",
+        "aria2.getBtSessionStatus",
+        "aria2.getBtTrackers",
+        "aria2.getEd2kSearchResults",
+        "aria2.replaceBtTrackers",
+        "aria2.replaceBtWebSeeds",
+    ];
+
+    let version = client.get_version().await?;
+    if version.get("product").and_then(serde_json::Value::as_str) != Some("aria2-next") {
+        return Err(AppError::Engine(
+            "Unsupported download engine product".into(),
+        ));
+    }
+    if version
+        .get("rpcVersion")
+        .and_then(serde_json::Value::as_str)
+        != Some("1.1.0")
+    {
+        return Err(AppError::Engine(
+            "Unsupported Aria2 Next RPC contract".into(),
+        ));
+    }
+
+    let methods = client.list_methods().await?;
+    let available = methods
+        .iter()
+        .map(String::as_str)
+        .collect::<std::collections::HashSet<_>>();
+    if let Some(method) = REQUIRED_METHODS
+        .iter()
+        .find(|method| !available.contains(**method))
+    {
+        return Err(AppError::Engine(format!(
+            "Aria2 Next RPC method is unavailable: {method}"
+        )));
+    }
+    Ok(())
 }
 
 async fn confirm_engine_stability(

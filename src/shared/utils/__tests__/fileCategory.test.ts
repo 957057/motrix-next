@@ -68,8 +68,8 @@ describe('extractExtension', () => {
     expect(extractExtension('https://cdn.example.com/releases/v2/file.tar.gz')).toBe('gz')
   })
 
-  it('extracts extension from FTP URL', () => {
-    expect(extractExtension('ftp://mirror.example.com/pub/archive.zip')).toBe('zip')
+  it('extracts extension from SFTP URL', () => {
+    expect(extractExtension('sftp://mirror.example.com/pub/archive.zip')).toBe('zip')
   })
 
   // ── Query strings & fragments ──────────────────────────────────

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** @fileoverview Downloads preference tab: paths, concurrency, speed limits, notifications, cleanup. */
-import { ref, computed, h, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
@@ -10,13 +10,7 @@ import { logger } from '@shared/logger'
 import { resolveUserVisibleDownloadDir } from '@shared/utils/userVisibleDirectory'
 import { toggleSpeedLimit } from '@/composables/useSpeedLimiter'
 import { changeGlobalOption, isEngineReady } from '@/api/aria2'
-import {
-  ENGINE_MAX_CONCURRENT_DOWNLOADS,
-  ENGINE_MAX_CONNECTION_PER_SERVER,
-  SAFE_LIMIT_SPLIT,
-  SAFE_LIMIT_CONNECTION_PER_SERVER,
-  SCHEDULE_DAY,
-} from '@shared/constants'
+import { ENGINE_MAX_CONCURRENT_DOWNLOADS, ENGINE_MAX_STREAM_CONNECTIONS, SCHEDULE_DAY } from '@shared/constants'
 import { useAppMessage } from '@/composables/useAppMessage'
 import {
   buildDownloadsForm,
@@ -40,7 +34,6 @@ import {
   NText,
   NCollapseTransition,
   NIcon,
-  useDialog,
 } from 'naive-ui'
 import PreferenceActionBar from './PreferenceActionBar.vue'
 import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
@@ -51,7 +44,6 @@ import { FolderOpenOutline } from '@vicons/ionicons5'
 
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
-const dialog = useDialog()
 const message = useAppMessage()
 const defaultDownloadDir = ref('')
 
@@ -80,58 +72,6 @@ const skipConfirmationFileLabel = computed(() =>
   ),
 )
 
-// ── Safe-limit warning ──────────────────────────────────────────────
-const safeLimits = [
-  {
-    field: 'split' as const,
-    safe: SAFE_LIMIT_SPLIT,
-    labelKey: 'preferences.split-count',
-    reasonKey: 'preferences.high-split-reason',
-  },
-  {
-    field: 'maxConnectionPerServer' as const,
-    safe: SAFE_LIMIT_CONNECTION_PER_SERVER,
-    labelKey: 'preferences.max-connection-per-server',
-    reasonKey: 'preferences.high-connection-reason',
-  },
-]
-
-function buildSafeLimitContent(f: Record<string, unknown>, exceeded: typeof safeLimits) {
-  return h(
-    'div',
-    { style: 'display: flex; flex-direction: column; gap: 12px' },
-    exceeded.map((e) => {
-      const current = f[e.field] as number
-      return h('div', [
-        h(
-          'div',
-          { style: 'font-weight: 500' },
-          `• ${t(e.labelKey)}: ${current} (${t('preferences.recommended-limit', { value: e.safe })})`,
-        ),
-        h('div', { style: 'padding-left: 14px; opacity: 0.75' }, t(e.reasonKey)),
-      ])
-    }),
-  )
-}
-
-function confirmSafeLimits(f: Record<string, unknown>, exceeded: typeof safeLimits): Promise<boolean> {
-  return new Promise<boolean>((resolve) => {
-    const revert = () => {
-      for (const e of exceeded) f[e.field] = e.safe
-      resolve(false)
-    }
-    dialog.warning({
-      title: t('preferences.safe-limit-warning-title'),
-      content: () => buildSafeLimitContent(f, exceeded),
-      positiveText: t('preferences.high-connection-continue'),
-      negativeText: t('app.cancel'),
-      onPositiveClick: () => resolve(true),
-      onNegativeClick: revert,
-      onClose: revert,
-    })
-  })
-}
-
 function buildForm() {
   return buildDownloadsForm(preferenceStore.config, defaultDownloadDir.value)
 }
@@ -140,17 +80,6 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } =
   buildForm,
   buildSystemConfig: buildDownloadsSystemConfig,
   transformForStore: transformDownloadsForStore,
-  beforeSave: async (f) => {
-    const exceeded = safeLimits.filter((e) => {
-      const v = f[e.field as string]
-      return typeof v === 'number' && v > e.safe
-    })
-    if (exceeded.length > 0) {
-      const ok = await confirmSafeLimits(f, exceeded)
-      if (!ok) return false
-    }
-    return true
-  },
   afterSave: (f) => {
     recordDownloadsDirectory(f, preferenceStore.recordHistoryDirectory)
   },
@@ -325,8 +254,7 @@ onMounted(async () => {
   <div class="preference-form-wrapper">
     <div class="preference-form-scroll">
       <NForm label-placement="left" label-align="left" label-width="260px" size="small" class="form-preference">
-        <!-- Concurrency & Segments -->
-        <NDivider title-placement="left">{{ t('preferences.concurrency-and-segments') }}</NDivider>
+        <NDivider title-placement="left">{{ t('preferences.download-concurrency') }}</NDivider>
         <NFormItem :label="t('preferences.max-concurrent-downloads')">
           <NInputNumber
             v-model:value="form.maxConcurrentDownloads"
@@ -335,19 +263,11 @@ onMounted(async () => {
             class="pref-number"
           />
         </NFormItem>
-        <NFormItem :label="t('preferences.split-count')">
+        <NFormItem :label="t('preferences.stream-max-connections')">
           <NInputNumber
-            v-model:value="form.split"
+            v-model:value="form.streamMaxConnections"
             :min="1"
-            :max="ENGINE_MAX_CONNECTION_PER_SERVER"
-            class="pref-number"
-          />
-        </NFormItem>
-        <NFormItem :label="t('preferences.max-connection-per-server')">
-          <NInputNumber
-            v-model:value="form.maxConnectionPerServer"
-            :min="1"
-            :max="ENGINE_MAX_CONNECTION_PER_SERVER"
+            :max="ENGINE_MAX_STREAM_CONNECTIONS"
             class="pref-number"
           />
         </NFormItem>

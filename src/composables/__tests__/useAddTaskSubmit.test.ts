@@ -43,6 +43,7 @@ vi.mock('@/api/aria2', () => ({
 
 const mockAppStore = {
   pendingBatch: [] as BatchItem[],
+  pendingMagnetGids: [] as string[],
 }
 
 const mockTaskStoreForHook = {
@@ -101,7 +102,7 @@ describe('buildEngineOptions', () => {
     uris: '',
     out: '',
     dir: '/downloads',
-    split: 16,
+    streamMaxConnections: 16,
     userAgent: '',
     authorization: '',
     referer: '',
@@ -114,21 +115,15 @@ describe('buildEngineOptions', () => {
     requestHeaders: [],
   }
 
-  it('always includes dir and split', () => {
+  it('includes the canonical stream connection limit', () => {
     const opts = buildEngineOptions(baseForm)
     expect(opts.dir).toBe('/downloads')
-    expect(opts.split).toBe('16')
+    expect(opts['stream-max-connections']).toBe('16')
   })
 
-  it('does NOT include max-connection-per-server (uses global value since v2)', () => {
-    const opts = buildEngineOptions(baseForm)
-    expect(opts['max-connection-per-server']).toBeUndefined()
-  })
-
-  it('includes split without coupling to max-connection-per-server', () => {
-    const opts = buildEngineOptions({ ...baseForm, split: 128 })
-    expect(opts.split).toBe('128')
-    expect(opts['max-connection-per-server']).toBeUndefined()
+  it('uses a per-task stream connection limit', () => {
+    const opts = buildEngineOptions({ ...baseForm, streamMaxConnections: 8 })
+    expect(opts['stream-max-connections']).toBe('8')
   })
 
   it('includes out when non-empty', () => {
@@ -411,7 +406,7 @@ describe('submitBatchItems', () => {
     registerTorrentSource: vi.fn(),
   } as unknown as ReturnType<typeof import('@/stores/task').useTaskStore>
 
-  const baseOptions: Aria2EngineOptions = { dir: '/dl', split: '16' }
+  const baseOptions: Aria2EngineOptions = { dir: '/dl', 'stream-max-connections': '16' }
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -457,25 +452,6 @@ describe('submitBatchItems', () => {
 
     const passedOpts = (mockTaskStore.addTorrent as ReturnType<typeof vi.fn>).mock.calls[0][0].options
     expect(passedOpts.out).toBeUndefined()
-  })
-
-  it('includes select-file when partial selection', async () => {
-    const items: BatchItem[] = [
-      {
-        id: 5,
-        kind: 'torrent',
-        source: 'd.torrent',
-        payload: 'b64',
-        status: 'pending',
-        selectedFileIndices: [1, 3],
-        torrentMeta: { files: [{ idx: 1 }, { idx: 2 }, { idx: 3 }] },
-      } as unknown as BatchItem,
-    ]
-
-    await submitBatchItems(items, baseOptions, mockTaskStore)
-
-    const passedOpts = (mockTaskStore.addTorrent as ReturnType<typeof vi.fn>).mock.calls[0][0].options
-    expect(passedOpts['select-file']).toBe('1,3')
   })
 
   it('marks items as failed on error and returns failure count', async () => {
@@ -532,7 +508,7 @@ describe('submitManualUris', () => {
     uris: '',
     out: '',
     dir: '/dl',
-    split: 16,
+    streamMaxConnections: 16,
     userAgent: '',
     authorization: '',
     referer: '',
@@ -780,7 +756,7 @@ describe('useAddTaskSubmit', () => {
     uris: '',
     out: '',
     dir: '/dl',
-    split: 16,
+    streamMaxConnections: 16,
     userAgent: '',
     authorization: '',
     referer: '',

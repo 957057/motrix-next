@@ -297,15 +297,15 @@ export interface ClipboardConfig {
   enable: boolean
   /** Detect http:// and https:// URLs. */
   http: boolean
-  /** Detect ftp:// URLs. */
-  ftp: boolean
+  /** Detect sftp:// URLs. */
+  sftp: boolean
   /** Detect magnet: URIs. */
   magnet: boolean
   /** Detect ed2k:// file links. */
   ed2k: boolean
   /** Detect thunder:// (迅雷) links. */
   thunder: boolean
-  /** Detect bare BitTorrent v1 info hashes (40-char hex / 32-char Base32). */
+  /** Detect bare BitTorrent v1 and v2 info hashes. */
   btHash: boolean
 }
 
@@ -324,7 +324,7 @@ export interface PortConflictRecoveryConfig {
 export type BtEncryptionMode = 'preferred' | 'required' | 'disabled'
 export type BtTransportMode = 'tcp' | 'utp' | 'both'
 export type BtBlocklistScope = 'peers' | 'peers-and-trackers' | 'all'
-export type MagnetFileSelectionMode = 'auto' | 'manual'
+export type BtFileSelectionMode = 'auto' | 'manual'
 export type BtFilePriority = 'off' | 'normal' | 'high' | 'top'
 
 /** A file category rule mapping extensions to a download directory. */
@@ -381,9 +381,8 @@ export interface AppConfig {
   taskPageSize: number
   locale: string
   dir: string
-  split: number
+  streamMaxConnections: number
   maxConcurrentDownloads: number
-  maxConnectionPerServer: number
   maxOverallDownloadLimit: string
   maxOverallUploadLimit: string
   maxDownloadLimit: string
@@ -451,7 +450,6 @@ export interface AppConfig {
   dockBadgeSpeed: boolean
   logLevel: AppLogLevel
   aria2LogLevel: Aria2LogLevel
-  engineBinPath: string
   /** Directory for internal temporary engine files. Empty means the OS temporary directory. */
   tempFilesDir: string
   cookie: string
@@ -504,11 +502,12 @@ export interface AppConfig {
   ed2kBootstrapAutoSync: boolean
   ed2kBootstrapSyncIntervalHours: number
   ed2kUploadSlots: number
+  ed2kMaxConnections: number
   ed2kPreviewPriority: boolean
   ed2kSearchTimeout: number
   btTracker: string
   btEncryption: BtEncryptionMode
-  magnetFileSelectionMode: MagnetFileSelectionMode
+  btFileSelectionMode: BtFileSelectionMode
   continue: boolean
   /** When true, aria2 applies the remote server's Last-Modified timestamp
    *  to the local file instead of using the download-completion time. */
@@ -645,10 +644,6 @@ export interface BatchItem {
   payload: string
   /** Browser request context captured by the extension for this item. */
   browserContext?: ExternalDownloadContext
-  /** Parsed torrent metadata — only present for torrent items. */
-  torrentMeta?: { infoHash: string; files: { idx: number; path: string; length: number }[] }
-  /** Selected file indices for torrent selective download. */
-  selectedFileIndices?: number[]
   status: BatchItemStatus
   /** Error message when status is 'failed'. */
   error?: string

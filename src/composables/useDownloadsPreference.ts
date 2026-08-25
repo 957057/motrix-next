@@ -23,8 +23,7 @@ export interface DownloadsForm {
   fileCategoryEnabled: boolean
   fileCategories: FileCategory[]
   maxConcurrentDownloads: number
-  split: number
-  maxConnectionPerServer: number
+  streamMaxConnections: number
   continue: boolean
   maxTries: number
   retryWait: number
@@ -92,8 +91,7 @@ export function buildDownloadsForm(config: AppConfig, defaultDir: string = ''): 
         ? hydrateCategories(config.fileCategories, config.dir || defaultDir)
         : buildDefaultCategories(config.dir || defaultDir),
     maxConcurrentDownloads: config.maxConcurrentDownloads ?? D.maxConcurrentDownloads,
-    split: config.split ?? D.split,
-    maxConnectionPerServer: config.maxConnectionPerServer ?? D.maxConnectionPerServer,
+    streamMaxConnections: config.streamMaxConnections ?? D.streamMaxConnections,
     continue: config.continue ?? D.continue,
     maxTries: config.maxTries ?? D.maxTries,
     retryWait: config.retryWait ?? D.retryWait,
@@ -129,8 +127,7 @@ export function buildDownloadsSystemConfig(f: DownloadsForm): Record<string, str
   return {
     dir: f.dir,
     'max-concurrent-downloads': String(f.maxConcurrentDownloads),
-    'max-connection-per-server': String(f.maxConnectionPerServer),
-    split: String(f.split),
+    'stream-max-connections': String(f.streamMaxConnections),
     'max-overall-download-limit': f.maxOverallDownloadLimit,
     'max-overall-upload-limit': f.maxOverallUploadLimit,
     continue: String(f.continue !== false),
@@ -143,7 +140,6 @@ export function buildDownloadsSystemConfig(f: DownloadsForm): Record<string, str
 /**
  * Transforms the downloads form for store persistence.
  * Handles the fileCategories auto-populate guard.
- * Since v2, split and maxConnectionPerServer are persisted independently.
  */
 export function transformDownloadsForStore(f: DownloadsForm): Partial<AppConfig> {
   const data = { ...f } as Partial<AppConfig> & Record<string, unknown>
@@ -155,8 +151,6 @@ export function transformDownloadsForStore(f: DownloadsForm): Partial<AppConfig>
   } else {
     data.fileCategories = f.fileCategories.map(normalizeFileCategory)
   }
-
-  data.split = f.split
 
   return data
 }

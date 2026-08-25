@@ -69,8 +69,8 @@ describe('detectResource', () => {
       expect(detectResource('https://cdn.example.com/release-v2.tar.gz')).toBe(true)
     })
 
-    it('detects ftp:// URL', () => {
-      expect(detectResource('ftp://mirror.example.com/pub/file.iso')).toBe(true)
+    it('detects sftp:// URL', () => {
+      expect(detectResource('sftp://mirror.example.com/pub/file.iso')).toBe(true)
     })
 
     it('detects magnet link', () => {
@@ -97,8 +97,8 @@ describe('detectResource', () => {
       expect(detectResource('Https://cdn.example.com/release.tar.gz')).toBe(true)
     })
 
-    it('detects uppercase FTP:// URL', () => {
-      expect(detectResource('FTP://mirror.example.com/pub/file.iso')).toBe(true)
+    it('detects uppercase SFTP:// URL', () => {
+      expect(detectResource('SFTP://mirror.example.com/pub/file.iso')).toBe(true)
     })
   })
 
@@ -110,7 +110,7 @@ describe('detectResource', () => {
     })
 
     it('detects mixed protocols on separate lines', () => {
-      const input = 'http://a.com/file.zip\nftp://b.com/file.iso\nmagnet:?xt=urn:btih:abc'
+      const input = 'http://a.com/file.zip\nsftp://b.com/file.iso\nmagnet:?xt=urn:btih:abc'
       expect(detectResource(input)).toBe(true)
     })
 
@@ -236,8 +236,8 @@ describe('detectResource', () => {
       expect(detectResource('d8988e034cb5de79d319242e3365bf30a7741a6ef')).toBe(false)
     })
 
-    it('rejects 64-char hex (SHA-256/BT v2 — unsupported by aria2)', () => {
-      expect(detectResource('aabbccddee00112233445566778899aabbccddee00112233445566778899aabb')).toBe(false)
+    it('detects a bare BitTorrent v2 hash', () => {
+      expect(detectResource('aabbccddee00112233445566778899aabbccddee00112233445566778899aabb')).toBe(true)
     })
 
     it('rejects 32-char lowercase string (not valid Base32)', () => {
@@ -280,8 +280,8 @@ describe('detectResource', () => {
       expect(detectResource('http://')).toBe(false)
     })
 
-    it('rejects bare ftp:// protocol', () => {
-      expect(detectResource('ftp://')).toBe(false)
+    it('rejects bare sftp:// protocol', () => {
+      expect(detectResource('sftp://')).toBe(false)
     })
 
     it('rejects bare magnet: protocol', () => {
@@ -307,7 +307,7 @@ describe('detectResource with ClipboardConfig filter', () => {
   const allEnabled = (): ClipboardConfig => ({
     enable: true,
     http: true,
-    ftp: true,
+    sftp: true,
     magnet: true,
     ed2k: true,
     thunder: true,
@@ -366,13 +366,13 @@ describe('detectResource with ClipboardConfig filter', () => {
       expect(detectResource('magnet:?xt=urn:btih:abc123def456', filter)).toBe(true)
     })
 
-    it('rejects ftp URL when ftp is disabled', () => {
-      const filter: ClipboardConfig = { ...allEnabled(), ftp: false }
-      expect(detectResource('ftp://mirror.example.com/pub/file.iso', filter)).toBe(false)
+    it('rejects sftp URL when sftp is disabled', () => {
+      const filter: ClipboardConfig = { ...allEnabled(), sftp: false }
+      expect(detectResource('sftp://mirror.example.com/pub/file.iso', filter)).toBe(false)
     })
 
-    it('still detects http URL when ftp is disabled', () => {
-      const filter: ClipboardConfig = { ...allEnabled(), ftp: false }
+    it('still detects http URL when sftp is disabled', () => {
+      const filter: ClipboardConfig = { ...allEnabled(), sftp: false }
       expect(detectResource('https://example.com/file.zip', filter)).toBe(true)
     })
 
@@ -448,14 +448,14 @@ describe('detectResource with ClipboardConfig filter', () => {
       const filter: ClipboardConfig = {
         enable: true,
         http: false,
-        ftp: false,
+        sftp: false,
         magnet: false,
         ed2k: false,
         thunder: false,
         btHash: false,
       }
       expect(detectResource('https://example.com/file.zip', filter)).toBe(false)
-      expect(detectResource('ftp://mirror.com/file.iso', filter)).toBe(false)
+      expect(detectResource('sftp://mirror.com/file.iso', filter)).toBe(false)
       expect(detectResource('magnet:?xt=urn:btih:abc', filter)).toBe(false)
       expect(detectResource('ed2k://|file|a.iso|123|0123456789abcdef0123456789abcdef|/', filter)).toBe(false)
       expect(detectResource('thunder://QUFodHRwOi8vZmlsZS56aXBaWg==', filter)).toBe(false)

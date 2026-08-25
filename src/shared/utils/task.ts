@@ -145,7 +145,7 @@ export const checkTaskIsEd2kSearch = (task: Partial<Aria2Task> = {} as Partial<A
 /**
  * Collects all download URIs from a task.
  * For BT and ED2K tasks, returns the engine-serialized canonical link.
- * For HTTP/FTP tasks, iterates all files and extracts their URIs.
+ * For stream tasks, iterates all files and extracts their URIs.
  */
 export const getTaskUris = (task: Aria2Task, _withTracker = false): string[] => {
   const magnet = task.bittorrent?.magnetLink?.trim()
@@ -176,7 +176,7 @@ export const getTaskUris = (task: Aria2Task, _withTracker = false): string[] => 
  *
  * - BT: single group containing the magnet link
  * - ED2K: single group containing the file link
- * - HTTP/FTP: one group per file, each containing ALL mirror URIs
+ * - Streams: one group per file, each containing all mirror URIs
  *
  * Each group maps to one addUriAtomic({ uris: [...mirrors] }) call.
  */

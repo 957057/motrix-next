@@ -187,8 +187,8 @@ describe('useAppStore', () => {
   describe('updateAddTaskOptions', () => {
     it('replaces addTaskOptions with provided options', () => {
       const store = useAppStore()
-      store.updateAddTaskOptions({ dir: '/tmp/downloads', split: '4' } as never)
-      expect(store.addTaskOptions).toEqual({ dir: '/tmp/downloads', split: '4' })
+      store.updateAddTaskOptions({ dir: '/tmp/downloads', 'stream-max-connections': '4' } as never)
+      expect(store.addTaskOptions).toEqual({ dir: '/tmp/downloads', 'stream-max-connections': '4' })
     })
 
     it('defaults to empty object when called with no arguments', () => {
@@ -272,34 +272,6 @@ describe('useAppStore', () => {
         numStoppedTotal: 0,
       })
       expect(store.stat.downloadSpeed).toBe(512000)
-    })
-  })
-
-  // ── fetchEngineInfo ─────────────────────────────────────────────
-
-  describe('fetchEngineInfo', () => {
-    it('stores engine version and features', async () => {
-      const store = useAppStore()
-      const api = {
-        getVersion: vi.fn().mockResolvedValue({ version: '1.37.0', enabledFeatures: ['BitTorrent', 'GZip'] }),
-      }
-      await store.fetchEngineInfo(api)
-      expect(store.engineInfo.version).toBe('1.37.0')
-      expect(store.engineInfo.enabledFeatures).toContain('BitTorrent')
-    })
-  })
-
-  // ── fetchEngineOptions ──────────────────────────────────────────
-
-  describe('fetchEngineOptions', () => {
-    it('stores global engine options and returns data', async () => {
-      const store = useAppStore()
-      const api = {
-        getGlobalOption: vi.fn().mockResolvedValue({ dir: '/downloads', split: '5' }),
-      }
-      const result = await store.fetchEngineOptions(api)
-      expect(store.engineOptions).toMatchObject({ dir: '/downloads', split: '5' })
-      expect(result).toEqual({ dir: '/downloads', split: '5' })
     })
   })
 

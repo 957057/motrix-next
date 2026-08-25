@@ -377,6 +377,9 @@ onMounted(() => {
         <NFormItem :label="t('preferences.ed2k-upload-slots')">
           <NInputNumber v-model:value="form.ed2kUploadSlots" :min="1" :max="100" class="pref-port" />
         </NFormItem>
+        <NFormItem :label="t('preferences.ed2k-max-connections')">
+          <NInputNumber v-model:value="form.ed2kMaxConnections" :min="1" :max="1024" class="pref-port" />
+        </NFormItem>
         <NFormItem :label="t('preferences.ed2k-preview-priority')">
           <NSwitch v-model:value="form.ed2kPreviewPriority" />
         </NFormItem>

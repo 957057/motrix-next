@@ -64,12 +64,12 @@ export const useTaskStore = defineStore('task', () => {
 
   let api: TaskApi
 
-  /** In-memory map: infoHash → original .torrent file path for post-download cleanup. */
+  /** In-memory map: GID → original .torrent file path for post-download cleanup. */
   const torrentSourcePaths = new Map<string, string>()
-  const registerTorrentSource = (hash: string, p: string) => torrentSourcePaths.set(hash, p)
-  function consumeTorrentSource(hash: string): string | undefined {
-    const p = torrentSourcePaths.get(hash)
-    if (p) torrentSourcePaths.delete(hash)
+  const registerTorrentSource = (gid: string, path: string) => torrentSourcePaths.set(gid, path)
+  function consumeTorrentSource(gid: string): string | undefined {
+    const p = torrentSourcePaths.get(gid)
+    if (p) torrentSourcePaths.delete(gid)
     return p
   }
 

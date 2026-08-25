@@ -17,12 +17,10 @@ const ENGINE_PORT_RELEASE_POLL_MS: u64 = 100;
 const PROXY_ENV_VARS: &[&str] = &[
     "http_proxy",
     "https_proxy",
-    "ftp_proxy",
     "all_proxy",
     "no_proxy",
     "HTTP_PROXY",
     "HTTPS_PROXY",
-    "FTP_PROXY",
     "ALL_PROXY",
     "NO_PROXY",
 ];
