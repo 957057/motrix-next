@@ -19,6 +19,7 @@ import type {
   Ed2kSearchOptions,
   Ed2kSearchResults,
   ExternalDownloadContext,
+  TorrentInspection,
 } from '@shared/types'
 import { formatLogFields, logger } from '@shared/logger'
 import { resolveDownloadDir } from '@shared/utils/fileCategory'
@@ -186,6 +187,11 @@ export async function addTorrent(params: { torrent: string; options: Aria2Engine
   return gid
 }
 
+/** Inspects torrent metainfo without creating a task or engine state. */
+export async function inspectTorrent(params: { torrent: string }): Promise<TorrentInspection> {
+  return invoke<TorrentInspection>('aria2_inspect_torrent', { torrent: params.torrent })
+}
+
 /** Starts an ED2K search and returns the search GID. */
 export async function ed2kSearch(params: { keyword: string; options?: Ed2kSearchOptions }): Promise<string> {
   return invoke<string>('aria2_ed2k_search', {
@@ -287,6 +293,7 @@ const api = {
   addUri,
   addUriAtomic,
   addTorrent,
+  inspectTorrent,
   ed2kSearch,
   getEd2kSearchResults,
   cleanupEd2kSearch,

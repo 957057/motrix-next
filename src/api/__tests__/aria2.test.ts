@@ -64,6 +64,7 @@ import {
   addUri,
   addUriAtomic,
   addTorrent,
+  inspectTorrent,
   removeTask,
   deleteTask,
   finishSharing,
@@ -515,6 +516,21 @@ describe('aria2 API (invoke transport)', () => {
       await addTorrent({ torrent: 'data', options: { 'force-save': 'false' } })
       const callArgs = mockInvoke.mock.calls[0][1] as Record<string, unknown>
       expect((callArgs.options as Record<string, string>)['force-save']).toBe('false')
+    })
+
+    it('inspectTorrent returns native metainfo without task options', async () => {
+      const inspection = {
+        name: 'Bundle',
+        mode: 'multi' as const,
+        infoHashV1: 'a'.repeat(40),
+        infoHashV2: 'b'.repeat(64),
+        totalLength: '3',
+        files: [{ index: '1', path: 'Bundle/a.bin', length: '3' }],
+      }
+      mockInvoke.mockResolvedValueOnce(inspection)
+
+      await expect(inspectTorrent({ torrent: 'base64data' })).resolves.toEqual(inspection)
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_inspect_torrent', { torrent: 'base64data' })
     })
 
     it('addUri does NOT inject force-save (HTTP downloads must not persist)', async () => {

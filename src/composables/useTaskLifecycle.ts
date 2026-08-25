@@ -33,7 +33,7 @@ export function buildHistoryMeta(task: Aria2Task): HistoryMeta {
   if (task.bittorrent?.announceList && task.bittorrent.announceList.length > 0) {
     meta.announceList = task.bittorrent.announceList.map((tier) => [...tier])
   }
-  const sharingTime = Number(task.bittorrent?.seedingTime ?? task.ed2k?.sharingTime)
+  const sharingTime = Number(task.bittorrent?.finishedTime ?? task.ed2k?.sharingTime)
   if (Number.isFinite(sharingTime) && sharingTime > 0) meta.sharingTime = String(Math.floor(sharingTime))
 
   // Snapshot trigger: multi-file OR any file with multiple mirror URIs.
@@ -191,7 +191,7 @@ export function historyRecordToTask(record: HistoryRecord): Aria2Task {
       task.bittorrent.announceList = meta.announceList.map((tier) => [...tier])
     }
     if (meta.sharingTime) {
-      task.bittorrent.seedingTime = meta.sharingTime
+      task.bittorrent.finishedTime = meta.sharingTime
     }
   }
 

@@ -110,6 +110,17 @@ impl Aria2Client {
         let body: JsonRpcResponse<T> = parse_jsonrpc_response(&bytes, "aria2")?;
 
         if let Some(err) = body.error {
+            if let Some(kind @ ("invalidBase64" | "torrentTooLarge" | "invalidTorrent")) = err
+                .data
+                .as_ref()
+                .and_then(|data| data.get("kind"))
+                .and_then(serde_json::Value::as_str)
+            {
+                return Err(AppError::TorrentInspection {
+                    kind: kind.to_string(),
+                    message: err.message,
+                });
+            }
             return Err(AppError::Aria2(format!(
                 "aria2 RPC error [{}]: {}",
                 err.code, err.message
@@ -288,6 +299,11 @@ impl Aria2Client {
             vec![base64.into(), serde_json::json!([]), opts],
         )
         .await
+    }
+
+    /// Inspects torrent metainfo without creating a download task.
+    pub async fn inspect_torrent(&self, base64: &str) -> Result<Aria2TorrentInspection, AppError> {
+        self.call("inspectTorrent", vec![base64.into()]).await
     }
 
     /// Returns file descriptors for a task.

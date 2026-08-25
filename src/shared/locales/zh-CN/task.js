@@ -121,6 +121,7 @@ export default {
   'error-too-many-redirects': '重定向次数过多',
   'error-http-auth': 'HTTP 认证失败',
   'error-bencode-parse': '无法解析 .torrent 文件',
+  'torrent-too-large': 'Torrent 元数据超过支持的大小限制',
   'error-torrent-corrupt': '种子文件损坏或信息不完整',
   'error-magnet-bad': '磁力链接格式错误',
   'error-bad-option': '无效或无法识别的选项',

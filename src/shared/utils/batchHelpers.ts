@@ -112,6 +112,7 @@ export function createBatchItem(kind: BatchItemKind, source: string, payload = '
     displayName: toDisplayName(source, kind),
     payload: payload || source, // URI items use source as payload
     status: 'pending',
+    inspectionState: kind === 'torrent' ? 'reading' : undefined,
   }
 }
 

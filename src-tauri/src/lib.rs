@@ -808,6 +808,7 @@ pub fn run() {
             commands::aria2_get_files,
             commands::aria2_add_uri,
             commands::aria2_add_torrent,
+            commands::aria2_inspect_torrent,
             commands::aria2_ed2k_search,
             commands::aria2_get_ed2k_search_results,
             commands::aria2_cleanup_ed2k_search,

@@ -407,21 +407,30 @@ describe('submitBatchItems', () => {
   } as unknown as ReturnType<typeof import('@/stores/task').useTaskStore>
 
   const baseOptions: Aria2EngineOptions = { dir: '/dl', 'stream-max-connections': '16' }
+  const readyTorrent = (overrides: Partial<BatchItem> = {}): BatchItem => ({
+    id: 'torrent-1',
+    kind: 'torrent',
+    source: 'a.torrent',
+    displayName: 'Archive',
+    payload: 'base64',
+    status: 'pending',
+    inspectionState: 'ready',
+    selectedFileIndices: [1, 3],
+    ...overrides,
+  })
 
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('submits torrent items via addTorrent', async () => {
-    const items: BatchItem[] = [
-      { id: 1, kind: 'torrent', source: 'a.torrent', payload: 'base64', status: 'pending' } as unknown as BatchItem,
-    ]
+    const items = [readyTorrent()]
 
     await submitBatchItems(items, baseOptions, mockTaskStore)
 
     expect(mockTaskStore.addTorrent).toHaveBeenCalledWith({
       torrent: 'base64',
-      options: expect.objectContaining({ dir: '/dl' }),
+      options: expect.objectContaining({ dir: '/dl', 'select-file': '1,3' }),
     })
     expect(items[0].status).toBe('submitted')
   })
@@ -443,23 +452,20 @@ describe('submitBatchItems', () => {
   })
 
   it('removes out option for torrent items', async () => {
-    const items: BatchItem[] = [
-      { id: 4, kind: 'torrent', source: 'c.torrent', payload: 'b64', status: 'pending' } as unknown as BatchItem,
-    ]
+    const items = [readyTorrent({ source: 'c.torrent', payload: 'b64' })]
     const opts = { ...baseOptions, out: 'custom.zip' }
 
     await submitBatchItems(items, opts, mockTaskStore)
 
     const passedOpts = (mockTaskStore.addTorrent as ReturnType<typeof vi.fn>).mock.calls[0][0].options
     expect(passedOpts.out).toBeUndefined()
+    expect(passedOpts['stream-max-connections']).toBeUndefined()
   })
 
   it('marks items as failed on error and returns failure count', async () => {
     ;(mockTaskStore.addTorrent as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('engine down'))
 
-    const items: BatchItem[] = [
-      { id: 6, kind: 'torrent', source: 'e.torrent', payload: 'b64', status: 'pending' } as unknown as BatchItem,
-    ]
+    const items = [readyTorrent({ source: 'e.torrent', payload: 'b64' })]
 
     const failures = await submitBatchItems(items, baseOptions, mockTaskStore)
 
@@ -473,9 +479,7 @@ describe('submitBatchItems', () => {
       Aria2: 'aria2 RPC error [1]: Unsupported URI scheme',
     })
 
-    const items: BatchItem[] = [
-      { id: 8, kind: 'torrent', source: 'e.torrent', payload: 'b64', status: 'pending' } as unknown as BatchItem,
-    ]
+    const items = [readyTorrent({ source: 'e.torrent', payload: 'b64' })]
 
     const failures = await submitBatchItems(items, baseOptions, mockTaskStore)
 
@@ -484,9 +488,7 @@ describe('submitBatchItems', () => {
   })
 
   it('skips already submitted items', async () => {
-    const items: BatchItem[] = [
-      { id: 7, kind: 'torrent', source: 'f.torrent', payload: 'b64', status: 'submitted' } as unknown as BatchItem,
-    ]
+    const items = [readyTorrent({ source: 'f.torrent', payload: 'b64', status: 'submitted' })]
 
     await submitBatchItems(items, baseOptions, mockTaskStore)
     expect(mockTaskStore.addTorrent).not.toHaveBeenCalled()

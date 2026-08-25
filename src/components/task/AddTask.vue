@@ -36,7 +36,11 @@ import {
 import { resolveUserVisibleDownloadDir } from '@shared/utils/userVisibleDirectory'
 import { findMatchingUserAgentRule, resolveUserAgent } from '@shared/utils/userAgentPolicy'
 
-import { resolveUnresolvedItems, chooseTorrentFile as chooseTorrentFileImpl } from '@/composables/useAddTaskFileOps'
+import {
+  resolveUnresolvedItems,
+  retryTorrentInspection,
+  chooseTorrentFile as chooseTorrentFileImpl,
+} from '@/composables/useAddTaskFileOps'
 import {
   NModal,
   NCard,
@@ -54,11 +58,12 @@ import {
   NEllipsis,
 } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
-import type { BatchItem, UserAgentProfile } from '@shared/types'
+import type { BatchItem, BatchItemKind, BtFileSelectionItem, UserAgentProfile } from '@shared/types'
 import { FolderOpenOutline, CloudUploadOutline } from '@vicons/ionicons5'
 import { vMotionAutoAnimate } from '@/directives/motionAutoAnimate'
 import AdvancedOptions from './addtask/AdvancedOptions.vue'
 import DirectoryPopover from '@/components/common/DirectoryPopover.vue'
+import BtFileSelector from '@/components/task/BtFileSelector.vue'
 
 const props = defineProps<{ show: boolean }>()
 const emit = defineEmits<{ close: [] }>()
@@ -74,7 +79,7 @@ const { constraint, configFieldProps, areConfigFieldsValid } = usePreferenceNume
 /** Tracks whether the user manually edited the download directory in this session. */
 const dirUserModified = ref(false)
 
-const activeTab = ref(ADD_TASK_TYPE.URI)
+const activeTab = ref<BatchItemKind>(ADD_TASK_TYPE.URI)
 const tabsRef = ref<InstanceType<typeof import('naive-ui').NTabs> | null>(null)
 
 /**
@@ -86,7 +91,7 @@ const tabsRef = ref<InstanceType<typeof import('naive-ui').NTabs> | null>(null)
  * source and sets it on the component instance before updating `activeTab`.
  */
 const TAB_ORDER = [ADD_TASK_TYPE.URI, ADD_TASK_TYPE.TORRENT] as const
-function switchTab(target: string): void {
+function switchTab(target: BatchItemKind): void {
   if (activeTab.value === target) return
   const inst = tabsRef.value as Record<string, unknown> | null
   if (inst && 'animationDirection' in inst) {
@@ -95,6 +100,10 @@ function switchTab(target: string): void {
     ;(inst as { animationDirection: string }).animationDirection = tgtIdx > curIdx ? 'next' : 'prev'
   }
   activeTab.value = target
+}
+
+function activateTab(value: string): void {
+  if (value === ADD_TASK_TYPE.URI || value === ADD_TASK_TYPE.TORRENT) activeTab.value = value
 }
 const showAdvanced = ref(false)
 const submitting = ref(false)
@@ -187,6 +196,31 @@ function applyResolvedUserAgent() {
 const batch = computed(() => appStore.pendingBatch)
 const hasBatch = computed(() => batch.value.length > 0)
 const fileItems = computed(() => batch.value.filter((i) => i.kind !== 'uri'))
+const selectedItem = computed(() => fileItems.value[selectedBatchIndex.value] ?? null)
+const selectedTorrentFiles = computed<BtFileSelectionItem[]>(() =>
+  (selectedItem.value?.torrentMeta?.files ?? []).map((file) => {
+    const pathParts = file.path.split(/[/\\]/)
+    return {
+      index: Number(file.index),
+      name: pathParts[pathParts.length - 1] || file.path,
+      path: file.path,
+      length: Number(file.length),
+    }
+  }),
+)
+const selectedFileIndices = computed<number[]>({
+  get: () => selectedItem.value?.selectedFileIndices ?? [],
+  set: (indices) => {
+    if (selectedItem.value) selectedItem.value.selectedFileIndices = indices
+  },
+})
+const torrentItemsReady = computed(() =>
+  fileItems.value.every((item) => item.inspectionState === 'ready' && Boolean(item.selectedFileIndices?.length)),
+)
+const uriOptionsValid = computed(
+  () => !form.value.uris.trim() || areConfigFieldsValid({ streamMaxConnections: form.value.streamMaxConnections }),
+)
+const canSubmit = computed(() => uriOptionsValid.value && torrentItemsReady.value)
 
 // Sync download settings with the latest preference every time the dialog
 // opens. AddTask is kept mounted (`:show` not `v-if`), so form values would
@@ -437,6 +471,10 @@ async function chooseTorrentFile() {
   })
 }
 
+async function retryTorrent(item: BatchItem) {
+  await retryTorrentInspection(item, t, getDownloadProxy(preferenceStore.config.proxy))
+}
+
 async function chooseDirectory() {
   try {
     const selected = await openDialog({ directory: true })
@@ -497,7 +535,7 @@ function handleClose() {
 }
 
 async function handleSubmit() {
-  if (submitting.value || !areConfigFieldsValid({ streamMaxConnections: form.value.streamMaxConnections })) return
+  if (submitting.value || !canSubmit.value) return
   submitting.value = true
 
   try {
@@ -646,7 +684,7 @@ async function handleSubmit() {
       @close="handleClose"
     >
       <NForm label-placement="left" label-width="110px">
-        <NTabs ref="tabsRef" :value="activeTab" type="line" animated @update:value="(v: string) => (activeTab = v)">
+        <NTabs ref="tabsRef" :value="activeTab" type="line" animated @update:value="activateTab">
           <!-- ── URI Tab ──────────────────────────────────────── -->
           <NTabPane :name="ADD_TASK_TYPE.URI" :tab="t('task.uri-task') || 'URL'">
             <div class="tab-pane-content">
@@ -695,6 +733,26 @@ async function handleSubmit() {
                   </template>
                   {{ t('task.select-torrent') || 'Select torrent files' }}
                 </NButton>
+
+                <Transition name="content-fade" mode="out-in">
+                  <div
+                    v-if="selectedItem?.inspectionState === 'failed'"
+                    :key="`${selectedItem.id}-failed`"
+                    class="torrent-inspection-error"
+                  >
+                    <span>{{ selectedItem.error }}</span>
+                    <NButton size="tiny" type="primary" ghost @click="retryTorrent(selectedItem)">
+                      {{ t('app.retry') }}
+                    </NButton>
+                  </div>
+                  <div v-else-if="selectedItem?.torrentMeta" :key="selectedItem.id" class="torrent-inspection-result">
+                    <BtFileSelector
+                      v-model:selected-indices="selectedFileIndices"
+                      :files="selectedTorrentFiles"
+                      :max-height="200"
+                    />
+                  </div>
+                </Transition>
               </div>
 
               <!-- Upload zone: shown when no torrents loaded -->
@@ -710,20 +768,22 @@ async function handleSubmit() {
 
         <!-- ── Download settings: always visible ──────────────── -->
         <div class="download-settings">
-          <NFormItem :label="t('task.task-out') + ':'">
-            <NInput v-model:value="form.out" :placeholder="t('task.task-out-tips')" :autofocus="false" />
-          </NFormItem>
-          <NFormItem
-            :label="t('preferences.stream-max-connections') + ':'"
-            v-bind="configFieldProps('streamMaxConnections', form.streamMaxConnections)"
-          >
-            <NInputNumber
-              v-model:value="form.streamMaxConnections"
-              :min="constraint('streamMaxConnections').min"
-              :max="constraint('streamMaxConnections').max"
-              style="width: 120px"
-            />
-          </NFormItem>
+          <div v-if="activeTab === ADD_TASK_TYPE.URI">
+            <NFormItem :label="t('task.task-out') + ':'">
+              <NInput v-model:value="form.out" :placeholder="t('task.task-out-tips')" :autofocus="false" />
+            </NFormItem>
+            <NFormItem
+              :label="t('task.task-connections') + ':'"
+              v-bind="configFieldProps('streamMaxConnections', form.streamMaxConnections)"
+            >
+              <NInputNumber
+                v-model:value="form.streamMaxConnections"
+                :min="constraint('streamMaxConnections').min"
+                :max="constraint('streamMaxConnections').max"
+                style="width: 120px"
+              />
+            </NFormItem>
+          </div>
           <NFormItem :label="dirLabel + ':'">
             <div style="width: 100%">
               <NInputGroup>
@@ -752,6 +812,7 @@ async function handleSubmit() {
             </div>
           </NFormItem>
           <AdvancedOptions
+            v-if="activeTab === ADD_TASK_TYPE.URI"
             v-model:show="showAdvanced"
             v-model:authorization="form.authorization"
             v-model:http-auth-username="form.httpAuthUsername"
@@ -781,7 +842,7 @@ async function handleSubmit() {
             data-testid="submit-button"
             type="primary"
             :loading="submitting"
-            :disabled="!areConfigFieldsValid({ streamMaxConnections: form.streamMaxConnections })"
+            :disabled="!canSubmit"
             @click="handleSubmit"
           >
             {{ submitLabel }}
@@ -820,6 +881,20 @@ async function handleSubmit() {
   border-radius: 6px;
   border: 1px solid var(--m3-outline-variant);
   overflow: hidden;
+}
+
+.torrent-inspection-result,
+.torrent-inspection-error {
+  margin-top: 8px;
+}
+
+.torrent-inspection-error {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--m3-error);
 }
 
 /* ── Upload zone (when no torrents) ───────────────────────────────── */

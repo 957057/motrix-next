@@ -139,7 +139,7 @@ export const getTaskSharingPhase = (task: Aria2Task): TaskSharingPhase | null =>
 }
 
 export const getTaskSharingTime = (task: Aria2Task): number => {
-  const value = task.bittorrent?.seedingTime ?? task.ed2k?.sharingTime
+  const value = task.bittorrent?.finishedTime ?? task.ed2k?.sharingTime
   const seconds = Number(value)
   return Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0
 }

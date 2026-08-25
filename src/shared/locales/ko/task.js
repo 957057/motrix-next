@@ -121,6 +121,7 @@ export default {
   'error-too-many-redirects': '리디렉션이 너무 많음',
   'error-http-auth': 'HTTP 인증 실패',
   'error-bencode-parse': '.torrent 파일을 분석할 수 없음',
+  'torrent-too-large': 'Torrent 메타데이터가 지원되는 크기 제한을 초과합니다',
   'error-torrent-corrupt': '토렌트 파일이 손상되었거나 불완전함',
   'error-magnet-bad': '잘못된 마그넷 URI',
   'error-bad-option': '잘못되었거나 인식할 수 없는 옵션',

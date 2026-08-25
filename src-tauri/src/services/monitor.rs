@@ -108,7 +108,7 @@ impl TaskEvent {
         let sharing_time = task
             .bittorrent
             .as_ref()
-            .and_then(|bt| bt.seeding_time.clone())
+            .and_then(|bt| bt.finished_time.clone())
             .or_else(|| {
                 task.ed2k
                     .as_ref()
@@ -1230,7 +1230,7 @@ mod tests {
     #[test]
     fn build_history_record_sets_complete_status_for_bt_complete() {
         let mut task = make_bt_task("g2", "active", true);
-        task.bittorrent.as_mut().unwrap().seeding_time = Some("3600".to_string());
+        task.bittorrent.as_mut().unwrap().finished_time = Some("3600".to_string());
         let event = TaskEvent::from_aria2(&task);
         let record = build_history_record(&event, events::P2P_DOWNLOAD_COMPLETE);
 

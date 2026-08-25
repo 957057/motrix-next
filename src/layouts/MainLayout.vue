@@ -20,12 +20,12 @@ import { handleTaskComplete, handleP2pDownloadComplete, handleTaskError } from '
 import { shouldDeleteTorrent, trashTorrentFile } from '@/composables/useDownloadCleanup'
 import { getTaskDisplayName, resolveOpenTarget, checkTaskIsSharing, getTaskSharingKind } from '@shared/utils'
 import type { TaskSharingKind } from '@shared/utils/task'
-import type { Aria2Task } from '@shared/types'
+import type { Aria2Task, BtFileSelectionItem } from '@shared/types'
 import { ARIA2_ERROR_CODES } from '@shared/aria2ErrorCodes'
 import { TASK_STATUS } from '@shared/constants'
 import { useHistoryStore } from '@/stores/history'
 import { buildSelectFileOption, getPendingMagnetSelectionGids } from '@/composables/useMagnetFlow'
-import type { MagnetFileItem, MagnetSelectionSubmission } from '@/composables/useMagnetFlow'
+import type { MagnetSelectionSubmission } from '@/composables/useMagnetFlow'
 import {
   createMagnetMetadataResolver,
   listenForAria2DownloadPause,
@@ -202,7 +202,7 @@ async function showInFolderFromNotification(task: Aria2Task) {
 
 // ── Magnet file selection state (app-level) ─────────────────────────
 const magnetSelectVisible = ref(false)
-const magnetSelectFiles = ref<MagnetFileItem[]>([])
+const magnetSelectFiles = ref<BtFileSelectionItem[]>([])
 const magnetSelectionSession = ref<MagnetSelectionSession | null>(null)
 const magnetSelectName = ref('')
 const magnetSelectSubmission = ref<MagnetSelectionSubmission>(null)

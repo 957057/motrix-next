@@ -121,6 +121,7 @@ export default {
   'error-too-many-redirects': 'リダイレクトが多すぎます',
   'error-http-auth': 'HTTP 認証に失敗しました',
   'error-bencode-parse': '.torrent ファイルを解析できません',
+  'torrent-too-large': 'Torrentメタデータが対応サイズの上限を超えています',
   'error-torrent-corrupt': 'トレントファイルが破損しているか不完全です',
   'error-magnet-bad': 'マグネットURIが無効です',
   'error-bad-option': '無効または認識できないオプション',

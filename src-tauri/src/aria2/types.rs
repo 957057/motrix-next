@@ -77,8 +77,6 @@ pub struct Aria2BtInfo {
     pub active_time: Option<String>,
     #[serde(default, rename = "finishedTime")]
     pub finished_time: Option<String>,
-    #[serde(default, rename = "seedingTime")]
-    pub seeding_time: Option<String>,
     #[serde(default, rename = "connectCandidates")]
     pub connect_candidates: Option<String>,
     #[serde(default, rename = "uploadingPeers")]
@@ -302,6 +300,25 @@ pub struct Aria2BtPeerAddResult {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct Aria2TorrentInspectionFile {
+    pub index: String,
+    pub path: String,
+    pub length: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Aria2TorrentInspection {
+    pub name: String,
+    pub mode: String,
+    pub info_hash_v1: String,
+    pub info_hash_v2: String,
+    pub total_length: String,
+    pub files: Vec<Aria2TorrentInspectionFile>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Aria2BtTrackerEndpoint {
     pub local_endpoint: String,
     pub protocol: String,
@@ -362,6 +379,8 @@ pub(crate) struct JsonRpcResponse<T> {
 pub(crate) struct JsonRpcError {
     pub code: i64,
     pub message: String,
+    #[serde(default)]
+    pub data: Option<serde_json::Value>,
 }
 
 #[cfg(test)]

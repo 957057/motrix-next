@@ -6,7 +6,7 @@
  * - Parse aria2 file list into UI-friendly selection items
  * - Build the select-file option string
  */
-import type { Aria2File, Aria2EngineOptions, Aria2Task } from '@shared/types'
+import type { Aria2File, Aria2EngineOptions, Aria2Task, BtFileSelectionItem } from '@shared/types'
 
 /** Check if a URI is a magnet link. */
 export function isMagnetUri(uri: string): boolean {
@@ -21,18 +21,10 @@ export function buildMetadataOnlyOptions(baseOptions: Aria2EngineOptions): Aria2
   }
 }
 
-/** A file entry parsed for the selection UI. */
-export interface MagnetFileItem {
-  index: number
-  name: string
-  path: string
-  length: number
-}
-
 export type MagnetSelectionSubmission = 'confirm' | null
 
 /** Convert raw Aria2File array into UI-friendly selection items. */
-export function parseFilesForSelection(files: Aria2File[]): MagnetFileItem[] {
+export function parseFilesForSelection(files: Aria2File[]): BtFileSelectionItem[] {
   return files.map((f) => {
     const parts = f.path.split(/[/\\]/)
     return {

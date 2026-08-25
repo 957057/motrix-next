@@ -831,7 +831,7 @@ describe('buildHistoryMeta', () => {
     const task = makeTask({
       bittorrent: {
         info: { name: 'Ubuntu 24.04' },
-        seedingTime: '3600',
+        finishedTime: '3600',
       },
     })
 
@@ -839,7 +839,7 @@ describe('buildHistoryMeta', () => {
     expect(meta.sharingTime).toBe('3600')
 
     const restored = historyRecordToTask(makeRecord({ task_type: 'bt', meta: JSON.stringify(meta) }))
-    expect(restored.bittorrent?.seedingTime).toBe('3600')
+    expect(restored.bittorrent?.finishedTime).toBe('3600')
   })
 
   it('round-trips the final ED2K sharing duration', () => {

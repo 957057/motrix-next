@@ -58,7 +58,7 @@ export const APP_RUN_MODE = {
 export const ADD_TASK_TYPE = {
   URI: 'uri',
   TORRENT: 'torrent',
-}
+} as const
 
 export const TASK_STATUS = {
   ACTIVE: 'active',

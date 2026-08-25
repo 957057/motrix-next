@@ -479,7 +479,7 @@ describe('task sharing state', () => {
   })
 
   it('reads native sharing time from both P2P protocols', () => {
-    expect(getTaskSharingTime(createMockTask({ bittorrent: { seedingTime: '42' } }))).toBe(42)
+    expect(getTaskSharingTime(createMockTask({ bittorrent: { finishedTime: '42' } }))).toBe(42)
     expect(getTaskSharingTime(createMockTask({ ed2k: { sharingTime: '84' } }))).toBe(84)
   })
 })

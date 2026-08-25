@@ -4,10 +4,9 @@ import {
   findPendingMagnetSelectionTask,
   isPendingMagnetSelectionTask,
   parseFilesForSelection,
-  type MagnetFileItem,
   type MagnetSelectionResolution,
 } from '@/composables/useMagnetFlow'
-import type { Aria2Task } from '@shared/types'
+import type { Aria2Task, BtFileSelectionItem } from '@shared/types'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { getTaskDisplayName } from '@shared/utils/task'
 
@@ -15,7 +14,7 @@ export interface MagnetMetadataState {
   pendingGids: string[]
   deferredGids: string[]
   visible: boolean
-  files: MagnetFileItem[]
+  files: BtFileSelectionItem[]
   session: MagnetSelectionResolution | null
   name: string
 }

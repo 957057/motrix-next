@@ -74,7 +74,6 @@ export interface Aria2BtInfo {
   redundantLength?: string
   activeTime?: string
   finishedTime?: string
-  seedingTime?: string
   connectCandidates?: string
   uploadingPeers?: string
   webSeeds?: string[]
@@ -603,6 +602,28 @@ export interface AddTorrentParams {
   options: Aria2EngineOptions
 }
 
+export interface TorrentInspectionFile {
+  index: string
+  path: string
+  length: string
+}
+
+export interface TorrentInspection {
+  name: string
+  mode: 'single' | 'multi'
+  infoHashV1: string
+  infoHashV2: string
+  totalLength: string
+  files: TorrentInspectionFile[]
+}
+
+export interface BtFileSelectionItem {
+  index: number
+  name: string
+  path: string
+  length: number
+}
+
 /** Parameters for changing options on an existing task. */
 export interface TaskOptionParams {
   gid: string
@@ -629,6 +650,7 @@ export interface TauriUpdate {
 
 export type BatchItemKind = 'uri' | 'torrent'
 export type BatchItemStatus = 'pending' | 'submitted' | 'failed'
+export type TorrentInspectionState = 'reading' | 'inspecting' | 'ready' | 'failed'
 
 /** A single item in the add-task batch queue. */
 export interface BatchItem {
@@ -643,6 +665,12 @@ export interface BatchItem {
   payload: string
   /** Browser request context captured by the extension for this item. */
   browserContext?: ExternalDownloadContext
+  /** Native engine metainfo inspection for torrent items. */
+  torrentMeta?: TorrentInspection
+  /** File indexes selected for the torrent download. */
+  selectedFileIndices?: number[]
+  /** Independent pre-submission inspection state for torrent items. */
+  inspectionState?: TorrentInspectionState
   status: BatchItemStatus
   /** Error message when status is 'failed'. */
   error?: string

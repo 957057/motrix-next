@@ -121,6 +121,7 @@ export default {
   'error-too-many-redirects': 'Too many redirects',
   'error-http-auth': 'HTTP authorization failed',
   'error-bencode-parse': 'Cannot parse .torrent file',
+  'torrent-too-large': 'Los metadatos del torrent superan el límite de tamaño admitido',
   'error-torrent-corrupt': 'Torrent file corrupted or incomplete',
   'error-magnet-bad': 'Invalid magnet URI',
   'error-bad-option': 'Invalid or unrecognized option',

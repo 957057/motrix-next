@@ -51,6 +51,12 @@ describe('getErrorMessage', () => {
     )
   })
 
+  it('extracts structured torrent inspection errors', () => {
+    expect(getErrorMessage({ TorrentInspection: { kind: 'invalidTorrent', message: 'invalid metadata' } })).toBe(
+      'Torrent inspection error [invalidTorrent]: invalid metadata',
+    )
+  })
+
   it('serializes unknown objects instead of returning [object Object]', () => {
     expect(getErrorMessage({ code: 500, reason: 'failed' })).toBe('{"code":500,"reason":"failed"}')
   })

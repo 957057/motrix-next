@@ -4,7 +4,9 @@
 //! to one or more aria2 RPC methods.
 
 use crate::aria2::client::{Aria2Client, Aria2State};
-use crate::aria2::types::{Aria2BtPeerAddResult, Aria2BtTrackerConfig, Aria2File, Aria2Task};
+use crate::aria2::types::{
+    Aria2BtPeerAddResult, Aria2BtTrackerConfig, Aria2File, Aria2Task, Aria2TorrentInspection,
+};
 use crate::commands::net::decode_filename_encoding;
 use crate::error::AppError;
 use crate::history::HistoryDbState;
@@ -286,6 +288,15 @@ pub async fn aria2_add_torrent(
 ) -> Result<String, AppError> {
     log::info!("aria2:add-torrent");
     state.0.add_torrent(&torrent, options).await
+}
+
+/// Inspect torrent metainfo without creating a task or writing engine state.
+#[tauri::command]
+pub async fn aria2_inspect_torrent(
+    state: State<'_, Aria2State>,
+    torrent: String,
+) -> Result<Aria2TorrentInspection, AppError> {
+    state.0.inspect_torrent(&torrent).await
 }
 
 /// Start an ED2K search and return the search GID.

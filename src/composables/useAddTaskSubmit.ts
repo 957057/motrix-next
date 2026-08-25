@@ -99,6 +99,13 @@ interface ManualRegularEntry {
   hasInputOptions: boolean
 }
 
+function buildTorrentTaskOptions(options: Aria2EngineOptions, selectedFileIndices: number[]): Aria2EngineOptions {
+  return {
+    dir: options.dir,
+    'select-file': [...selectedFileIndices].sort((a, b) => a - b).join(','),
+  }
+}
+
 /**
  * Builds aria2 engine options from the add-task form.
  * Pure function — no side effects, fully testable.
@@ -208,14 +215,15 @@ export async function submitBatchItems(
   for (const item of items) {
     if (item.kind === 'uri') continue
     if (item.status !== 'pending' && item.status !== 'failed') continue
+    if (item.inspectionState !== 'ready' || !item.selectedFileIndices?.length) {
+      failures++
+      continue
+    }
     try {
       if (item.kind === 'torrent') {
-        const opts: Aria2EngineOptions = { ...options, 'pause-metadata': 'true' }
-        delete opts.out
+        const opts = buildTorrentTaskOptions(options, item.selectedFileIndices)
         const gid = await taskStore.addTorrent({ torrent: item.payload, options: opts })
         taskStore.registerTorrentSource(gid, item.source)
-        const appStore = useAppStore()
-        appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, gid]
       }
       item.status = 'submitted'
       logger.info('submitBatchItems', `${item.kind} submitted: ${item.displayName}`)
