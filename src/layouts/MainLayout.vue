@@ -9,12 +9,7 @@ import { useEngineStore } from '@/stores/engine'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
 import { logger } from '@shared/logger'
-import {
-  buildHistoryRecord,
-  buildP2pDownloadCompletionRecord,
-  isMetadataTask,
-  updateHistoryFilePath,
-} from '@/composables/useTaskLifecycle'
+import { isMetadataTask, updateHistoryFilePath } from '@/composables/useTaskLifecycle'
 import { setArchivedPath, resolveTaskFilePath, requestFileRecheck } from '@/composables/useArchivedPaths'
 import { handleTaskComplete, handleP2pDownloadComplete, handleTaskError } from '@/composables/useTaskNotifyHandlers'
 import { shouldDeleteTorrent, trashTorrentFile } from '@/composables/useDownloadCleanup'
@@ -689,14 +684,9 @@ onMounted(async () => {
     startShutdownCountdown()
   })
 
-  // ── Task lifecycle reactions (driven by Rust monitor events) ─────
-  // The Rust task monitor is the single poller of aria2. It detects
-  // completion / error / shared-upload transitions, writes history, and
-  // sends native OS notifications (working even in lightweight mode after
-  // the WebView is destroyed). The frontend subscribes to those events and
-  // owns the UI-side reactions: in-app toasts, auto-archive file moves,
-  // torrent cleanup, and the auto-shutdown check. Each handler re-fetches
-  // the full aria2 task so it sees the same shape a poll would have.
+  // ── Task lifecycle reactions (driven by native Aria2 Next events) ─
+  // Rust persists lifecycle records before emitting these UI events. The
+  // frontend owns in-app toasts, auto-archive moves, and torrent cleanup.
   const historyStore = useHistoryStore()
 
   // ── Pre-populate task birth timestamps from DB ──────────────────
@@ -723,8 +713,7 @@ onMounted(async () => {
 
   async function onTaskError(task: Aria2Task): Promise<void> {
     if (isMetadataTask(task)) return
-    const record = buildHistoryRecord(task)
-    historyStore.addRecord(record).catch((e) => logger.debug('Lifecycle.historyRecord.error', e))
+    historyStore.refreshRecordTotal().catch((e) => logger.debug('Lifecycle.historyTotal.error', e))
     const i18nKey = task.errorCode ? ARIA2_ERROR_CODES[task.errorCode] : undefined
     const errorText = i18nKey ? t(i18nKey) : task.errorMessage || t('task.error-unknown')
     handleTaskError(task, errorText, {
@@ -736,13 +725,7 @@ onMounted(async () => {
 
   async function onTaskComplete(task: Aria2Task): Promise<void> {
     if (isMetadataTask(task)) return
-    const record = buildHistoryRecord(task)
-    // BT tasks: clean up stale DB records from previous sessions where
-    // aria2 assigned a different GID to the same torrent (infoHash is stable).
-    if (task.infoHash) {
-      historyStore.removeByInfoHash(task.infoHash, task.gid).catch((e) => logger.debug('Lifecycle.cleanStale', e))
-    }
-    historyStore.addRecord(record).catch((e) => logger.debug('Lifecycle.historyRecord', e))
+    historyStore.refreshRecordTotal().catch((e) => logger.debug('Lifecycle.historyTotal', e))
     handleTaskComplete(task, {
       messageSuccess: message.success,
       messageError: message.error,
@@ -793,16 +776,8 @@ onMounted(async () => {
   }
 
   async function onP2pDownloadComplete(task: Aria2Task, kind: TaskSharingKind): Promise<void> {
-    // Persist immediately — download is complete, sharing is just uploading.
-    // INSERT OR REPLACE: safe if onTaskComplete later writes the same GID.
     if (!isMetadataTask(task)) {
-      if (kind === 'bt' && task.infoHash) {
-        historyStore
-          .removeByInfoHash(task.infoHash, task.gid)
-          .catch((e) => logger.debug('Lifecycle.p2pDownloadComplete.cleanStale', e))
-      }
-      const record = buildP2pDownloadCompletionRecord(task)
-      historyStore.addRecord(record).catch((e) => logger.debug('Lifecycle.p2pDownloadComplete.history', e))
+      historyStore.refreshRecordTotal().catch((e) => logger.debug('Lifecycle.p2pDownloadComplete.historyTotal', e))
     }
     handleP2pDownloadComplete(task, kind, {
       messageSuccess: message.success,

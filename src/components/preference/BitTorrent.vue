@@ -568,7 +568,7 @@ onMounted(() => {
               <NSelect
                 v-model:value="form.btBlocklistScope"
                 :options="blocklistScopeOptions"
-                class="pref-control-auto"
+                class="pref-control-auto bt-blocklist-scope-select"
               />
             </NFormItem>
             <NFormItem label=" ">
@@ -818,6 +818,9 @@ onMounted(() => {
 }
 .bt-blocklist-update-button {
   min-width: 100px;
+}
+.bt-blocklist-scope-select {
+  width: 200px;
 }
 .blocklist-collapse,
 .blocklist-frequency-collapse {

@@ -137,6 +137,17 @@ impl HistoryDb {
         Ok(())
     }
 
+    /// Returns whether a lifecycle record already exists for the GID.
+    pub async fn contains_record(&self, gid: &str) -> Result<bool, AppError> {
+        let conn = self.conn.lock().await;
+        let exists = conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM download_history WHERE gid = ?1)",
+            params![gid],
+            |row| row.get(0),
+        )?;
+        Ok(exists)
+    }
+
     /// Query records, optionally filtered by status.
     ///
     /// Sorted by `COALESCE(added_at, completed_at) DESC` matching the frontend.
@@ -350,6 +361,18 @@ mod tests {
         assert_eq!(records[0].name, "test.zip");
         assert_eq!(records[0].status, "complete");
         assert_eq!(records[0].total_length, Some(1024));
+    }
+
+    #[tokio::test]
+    async fn contains_record_checks_lifecycle_gid() {
+        let db = HistoryDb::open_in_memory().unwrap();
+        assert!(!db.contains_record("gid001").await.unwrap());
+
+        db.add_record(&make_record("gid001", "test.zip", "complete"))
+            .await
+            .unwrap();
+
+        assert!(db.contains_record("gid001").await.unwrap());
     }
 
     #[tokio::test]

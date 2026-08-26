@@ -1,11 +1,9 @@
 export default {
-  'engine-version': 'إصدار المحرك',
   'license': 'الرخصة',
   'about': 'حول',
   'release': 'ملاحظات الإصدار',
   'support': 'الدعم',
   'description': 'مدير تنزيل كامل الميزات — أُعيد بناؤه من الألف إلى الياء.',
-  'copied': 'تم نسخ {label}',
   'click-to-copy': 'انقر للنسخ',
   'version-copied': 'تم نسخ رقم إصدار {label}',
   'app-version': 'إصدار Motrix Next',

@@ -1,13 +1,10 @@
-/** @fileoverview Pure utility functions for task lifecycle events.
+/** @fileoverview Pure utilities for persisted task reconstruction.
  *
- * Bridges aria2 task state changes to download history records
- * and cleanup logic. All functions are pure for testability.
+ * Restores history records into task models and supports cleanup logic.
  */
-import type { Aria2Task, Aria2File, HistoryRecord, HistoryMeta, HistoryFileSnapshot } from '@shared/types'
-import { decodePathSegment } from '@shared/utils/batchHelpers'
+import type { Aria2Task, Aria2File, HistoryRecord, HistoryMeta } from '@shared/types'
 import { normalizeSep } from '@shared/utils/autoArchive'
 import { isBtMetadataTask } from '@shared/utils/task'
-import { getAddedAt } from '@/composables/useTaskOrder'
 import { logger } from '@shared/logger'
 
 /** Detect magnet tasks that are still resolving BitTorrent metadata. */
@@ -18,43 +15,6 @@ export function isMetadataTask(task: Aria2Task): boolean {
 // ── Centralized history snapshot helpers ────────────────────────────
 // All meta read/write MUST go through these functions. Never JSON.parse
 // HistoryRecord.meta directly in consumer code.
-
-/** Build structured meta from a live aria2 task (write path).
- *
- * - Stores infoHash for BT magnet reconstruction.
- * - Stores full file list (with ALL mirror URIs) for multi-file tasks.
- *   Single-file tasks omit meta.files to keep JSON compact. */
-export function buildHistoryMeta(task: Aria2Task): HistoryMeta {
-  const meta: HistoryMeta = {}
-  if (task.infoHash) meta.infoHash = task.infoHash
-  if (task.bittorrent?.magnetLink) meta.magnetLink = task.bittorrent.magnetLink
-  if (task.ed2k?.ed2kLink) meta.ed2kLink = task.ed2k.ed2kLink
-  if (task.ed2k?.hash) meta.ed2kHash = task.ed2k.hash
-  if (task.bittorrent?.announceList && task.bittorrent.announceList.length > 0) {
-    meta.announceList = task.bittorrent.announceList.map((tier) => [...tier])
-  }
-  const sharingTime = Number(task.bittorrent?.finishedTime ?? task.ed2k?.sharingTime)
-  if (Number.isFinite(sharingTime) && sharingTime > 0) meta.sharingTime = String(Math.floor(sharingTime))
-
-  // Snapshot trigger: multi-file OR any file with multiple mirror URIs.
-  // Multi-file: enables correct delete (all files) and stale cleanup.
-  // Multi-mirror: enables correct restart with all mirrors via addUriAtomic.
-  const files = task.files ?? []
-  const hasMultipleFiles = files.length > 1
-  const hasMirrors = files.some((f) => (f.uris?.length ?? 0) > 1)
-  const needsSnapshot = hasMultipleFiles || hasMirrors
-  if (needsSnapshot) {
-    meta.files = files.map(
-      (f): HistoryFileSnapshot => ({
-        path: f.path,
-        length: f.length,
-        selected: f.selected,
-        uris: (f.uris ?? []).map((u) => u.uri),
-      }),
-    )
-  }
-  return meta
-}
 
 /** Parse structured meta from a persisted history record (read path).
  *  Never throws — returns empty object on corrupt/missing meta. */
@@ -85,47 +45,6 @@ export function extractHistoryFilePaths(record: HistoryRecord): string[] {
   return []
 }
 
-/** Extract a HistoryRecord from an aria2 task for persistence. */
-export function buildHistoryRecord(task: Aria2Task): HistoryRecord {
-  const btName = task.bittorrent?.info?.name
-  const firstFile = task.files?.[0]
-  const pathName = firstFile?.path?.split(/[/\\]/).pop()
-  const name = btName || (pathName ? decodePathSegment(pathName) : '') || 'Unknown'
-
-  const uri = firstFile?.uris?.[0]?.uri
-  const taskType = task.bittorrent ? 'bt' : task.ed2k ? 'ed2k' : 'uri'
-
-  // Build structured meta snapshot (centralised — no inline JSON.stringify elsewhere)
-  const meta = buildHistoryMeta(task)
-
-  return {
-    gid: task.gid,
-    name,
-    uri: uri ?? undefined,
-    dir: task.dir ?? undefined,
-    total_length: task.totalLength ? Number(task.totalLength) : undefined,
-    status: task.status,
-    task_type: taskType,
-    added_at: getAddedAt(task.gid),
-    completed_at: new Date().toISOString(),
-    meta: Object.keys(meta).length > 0 ? JSON.stringify(meta) : undefined,
-  }
-}
-
-/** Build a history record for a task entering shared-upload state.
- *
- * Shared upload means the download phase is complete and verified.
- * Aria2 still reports status='active' for these tasks, but from the user's
- * perspective the download is done. This function overrides status to
- * 'complete' so the record correctly reflects download completion.
- *
- * Used by the lifecycle service when a task first enters shared-upload state. */
-export function buildP2pDownloadCompletionRecord(task: Aria2Task): HistoryRecord {
-  const record = buildHistoryRecord(task)
-  record.status = 'complete'
-  return record
-}
-
 /** Determine if stale record cleanup should run based on user config. */
 export function shouldRunStaleCleanup(config: Partial<{ autoDeleteStaleRecords: boolean }> | undefined): boolean {
   return config?.autoDeleteStaleRecords === true
@@ -133,9 +52,8 @@ export function shouldRunStaleCleanup(config: Partial<{ autoDeleteStaleRecords: 
 
 /** Reconstruct an Aria2Task from a persisted HistoryRecord.
  *
- * This is the inverse of buildHistoryRecord — it synthesizes the `files[]`
- * and optional `bittorrent` fields so that TaskItem can render the record
- * using the same code paths as live aria2 tasks.
+ * Synthesizes the `files[]` and optional `bittorrent` fields so TaskItem can
+ * render persisted records through the same paths as live aria2 tasks.
  *
  * Fields not available in the DB (downloadSpeed, connections, etc.) are
  * zero-filled, which is correct for stopped/completed tasks. */

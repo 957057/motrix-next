@@ -1,11 +1,9 @@
 export default {
-  'engine-version': 'Engine-Version',
   'license': 'Lizenz',
   'about': 'Über',
   'release': 'Versionshinweise',
   'support': 'Hilfe',
   'description': 'Ein vollwertiger Download-Manager — von Grund auf neu erstellt.',
-  'copied': '{label} kopiert',
   'click-to-copy': 'Klicken zum Kopieren',
   'version-copied': 'Versionsnummer von {label} kopiert',
   'app-version': 'Motrix Next Version',

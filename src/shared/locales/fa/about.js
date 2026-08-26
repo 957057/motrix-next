@@ -1,11 +1,9 @@
 export default {
-  'engine-version': 'نسخه موتور',
   'license': 'مجوز',
   'about': 'درباره',
   'release': 'یادداشت‌های انتشار',
   'support': 'پشتیبانی',
   'description': 'یک مدیر دانلود کامل — از پایه بازسازی شده.',
-  'copied': '{label} کپی شد',
   'click-to-copy': 'برای کپی کلیک کنید',
   'version-copied': 'نسخه {label} کپی شد',
   'app-version': 'نسخه Motrix Next',

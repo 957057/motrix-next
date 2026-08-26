@@ -1,11 +1,9 @@
 export default {
-  'engine-version': 'इंजन संस्करण',
   license: 'लाइसेंस',
   about: 'परिचय',
   release: 'रिलीज़ नोट्स',
   support: 'सहायता',
   description: 'एक पूर्ण डाउनलोड मैनेजर, जिसे शुरू से फिर बनाया गया है।',
-  copied: '{label} कॉपी हो गया',
   'click-to-copy': 'कॉपी करने के लिए क्लिक करें',
   'version-copied': '{label} संस्करण कॉपी हो गया',
   'app-version': 'Motrix Next संस्करण',

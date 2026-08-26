@@ -694,7 +694,6 @@ export interface HistoryFileSnapshot {
  *
  * This is the single source of truth for multi-file task reconstruction.
  * All consumers MUST use the centralized helpers in useTaskLifecycle.ts:
- * - buildHistoryMeta()  — write path
  * - parseHistoryMeta()  — read path
  * - extractHistoryFilePaths() — stale cleanup */
 export interface HistoryMeta {

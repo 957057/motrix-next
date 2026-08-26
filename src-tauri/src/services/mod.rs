@@ -4,8 +4,8 @@
 //! - `config` — RuntimeConfig cache (refreshed on engine ready)
 //! - `stat` — Global stat polling (download/upload speed)
 //! - `speed` — Speed limit scheduler (time-of-day limits)
-//! - `monitor` — Task lifecycle monitor (completion/error notifications)
-//! - `aria2_events` — WebSocket bridge for immediate aria2 notifications
+//! - `monitor` — lifecycle persistence and active-state policy
+//! - `aria2_events` — native WebSocket lifecycle event source
 //!
 //! The `on_engine_ready()` function orchestrates post-start initialization:
 //! 1. Updates `Aria2Client` credentials to match the just-started engine
