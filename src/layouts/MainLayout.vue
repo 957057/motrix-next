@@ -17,7 +17,6 @@ import { getTaskDisplayName, resolveOpenTarget, checkTaskIsSharing, getTaskShari
 import type { TaskSharingKind } from '@shared/utils/task'
 import type { Aria2Task, BtFileSelectionItem } from '@shared/types'
 import { ARIA2_ERROR_CODES } from '@shared/aria2ErrorCodes'
-import { TASK_STATUS } from '@shared/constants'
 import { useHistoryStore } from '@/stores/history'
 import { buildSelectFileOption, getPendingMagnetSelectionGids } from '@/composables/useMagnetFlow'
 import type { MagnetSelectionSubmission } from '@/composables/useMagnetFlow'
@@ -472,21 +471,6 @@ async function handleExitConfirm() {
   showExitDialog.value = false
   rememberChoice.value = false
 
-  // ── Clear completed download records on exit (#134) ──────────
-  // Runs while the webview JS context is still fully functional.
-  // Only removes 'complete' status tasks; error and removed records
-  // are preserved for diagnostics.
-  if (preferenceStore.config.clearCompletedOnExit) {
-    try {
-      const completedTasks = taskStore.taskList.filter((t) => t.status === TASK_STATUS.COMPLETE)
-      for (const task of completedTasks) {
-        await taskStore.removeTaskRecord(task)
-      }
-    } catch (e: unknown) {
-      logger.warn('MainLayout.exitCleanup', e instanceof Error ? e.message : String(e))
-    }
-  }
-
   // Hide the window and let the OS play its native close animation
   // (DWM fade on Windows, AppKit transition on macOS, compositor
   // effect on Linux).  No custom CSS or alpha animation needed.
@@ -495,8 +479,6 @@ async function handleExitConfirm() {
 
   // exit(0) sends an IPC call to Rust — if we destroy() first,
   // the webview is gone and the IPC silently fails.
-  // Session cleanup (purge completed tasks + save) is handled by the
-  // Rust RunEvent::Exit handler — single entry point for all exit paths.
   const { exit } = await import('@tauri-apps/plugin-process')
   await exit(0)
 }

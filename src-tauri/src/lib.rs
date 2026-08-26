@@ -468,36 +468,13 @@ fn handle_run_event(app: &tauri::AppHandle, event: tauri::RunEvent) {
             }
         }
         tauri::RunEvent::Exit => {
-            log::info!("app:exit — saving session, stopping engine and UPnP");
-
-            // ── Clear completed download records on exit ────────────
-            // When the user exits via tray-quit (app.exit(0)), the frontend's
-            // handleExitConfirm() is bypassed. Read the preference from the
-            // persistent store and clear records directly via HistoryDb.
-            // Best-effort with 2s timeout — never blocks app exit.
-            {
-                let clear_on_exit = read_pref_bool(app, "clearCompletedOnExit", false);
-                if clear_on_exit {
-                    if let Some(db_state) = app.try_state::<history::HistoryDbState>() {
-                        let db = db_state.0.clone();
-                        let _ = tauri::async_runtime::block_on(async {
-                            tokio::time::timeout(
-                                std::time::Duration::from_secs(2),
-                                db.clear_records(Some("complete")),
-                            )
-                            .await
-                        });
-                        log::info!("app:exit — cleared completed history records");
-                    }
-                }
-            }
+            log::info!("app:exit — stopping engine and runtime services");
 
             if let Some(supervisor) = app.try_state::<engine::supervisor::EngineSupervisor>() {
-                let _ = tauri::async_runtime::block_on(supervisor.stop(
-                    app,
-                    engine::supervisor::EngineOperationCause::AppExit,
-                    true,
-                ));
+                let clear_completed = read_pref_bool(app, "clearCompletedOnExit", false);
+                let _ = tauri::async_runtime::block_on(
+                    supervisor.stop_for_app_exit(app, clear_completed),
+                );
             }
             // Stop the extension HTTP API server gracefully.
             if let Some(api_state) = app.try_state::<services::http_api::HttpApiState>() {

@@ -207,14 +207,26 @@ impl HistoryDb {
 
     /// Clear all records, optionally filtered by status.
     pub async fn clear_records(&self, status: Option<&str>) -> Result<(), AppError> {
-        let conn = self.conn.lock().await;
+        let mut conn = self.conn.lock().await;
+        let transaction = conn.transaction()?;
         if let Some(status) = status {
-            conn.execute(
+            transaction.execute(
+                "DELETE FROM task_birth WHERE gid IN (SELECT gid FROM download_history WHERE status = ?1)",
+                params![status],
+            )?;
+            transaction.execute(
                 "DELETE FROM download_history WHERE status = ?1",
                 params![status],
             )?;
         } else {
-            conn.execute("DELETE FROM download_history", [])?;
+            transaction.execute(
+                "DELETE FROM task_birth WHERE gid IN (SELECT gid FROM download_history)",
+                [],
+            )?;
+            transaction.execute("DELETE FROM download_history", [])?;
+        }
+        transaction.commit()?;
+        if status.is_none() {
             conn.execute_batch("VACUUM")?;
         }
         Ok(())
@@ -486,12 +498,23 @@ mod tests {
         db.add_record(&make_record("g2", "b.zip", "error"))
             .await
             .unwrap();
+        db.record_task_birth("g1", "2025-01-01T00:00:00Z")
+            .await
+            .unwrap();
+        db.record_task_birth("g2", "2025-01-02T00:00:00Z")
+            .await
+            .unwrap();
 
         db.clear_records(Some("error")).await.unwrap();
 
         let records = db.get_records(None, None).await.unwrap();
         assert_eq!(records.len(), 1);
         assert_eq!(records[0].gid, "g1");
+        assert_eq!(
+            db.get_task_birth("g1").await.unwrap().as_deref(),
+            Some("2025-01-01T00:00:00Z")
+        );
+        assert_eq!(db.get_task_birth("g2").await.unwrap(), None);
     }
 
     #[tokio::test]

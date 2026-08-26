@@ -7,7 +7,9 @@ use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::{watch, Mutex as AsyncMutex};
 
 use crate::aria2::client::Aria2State;
+use crate::aria2::types::Aria2Task;
 use crate::error::AppError;
+use crate::history::HistoryDbState;
 use crate::services::{self, port_guard};
 
 use super::{
@@ -250,7 +252,7 @@ impl EngineSupervisor {
         ensure_active(self, operation_id, &cancelled)?;
 
         self.publish(app, operation_id, EnginePhase::Stopping, 0, cause, None);
-        if let Err(error) = self.stop_runtime(app, false).await {
+        if let Err(error) = self.stop_runtime(app, false, None).await {
             let failure = failure_from_error(EngineFailureStage::Shutdown, &error, false, app);
             let result = self.fail(app, operation_id, 0, cause, failure);
             self.finish_operation(operation_id);
@@ -288,7 +290,7 @@ impl EngineSupervisor {
 
         if force_restart {
             self.publish(app, operation_id, EnginePhase::Stopping, 0, cause, None);
-            if let Err(error) = self.stop_runtime(app, false).await {
+            if let Err(error) = self.stop_runtime(app, false, None).await {
                 let failure = failure_from_error(EngineFailureStage::Shutdown, &error, false, app);
                 let result = self.fail(app, operation_id, 0, cause, failure);
                 self.finish_operation(operation_id);
@@ -346,7 +348,7 @@ impl EngineSupervisor {
                 .try_state::<EngineState>()
                 .is_some_and(|state| state.is_running())
             {
-                if let Err(error) = self.stop_runtime(app, false).await {
+                if let Err(error) = self.stop_runtime(app, false, None).await {
                     let failure =
                         failure_from_error(EngineFailureStage::Shutdown, &error, false, app);
                     return self.fail(app, operation_id, attempt, cause, failure);
@@ -398,7 +400,7 @@ impl EngineSupervisor {
                         true,
                         app,
                     ));
-                    if let Err(stop_error) = self.stop_runtime(app, false).await {
+                    if let Err(stop_error) = self.stop_runtime(app, false, None).await {
                         let failure = failure_from_error(
                             EngineFailureStage::Shutdown,
                             &stop_error,
@@ -446,7 +448,7 @@ impl EngineSupervisor {
                     EngineFailureStage::Initialization
                 };
                 let failure = failure_from_error(stage, &error, false, app);
-                if let Err(stop_error) = self.stop_runtime(app, false).await {
+                if let Err(stop_error) = self.stop_runtime(app, false, None).await {
                     log::error!(
                         "engine_supervisor: cleanup after initialization failure failed: {stop_error}"
                     );
@@ -472,7 +474,7 @@ impl EngineSupervisor {
                         true,
                         app,
                     ));
-                    if let Err(stop_error) = self.stop_runtime(app, false).await {
+                    if let Err(stop_error) = self.stop_runtime(app, false, None).await {
                         let failure = failure_from_error(
                             EngineFailureStage::Shutdown,
                             &stop_error,
@@ -535,13 +537,37 @@ impl EngineSupervisor {
         cause: EngineOperationCause,
         fast: bool,
     ) -> Result<EngineSnapshot, AppError> {
+        self.stop_internal(app, cause, fast, None).await
+    }
+
+    pub async fn stop_for_app_exit(
+        &self,
+        app: &AppHandle,
+        clear_completed: bool,
+    ) -> Result<EngineSnapshot, AppError> {
+        self.stop_internal(
+            app,
+            EngineOperationCause::AppExit,
+            true,
+            Some(clear_completed),
+        )
+        .await
+    }
+
+    async fn stop_internal(
+        &self,
+        app: &AppHandle,
+        cause: EngineOperationCause,
+        fast: bool,
+        clear_completed_on_exit: Option<bool>,
+    ) -> Result<EngineSnapshot, AppError> {
         let (operation_id, _cancelled) = self.begin_operation(DesiredEngineState::Stopped);
         let _guard = self.operation_lock.lock().await;
         if !self.is_current(operation_id) {
             return Err(cancelled_error());
         }
         self.publish(app, operation_id, EnginePhase::Stopping, 0, cause, None);
-        let result = self.stop_runtime(app, fast).await;
+        let result = self.stop_runtime(app, fast, clear_completed_on_exit).await;
         match result {
             Ok(()) => {
                 self.publish(app, operation_id, EnginePhase::Stopped, 0, cause, None);
@@ -564,11 +590,21 @@ impl EngineSupervisor {
         }
     }
 
-    async fn stop_runtime(&self, app: &AppHandle, fast: bool) -> Result<(), AppError> {
+    async fn stop_runtime(
+        &self,
+        app: &AppHandle,
+        fast: bool,
+        clear_completed_on_exit: Option<bool>,
+    ) -> Result<(), AppError> {
         let was_running = app
             .try_state::<EngineState>()
             .is_some_and(|state| state.is_running());
         services::stop_engine_services(app).await;
+        if let Some(clear_completed) = clear_completed_on_exit {
+            if let Err(error) = prepare_app_exit(app, was_running, clear_completed).await {
+                log::warn!("engine_supervisor: app exit preparation failed: {error}");
+            }
+        }
         if !fast && was_running {
             request_graceful_shutdown(app).await;
         }
@@ -656,6 +692,47 @@ impl EngineSupervisor {
             Err(error) => log::error!("engine_supervisor: port reconciliation failed: {error}"),
         }
     }
+}
+
+async fn prepare_app_exit(
+    app: &AppHandle,
+    engine_running: bool,
+    clear_completed: bool,
+) -> Result<(), AppError> {
+    let mut removed = 0;
+    if engine_running {
+        let aria2 = app
+            .try_state::<Aria2State>()
+            .ok_or_else(|| AppError::Engine("Aria2State is not managed".into()))?;
+        if clear_completed {
+            let completed_gids = completed_result_gids(aria2.0.tell_all_stopped().await?);
+            aria2.0.remove_download_results(&completed_gids).await?;
+            removed = completed_gids.len();
+        }
+        aria2.0.save_session().await?;
+    }
+
+    if clear_completed {
+        let history = app.try_state::<HistoryDbState>().ok_or_else(|| {
+            AppError::Store("History database is unavailable during app exit".into())
+        })?;
+        history.0.clear_records(Some("complete")).await?;
+    }
+
+    log::info!(
+        "engine_supervisor: app exit prepared clear_completed={} removed_completed={}",
+        clear_completed,
+        removed
+    );
+    Ok(())
+}
+
+fn completed_result_gids(tasks: Vec<Aria2Task>) -> Vec<String> {
+    tasks
+        .into_iter()
+        .filter(|task| task.status == "complete")
+        .map(|task| task.gid)
+        .collect()
 }
 
 async fn request_graceful_shutdown(app: &AppHandle) {
@@ -932,5 +1009,24 @@ mod tests {
         assert!(*first_cancelled.borrow());
         assert!(!supervisor.is_current(first_id));
         assert_eq!(supervisor.desired_state(), DesiredEngineState::Stopped);
+    }
+
+    #[test]
+    fn exit_cleanup_selects_only_completed_results() {
+        let tasks = [
+            ("complete", "done"),
+            ("error", "failed"),
+            ("removed", "removed"),
+            ("paused", "paused"),
+        ]
+        .into_iter()
+        .map(|(status, gid)| Aria2Task {
+            gid: gid.into(),
+            status: status.into(),
+            ..Aria2Task::default()
+        })
+        .collect();
+
+        assert_eq!(completed_result_gids(tasks), vec!["done"]);
     }
 }

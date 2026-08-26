@@ -173,6 +173,24 @@ impl Aria2Client {
             .await
     }
 
+    /// Returns every stopped task using bounded native RPC pages.
+    pub async fn tell_all_stopped(&self) -> Result<Vec<Aria2Task>, AppError> {
+        const PAGE_SIZE: i64 = 256;
+
+        let mut tasks = Vec::new();
+        let mut offset = 0;
+        loop {
+            let page = self.tell_stopped(offset, PAGE_SIZE).await?;
+            let page_len = page.len();
+            tasks.extend(page);
+            if page_len < PAGE_SIZE as usize {
+                break;
+            }
+            offset += page_len as i64;
+        }
+        Ok(tasks)
+    }
+
     /// Returns the status of a single task by GID.
     pub async fn tell_status(&self, gid: &str) -> Result<Aria2Task, AppError> {
         self.call("tellStatus", vec![gid.into()]).await
@@ -391,6 +409,46 @@ impl Aria2Client {
     /// Removes a completed/error/removed download result.
     pub async fn remove_download_result(&self, gid: &str) -> Result<String, AppError> {
         self.call("removeDownloadResult", vec![gid.into()]).await
+    }
+
+    /// Removes stopped results in bounded native RPC batches.
+    pub async fn remove_download_results(&self, gids: &[String]) -> Result<(), AppError> {
+        const BATCH_SIZE: usize = 256;
+
+        for batch in gids.chunks(BATCH_SIZE) {
+            let calls = batch
+                .iter()
+                .map(|gid| {
+                    (
+                        "removeDownloadResult".to_string(),
+                        vec![serde_json::Value::String(gid.clone())],
+                    )
+                })
+                .collect();
+            let results = self.multicall(calls).await?;
+            if results.len() != batch.len() {
+                return Err(AppError::Aria2(format!(
+                    "aria2 returned {} results for {} removals",
+                    results.len(),
+                    batch.len()
+                )));
+            }
+            for (gid, result) in batch.iter().zip(results) {
+                if let Some(error) = result
+                    .as_object()
+                    .filter(|value| value.contains_key("code"))
+                {
+                    let message = error
+                        .get("message")
+                        .and_then(serde_json::Value::as_str)
+                        .unwrap_or("unknown RPC error");
+                    return Err(AppError::Aria2(format!(
+                        "Failed to remove completed result {gid}: {message}"
+                    )));
+                }
+            }
+        }
+        Ok(())
     }
 
     /// Purges all completed/error/removed download results.

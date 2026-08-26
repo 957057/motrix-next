@@ -56,7 +56,6 @@ rfd = { version = "0.16", default-features = false }
 maxminddb = { version = "0.27", features = ["mmap"] }
 axum = "0.8"
 tower-http = { version = "0.6", features = ["cors"] }
-keepawake = "0.6"
 mime2ext = "0.1"
 urlencoding = "2"
 sanitize-filename = "0.6"
@@ -78,9 +77,11 @@ windows-sys = { version = "0.59", features = [
 winreg = "0.56"
 
 [target.'cfg(target_os = "linux")'.dependencies]
+ashpd = { version = "0.13.13", default-features = false, features = ["tokio", "inhibit"] }
 notify-rust = "4.14"
 
 [target.'cfg(target_os = "macos")'.dependencies]
+keepawake = "0.6"
 objc2 = "0.6"
 objc2-app-kit = { version = "0.3", features = ["NSWorkspace", "NSDockTile", "NSApplication"] }
 objc2-foundation = { version = "0.3", features = ["NSURL", "NSString", "NSBundle"] }

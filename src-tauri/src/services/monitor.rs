@@ -429,36 +429,25 @@ pub async fn reconcile_stopped_tasks(
     app: &tauri::AppHandle,
     aria2: &crate::aria2::client::Aria2Client,
 ) -> Result<usize, AppError> {
-    const PAGE_SIZE: i64 = 256;
-
     let Some(db_state) = app.try_state::<HistoryDbState>() else {
         return Err(AppError::Store(
             "History database is unavailable during lifecycle reconciliation".into(),
         ));
     };
     let db = db_state.0.clone();
-    let mut offset = 0;
     let mut reconciled = 0;
 
-    loop {
-        let page = aria2.tell_stopped(offset, PAGE_SIZE).await?;
-        let page_len = page.len();
-        for task in page {
-            let event_name = match task.status.as_str() {
-                "complete" => events::TASK_COMPLETE,
-                "error" if task.error_code.as_deref() != Some("0") => events::TASK_ERROR,
-                _ => continue,
-            };
-            if db.contains_record(&task.gid).await? {
-                continue;
-            }
-            process_lifecycle_task(app, event_name, &task, false).await?;
-            reconciled += 1;
+    for task in aria2.tell_all_stopped().await? {
+        let event_name = match task.status.as_str() {
+            "complete" => events::TASK_COMPLETE,
+            "error" if task.error_code.as_deref() != Some("0") => events::TASK_ERROR,
+            _ => continue,
+        };
+        if db.contains_record(&task.gid).await? {
+            continue;
         }
-        if page_len < PAGE_SIZE as usize {
-            break;
-        }
-        offset += PAGE_SIZE;
+        process_lifecycle_task(app, event_name, &task, false).await?;
+        reconciled += 1;
     }
 
     Ok(reconciled)
