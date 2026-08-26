@@ -5,7 +5,6 @@ import { TransitionPresets, usePreferredReducedMotion, useTransition } from '@vu
 
 const props = defineProps<{
   value: number
-  tone?: 'error'
 }>()
 
 const reducedMotion = usePreferredReducedMotion()
@@ -19,7 +18,7 @@ const display = computed(() => Math.round(animated.value).toLocaleString())
 </script>
 
 <template>
-  <span class="subnav-count" :class="{ 'subnav-count--error': tone === 'error' && target > 0 }" aria-hidden="true">
+  <span class="subnav-count" aria-hidden="true">
     {{ display }}
   </span>
 </template>
@@ -42,10 +41,5 @@ const display = computed(() => Math.round(animated.value).toLocaleString())
     background-color 0.2s cubic-bezier(0.2, 0, 0, 1),
     transform 0.2s cubic-bezier(0.2, 0, 0, 1),
     opacity 0.16s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.subnav-count--error {
-  color: var(--m3-error);
-  background: var(--m3-error-container);
 }
 </style>

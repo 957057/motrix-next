@@ -18,10 +18,10 @@ const appStore = useAppStore()
 const preferenceStore = usePreferenceStore()
 const taskStore = useTaskStore()
 
-const items: { key: TaskScope; labelKey: string; icon: Component; route: string; countTone?: 'error' }[] = [
+const items: { key: TaskScope; labelKey: string; icon: Component; route: string }[] = [
   { key: 'all', labelKey: 'task.scope-all', icon: ListOutline, route: '/task/all' },
   { key: 'progress', labelKey: 'task.scope-progress', icon: PlayOutline, route: '/task/progress' },
-  { key: 'failed', labelKey: 'task.scope-failed', icon: AlertCircleOutline, route: '/task/failed', countTone: 'error' },
+  { key: 'failed', labelKey: 'task.scope-failed', icon: AlertCircleOutline, route: '/task/failed' },
   { key: 'completed', labelKey: 'task.scope-completed', icon: CheckmarkDoneOutline, route: '/task/completed' },
 ]
 
@@ -33,7 +33,6 @@ const subnavItems = computed<SubnavPaneItem[]>(() =>
       ...item,
       label,
       count,
-      countTone: item.countTone,
       ariaLabel: count === undefined ? label : `${label} ${count}`,
       active: isActive(item.key),
     }
