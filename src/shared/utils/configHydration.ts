@@ -25,7 +25,15 @@ import {
   normalizeUserAgentProfiles,
   normalizeUserAgentRules,
 } from '@shared/utils/userAgentPolicy'
-import { DEFAULT_TASK_MANUAL_ORDER, type TaskManualOrderConfig } from '@/composables/useTaskSort'
+import {
+  ALL_SORT_FIELDS,
+  DEFAULT_TASK_MANUAL_ORDER,
+  DEFAULT_TASK_SORT,
+  PROGRESS_SORT_FIELDS,
+  TERMINAL_SORT_FIELDS,
+  type TaskManualOrderConfig,
+  type TaskSortConfig,
+} from '@/composables/useTaskSort'
 
 export interface HydratedAppConfig {
   config: AppConfig
@@ -157,7 +165,7 @@ function normalizeTaskManualOrder(value: unknown, repairs: string[]): TaskManual
   const normalizeList = (key: keyof TaskManualOrderConfig): string[] => {
     const raw = saved[key]
     if (!Array.isArray(raw)) {
-      if (raw !== undefined) repairs.push(`taskManualOrder.${key}`)
+      repairs.push(`taskManualOrder.${key}`)
       return [...DEFAULT_TASK_MANUAL_ORDER[key]]
     }
     const result = raw.filter((item): item is string => typeof item === 'string' && item.length > 0)
@@ -166,9 +174,34 @@ function normalizeTaskManualOrder(value: unknown, repairs: string[]): TaskManual
   }
 
   return {
-    active: normalizeList('active'),
-    stopped: normalizeList('stopped'),
     all: normalizeList('all'),
+    progress: normalizeList('progress'),
+    failed: normalizeList('failed'),
+    completed: normalizeList('completed'),
+  }
+}
+
+function normalizeTaskSort(value: unknown, repairs: string[]): TaskSortConfig {
+  const saved = isRecord(value) ? value : {}
+  const normalize = <K extends keyof TaskSortConfig>(
+    key: K,
+    fields: readonly TaskSortConfig[K]['field'][],
+  ): TaskSortConfig[K] => {
+    const entry = isRecord(saved[key]) ? saved[key] : {}
+    const defaults = DEFAULT_TASK_SORT[key]
+    const field = fields.includes(entry.field as TaskSortConfig[K]['field'])
+      ? (entry.field as TaskSortConfig[K]['field'])
+      : defaults.field
+    const direction = entry.direction === 'asc' || entry.direction === 'desc' ? entry.direction : defaults.direction
+    if (field !== entry.field || direction !== entry.direction) repairs.push(`taskSort.${key}`)
+    return { field, direction } as TaskSortConfig[K]
+  }
+
+  return {
+    all: normalize('all', ALL_SORT_FIELDS),
+    progress: normalize('progress', PROGRESS_SORT_FIELDS),
+    failed: normalize('failed', TERMINAL_SORT_FIELDS),
+    completed: normalize('completed', TERMINAL_SORT_FIELDS),
   }
 }
 
@@ -315,6 +348,7 @@ export function hydrateAppConfig(saved?: Partial<AppConfig> | null): HydratedApp
     repairs,
   )
   merged.taskManualOrder = normalizeTaskManualOrder(input?.taskManualOrder ?? merged.taskManualOrder, repairs)
+  merged.taskSort = normalizeTaskSort(input?.taskSort ?? merged.taskSort, repairs)
 
   normalizeScalarValues(record, repairs)
   normalizeSecrets(merged, input, repairs)

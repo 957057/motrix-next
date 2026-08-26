@@ -1,7 +1,8 @@
 export default {
-  all: 'Tümü',
-  active: 'İndiriliyor',
-  stopped: 'Tamamlandı',
+  'scope-all': 'Tümü',
+  'scope-progress': 'Devam ediyor',
+  'scope-failed': 'Başarısız',
+  'scope-completed': 'Tamamlandı',
   'new-task': 'Yeni görev',
   'open-file': 'Dosyayı aç',
   'uri-task': 'URL',

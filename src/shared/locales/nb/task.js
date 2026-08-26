@@ -1,7 +1,8 @@
 export default {
-  all: 'Alle',
-  active: 'Laster ned',
-  stopped: 'Fullført',
+  'scope-all': 'Alle',
+  'scope-progress': 'Pågår',
+  'scope-failed': 'Mislyktes',
+  'scope-completed': 'Fullført',
   'new-task': 'Ny oppgave',
   'open-file': 'Åpne fil',
   'uri-task': 'URL',

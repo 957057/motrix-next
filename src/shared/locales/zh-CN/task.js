@@ -1,7 +1,8 @@
 export default {
-  all: '全部',
-  active: '下载中',
-  stopped: '已完成',
+  'scope-all': '全部',
+  'scope-progress': '进行中',
+  'scope-failed': '失败',
+  'scope-completed': '已完成',
   'new-task': '新建任务',
   'open-file': '打开文件',
   'uri-task': '链接任务',

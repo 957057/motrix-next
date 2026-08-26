@@ -1,7 +1,8 @@
 export default {
-  all: 'Todos',
-  active: 'Baixando',
-  stopped: 'Concluído',
+  'scope-all': 'Todas',
+  'scope-progress': 'Em andamento',
+  'scope-failed': 'Falhas',
+  'scope-completed': 'Concluídas',
   'new-task': 'Nova tarefa',
   'open-file': 'Abrir arquivo',
   'uri-task': 'URL',

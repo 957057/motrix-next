@@ -17,12 +17,12 @@ import MTooltip from '@/components/common/MTooltip.vue'
 import { useAppMessage } from '@/composables/useAppMessage'
 import { usePreferenceStore } from '@/stores/preference'
 import {
-  ACTIVE_SORT_FIELDS,
-  STOPPED_SORT_FIELDS,
+  PROGRESS_SORT_FIELDS,
+  TERMINAL_SORT_FIELDS,
   ALL_SORT_FIELDS,
   DEFAULT_TASK_SORT,
-  type ActiveSortField,
-  type StoppedSortField,
+  type ProgressSortField,
+  type TerminalSortField,
   type AllSortField,
 } from '@/composables/useTaskSort'
 import {
@@ -60,30 +60,32 @@ const SORT_LABELS: Record<string, string> = {
 const currentSort = computed(() => {
   const cfg = preferenceStore.config?.taskSort ?? DEFAULT_TASK_SORT
   switch (currentTab.value) {
-    case 'stopped':
-      return cfg.stopped
+    case 'failed':
+    case 'completed':
+      return cfg[currentTab.value]
     case 'all':
       return cfg.all
     default:
-      return cfg.active
+      return cfg.progress
   }
 })
 
 /** Sort field list for the current tab. */
 const currentSortFields = computed(() => {
   switch (currentTab.value) {
-    case 'stopped':
-      return STOPPED_SORT_FIELDS
+    case 'failed':
+    case 'completed':
+      return TERMINAL_SORT_FIELDS
     case 'all':
       return ALL_SORT_FIELDS
     default:
-      return ACTIVE_SORT_FIELDS
+      return PROGRESS_SORT_FIELDS
   }
 })
 
 const sortPopoverVisible = ref(false)
 
-async function onSortSelect(key: ActiveSortField | StoppedSortField | AllSortField) {
+async function onSortSelect(key: ProgressSortField | TerminalSortField | AllSortField) {
   sortPopoverVisible.value = false
   await taskStore.changeCurrentSort(key)
 }
@@ -103,10 +105,12 @@ const hasPausedTasks = computed(() =>
 )
 
 /** Active and all views show resume, pause, and delete actions. */
-const showActiveActions = computed(() => currentList.value === 'active' || currentList.value === 'all')
+const showActiveActions = computed(() => currentList.value === 'progress' || currentList.value === 'all')
 
-/** stopped and all views show Purge Records button */
-const showStoppedActions = computed(() => currentList.value === 'stopped' || currentList.value === 'all')
+/** Terminal and All scopes expose history purge. */
+const showStoppedActions = computed(
+  () => currentList.value === 'failed' || currentList.value === 'completed' || currentList.value === 'all',
+)
 
 /** GIDs of live (aria2-managed) tasks only — used by Delete All in 'all' view */
 const LIVE_STATUSES = new Set([TASK_STATUS.ACTIVE, TASK_STATUS.WAITING, TASK_STATUS.PAUSED])

@@ -1,7 +1,8 @@
 export default {
-  all: 'Alles',
-  active: 'Downloaden',
-  stopped: 'Voltooid',
+  'scope-all': 'Alle',
+  'scope-progress': 'Bezig',
+  'scope-failed': 'Mislukt',
+  'scope-completed': 'Voltooid',
   'new-task': 'Nieuwe taak',
   'open-file': 'Bestand openen',
   'uri-task': 'URL',

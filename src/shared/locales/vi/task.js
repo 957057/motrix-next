@@ -1,7 +1,8 @@
 export default {
-  all: 'Tất cả',
-  active: 'Đang tải',
-  stopped: 'Hoàn thành',
+  'scope-all': 'Tất cả',
+  'scope-progress': 'Đang thực hiện',
+  'scope-failed': 'Thất bại',
+  'scope-completed': 'Hoàn tất',
   'new-task': 'Tác vụ mới',
   'open-file': 'Mở tệp',
   'uri-task': 'URL',

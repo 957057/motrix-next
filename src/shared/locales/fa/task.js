@@ -1,7 +1,8 @@
 export default {
-  all: 'همه',
-  active: 'در حال دانلود',
-  stopped: 'تکمیل شده',
+  'scope-all': 'همه',
+  'scope-progress': 'در حال انجام',
+  'scope-failed': 'ناموفق',
+  'scope-completed': 'تکمیل‌شده',
   'new-task': 'وظیفه جدید',
   'open-file': 'باز کردن فایل',
   'uri-task': 'URL',

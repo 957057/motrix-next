@@ -1,7 +1,8 @@
 export default {
-  all: 'すべて',
-  active: 'ダウンロード中',
-  stopped: '完了',
+  'scope-all': 'すべて',
+  'scope-progress': '進行中',
+  'scope-failed': '失敗',
+  'scope-completed': '完了',
   'new-task': '新規タスク',
   'open-file': 'ファイルを開く',
   'uri-task': 'URL',

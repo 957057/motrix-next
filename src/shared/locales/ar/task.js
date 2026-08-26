@@ -1,7 +1,8 @@
 export default {
-  all: 'الكل',
-  active: 'جارٍ التنزيل',
-  stopped: 'مكتمل',
+  'scope-all': 'الكل',
+  'scope-progress': 'قيد التنفيذ',
+  'scope-failed': 'فشل',
+  'scope-completed': 'مكتمل',
   'new-task': 'مهمة جديدة',
   'open-file': 'فتح الملف',
   'uri-task': 'URL',

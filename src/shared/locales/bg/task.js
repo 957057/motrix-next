@@ -1,7 +1,8 @@
 export default {
-  all: 'Всички',
-  active: 'Изтегляне',
-  stopped: 'Завършено',
+  'scope-all': 'Всички',
+  'scope-progress': 'В процес',
+  'scope-failed': 'Неуспешни',
+  'scope-completed': 'Завършени',
   'new-task': 'Нова задача',
   'open-file': 'Отвори файл',
   'uri-task': 'URL',

@@ -1,7 +1,8 @@
 export default {
-  all: 'Semua',
-  active: 'Mengunduh',
-  stopped: 'Selesai',
+  'scope-all': 'Semua',
+  'scope-progress': 'Sedang berjalan',
+  'scope-failed': 'Gagal',
+  'scope-completed': 'Selesai',
   'new-task': 'Tugas baru',
   'open-file': 'Buka File',
   'uri-task': 'URL',

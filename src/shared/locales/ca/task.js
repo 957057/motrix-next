@@ -1,7 +1,8 @@
 export default {
-  all: 'Tot',
-  active: 'Descarregant',
-  stopped: 'Completat',
+  'scope-all': 'Totes',
+  'scope-progress': 'En curs',
+  'scope-failed': 'Fallides',
+  'scope-completed': 'Completades',
   'new-task': 'Nova tasca',
   'open-file': 'Obrir fitxer',
   'uri-task': 'URL',

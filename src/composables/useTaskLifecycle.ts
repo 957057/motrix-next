@@ -4,7 +4,7 @@
  */
 import type { Aria2Task, Aria2File, HistoryRecord, HistoryMeta } from '@shared/types'
 import { normalizeSep } from '@shared/utils/autoArchive'
-import { isBtMetadataTask } from '@shared/utils/task'
+import { collectTaskIdentityBuckets, isBtMetadataTask } from '@shared/utils/task'
 import { logger } from '@shared/logger'
 
 /** Detect magnet tasks that are still resolving BitTorrent metadata. */
@@ -139,10 +139,7 @@ export function historyRecordToTask(record: HistoryRecord): Aria2Task {
 
 /** Merge live aria2 tasks with persisted history records.
  *
- * Deduplicates on two dimensions:
- * 1. **GID** — same-session dedup (task still in aria2 with original GID).
- * 2. **infoHash** — cross-session dedup (aria2 reassigns GIDs on session
- *    restore, but the torrent's infoHash is globally stable).
+ * Deduplicates by GID and stable protocol identities. Live engine data wins.
  *
  * Aria2 live data always takes priority. History-only records (from
  * previous sessions) are appended after the live data. */
@@ -183,26 +180,19 @@ export function mergeHistoryIntoTasks(aria2Tasks: Aria2Task[], historyRecords: H
     }
   }
 
-  // Primary dedup key: GID (handles same-session tasks)
-  const seenGids = new Set(aria2Tasks.map((t) => t.gid))
-
-  // Secondary dedup key: infoHash (handles cross-session BT tasks).
-  // Metadata tasks are excluded — their infoHash is identical to the real
-  // download task's, and including it would incorrectly suppress the download
-  // task's history record when the metadata task lingers in tellStopped.
-  const seenInfoHashes = new Set<string>()
-  for (const t of aria2Tasks) {
-    if (t.infoHash && !isMetadataTask(t)) seenInfoHashes.add(t.infoHash)
-  }
+  const identities = collectTaskIdentityBuckets(aria2Tasks.filter((task) => !isMetadataTask(task)))
+  const seenGids = new Set(identities.gids)
+  const seenInfoHashes = new Set(identities.btInfoHashes)
+  const seenEd2kHashes = new Set(identities.ed2kHashes)
+  const seenEd2kLinks = new Set(identities.ed2kLinks)
 
   const historyOnly = historyRecords.filter((r) => {
     // Same-session: GID match → aria2 data wins
     if (seenGids.has(r.gid)) return false
-    // Cross-session: infoHash match → live seeding task wins
-    if (r.meta) {
-      const meta = parseHistoryMeta(r)
-      if (meta.infoHash && seenInfoHashes.has(meta.infoHash)) return false
-    }
+    const meta = parseHistoryMeta(r)
+    if (meta.infoHash && seenInfoHashes.has(meta.infoHash)) return false
+    if (meta.ed2kHash && seenEd2kHashes.has(meta.ed2kHash)) return false
+    if (meta.ed2kLink && seenEd2kLinks.has(meta.ed2kLink)) return false
     return true
   })
 

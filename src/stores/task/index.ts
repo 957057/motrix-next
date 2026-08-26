@@ -19,10 +19,11 @@ import {
   createManualOrderSnapshot,
   sortTasks,
   sortRecords,
-  type ActiveSortField,
+  type ProgressSortField,
   type AllSortField,
   type SortDirection,
-  type StoppedSortField,
+  type TaskScope,
+  type TerminalSortField,
 } from '@/composables/useTaskSort'
 import { DEFAULT_TASK_SORT } from '@/composables/useTaskSort'
 import { useHistoryStore } from '@/stores/history'
@@ -34,17 +35,23 @@ import { createTaskOperations } from './operations'
 
 export type { Aria2Task, Aria2File, Aria2Peer }
 
-type TaskTabKey = 'active' | 'stopped' | 'all'
-
 const DEFAULT_TASK_PAGE_SIZE = 20
+const TASK_SCOPES: readonly TaskScope[] = ['all', 'progress', 'failed', 'completed']
 
-function normalizeTaskTab(list: string): TaskTabKey {
-  return list === 'stopped' ? 'stopped' : list === 'all' ? 'all' : 'active'
+function normalizeTaskScope(list: string): TaskScope {
+  return TASK_SCOPES.includes(list as TaskScope) ? (list as TaskScope) : 'all'
+}
+
+export interface TaskCounts {
+  all: number
+  progress: number
+  failed: number
+  completed: number
 }
 
 export const useTaskStore = defineStore('task', () => {
   const preferenceStore = usePreferenceStore()
-  const currentList = ref('active')
+  const currentList = ref<TaskScope>('all')
   const taskDetailVisible = ref(false)
   const currentTaskGid = ref(EMPTY_STRING)
   const enabledFetchPeers = ref(false)
@@ -54,15 +61,20 @@ export const useTaskStore = defineStore('task', () => {
   const taskList = ref<Aria2Task[]>([])
   const removingGids = ref<string[]>([])
   const taskListTransitionRevision = ref(0)
+  const taskCounts = reactive<TaskCounts>({ all: 0, progress: 0, failed: 0, completed: 0 })
   const taskPagination = reactive({
-    active: { page: 1, total: 0, loaded: false },
-    stopped: { page: 1, total: 0, loaded: false },
     all: { page: 1, total: 0, loaded: false },
+    progress: { page: 1, total: 0, loaded: false },
+    failed: { page: 1, total: 0, loaded: false },
+    completed: { page: 1, total: 0, loaded: false },
     pageSize: clampPageSize(preferenceStore.config.taskPageSize),
   })
   const visibleTaskPageCount = ref(1)
 
   let api: TaskApi
+  let apiReady = false
+  let countRequestId = 0
+  let listRequestId = 0
 
   /** In-memory map: GID → original .torrent file path for post-download cleanup. */
   const torrentSourcePaths = new Map<string, string>()
@@ -75,6 +87,7 @@ export const useTaskStore = defineStore('task', () => {
 
   function setApi(a: TaskApi) {
     api = a
+    apiReady = true
     // Wire up task operations once API is available
     const ops = createTaskOperations({
       api,
@@ -86,13 +99,15 @@ export const useTaskStore = defineStore('task', () => {
       requestMagnetSelection: (gid) => {
         void import('@/stores/app').then(({ useAppStore }) => useAppStore().requestMagnetSelection(gid))
       },
+      refreshTaskCounts,
     })
     Object.assign(taskOps, ops)
   }
 
   async function changeCurrentList(list: string) {
-    const sameList = currentList.value === list
-    currentList.value = list
+    const scope = normalizeTaskScope(list)
+    const sameList = currentList.value === scope
+    currentList.value = scope
     if (!sameList) {
       const tab = currentTaskTab()
       if (taskPagination[tab].loaded) refreshCurrentTaskPageCount()
@@ -100,8 +115,8 @@ export const useTaskStore = defineStore('task', () => {
     await fetchList()
   }
 
-  function currentTaskTab(): TaskTabKey {
-    return normalizeTaskTab(currentList.value)
+  function currentTaskTab(): TaskScope {
+    return currentList.value
   }
 
   function clampPage(page: number): number {
@@ -135,7 +150,7 @@ export const useTaskStore = defineStore('task', () => {
     taskPagination[tab].loaded = true
   }
 
-  function setTaskPage(tab: TaskTabKey, page: number) {
+  function setTaskPage(tab: TaskScope, page: number) {
     taskPagination[tab].page = clampPage(page)
   }
 
@@ -166,35 +181,66 @@ export const useTaskStore = defineStore('task', () => {
     },
   )
 
-  async function fetchList() {
+  async function refreshTaskCounts(): Promise<void> {
+    if (!apiReady) return
+    const requestId = ++countRequestId
     try {
-      const tabAtFetchStart = currentTaskTab()
-      // Stopped tab is DB-primary: history.db is the single source of truth.
-      // Active tab reads from aria2 (tellActive + tellWaiting).
-      // All tab merges: aria2 active + aria2 stopped (bridge) + history DB.
+      const historyStore = useHistoryStore()
+      const [liveTasks, statusCounts] = await Promise.all([
+        api.fetchTaskList({ type: 'active' }).then((tasks) => tasks.filter((task) => !checkTaskIsEd2kSearch(task))),
+        historyStore.getStatusCounts(),
+      ])
+      const [completedOverlap, failedOverlap] = await Promise.all([
+        historyStore.countRecordsMatchingTaskIdentities(liveTasks, 'complete'),
+        historyStore.countRecordsMatchingTaskIdentities(liveTasks, 'error'),
+      ])
+      if (requestId !== countRequestId) return
+
+      const progress = liveTasks.length
+      const completed = Math.max(0, statusCounts.completed - completedOverlap)
+      const failed = Math.max(0, statusCounts.failed - failedOverlap)
+      Object.assign(taskCounts, { progress, completed, failed, all: progress + completed + failed })
+    } catch (e) {
+      if (requestId !== countRequestId) return
+      logger.debug('TaskStore.refreshTaskCounts', e instanceof Error ? e.message : String(e))
+    }
+  }
+
+  async function fetchList() {
+    const requestId = ++listRequestId
+    try {
+      const scope = currentTaskTab()
+      // Progress is engine-primary. Failed and completed are history-primary.
+      // All is the exclusive union of live engine tasks and persisted terminal records.
       const sortConfig = usePreferenceStore().config?.taskSort ?? DEFAULT_TASK_SORT
       let data: Aria2Task[]
-      if (currentList.value === 'stopped') {
+      if (scope === 'failed' || scope === 'completed') {
         const historyStore = useHistoryStore()
-        const records = await historyStore.getRecords()
-        const { field, direction } = sortConfig.stopped
+        const status = scope === 'failed' ? 'error' : 'complete'
+        const [records, liveTasks] = await Promise.all([
+          historyStore.getRecords(status),
+          api.fetchTaskList({ type: 'active' }),
+        ])
+        const recordByGid = new Map(records.map((record) => [record.gid, record]))
+        const visibleRecords = mergeHistoryIntoTasks(liveTasks, records)
+          .filter((task) => task.status === status)
+          .map((task) => recordByGid.get(task.gid))
+          .filter((record): record is NonNullable<typeof record> => record !== undefined)
+        const { field, direction } = sortConfig[scope]
         if (field === 'manual') {
-          applyManualOrder(records, usePreferenceStore().config.taskManualOrder.stopped, (fresh) => {
+          applyManualOrder(visibleRecords, usePreferenceStore().config.taskManualOrder[scope], (fresh) => {
             sortRecords(fresh, 'added-at', 'desc')
           })
         } else {
-          sortRecords(records, field, direction)
+          sortRecords(visibleRecords, field, direction)
         }
-        data = records.map(historyRecordToTask)
-      } else if (currentList.value === 'all') {
-        const ALL_STOPPED_LIMIT = 128
-        const ALL_HISTORY_LIMIT = 256
-        const [activeTasks, stoppedTasks, historyRecords] = await Promise.all([
+        data = visibleRecords.map(historyRecordToTask)
+      } else if (scope === 'all') {
+        const [activeTasks, historyRecords] = await Promise.all([
           api.fetchTaskList({ type: 'active' }),
-          api.fetchTaskList({ type: 'stopped', limit: ALL_STOPPED_LIMIT }),
-          useHistoryStore().getRecords(undefined, ALL_HISTORY_LIMIT),
+          useHistoryStore().getRecords(),
         ])
-        data = mergeHistoryIntoTasks([...activeTasks, ...stoppedTasks], historyRecords)
+        data = mergeHistoryIntoTasks(activeTasks, historyRecords)
         data = data.filter((t) => !checkTaskIsEd2kSearch(t))
         // Filter stale metadata tasks (completed magnet resolution) but keep
         // actively-downloading metadata visible so users see the progress.
@@ -217,14 +263,14 @@ export const useTaskStore = defineStore('task', () => {
           sortTasks(data, field, direction, addedAtIndex)
         }
       } else {
-        // Active tab: aria2 returns insertion-order; apply user sort.
-        data = await api.fetchTaskList({ type: currentList.value })
+        // In Progress: aria2 returns insertion-order; apply user sort.
+        data = await api.fetchTaskList({ type: 'active' })
         data = data.filter((t) => !checkTaskIsEd2kSearch(t))
         trackFirstSeen(data)
         const addedAtIndex = buildSortableAddedAtMap(data, [])
-        const { field, direction } = sortConfig.active
+        const { field, direction } = sortConfig.progress
         if (field === 'manual') {
-          applyManualOrder(data, usePreferenceStore().config.taskManualOrder.active, (fresh) => {
+          applyManualOrder(data, usePreferenceStore().config.taskManualOrder.progress, (fresh) => {
             sortTasks(fresh, 'added-at', 'desc', addedAtIndex)
           })
         } else {
@@ -234,10 +280,11 @@ export const useTaskStore = defineStore('task', () => {
 
       const removing = new Set(removingGids.value)
       data = data.filter((task) => !removing.has(task.gid))
+      if (requestId !== listRequestId || currentTaskTab() !== scope) return
       taskList.value = data
       updateCurrentTaskTotal(data.length)
       clampCurrentTaskPage()
-      if (currentTaskTab() === tabAtFetchStart) refreshCurrentTaskPageCount()
+      refreshCurrentTaskPageCount()
       if (taskDetailVisible.value && currentTaskGid.value) {
         try {
           const fresh = await api.fetchTaskItemWithPeers({ gid: currentTaskGid.value })
@@ -295,7 +342,7 @@ export const useTaskStore = defineStore('task', () => {
     await saveManualOrder(createManualOrderSnapshot(nextList))
   }
 
-  async function changeCurrentSort(field: ActiveSortField | StoppedSortField | AllSortField) {
+  async function changeCurrentSort(field: ProgressSortField | TerminalSortField | AllSortField) {
     const preferenceStore = usePreferenceStore()
     const tab = currentTaskTab()
     const taskSort = preferenceStore.config?.taskSort ?? DEFAULT_TASK_SORT
@@ -382,7 +429,7 @@ export const useTaskStore = defineStore('task', () => {
       registerAddedAt(gid, now)
       historyStore.recordTaskBirth(gid, now).catch((e) => logger.debug('taskBirth.write', e))
     }
-    await fetchList()
+    await Promise.all([fetchList(), refreshTaskCounts()])
   }
 
   async function addUriAtomic(data: { uris: string[]; options: Aria2EngineOptions }) {
@@ -393,7 +440,7 @@ export const useTaskStore = defineStore('task', () => {
     registerAddedAt(gid, now)
     const historyStore = useHistoryStore()
     historyStore.recordTaskBirth(gid, now).catch((e) => logger.debug('taskBirth.write', e))
-    await fetchList()
+    await Promise.all([fetchList(), refreshTaskCounts()])
     return gid
   }
 
@@ -446,7 +493,7 @@ export const useTaskStore = defineStore('task', () => {
     const appStore = useAppStore()
     appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, gid]
 
-    await fetchList()
+    await Promise.all([fetchList(), refreshTaskCounts()])
     return gid
   }
 
@@ -466,7 +513,7 @@ export const useTaskStore = defineStore('task', () => {
     registerAddedAt(gid, now)
     const historyStore = useHistoryStore()
     historyStore.recordTaskBirth(gid, now).catch((e) => logger.debug('taskBirth.write', e))
-    await fetchList()
+    await Promise.all([fetchList(), refreshTaskCounts()])
     return gid
   }
 
@@ -494,10 +541,12 @@ export const useTaskStore = defineStore('task', () => {
         appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, gid]
       },
     )
+    await refreshTaskCounts()
   }
 
   return {
     currentList,
+    taskCounts,
     taskDetailVisible,
     currentTaskGid,
     enabledFetchPeers,
@@ -512,6 +561,7 @@ export const useTaskStore = defineStore('task', () => {
     setApi,
     changeCurrentList,
     fetchList,
+    refreshTaskCounts,
     saveManualOrder,
     saveCurrentManualOrder,
     saveVisiblePageManualOrder,

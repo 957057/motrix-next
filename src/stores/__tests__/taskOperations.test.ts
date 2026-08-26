@@ -82,8 +82,9 @@ function createDeps(api: TaskApi) {
   const currentTaskGid = ref('')
   const hideTaskDetail = vi.fn()
   const fetchList = vi.fn().mockResolvedValue(undefined)
+  const refreshTaskCounts = vi.fn().mockResolvedValue(undefined)
   const setTaskRemoving = vi.fn()
-  return { api, taskList, currentTaskGid, hideTaskDetail, fetchList, setTaskRemoving }
+  return { api, taskList, currentTaskGid, hideTaskDetail, fetchList, refreshTaskCounts, setTaskRemoving }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -98,6 +99,7 @@ describe('removeTask', () => {
     await ops.removeTask(makeTask({ gid: 'task-1', infoHash: 'hash-1' }))
     expect(api.deleteTask).toHaveBeenCalledWith({ gid: 'task-1', infoHash: 'hash-1' })
     expect(deps.fetchList).toHaveBeenCalledOnce()
+    expect(deps.refreshTaskCounts).toHaveBeenCalledOnce()
     expect(api.saveSession).toHaveBeenCalledOnce()
   })
 
@@ -396,6 +398,7 @@ describe('purgeTaskRecord', () => {
     expect(mockClearRecords).toHaveBeenCalledOnce()
     expect(api.purgeTaskRecord).toHaveBeenCalledOnce()
     expect(deps.fetchList).toHaveBeenCalledOnce()
+    expect(deps.refreshTaskCounts).toHaveBeenCalledOnce()
   })
 
   it('saves session after purging all records', async () => {
@@ -430,6 +433,7 @@ describe('batchRemoveTask', () => {
     expect(api.deleteTask).toHaveBeenCalledTimes(2)
     expect(api.deleteTask).toHaveBeenCalledWith({ gid: 'a', infoHash: undefined })
     expect(api.deleteTask).toHaveBeenCalledWith({ gid: 'b', infoHash: undefined })
+    expect(deps.refreshTaskCounts).toHaveBeenCalledOnce()
     expect(api.saveSession).toHaveBeenCalledOnce()
   })
 

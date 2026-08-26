@@ -1,7 +1,8 @@
 export default {
-  all: 'Усі',
-  active: 'Завантаження',
-  stopped: 'Завершено',
+  'scope-all': 'Усі',
+  'scope-progress': 'Виконуються',
+  'scope-failed': 'Невдалі',
+  'scope-completed': 'Завершені',
   'new-task': 'Нове завдання',
   'open-file': 'Відкрити файл',
   'uri-task': 'URL',

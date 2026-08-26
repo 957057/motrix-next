@@ -14,6 +14,8 @@ const mockHistoryFns = {
   init: vi.fn().mockResolvedValue(undefined),
   addRecord: vi.fn().mockResolvedValue(undefined),
   getRecords: vi.fn().mockResolvedValue([] as HistoryRecord[]),
+  getStatusCounts: vi.fn().mockResolvedValue({ completed: 0, failed: 0 }),
+  countRecordsMatchingTaskIdentities: vi.fn().mockResolvedValue(0),
   removeRecord: vi.fn().mockResolvedValue(undefined),
   clearRecords: vi.fn().mockResolvedValue(undefined),
   removeStaleRecords: vi.fn().mockResolvedValue(undefined),
@@ -97,6 +99,7 @@ describe('TaskStore', () => {
     store = useTaskStore()
     mockApi = createMockApi()
     store.setApi(mockApi)
+    store.currentList = 'progress'
     // Reset history mock between tests
     Object.values(mockHistoryFns).forEach((fn) => fn.mockClear())
     mockHistoryFns.getRecords.mockResolvedValue([])
@@ -123,14 +126,16 @@ describe('TaskStore', () => {
     const preferenceStore = usePreferenceStore()
     preferenceStore.updatePreference({
       taskSort: {
-        active: { field: 'manual', direction: 'desc' },
-        stopped: { field: 'added-at', direction: 'desc' },
         all: { field: 'added-at', direction: 'desc' },
+        progress: { field: 'manual', direction: 'desc' },
+        failed: { field: 'added-at', direction: 'desc' },
+        completed: { field: 'added-at', direction: 'desc' },
       },
       taskManualOrder: {
-        active: ['old-2', 'old-1'],
-        stopped: [],
         all: [],
+        progress: ['old-2', 'old-1'],
+        failed: [],
+        completed: [],
       },
     })
     registerAddedAt('old-1', '2024-01-01T00:00:00Z')
@@ -158,245 +163,78 @@ describe('TaskStore', () => {
 
     await store.changeCurrentSort('name')
 
-    expect(preferenceStore.config.taskSort.active).toEqual({ field: 'name', direction: 'desc' })
+    expect(preferenceStore.config.taskSort.progress).toEqual({ field: 'name', direction: 'desc' })
     expect(store.taskList.map((task) => task.gid)).toEqual(['beta', 'alpha'])
 
     await store.changeCurrentSort('name')
 
-    expect(preferenceStore.config.taskSort.active).toEqual({ field: 'name', direction: 'asc' })
+    expect(preferenceStore.config.taskSort.progress).toEqual({ field: 'name', direction: 'asc' })
     expect(store.taskList.map((task) => task.gid)).toEqual(['alpha', 'beta'])
     expect(saveSpy).toHaveBeenCalledTimes(2)
   })
 
-  // ─── fetchList: 'all' branch — 3-source merge ──────────────────
+  // ─── exclusive task scopes ──────────────────────────────
 
-  describe('fetchList all branch', () => {
-    beforeEach(() => {
-      // Reset mock to avoid interference from the default setup
-      mockApi.fetchTaskList.mockReset()
-    })
-
-    it('merges active + stopped + history records', async () => {
-      await store.changeCurrentList('all')
-
-      // Setup: active returns 1 task, stopped returns 1 task, history returns 1 record
-      mockApi.fetchTaskList
-        .mockResolvedValueOnce([makeMockTask('aaa', 'active')]) // active
-        .mockResolvedValueOnce([makeMockTask('bbb', 'complete')]) // stopped
+  describe('exclusive task scopes', () => {
+    it('merges live tasks and persisted history in All', async () => {
+      mockApi.fetchTaskList.mockResolvedValueOnce([makeMockTask('live', 'active')])
       mockHistoryFns.getRecords.mockResolvedValueOnce([
-        { gid: 'ccc', name: 'old.zip', status: 'complete' } as HistoryRecord,
+        { gid: 'done', name: 'done.zip', status: 'complete' } as HistoryRecord,
+        { gid: 'failed', name: 'failed.zip', status: 'error' } as HistoryRecord,
       ])
 
-      await store.fetchList()
-
-      // All 3 tasks should be present
-      expect(store.taskList).toHaveLength(3)
-      const gids = store.taskList.map((t: { gid: string }) => t.gid)
-      expect(gids).toContain('aaa')
-      expect(gids).toContain('bbb')
-      expect(gids).toContain('ccc')
-    })
-
-    it('deduplicates GIDs: aria2 data takes priority over history', async () => {
       await store.changeCurrentList('all')
 
-      // Same GID 'dup1' exists in both aria2 stopped and history DB
-      mockApi.fetchTaskList
-        .mockResolvedValueOnce([]) // active
-        .mockResolvedValueOnce([makeMockTask('dup1', 'complete')]) // stopped (aria2)
-      mockHistoryFns.getRecords.mockResolvedValueOnce([
-        { gid: 'dup1', name: 'history-version.zip', status: 'complete' } as HistoryRecord,
-      ])
-
-      await store.fetchList()
-
-      // Only one entry for 'dup1' — aria2 version wins
-      expect(store.taskList).toHaveLength(1)
-      expect(store.taskList[0].gid).toBe('dup1')
-    })
-
-    it('sorts all tasks by added_at DESC regardless of status', async () => {
-      // Pre-register birth timestamps to control sort order
-      registerAddedAt('active-1', '2024-01-01T10:00:00Z') // oldest
-      registerAddedAt('stopped-1', '2024-01-01T10:01:00Z') // middle
-
-      await store.changeCurrentList('all')
-
-      // Live active task + completed stopped task
-      mockApi.fetchTaskList
-        .mockResolvedValueOnce([makeMockTask('active-1', 'active')]) // active
-        .mockResolvedValueOnce([makeMockTask('stopped-1', 'complete')]) // stopped
-      // History record with added_at — newest
-      mockHistoryFns.getRecords.mockResolvedValueOnce([
-        {
-          gid: 'hist-1',
-          name: 'old.zip',
-          status: 'complete',
-          added_at: '2024-01-01T10:02:00Z',
-        } as HistoryRecord,
-      ])
-
-      await store.fetchList()
-
-      const gids = store.taskList.map((t: { gid: string }) => t.gid)
-      // Sorted by added_at DESC: hist-1 (newest), stopped-1, active-1 (oldest)
-      expect(gids).toEqual(['hist-1', 'stopped-1', 'active-1'])
-    })
-
-    it('calls fetchTaskList for active and stopped concurrently', async () => {
-      // changeCurrentList('all') internally calls fetchList, so we set up returns for that first
-      mockApi.fetchTaskList
-        .mockResolvedValueOnce([]) // active (consumed by changeCurrentList)
-        .mockResolvedValueOnce([]) // stopped (consumed by changeCurrentList)
-      mockHistoryFns.getRecords.mockResolvedValueOnce([])
-
-      await store.changeCurrentList('all')
-
-      // Reset to count only the explicit fetchList call
-      mockApi.fetchTaskList.mockReset()
-      mockApi.fetchTaskList
-        .mockResolvedValueOnce([]) // active
-        .mockResolvedValueOnce([]) // stopped
-      mockHistoryFns.getRecords.mockResolvedValueOnce([])
-
-      await store.fetchList()
-
-      // Should call fetchTaskList twice: once for active, once for stopped
-      expect(mockApi.fetchTaskList).toHaveBeenCalledTimes(2)
+      expect(new Set(store.taskList.map((task) => task.gid))).toEqual(new Set(['live', 'done', 'failed']))
       expect(mockApi.fetchTaskList).toHaveBeenCalledWith({ type: 'active' })
-      expect(mockApi.fetchTaskList).toHaveBeenCalledWith(expect.objectContaining({ type: 'stopped' }))
+      expect(mockHistoryFns.getRecords).toHaveBeenCalledWith()
     })
 
-    it('passes limit for stopped and history queries', async () => {
-      await store.changeCurrentList('all')
+    it('keeps a sharing task only in In Progress until sharing ends', async () => {
+      const sharing = makeMockTask('torrent', 'active', {
+        seeder: 'true',
+        infoHash: 'hash',
+        bittorrent: { info: { name: 'torrent' } },
+      })
+      const completedRecord = {
+        gid: 'torrent',
+        name: 'torrent',
+        status: 'complete',
+        task_type: 'bt',
+        meta: JSON.stringify({ infoHash: 'hash' }),
+      } as HistoryRecord
 
-      mockApi.fetchTaskList
-        .mockResolvedValueOnce([]) // active
-        .mockResolvedValueOnce([]) // stopped
-      mockHistoryFns.getRecords.mockResolvedValueOnce([])
-
-      await store.fetchList()
-
-      // The stopped call should have a limit
-      const stoppedCall = mockApi.fetchTaskList.mock.calls.find(
-        (c: unknown[]) => (c[0] as { type: string }).type === 'stopped',
-      )
-      expect(stoppedCall).toBeDefined()
-      expect((stoppedCall![0] as { limit?: number }).limit).toBeDefined()
-      expect(typeof (stoppedCall![0] as { limit?: number }).limit).toBe('number')
-
-      // History should also be called with a limit
-      expect(mockHistoryFns.getRecords).toHaveBeenCalledWith(undefined, expect.any(Number))
-    })
-
-    it('handles empty data from all sources gracefully', async () => {
-      await store.changeCurrentList('all')
-
-      mockApi.fetchTaskList.mockResolvedValueOnce([]).mockResolvedValueOnce([])
-      mockHistoryFns.getRecords.mockResolvedValueOnce([])
-
-      await store.fetchList()
-
+      mockHistoryFns.getRecords.mockResolvedValueOnce([completedRecord])
+      mockApi.fetchTaskList.mockResolvedValueOnce([sharing])
+      await store.changeCurrentList('completed')
       expect(store.taskList).toEqual([])
+
+      mockHistoryFns.getRecords.mockResolvedValueOnce([completedRecord])
+      mockApi.fetchTaskList.mockResolvedValueOnce([])
+      await store.fetchList()
+      expect(store.taskList.map((task) => task.gid)).toEqual(['torrent'])
     })
 
-    it('preserves position when task transitions from active to stopped', async () => {
-      // Simulate: task 'bbb' completes between polls.
-      // Both tasks pre-registered with birth timestamps
-      registerAddedAt('bbb', '2024-01-01T10:01:00Z') // added second (newer)
-      registerAddedAt('aaa', '2024-01-01T10:00:00Z') // added first (older)
-
-      await store.changeCurrentList('all')
-
-      // Poll 1: both active
-      mockApi.fetchTaskList
-        .mockResolvedValueOnce([makeMockTask('bbb', 'active'), makeMockTask('aaa', 'active')])
-        .mockResolvedValueOnce([])
-      mockHistoryFns.getRecords.mockResolvedValueOnce([])
-
-      await store.fetchList()
-      const poll1Gids = store.taskList.map((t: { gid: string }) => t.gid)
-      // Sorted by added_at DESC: bbb (newer) then aaa (older)
-      expect(poll1Gids).toEqual(['bbb', 'aaa'])
-
-      // Poll 2: 'bbb' moved to stopped, 'aaa' still active
-      mockApi.fetchTaskList
-        .mockResolvedValueOnce([makeMockTask('aaa', 'active')])
-        .mockResolvedValueOnce([makeMockTask('bbb', 'complete')])
-      mockHistoryFns.getRecords.mockResolvedValueOnce([])
-
-      await store.fetchList()
-      const poll2Gids = store.taskList.map((t: { gid: string }) => t.gid)
-      // Position unchanged: bbb still before aaa (sorted by added_at)
-      expect(poll2Gids).toEqual(['bbb', 'aaa'])
-    })
-
-    it('newly tracked tasks (no pre-registered added_at) sort above old DB records', async () => {
-      // Edge case: a task appears in aria2 tellStopped before addedAtMap is populated.
-      // trackFirstSeen assigns a current timestamp → sorts above old DB records.
-      await store.changeCurrentList('all')
-
-      mockApi.fetchTaskList
-        .mockResolvedValueOnce([]) // active
-        .mockResolvedValueOnce([makeMockTask('fresh', 'complete')]) // stopped
+    it('shows errors only in Failed', async () => {
       mockHistoryFns.getRecords.mockResolvedValueOnce([
-        {
-          gid: 'old',
-          name: 'old.zip',
-          status: 'complete',
-          added_at: '2024-01-01T00:00:00Z',
-        } as HistoryRecord,
+        { gid: 'error', name: 'error.zip', status: 'error' } as HistoryRecord,
       ])
+      mockApi.fetchTaskList.mockResolvedValueOnce([])
 
-      await store.fetchList()
-
-      const gids = store.taskList.map((t: { gid: string }) => t.gid)
-      // 'fresh' gets current time from trackFirstSeen → sorts first
-      expect(gids).toEqual(['fresh', 'old'])
-    })
-
-    it('filters out stale terminal metadata tasks from the stopped source', async () => {
-      await store.changeCurrentList('all')
-
-      const completedMeta = makeMockTask('meta1', 'complete', {
-        bittorrent: { state: 'downloadingMetadata' },
-      })
-      const realTask = makeMockTask('real-gid', 'active')
-
-      mockApi.fetchTaskList.mockResolvedValueOnce([realTask]).mockResolvedValueOnce([completedMeta])
-      mockHistoryFns.getRecords.mockResolvedValueOnce([])
-
-      await store.fetchList()
+      await store.changeCurrentList('failed')
 
       expect(store.taskList).toHaveLength(1)
-      expect(store.taskList[0].gid).toBe('real-gid')
+      expect(store.taskList[0].status).toBe('error')
+      expect(mockHistoryFns.getRecords).toHaveBeenCalledWith('error')
     })
 
-    it('keeps actively-downloading native aria2 metadata tasks visible', async () => {
-      await store.changeCurrentList('all')
-
-      const activeMeta = makeMockTask('meta-active', 'active', {
-        bittorrent: {},
-      })
-
-      mockApi.fetchTaskList.mockResolvedValueOnce([activeMeta]).mockResolvedValueOnce([]) // stopped
-      mockHistoryFns.getRecords.mockResolvedValueOnce([])
-
-      await store.fetchList()
-
-      expect(store.taskList).toHaveLength(1)
-      expect(store.taskList[0].gid).toBe('meta-active')
-    })
-
-    it('filters ED2K search request groups from the task list', async () => {
-      await store.changeCurrentList('all')
-
-      const searchTask = makeMockTask('search-gid', 'active', {
+    it('filters internal ED2K search groups from In Progress', async () => {
+      const searchTask = makeMockTask('search', 'active', {
         ed2k: { searchActive: true },
         files: [
           {
             index: '1',
-            path: '/Users/test/Downloads/aria2-next-ed2k-search-search-gid',
+            path: '/tmp/aria2-next-ed2k-search-search',
             length: '0',
             completedLength: '0',
             selected: 'true',
@@ -404,30 +242,36 @@ describe('TaskStore', () => {
           },
         ],
       })
-      const downloadTask = makeMockTask('download-gid', 'active')
+      mockApi.fetchTaskList.mockResolvedValueOnce([searchTask, makeMockTask('download')])
 
-      mockApi.fetchTaskList.mockResolvedValueOnce([searchTask, downloadTask]).mockResolvedValueOnce([])
-      mockHistoryFns.getRecords.mockResolvedValueOnce([])
+      await store.changeCurrentList('progress')
 
-      await store.fetchList()
+      expect(store.taskList.map((task) => task.gid)).toEqual(['download'])
+    })
 
-      expect(store.taskList).toHaveLength(1)
-      expect(store.taskList[0].gid).toBe('download-gid')
+    it('derives exclusive counts from live tasks and terminal history', async () => {
+      mockApi.fetchTaskList.mockResolvedValueOnce([makeMockTask('sharing')])
+      mockHistoryFns.getStatusCounts.mockResolvedValueOnce({ completed: 4, failed: 2 })
+      mockHistoryFns.countRecordsMatchingTaskIdentities.mockResolvedValueOnce(1).mockResolvedValueOnce(0)
+
+      await store.refreshTaskCounts()
+
+      expect(store.taskCounts).toEqual({ all: 6, progress: 1, failed: 2, completed: 3 })
     })
   })
 
   // ─── pagination ────────────────────────────────────────
 
   it('keeps independent task page state per tab and clamps overflowing pages', async () => {
-    store.setTaskPage('active', 3)
-    store.setTaskPage('stopped', 2)
+    store.setTaskPage('progress', 3)
+    store.setTaskPage('completed', 2)
     store.setTaskPageSize(2)
     await store.fetchList()
 
     store.clampCurrentTaskPage()
 
-    expect(store.taskPagination.active.page).toBe(1)
-    expect(store.taskPagination.stopped.page).toBe(2)
+    expect(store.taskPagination.progress.page).toBe(1)
+    expect(store.taskPagination.completed.page).toBe(2)
     expect(store.taskPagination.pageSize).toBe(2)
   })
 
@@ -453,7 +297,8 @@ describe('TaskStore', () => {
       ]
     })
 
-    await store.changeCurrentList('stopped')
+    mockApi.fetchTaskList.mockResolvedValueOnce([])
+    await store.changeCurrentList('completed')
 
     expect(store.currentTaskPageCount()).toBe(1)
   })
@@ -464,7 +309,7 @@ describe('TaskStore', () => {
     const saveSpy = vi.spyOn(preferenceStore, 'updateAndSave').mockResolvedValue(true)
     store.taskList = ['a', 'b', 'c', 'd', 'e'].map((gid) => makeMockTask(gid))
     store.setTaskPageSize(2)
-    store.setTaskPage('active', 2)
+    store.setTaskPage('progress', 2)
 
     await store.saveVisiblePageManualOrder([makeMockTask('d'), makeMockTask('c')])
 
@@ -472,7 +317,7 @@ describe('TaskStore', () => {
     expect(saveSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         taskManualOrder: expect.objectContaining({
-          active: ['a', 'b', 'd', 'c', 'e'],
+          progress: ['a', 'b', 'd', 'c', 'e'],
         }),
       }),
     )
@@ -584,16 +429,40 @@ describe('TaskStore', () => {
 
   it('changeCurrentList keeps the current list visible until the target tab data arrives', async () => {
     store.taskList = [makeMockTask('old')]
-    mockApi.fetchTaskList.mockImplementationOnce(async () => {
+    mockHistoryFns.getRecords.mockImplementationOnce(async () => {
       expect(store.taskList.map((task) => task.gid)).toEqual(['old'])
-      return [makeMockTask('fresh')]
+      return [{ gid: 'fresh', name: 'fresh.zip', status: 'complete' } as HistoryRecord]
     })
+    mockApi.fetchTaskList.mockResolvedValueOnce([])
 
-    await store.changeCurrentList('waiting')
+    await store.changeCurrentList('completed')
 
-    expect(store.currentList).toBe('waiting')
-    expect(mockApi.fetchTaskList).toHaveBeenCalledWith({ type: 'waiting' })
+    expect(store.currentList).toBe('completed')
+    expect(mockHistoryFns.getRecords).toHaveBeenCalledWith('complete')
     expect(store.taskList.map((task) => task.gid)).toEqual(['fresh'])
+  })
+
+  it('ignores a stale response from the previous scope', async () => {
+    let resolveProgress!: (tasks: Aria2Task[]) => void
+    mockApi.fetchTaskList.mockImplementationOnce(
+      () =>
+        new Promise<Aria2Task[]>((resolve) => {
+          resolveProgress = resolve
+        }),
+    )
+    const staleRequest = store.fetchList()
+
+    mockHistoryFns.getRecords.mockResolvedValueOnce([
+      { gid: 'completed', name: 'completed.zip', status: 'complete' } as HistoryRecord,
+    ])
+    mockApi.fetchTaskList.mockResolvedValueOnce([])
+    await store.changeCurrentList('completed')
+
+    resolveProgress([makeMockTask('stale')])
+    await staleRequest
+
+    expect(store.currentList).toBe('completed')
+    expect(store.taskList.map((task) => task.gid)).toEqual(['completed'])
   })
 
   // ─── removeTask ─────────────────────────────────────────

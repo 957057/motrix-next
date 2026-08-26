@@ -68,9 +68,7 @@ const rememberChoice = ref(false)
 const pendingTrayHide = ref(false)
 const isMaximized = ref(false)
 const { platform: currentPlatform, isMac } = usePlatform()
-const taskPaginationTab = computed(() =>
-  taskStore.currentList === 'stopped' ? 'stopped' : taskStore.currentList === 'all' ? 'all' : 'active',
-)
+const taskPaginationTab = computed(() => taskStore.currentList)
 const taskPaginationPage = computed(() => taskStore.taskPagination[taskPaginationTab.value].page)
 const taskPaginationPageSize = computed(() => taskStore.taskPagination.pageSize)
 const taskPaginationPageCount = computed(() => taskStore.currentTaskPageCount())
@@ -695,7 +693,7 @@ onMounted(async () => {
 
   async function onTaskError(task: Aria2Task): Promise<void> {
     if (isMetadataTask(task)) return
-    historyStore.refreshRecordTotal().catch((e) => logger.debug('Lifecycle.historyTotal.error', e))
+    taskStore.refreshTaskCounts().catch((e) => logger.debug('Lifecycle.taskCounts.error', e))
     const i18nKey = task.errorCode ? ARIA2_ERROR_CODES[task.errorCode] : undefined
     const errorText = i18nKey ? t(i18nKey) : task.errorMessage || t('task.error-unknown')
     handleTaskError(task, errorText, {
@@ -707,7 +705,7 @@ onMounted(async () => {
 
   async function onTaskComplete(task: Aria2Task): Promise<void> {
     if (isMetadataTask(task)) return
-    historyStore.refreshRecordTotal().catch((e) => logger.debug('Lifecycle.historyTotal', e))
+    taskStore.refreshTaskCounts().catch((e) => logger.debug('Lifecycle.taskCounts', e))
     handleTaskComplete(task, {
       messageSuccess: message.success,
       messageError: message.error,
@@ -759,7 +757,7 @@ onMounted(async () => {
 
   async function onP2pDownloadComplete(task: Aria2Task, kind: TaskSharingKind): Promise<void> {
     if (!isMetadataTask(task)) {
-      historyStore.refreshRecordTotal().catch((e) => logger.debug('Lifecycle.p2pDownloadComplete.historyTotal', e))
+      taskStore.refreshTaskCounts().catch((e) => logger.debug('Lifecycle.p2pDownloadComplete.taskCounts', e))
     }
     handleP2pDownloadComplete(task, kind, {
       messageSuccess: message.success,

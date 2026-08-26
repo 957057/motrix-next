@@ -1,7 +1,8 @@
 export default {
-  all: 'सभी',
-  active: 'डाउनलोड हो रहा है',
-  stopped: 'समाप्त',
+  'scope-all': 'सभी',
+  'scope-progress': 'प्रगति में',
+  'scope-failed': 'विफल',
+  'scope-completed': 'पूर्ण',
   'new-task': 'नया कार्य',
   'open-file': 'फ़ाइल खोलें',
   'uri-task': 'URL',

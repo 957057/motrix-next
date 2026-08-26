@@ -175,6 +175,7 @@ describe('TaskActions', () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
     mockIsEngineReady.mockReturnValue(true)
+    useTaskStore().currentList = 'progress'
     lastDialogOptions = null
 
     // Patch store methods so we can track calls without real IPC
@@ -234,7 +235,7 @@ describe('TaskActions', () => {
     it('opens purgeRecord dialog even when engine is not ready (purge operates on DB only)', async () => {
       mockIsEngineReady.mockReturnValue(false)
       const taskStore = useTaskStore()
-      taskStore.currentList = 'stopped'
+      taskStore.currentList = 'completed'
       const wrapper = createWrapper()
 
       await clickButton(wrapper, 3) // Purge (index 2 when in stopped list)
@@ -268,7 +269,7 @@ describe('TaskActions', () => {
 
     it('opens confirmation dialog for purgeRecord when engine IS ready', async () => {
       const taskStore = useTaskStore()
-      taskStore.currentList = 'stopped'
+      taskStore.currentList = 'completed'
       const wrapper = createWrapper()
 
       await clickButton(wrapper, 3) // Purge
@@ -489,7 +490,7 @@ describe('TaskActions', () => {
 
     it('purgeRecord dialog calls purgeTaskRecord on positive click', async () => {
       const taskStore = useTaskStore()
-      taskStore.currentList = 'stopped'
+      taskStore.currentList = 'completed'
       const wrapper = createWrapper()
 
       await clickButton(wrapper, 3) // Purge

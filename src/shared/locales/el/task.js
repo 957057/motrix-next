@@ -1,7 +1,8 @@
 export default {
-  all: 'Όλα',
-  active: 'Λήψη',
-  stopped: 'Ολοκληρώθηκε',
+  'scope-all': 'Όλα',
+  'scope-progress': 'Σε εξέλιξη',
+  'scope-failed': 'Απέτυχαν',
+  'scope-completed': 'Ολοκληρώθηκαν',
   'new-task': 'Νέα εργασία',
   'open-file': 'Άνοιγμα αρχείου',
   'uri-task': 'URL',

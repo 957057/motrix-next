@@ -24,10 +24,11 @@ interface TaskOperationsDeps {
   fetchList: () => Promise<void>
   setTaskRemoving?: (gid: string, removing: boolean) => void
   requestMagnetSelection?: (gid: string) => void
+  refreshTaskCounts: () => Promise<void>
 }
 
 export function createTaskOperations(deps: TaskOperationsDeps) {
-  const { api, taskList, currentTaskGid, hideTaskDetail, fetchList } = deps
+  const { api, taskList, currentTaskGid, hideTaskDetail, fetchList, refreshTaskCounts } = deps
   const setTaskRemoving = deps.setTaskRemoving ?? (() => undefined)
 
   async function resumeTasks(tasks: Aria2Task[]): Promise<{ resumed: number; blocked: number }> {
@@ -47,7 +48,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       await api.deleteTask({ gid: task.gid, infoHash: task.infoHash })
       logger.info('TaskOps.removeTask', `gid=${task.gid}`)
       setTaskRemoving(task.gid, false)
-      await fetchList()
+      await Promise.all([fetchList(), refreshTaskCounts()])
       await api.saveSession()
     } catch (error) {
       setTaskRemoving(task.gid, false)
@@ -74,7 +75,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       await api.finishSharing({ gid: task.gid })
       logger.info('TaskOps.finishSharing', `gid=${task.gid}`)
     } finally {
-      await fetchList()
+      await Promise.all([fetchList(), refreshTaskCounts()])
       await api.saveSession()
     }
   }
@@ -163,7 +164,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
     } catch (e) {
       logger.debug('TaskStore.purgeTaskRecord.aria2', e)
     }
-    await fetchList()
+    await Promise.all([fetchList(), refreshTaskCounts()])
     await api.saveSession()
   }
 
@@ -175,7 +176,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       logger.info('TaskOps.batchRemoveTask', `removed ${gids.length} task(s) gids=[${gids.join(',')}]`)
     } finally {
       gids.forEach((gid) => setTaskRemoving(gid, false))
-      await fetchList()
+      await Promise.all([fetchList(), refreshTaskCounts()])
       await api.saveSession()
     }
   }

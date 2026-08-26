@@ -41,12 +41,7 @@ let renderedTransitionRevision = taskStore.taskListTransitionRevision
 const taskCardComponent = computed(() =>
   preferenceStore.config.taskCardMode === 'compact' ? TaskCompactItem : TaskItem,
 )
-const taskPage = computed(
-  () =>
-    taskStore.taskPagination[
-      taskStore.currentList === 'stopped' ? 'stopped' : taskStore.currentList === 'all' ? 'all' : 'active'
-    ].page,
-)
+const taskPage = computed(() => taskStore.taskPagination[taskStore.currentList].page)
 const pageSize = computed(() => taskStore.taskPagination.pageSize)
 const pageTransitionKey = computed(
   () => `${taskStore.currentList}:${taskPage.value}:${pageSize.value}:${taskStore.taskListTransitionRevision}`,

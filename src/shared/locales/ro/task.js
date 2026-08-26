@@ -1,7 +1,8 @@
 export default {
-  all: 'Toate',
-  active: 'Se descarcă',
-  stopped: 'Finalizat',
+  'scope-all': 'Toate',
+  'scope-progress': 'În desfășurare',
+  'scope-failed': 'Eșuate',
+  'scope-completed': 'Finalizate',
   'new-task': 'Sarcină nouă',
   'open-file': 'Deschide fișierul',
   'uri-task': 'URL',

@@ -19,7 +19,7 @@ import TaskDetail from '@/components/task/TaskDetail.vue'
 import watermarkDark from '@/assets/logo-bolt-dark.png'
 import watermarkLight from '@/assets/logo-bolt-light.png'
 
-const props = withDefaults(defineProps<{ status?: string }>(), { status: 'active' })
+const props = withDefaults(defineProps<{ status?: string }>(), { status: 'all' })
 
 const { t } = useI18n()
 const taskStore = useTaskStore()
@@ -52,9 +52,10 @@ const {
 })
 
 const subnavs = computed(() => [
-  { key: 'all', title: t('task.all') || 'All' },
-  { key: 'active', title: t('task.active') || 'Active' },
-  { key: 'stopped', title: t('task.stopped') || 'Completed' },
+  { key: 'all', title: t('task.scope-all') || 'All' },
+  { key: 'progress', title: t('task.scope-progress') || 'In Progress' },
+  { key: 'failed', title: t('task.scope-failed') || 'Failed' },
+  { key: 'completed', title: t('task.scope-completed') || 'Completed' },
 ])
 
 const title = computed(() => {

@@ -1,7 +1,8 @@
 export default {
-  all: 'Összes',
-  active: 'Letöltés',
-  stopped: 'Befejezve',
+  'scope-all': 'Összes',
+  'scope-progress': 'Folyamatban',
+  'scope-failed': 'Sikertelen',
+  'scope-completed': 'Befejezett',
   'new-task': 'Új feladat',
   'open-file': 'Fájl megnyitása',
   'uri-task': 'URL',

@@ -11,6 +11,7 @@ export interface SubnavPaneItem {
   route: string
   active: boolean
   count?: number
+  countTone?: 'error'
   ariaLabel?: string
 }
 
@@ -43,7 +44,7 @@ defineEmits<{
             </NIcon>
             <span class="subnav-label">{{ item.label }}</span>
             <Transition name="subnav-count">
-              <SubnavCount v-if="item.count !== undefined" :value="item.count" />
+              <SubnavCount v-if="item.count !== undefined" :value="item.count" :tone="item.countTone" />
             </Transition>
           </button>
         </li>

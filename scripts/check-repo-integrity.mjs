@@ -25,10 +25,14 @@ const problems = []
 // ── 1. Locale key parity ────────────────────────────────────────────
 
 function extractLocaleKeys(filePath) {
+  return new Set(extractLocaleKeyList(filePath))
+}
+
+function extractLocaleKeyList(filePath) {
   const content = readFileSync(filePath, 'utf-8')
   const quoted = Array.from(content.matchAll(/^\s*'([^']+)'\s*:/gm), (m) => m[1])
   const bare = Array.from(content.matchAll(/^\s*([A-Za-z_$][\w$-]*)\s*:/gm), (m) => m[1])
-  return new Set([...quoted, ...bare])
+  return [...quoted, ...bare]
 }
 
 const locales = readdirSync(LOCALES_DIR, { withFileTypes: true })
@@ -38,6 +42,25 @@ const locales = readdirSync(LOCALES_DIR, { withFileTypes: true })
 const namespaces = readdirSync(join(LOCALES_DIR, 'en-US'))
   .filter((f) => f.endsWith('.js') && f !== 'index.js')
   .map((f) => f.replace(/\.js$/, ''))
+
+for (const namespace of namespaces) {
+  for (const locale of locales) {
+    const filePath = join(LOCALES_DIR, locale, `${namespace}.js`)
+    let keys
+    try {
+      keys = extractLocaleKeyList(filePath)
+    } catch {
+      continue
+    }
+    const seen = new Set()
+    const duplicates = new Set()
+    for (const key of keys) {
+      if (seen.has(key)) duplicates.add(key)
+      seen.add(key)
+    }
+    if (duplicates.size) problems.push(`locale ${locale}/${namespace}.js duplicate keys: ${[...duplicates].join(', ')}`)
+  }
+}
 
 for (const namespace of namespaces) {
   const reference = extractLocaleKeys(join(LOCALES_DIR, 'en-US', `${namespace}.js`))
@@ -145,9 +168,10 @@ const dynamicKeyContracts = {
     'file-category-programs',
   ]),
   task: new Set([
-    'all',
-    'active',
-    'stopped',
+    'scope-all',
+    'scope-progress',
+    'scope-failed',
+    'scope-completed',
     'status-active',
     'status-waiting',
     'status-paused',

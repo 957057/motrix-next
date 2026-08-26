@@ -113,10 +113,10 @@ describe('TaskView', () => {
     fetchListMock.mockResolvedValue(undefined)
 
     const wrapper = mount(TaskView, {
-      props: { status: 'active' },
+      props: { status: 'progress' },
     })
 
-    expect(changeCurrentListMock).toHaveBeenCalledWith('active')
+    expect(changeCurrentListMock).toHaveBeenCalledWith('progress')
 
     wrapper.unmount()
     pendingChange.resolve()

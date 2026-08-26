@@ -200,18 +200,20 @@ describe('hydrateAppConfig', () => {
     const result = hydrateAppConfig({
       configVersion: CONFIG_VERSION,
       taskManualOrder: {
-        active: ['a', '', 'a', 1],
-        stopped: 'bad',
         all: ['z'],
+        progress: ['a', '', 'a', 1],
+        failed: 'bad',
+        completed: [],
       } as never,
     })
 
     expect(result.config.taskManualOrder).toEqual({
-      active: ['a'],
-      stopped: [],
       all: ['z'],
+      progress: ['a'],
+      failed: [],
+      completed: [],
     })
-    expect(result.repairs).toEqual(expect.arrayContaining(['taskManualOrder.active', 'taskManualOrder.stopped']))
+    expect(result.repairs).toEqual(expect.arrayContaining(['taskManualOrder.progress', 'taskManualOrder.failed']))
   })
 
   it('repairs legacy auto proxy mode to disabled direct mode', () => {
