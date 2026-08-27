@@ -72,6 +72,9 @@ const actions = computed(() => {
     primary = [{ key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' }]
   } else if (lifecycle === 'error') {
     primary = [
+      ...(props.task.status === TASK_STATUS.ERROR
+        ? [{ key: 'retry', icon: RefreshOutline, label: t('task.retry-task'), event: 'retry' }]
+        : []),
       { key: 'info', icon: InformationCircleOutline, label: t('task.task-detail-title'), event: 'show-info' },
       { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
@@ -152,21 +155,6 @@ const actions = computed(() => {
     .reverse()
 })
 
-const actionSlots = computed(() => {
-  const next = [...actions.value]
-  const minimum = props.density === 'compact' ? 5 : 6
-  while (next.length < minimum) {
-    next.push({
-      key: `placeholder-${next.length}`,
-      icon: CloseOutline,
-      label: '',
-      event: '',
-      disabled: true,
-    })
-  }
-  return next
-})
-
 function onAction(event: string) {
   switch (event) {
     case 'pause':
@@ -216,12 +204,7 @@ function onAction(event: string) {
     class="task-item-actions"
     :class="{ 'task-item-actions--compact': props.density === 'compact' }"
   >
-    <li
-      v-for="action in actionSlots"
-      :key="action.key"
-      class="task-item-action-slot"
-      :class="{ 'task-item-action-slot--placeholder': action.key.startsWith('placeholder-') }"
-    >
+    <li v-for="(action, index) in actions" :key="index" class="task-item-action-slot">
       <MTooltip>
         <template #trigger>
           <button
@@ -287,10 +270,6 @@ function onAction(event: string) {
     max-width 0.2s ease-out,
     margin 0.2s ease-out,
     opacity 0.2s ease-out;
-}
-.task-item-action-slot--placeholder {
-  visibility: hidden;
-  pointer-events: none;
 }
 .task-item-action {
   appearance: none;

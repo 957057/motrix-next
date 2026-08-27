@@ -133,6 +133,25 @@ describe('TaskItemActions', () => {
     expect(wrapper.find('[aria-label="task.delete-task"]').exists()).toBe(true)
   })
 
+  it('offers retry for terminal BitTorrent failures', async () => {
+    const wrapper = mountActions(
+      makeTask('error', {
+        bittorrent: {
+          state: 'error',
+          error: {
+            code: 'network',
+            kind: 'network',
+            category: 'network',
+            recoverable: 'true',
+            message: 'network failure',
+          },
+        },
+      }),
+    )
+    await wrapper.find('[aria-label="task.retry-task"]').trigger('click')
+    expect(wrapper.emitted('retry')).toBeTruthy()
+  })
+
   it('keeps terminal actions accessible', () => {
     const wrapper = mountActions(makeTask('complete'))
     const actions = wrapper.findAll('.task-item-action')
