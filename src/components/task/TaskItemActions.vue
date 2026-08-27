@@ -23,12 +23,15 @@ import type { Aria2Task } from '@shared/types'
 import { getBtLifecycleState } from '@/composables/useBtLifecycle'
 import { getSharingActionLabelKey, getTaskSharingState } from '@shared/utils/task'
 
-const props = withDefaults(defineProps<{ task: Aria2Task; fileMissing?: boolean; density?: 'full' | 'compact' }>(), {
-  density: 'full',
-})
+const props = withDefaults(
+  defineProps<{ task: Aria2Task; fileMissing?: boolean; pending?: boolean; density?: 'full' | 'compact' }>(),
+  { density: 'full' },
+)
 const emit = defineEmits<{
   pause: []
   resume: []
+  retry: []
+  redownload: []
   'finish-sharing': []
   delete: []
   'delete-record': []
@@ -111,19 +114,19 @@ const actions = computed(() => {
       [TASK_STATUS.ERROR]: [
         { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
         { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
-        { key: 'restart', icon: RefreshOutline, label: t('task.resume-task'), event: 'resume' },
+        { key: 'retry', icon: RefreshOutline, label: t('task.retry-task'), event: 'retry' },
         { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
       ],
       [TASK_STATUS.COMPLETE]: [
         { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
         { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
-        { key: 'restart', icon: RefreshOutline, label: t('task.restart-task'), event: 'resume' },
+        { key: 'redownload', icon: RefreshOutline, label: t('task.restart-task'), event: 'redownload' },
         { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
       ],
       [TASK_STATUS.REMOVED]: [
         { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
         { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
-        { key: 'restart', icon: RefreshOutline, label: t('task.restart-task'), event: 'resume' },
+        { key: 'redownload', icon: RefreshOutline, label: t('task.restart-task'), event: 'redownload' },
         { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
       ],
     }
@@ -142,7 +145,26 @@ const actions = computed(() => {
     { key: 'info', icon: InformationCircleOutline, label: t('task.task-detail-title'), event: 'show-info' },
   ].filter((a) => !primaryKeys.has(a.key))
 
-  return [...leading, ...common, ...trailing].reverse()
+  return [...leading, ...common, ...trailing]
+    .map((action) =>
+      action.key === 'retry' || action.key === 'redownload' ? { ...action, disabled: props.pending } : action,
+    )
+    .reverse()
+})
+
+const actionSlots = computed(() => {
+  const next = [...actions.value]
+  const minimum = props.density === 'compact' ? 5 : 6
+  while (next.length < minimum) {
+    next.push({
+      key: `placeholder-${next.length}`,
+      icon: CloseOutline,
+      label: '',
+      event: '',
+      disabled: true,
+    })
+  }
+  return next
 })
 
 function onAction(event: string) {
@@ -152,6 +174,12 @@ function onAction(event: string) {
       break
     case 'resume':
       emit('resume')
+      break
+    case 'retry':
+      emit('retry')
+      break
+    case 'redownload':
+      emit('redownload')
       break
     case 'finish-sharing':
       emit('finish-sharing')
@@ -188,7 +216,12 @@ function onAction(event: string) {
     class="task-item-actions"
     :class="{ 'task-item-actions--compact': props.density === 'compact' }"
   >
-    <li v-for="(action, index) in actions" :key="index" class="task-item-action-slot">
+    <li
+      v-for="action in actionSlots"
+      :key="action.key"
+      class="task-item-action-slot"
+      :class="{ 'task-item-action-slot--placeholder': action.key.startsWith('placeholder-') }"
+    >
       <MTooltip>
         <template #trigger>
           <button
@@ -254,6 +287,10 @@ function onAction(event: string) {
     max-width 0.2s ease-out,
     margin 0.2s ease-out,
     opacity 0.2s ease-out;
+}
+.task-item-action-slot--placeholder {
+  visibility: hidden;
+  pointer-events: none;
 }
 .task-item-action {
   appearance: none;

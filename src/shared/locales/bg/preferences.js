@@ -378,8 +378,7 @@ export default {
   'file-category-reset': 'Възстановяване по подразбиране',
   'file-category-reset-confirm': 'Щракнете отново за възстановяване',
   'file-category-custom-label': 'Име на категория',
-  'file-category-auto-archive-hint':
-    'Неразпознатите типове се записват в пътя по подразбиране и автоматично се архивират след изтегляне',
+  'file-category-auto-archive-hint': 'Разпознатите файлове се записват в папките на категориите, а останалите използват пътя по подразбиране',
   'file-category-manage': 'Управление',
   'file-category-manager-title': 'Категории за изтегляне',
   'file-category-manager-hint': 'Настройте типове файлове, URL правила и целеви папки',

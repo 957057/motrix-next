@@ -46,6 +46,11 @@ describe('useMagnetFlow', () => {
       expect(options['pause-metadata']).toBe('false')
     })
 
+    it('pauses metadata when download-all needs native file classification', () => {
+      const options = buildMagnetOptions({ dir: '/downloads' }, 'download-all', true)
+      expect(options['pause-metadata']).toBe('true')
+    })
+
     it('pauses metadata for prompt and manual selection', () => {
       const options = buildMagnetOptions({ dir: '/downloads', 'stream-max-connections': '8' }, 'prompt')
       expect(options['pause-metadata']).toBe('true')

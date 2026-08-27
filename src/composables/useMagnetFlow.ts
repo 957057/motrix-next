@@ -23,10 +23,11 @@ export function isMagnetUri(uri: string): boolean {
 export function buildMagnetOptions(
   baseOptions: Aria2EngineOptions,
   policy: MagnetFileSelectionPolicy,
+  classifyFiles = false,
 ): Aria2EngineOptions {
   return {
     ...baseOptions,
-    'pause-metadata': policy === 'download-all' ? 'false' : 'true',
+    'pause-metadata': policy === 'download-all' && !classifyFiles ? 'false' : 'true',
   }
 }
 

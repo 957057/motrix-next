@@ -376,8 +376,7 @@ export default {
   'file-category-reset': 'بازیابی پیش‌فرض',
   'file-category-reset-confirm': 'برای بازیابی دوباره کلیک کنید',
   'file-category-custom-label': 'نام دسته‌بندی',
-  'file-category-auto-archive-hint':
-    'انواع ناشناخته در مسیر پیش‌فرض ذخیره و پس از دانلود به‌صورت خودکار بایگانی می‌شوند',
+  'file-category-auto-archive-hint': 'فایل‌های شناخته‌شده در پوشه‌های دسته‌بندی ذخیره می‌شوند و سایر فایل‌ها از مسیر پیش‌فرض استفاده می‌کنند',
   'file-category-manage': 'مدیریت',
   'file-category-manager-title': 'دسته‌های دانلود',
   'file-category-manager-hint': 'نوع فایل، قوانین URL و پوشه‌های مقصد را تنظیم کنید',

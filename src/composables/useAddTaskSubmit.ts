@@ -7,24 +7,9 @@
  * - Manual URI submission with multi-URI rename
  * - Error classification (engine-not-ready, duplicate, generic)
  */
-import { ref } from 'vue'
-import type { Ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
-import { useAppStore } from '@/stores/app'
-import { useTaskStore } from '@/stores/task'
-import { usePreferenceStore } from '@/stores/preference'
-import { useAppMessage } from '@/composables/useAppMessage'
-import { handleTaskStart } from '@/composables/useTaskNotifyHandlers'
+import type { useTaskStore } from '@/stores/task'
 import { isEngineReady } from '@/api/aria2'
-import {
-  normalizeUriLines,
-  parseAria2Input,
-  extractDecodedFilename,
-  extractMagnetDisplayName,
-  hasExtension,
-  sanitizeAria2OutHint,
-} from '@shared/utils/batchHelpers'
+import { parseAria2Input, extractDecodedFilename, hasExtension, sanitizeAria2OutHint } from '@shared/utils/batchHelpers'
 import { buildOuts } from '@shared/utils/rename'
 import { invoke } from '@tauri-apps/api/core'
 import { logger } from '@shared/logger'
@@ -45,8 +30,9 @@ import {
 } from '@shared/utils/headerSanitize'
 import { summarizeHeaderForwarding } from '@shared/utils/externalInputDiagnostics'
 import { getErrorMessage } from '@shared/utils/errorMessage'
-import { buildTaskProxyOptions, getDownloadProxy, type TaskProxyMode } from '@shared/utils/proxy'
+import { buildTaskProxyOptions, type TaskProxyMode } from '@shared/utils/proxy'
 import { resolveUserAgentFromContext } from '@shared/utils/userAgentPolicy'
+import { resolveDownloadDir, resolveFileSetCategory } from '@shared/utils/fileCategory'
 
 export { getDownloadProxy } from '@shared/utils/proxy'
 
@@ -77,11 +63,6 @@ export interface AddTaskForm {
   uriRequestContexts?: Record<string, ExternalDownloadContext>
 }
 
-export interface UseAddTaskSubmitOptions {
-  form: Ref<AddTaskForm>
-  onClose: () => void
-}
-
 export interface MagnetSubmitFailure {
   uri: string
   error: string
@@ -99,10 +80,27 @@ interface ManualRegularEntry {
   hasInputOptions: boolean
 }
 
-function buildTorrentTaskOptions(options: Aria2EngineOptions, selectedFileIndices: number[]): Aria2EngineOptions {
+export interface FileCategoryPolicy {
+  enabled: boolean
+  categories: FileCategory[]
+}
+
+function buildTorrentTaskOptions(
+  item: BatchItem,
+  options: Aria2EngineOptions,
+  fileCategory?: FileCategoryPolicy,
+): Aria2EngineOptions {
+  const selectedIndices = new Set(item.selectedFileIndices ?? [])
+  const selectedFiles = (item.torrentMeta?.files ?? [])
+    .filter((file) => selectedIndices.has(Number(file.index)) && Number(file.length) > 0)
+    .map((file) => ({ path: file.path }))
+  const category = fileCategory?.enabled
+    ? resolveFileSetCategory(selectedFiles, fileCategory.categories, { urls: [item.source] })
+    : undefined
+
   return {
-    dir: options.dir,
-    'select-file': [...selectedFileIndices].sort((a, b) => a - b).join(','),
+    dir: category?.directory ?? options.dir,
+    'select-file': [...selectedIndices].sort((a, b) => a - b).join(','),
   }
 }
 
@@ -210,6 +208,7 @@ export async function submitBatchItems(
   items: BatchItem[],
   options: Aria2EngineOptions,
   taskStore: ReturnType<typeof useTaskStore>,
+  fileCategory?: FileCategoryPolicy,
 ): Promise<number> {
   let failures = 0
   for (const item of items) {
@@ -221,7 +220,7 @@ export async function submitBatchItems(
     }
     try {
       if (item.kind === 'torrent') {
-        const opts = buildTorrentTaskOptions(options, item.selectedFileIndices)
+        const opts = buildTorrentTaskOptions(item, options, fileCategory)
         const gid = await taskStore.addTorrent({ torrent: item.payload, options: opts })
         taskStore.registerTorrentSource(gid, item.source)
       }
@@ -248,7 +247,7 @@ export async function submitManualUris(
   form: AddTaskForm,
   options: Aria2EngineOptions,
   taskStore: ReturnType<typeof useTaskStore>,
-  fileCategory?: { enabled: boolean; categories: FileCategory[] },
+  fileCategory?: FileCategoryPolicy,
   downloadProxy?: string,
 ): Promise<ManualUriSubmitResult> {
   if (!form.uris.trim()) return { submittedTaskNames: [], magnetGids: [], magnetFailures: [] }
@@ -301,11 +300,22 @@ export async function submitManualUris(
       const contextEntries = form.uriRequestContexts ?? {}
       for (const entry of regularEntries) {
         if (entry.uris.length > 1) {
+          const atomicOptions = { ...entry.options }
+          if (fileCategory?.enabled) {
+            const candidate = getScalarOption(atomicOptions, 'out') || extractDecodedFilename(entry.uris[0])
+            atomicOptions.dir = resolveDownloadDir(
+              candidate || entry.uris[0],
+              getScalarOption(atomicOptions, 'dir'),
+              true,
+              fileCategory.categories,
+              { urls: entry.uris },
+            )
+          }
           await taskStore.addUriAtomic({
             uris: entry.uris,
-            options: entry.options,
+            options: atomicOptions,
           })
-          const out = getScalarOption(entry.options, 'out')
+          const out = getScalarOption(atomicOptions, 'out')
           submittedTaskNames.push(...entry.uris.map((uri) => resolveSubmittedTaskName(uri, out)))
           continue
         }
@@ -371,7 +381,7 @@ export async function submitManualUris(
   }
   for (const uri of magnetUris) {
     try {
-      const gid = await taskStore.addMagnetUri({ uri, options })
+      const gid = await taskStore.addMagnetUri({ uri, options, fileCategory })
       result.magnetGids.push(gid)
     } catch (e) {
       logger.error('submitManualUris.magnet', e)
@@ -388,98 +398,4 @@ export async function submitManualUris(
 function resolveSubmittedTaskName(uri: string, outHint?: string): string {
   const out = outHint ? sanitizeAria2OutHint(outHint) : ''
   return out || extractDecodedFilename(uri) || uri
-}
-
-function buildSubmitErrorLabels(t: (key: string) => string): Parameters<typeof getErrorMessage>[1] {
-  return {
-    fallback: t('task.error-unknown'),
-    labels: { Aria2: t('task.error-aria2-next') },
-  }
-}
-
-export function useAddTaskSubmit({ form, onClose }: UseAddTaskSubmitOptions) {
-  const { t } = useI18n()
-  const router = useRouter()
-  const appStore = useAppStore()
-  const taskStore = useTaskStore()
-  const preferenceStore = usePreferenceStore()
-  const message = useAppMessage()
-  const submitting = ref(false)
-
-  async function handleSubmit() {
-    if (submitting.value) return
-    submitting.value = true
-
-    try {
-      const options = buildEngineOptions(form.value)
-      const batch = appStore.pendingBatch
-      let manualResult: ManualUriSubmitResult = { submittedTaskNames: [], magnetGids: [], magnetFailures: [] }
-
-      if (batch.length > 0) {
-        await submitBatchItems(batch, options, taskStore)
-      }
-      if (form.value.uris.trim()) {
-        manualResult = await submitManualUris(
-          form.value,
-          options,
-          taskStore,
-          {
-            enabled: preferenceStore.config.fileCategoryEnabled,
-            categories: preferenceStore.config.fileCategories,
-          },
-          getDownloadProxy(preferenceStore.config.proxy),
-        )
-        // addMagnetUri owns native metadata behavior and any pending selection state.
-      }
-
-      const failedCount = batch.filter((i) => i.status === 'failed').length + manualResult.magnetFailures.length
-      logger.info(
-        'AddTask.submit',
-        `batch=${batch.length} manual=${normalizeUriLines(form.value.uris).length} failed=${failedCount}`,
-      )
-      if (failedCount > 0) {
-        message.warning(`${failedCount} ${t('task.failed') || 'failed'}`, { closable: true })
-      } else {
-        onClose()
-
-        // ── Start notification (aggregated) ──────────────────────
-        const taskNames: string[] = []
-        for (const item of batch) {
-          if (item.status === 'submitted') {
-            taskNames.push(item.displayName)
-          }
-        }
-        taskNames.push(...manualResult.submittedTaskNames)
-        const allUris = normalizeUriLines(form.value.uris)
-        const magnetUris = allUris.filter(isMagnetUri)
-        for (let i = 0; i < manualResult.magnetGids.length; i++) {
-          const dn = magnetUris[i] ? extractMagnetDisplayName(magnetUris[i]) : ''
-          taskNames.push(dn || t('task.magnet-task'))
-        }
-        handleTaskStart(taskNames, {
-          messageInfo: message.info,
-          t,
-        })
-
-        if (preferenceStore.config.newTaskShowDownloading !== false) {
-          router.push({ path: '/task/all' }).catch(() => {})
-        }
-      }
-    } catch (e: unknown) {
-      const category = classifySubmitError(e)
-      const errMsg = getErrorMessage(e, buildSubmitErrorLabels(t))
-      logger.error('AddTask.submit', e)
-      if (category === 'engine-not-ready') {
-        message.error(t('app.engine-not-ready'), { closable: true })
-      } else if (category === 'duplicate') {
-        message.warning(errMsg, { closable: true })
-      } else {
-        message.error(errMsg, { closable: true })
-      }
-    } finally {
-      submitting.value = false
-    }
-  }
-
-  return { submitting, handleSubmit }
 }

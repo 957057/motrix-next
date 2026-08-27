@@ -379,8 +379,7 @@ export default {
   'file-category-reset': 'Pulihkan Default',
   'file-category-reset-confirm': 'Klik lagi untuk memulihkan',
   'file-category-custom-label': 'Nama Kategori',
-  'file-category-auto-archive-hint':
-    'Jenis yang tidak dikenali disimpan ke jalur default dan diarsipkan secara otomatis setelah unduhan',
+  'file-category-auto-archive-hint': 'File yang dikenali disimpan di folder kategori, file lainnya menggunakan jalur default',
   'file-category-manage': 'Kelola',
   'file-category-manager-title': 'Kategori Unduhan',
   'file-category-manager-hint': 'Atur jenis file, aturan URL, dan folder tujuan',

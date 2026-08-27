@@ -19,7 +19,6 @@ import { getErrorMessage } from '@shared/utils/errorMessage'
 import { invoke } from '@tauri-apps/api/core'
 import { deleteTaskFiles } from '@/composables/useFileDelete'
 import { resolveTaskFilePath, requestFileRecheck } from '@/composables/useArchivedPaths'
-import { TASK_STATUS } from '@shared/constants'
 import { logger } from '@shared/logger'
 import { NCheckbox, useDialog } from 'naive-ui'
 import type { Aria2Task, AppConfig } from '@shared/types'
@@ -31,7 +30,8 @@ interface TaskActionsDeps {
     finishSharing: (task: Aria2Task) => Promise<unknown>
     removeTask: (task: Aria2Task) => Promise<unknown>
     removeTaskRecord: (task: Aria2Task) => Promise<unknown>
-    restartTask: (task: Aria2Task) => Promise<unknown>
+    retryTask: (task: Aria2Task) => Promise<unknown>
+    redownloadTask: (task: Aria2Task) => Promise<unknown>
     showTaskDetail: (task: Aria2Task) => void
     fetchList: () => Promise<unknown>
     taskList: Aria2Task[]
@@ -71,30 +71,45 @@ export function useTaskActions(deps: TaskActionsDeps) {
 
   function handleResumeTask(task: Aria2Task) {
     const taskName = getTaskDisplayName(task, { defaultName: 'Unknown' })
-    const { COMPLETE, ERROR, REMOVED } = TASK_STATUS
-    if (task.status === ERROR || task.status === COMPLETE || task.status === REMOVED) {
-      if (!canRestart(task)) {
-        message.warning(t('task.restart-not-available'))
-        return
-      }
-      taskStore
-        .restartTask(task)
-        .then(() => message.success(t('task.restart-task-success', { taskName })))
-        .catch((e) => {
-          logger.warn('TaskView.restartTask', getErrorMessage(e))
-          message.error(t('task.restart-task-fail', { taskName }))
-        })
-    } else {
-      taskStore
-        .resumeTask(task)
-        .then((resumed) => {
-          if (resumed !== false) message.success(t('task.resume-task-success', { taskName }))
-        })
-        .catch((e) => {
-          logger.warn('TaskView.resumeTask', getErrorMessage(e))
-          message.error(t('task.resume-task-fail', { taskName }))
-        })
+    taskStore
+      .resumeTask(task)
+      .then((resumed) => {
+        if (resumed !== false) message.success(t('task.resume-task-success', { taskName }))
+      })
+      .catch((e) => {
+        logger.warn('TaskView.resumeTask', getErrorMessage(e))
+        message.error(t('task.resume-task-fail', { taskName }))
+      })
+  }
+
+  function handleRetryTask(task: Aria2Task) {
+    const taskName = getTaskDisplayName(task, { defaultName: 'Unknown' })
+    if (!canRestart(task)) {
+      message.warning(t('task.restart-not-available'))
+      return
     }
+    taskStore
+      .retryTask(task)
+      .then(() => message.success(t('task.retry-task-success', { taskName })))
+      .catch((error) => {
+        logger.warn('TaskView.retryTask', getErrorMessage(error))
+        message.error(t('task.retry-task-fail', { taskName }))
+      })
+  }
+
+  function handleRedownloadTask(task: Aria2Task) {
+    const taskName = getTaskDisplayName(task, { defaultName: 'Unknown' })
+    if (!canRestart(task)) {
+      message.warning(t('task.restart-not-available'))
+      return
+    }
+    taskStore
+      .redownloadTask(task)
+      .then(() => message.success(t('task.restart-task-success', { taskName })))
+      .catch((error) => {
+        logger.warn('TaskView.redownloadTask', getErrorMessage(error))
+        message.error(t('task.restart-task-fail', { taskName }))
+      })
   }
 
   function handleFinishSharing(task: Aria2Task) {
@@ -328,6 +343,8 @@ export function useTaskActions(deps: TaskActionsDeps) {
   return {
     handlePauseTask,
     handleResumeTask,
+    handleRetryTask,
+    handleRedownloadTask,
     handleFinishSharing,
     handleDeleteTask,
     handleDeleteRecord,

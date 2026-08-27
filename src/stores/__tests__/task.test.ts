@@ -404,6 +404,29 @@ describe('TaskStore', () => {
     expect(useAppStore().automaticMagnetPromptGids).toEqual([])
   })
 
+  it('pauses download-all magnets for native metadata classification', async () => {
+    const { useAppStore } = await import('@/stores/app')
+    const { usePreferenceStore } = await import('@/stores/preference')
+    usePreferenceStore().updatePreference({ magnetFileSelectionPolicy: 'download-all' })
+
+    await store.addMagnetUri({
+      uri: 'magnet:?xt=urn:btih:abc123',
+      options: { dir: '/dl' },
+      fileCategory: {
+        enabled: true,
+        categories: [{ label: 'Videos', extensions: ['mkv'], directory: '/dl/Videos' }],
+      },
+    })
+
+    expect(mockApi.addUri).toHaveBeenCalledWith({
+      uris: ['magnet:?xt=urn:btih:abc123'],
+      outs: [],
+      options: { dir: '/dl', 'pause-metadata': 'true', 'check-integrity': 'true', 'force-save': 'true' },
+    })
+    expect(useAppStore().pendingMagnetGids).toEqual(['gid3'])
+    expect(useAppStore().automaticMagnetPromptGids).toEqual([])
+  })
+
   // ─── pauseAllTask / resumeAllTask ───────────────────────
 
   it('pauseAllTask uses the native engine-wide pause operation', async () => {
@@ -652,9 +675,9 @@ describe('TaskStore', () => {
     store.saveSession()
     expect(mockApi.saveSession).toHaveBeenCalled()
   })
-  // ─── restartTask ───────────────────────────────────────
+  // ─── terminal resubmission ─────────────────────────────
 
-  it('restartTask submits single URI and removes old record on success', async () => {
+  it('retryTask coalesces repeated clicks into one submission', async () => {
     const task = makeMockTask('stopped1', 'error', {
       files: [
         {
@@ -669,18 +692,24 @@ describe('TaskStore', () => {
     })
     mockApi.addUriAtomic.mockResolvedValue('new-gid-1')
     mockApi.getOption.mockResolvedValue({ dir: '/tmp' })
-    await store.restartTask(task)
+    const pending = new Promise<Aria2Task>((resolve) => {
+      setTimeout(() => resolve(makeMockTask('new-gid-1', 'active')), 10)
+    })
+    mockApi.fetchTaskItem.mockReturnValue(pending)
+    const first = store.retryTask(task)
+    const second = store.retryTask(task)
+    await Promise.all([first, second])
 
     expect(mockApi.addUriAtomic).toHaveBeenCalledTimes(1)
     expect(mockApi.addUriAtomic).toHaveBeenCalledWith({
       uris: ['http://example.com/file.zip'],
-      options: { dir: '/tmp' },
+      options: { dir: '/tmp', continue: 'true', allowOverwrite: 'false', autoFileRenaming: 'false' },
     })
     expect(mockApi.removeTaskRecord).toHaveBeenCalledWith({ gid: 'stopped1' })
     expect(mockApi.fetchTaskList).toHaveBeenCalled()
   })
 
-  it('restartTask submits each URI separately for multi-file tasks', async () => {
+  it('redownloadTask submits each URI separately with fresh-file options', async () => {
     const task = makeMockTask('stopped2', 'error', {
       files: [
         {
@@ -703,21 +732,22 @@ describe('TaskStore', () => {
     })
     mockApi.addUriAtomic.mockResolvedValueOnce('new-a').mockResolvedValueOnce('new-b')
     mockApi.getOption.mockResolvedValue({ dir: '/tmp' })
-    await store.restartTask(task)
+    mockApi.fetchTaskItem.mockImplementation(({ gid }) => Promise.resolve(makeMockTask(gid, 'active')))
+    await store.redownloadTask({ ...task, status: 'complete' })
 
     expect(mockApi.addUriAtomic).toHaveBeenCalledTimes(2)
     expect(mockApi.addUriAtomic).toHaveBeenNthCalledWith(1, {
       uris: ['http://example.com/a.zip'],
-      options: { dir: '/tmp' },
+      options: { dir: '/tmp', continue: 'false', allowOverwrite: 'false', autoFileRenaming: 'true' },
     })
     expect(mockApi.addUriAtomic).toHaveBeenNthCalledWith(2, {
       uris: ['http://example.com/b.zip'],
-      options: { dir: '/tmp' },
+      options: { dir: '/tmp', continue: 'false', allowOverwrite: 'false', autoFileRenaming: 'true' },
     })
     expect(mockApi.removeTaskRecord).toHaveBeenCalledWith({ gid: 'stopped2' })
   })
 
-  it('restartTask rolls back created tasks on partial failure', async () => {
+  it('retryTask rolls back created tasks on partial failure', async () => {
     const task = makeMockTask('stopped3', 'error', {
       files: [
         {
@@ -741,7 +771,8 @@ describe('TaskStore', () => {
     // First URI succeeds, second fails
     mockApi.addUriAtomic.mockResolvedValueOnce('new-a').mockRejectedValueOnce(new Error('network error'))
 
-    await expect(store.restartTask(task)).rejects.toThrow('network error')
+    mockApi.fetchTaskItem.mockImplementation(({ gid }) => Promise.resolve(makeMockTask(gid, 'active')))
+    await expect(store.retryTask(task)).rejects.toThrow('network error')
 
     // Rollback: the successfully created task should be removed
     expect(mockApi.removeTask).toHaveBeenCalledWith({ gid: 'new-a' })
@@ -749,11 +780,9 @@ describe('TaskStore', () => {
     expect(mockApi.removeTaskRecord).not.toHaveBeenCalled()
   })
 
-  it('restartTask skips non-stopped tasks', async () => {
+  it('retryTask rejects non-error tasks', async () => {
     const task = makeMockTask('active1', 'active')
-    await store.restartTask(task)
-
-    expect(mockApi.addUriAtomic).not.toHaveBeenCalled()
+    await expect(store.retryTask(task)).rejects.toThrow('Cannot retry')
     expect(mockApi.removeTaskRecord).not.toHaveBeenCalled()
   })
 

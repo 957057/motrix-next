@@ -49,6 +49,8 @@ vi.mock('@/composables/useTaskActions', () => ({
   useTaskActions: () => ({
     handlePauseTask: vi.fn(),
     handleResumeTask: vi.fn(),
+    handleRetryTask: vi.fn(),
+    handleRedownloadTask: vi.fn(),
     handleDeleteTask: vi.fn(),
     handleDeleteRecord: vi.fn(),
     handleCopyLink: vi.fn(),

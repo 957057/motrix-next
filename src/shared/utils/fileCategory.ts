@@ -25,6 +25,11 @@ export interface CategoryMatchContext {
   urls?: readonly string[]
 }
 
+export interface CategoryFileCandidate {
+  path: string
+  urls?: readonly string[]
+}
+
 export interface CategoryUrlPatternValidationError {
   line: number
   reason: 'invalid-regex' | 'too-long'
@@ -220,6 +225,40 @@ export function resolveDownloadCategory(
 ): FileCategory | undefined {
   const ext = extractExtension(url)
   return resolveCategory(ext, categories, { urls: [url, ...(context?.urls ?? [])] })
+}
+
+/**
+ * Resolves one category for a selected file set.
+ *
+ * A multi-file download is classified only when every non-empty candidate
+ * resolves to the same directory. Mixed or partially unclassified content
+ * stays in the default directory so its native layout remains intact.
+ */
+export function resolveFileSetCategory(
+  files: readonly CategoryFileCandidate[],
+  categories: FileCategory[],
+  context?: CategoryMatchContext,
+): FileCategory | undefined {
+  const candidates = files.filter((file) => file.path.trim().length > 0)
+  if (candidates.length === 0) return undefined
+
+  let resolved: FileCategory | undefined
+  for (const file of candidates) {
+    const category = resolveDownloadCategory(file.path, categories, {
+      urls: [...(file.urls ?? []), ...(context?.urls ?? [])],
+    })
+    if (!category) return undefined
+    if (resolved && normalizeDirectory(resolved.directory) !== normalizeDirectory(category.directory)) {
+      return undefined
+    }
+    resolved = category
+  }
+
+  return resolved
+}
+
+function normalizeDirectory(directory: string): string {
+  return directory.replace(/\\/g, '/').replace(/\/+$/, '')
 }
 
 /**

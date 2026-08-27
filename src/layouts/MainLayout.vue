@@ -18,7 +18,7 @@ import type { TaskSharingKind } from '@shared/utils/task'
 import type { Aria2Task, BtFileSelectionItem } from '@shared/types'
 import { ARIA2_ERROR_CODES } from '@shared/aria2ErrorCodes'
 import { useHistoryStore } from '@/stores/history'
-import { buildSelectFileOption } from '@/composables/useMagnetFlow'
+import { buildSelectFileOption, isPendingMagnetSelectionTask } from '@/composables/useMagnetFlow'
 import type { MagnetSelectionSubmission } from '@/composables/useMagnetFlow'
 import {
   createMagnetMetadataResolver,
@@ -45,7 +45,8 @@ import { NModal, NButton, NCheckbox, NProgress, NPagination, useDialog } from 'n
 
 import { useAppEvents } from '@/composables/useAppEvents'
 import { loadAddedAtFromRecords } from '@/composables/useTaskOrder'
-import { resolveArchiveAction } from '@shared/utils/autoArchive'
+import { normalizeSep, resolveArchiveAction } from '@shared/utils/autoArchive'
+import { resolveFileSetCategory } from '@shared/utils/fileCategory'
 
 interface MagnetSelectionSession {
   gid: string
@@ -67,7 +68,7 @@ const isExiting = ref(false)
 const rememberChoice = ref(false)
 const pendingTrayHide = ref(false)
 const isMaximized = ref(false)
-const { platform: currentPlatform, isMac } = usePlatform()
+const { platform: currentPlatform, isMac, isWindows } = usePlatform()
 const taskPaginationTab = computed(() => taskStore.currentList)
 const taskPaginationPage = computed(() => taskStore.taskPagination[taskPaginationTab.value].page)
 const taskPaginationPageSize = computed(() => taskStore.taskPagination.pageSize)
@@ -294,7 +295,8 @@ const magnetMetadataResolver = createMagnetMetadataResolver(magnetMetadataDeps)
 
 async function startAria2DownloadPauseListener() {
   stopAria2DownloadPauseListener()
-  unlistenAria2DownloadPause = await listenForAria2DownloadPause((gid) => {
+  unlistenAria2DownloadPause = await listenForAria2DownloadPause(async (gid) => {
+    if (await applyAutomaticMagnetClassification(gid)) return
     if (appStore.automaticMagnetPromptGids.includes(gid)) return magnetMetadataResolver.request(gid)
   })
 }
@@ -357,6 +359,52 @@ function clearPendingMagnetSelection(gid: string) {
   deferredMagnetGids.value = deferredMagnetGids.value.filter((candidate) => candidate !== gid)
 }
 
+function resolveMagnetCategoryDirectory(
+  task: Aria2Task,
+  files: readonly { path: string; length: number }[],
+): string | undefined {
+  const config = preferenceStore.config
+  if (!config.fileCategoryEnabled || config.fileCategories.length === 0) return undefined
+  const normalizeDirectory = (directory: string) => {
+    const normalized = normalizeSep(directory).replace(/\/+$/, '')
+    return isWindows.value ? normalized.toLowerCase() : normalized
+  }
+  if (normalizeDirectory(task.dir) !== normalizeDirectory(config.dir)) return undefined
+
+  return resolveFileSetCategory(
+    files.filter((file) => file.length > 0).map((file) => ({ path: file.path })),
+    config.fileCategories,
+    { urls: [task.bittorrent?.magnetLink ?? ''] },
+  )?.directory
+}
+
+async function applyAutomaticMagnetClassification(gid: string): Promise<boolean> {
+  const config = preferenceStore.config
+  if (config.magnetFileSelectionPolicy !== 'download-all' || !config.fileCategoryEnabled) return false
+
+  try {
+    const task = await taskStore.fetchTaskStatus(gid)
+    if (!isPendingMagnetSelectionTask(task)) return false
+
+    const files = await taskStore.getFiles(gid)
+    const selectedFiles = files
+      .filter((file) => Number(file.length) > 0)
+      .map((file) => ({ index: Number(file.index), path: file.path, length: Number(file.length) }))
+    if (selectedFiles.length === 0) return false
+
+    const selectFile = buildSelectFileOption(selectedFiles.map((file) => file.index))
+    const targetDir = resolveMagnetCategoryDirectory(task, selectedFiles)
+    await taskStore.applyMagnetFileSelection(task, selectFile, targetDir)
+    clearPendingMagnetSelection(gid)
+    logger.info('MagnetCategory.apply', `gid=${gid} classified=${Boolean(targetDir)}`)
+    return true
+  } catch (error) {
+    logger.error('MagnetCategory.apply', error)
+    message.error(t('task.magnet-select-fail'))
+    return true
+  }
+}
+
 function openNextAutomaticMagnetSelection() {
   if (magnetSelectVisible.value || magnetSelectClosing.value) return
   const gid = appStore.automaticMagnetPromptGids.find(
@@ -374,7 +422,12 @@ async function handleMagnetConfirm(selectedIndices: number[]) {
   try {
     const selectFile = buildSelectFileOption(selectedIndices)
     const task = await taskStore.fetchTaskStatus(session.gid)
-    await taskStore.applyMagnetFileSelection(task, selectFile)
+    const selected = new Set(selectedIndices)
+    const targetDir = resolveMagnetCategoryDirectory(
+      task,
+      magnetSelectFiles.value.filter((file) => selected.has(file.index)),
+    )
+    await taskStore.applyMagnetFileSelection(task, selectFile, targetDir)
     clearPendingMagnetSelection(session.gid)
     closeMagnetSelection()
     message.success(t('task.magnet-files-selected') || 'Files selected, download starting')

@@ -365,7 +365,7 @@ export default {
   'file-category-reset': '恢復預設',
   'file-category-reset-confirm': '再次點擊恢復',
   'file-category-custom-label': '分類名稱',
-  'file-category-auto-archive-hint': '無法識別的類型將儲存到預設路徑，下載完成後自動歸檔',
+  'file-category-auto-archive-hint': '已識別檔案儲存到分類資料夾，其他檔案使用預設路徑',
   'file-category-manage': '管理',
   'file-category-manager-title': '下載分類',
   'file-category-manager-hint': '設定檔案類型、URL 規則和儲存目錄',

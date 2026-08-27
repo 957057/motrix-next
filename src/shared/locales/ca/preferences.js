@@ -383,8 +383,7 @@ export default {
   'file-category-reset': 'Restaurar per defecte',
   'file-category-reset-confirm': 'Torna a clicar per restaurar',
   'file-category-custom-label': 'Nom de la categoria',
-  'file-category-auto-archive-hint':
-    "Els tipus no reconeguts es desen a la ruta per defecte i s'arxiven automàticament després de la descàrrega",
+  'file-category-auto-archive-hint': 'Els fitxers reconeguts es desen a les carpetes de categoria; la resta, al camí predeterminat',
   'file-category-manage': 'Gestiona',
   'file-category-manager-title': 'Categories de descàrrega',
   'file-category-manager-hint': "Configura tipus de fitxer, regles d'URL i carpetes de destinació",

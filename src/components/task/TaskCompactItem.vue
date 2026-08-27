@@ -13,10 +13,12 @@ import TaskItemActions from './TaskItemActions.vue'
 import type { Component } from 'vue'
 import type { Aria2Task } from '@shared/types'
 
-const props = defineProps<{ task: Aria2Task }>()
+const props = withDefaults(defineProps<{ task: Aria2Task; actionPending?: boolean }>(), { actionPending: false })
 const emit = defineEmits<{
   pause: [task: Aria2Task]
   resume: [task: Aria2Task]
+  retry: [task: Aria2Task]
+  redownload: [task: Aria2Task]
   'finish-sharing': [task: Aria2Task]
   delete: [task: Aria2Task]
   'delete-record': [task: Aria2Task]
@@ -108,9 +110,12 @@ watch(isSharing, (now, was) => {
         <TaskItemActions
           :task="task"
           :file-missing="fileMissing"
+          :pending="actionPending"
           density="compact"
           @pause="emit('pause', task)"
           @resume="emit('resume', task)"
+          @retry="emit('retry', task)"
+          @redownload="emit('redownload', task)"
           @finish-sharing="emit('finish-sharing', task)"
           @delete="emit('delete', task)"
           @delete-record="emit('delete-record', task)"

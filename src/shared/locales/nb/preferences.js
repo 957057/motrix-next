@@ -378,7 +378,7 @@ export default {
   'file-category-reset': 'Gjenopprett standardverdier',
   'file-category-reset-confirm': 'Klikk igjen for å gjenopprette',
   'file-category-custom-label': 'Kategorinavn',
-  'file-category-auto-archive-hint': 'Ukjente typer lagres i standardstien og arkiveres automatisk etter nedlasting',
+  'file-category-auto-archive-hint': 'Gjenkjente filer lagres i kategorimapper, andre filer bruker standardstien',
   'file-category-manage': 'Administrer',
   'file-category-manager-title': 'Nedlastingskategorier',
   'file-category-manager-hint': 'Konfigurer filtyper, URL-regler og målmapper',

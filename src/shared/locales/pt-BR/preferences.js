@@ -381,8 +381,7 @@ export default {
   'file-category-reset': 'Restaurar Padrões',
   'file-category-reset-confirm': 'Clique novamente para restaurar',
   'file-category-custom-label': 'Nome da Categoria',
-  'file-category-auto-archive-hint':
-    'Tipos não reconhecidos são salvos no caminho padrão e arquivados automaticamente após o download',
+  'file-category-auto-archive-hint': 'Arquivos reconhecidos são salvos nas pastas de categoria; os demais usam o caminho padrão',
   'file-category-manage': 'Gerenciar',
   'file-category-manager-title': 'Categorias de download',
   'file-category-manager-hint': 'Configure tipos de arquivo, regras de URL e pastas de destino',

@@ -30,7 +30,7 @@ import { useHistoryStore } from '@/stores/history'
 import { useHttpAuthStore } from '@/stores/httpAuth'
 import { usePreferenceStore } from '@/stores/preference'
 
-import { restartTask as restartTaskImpl } from './restart'
+import { resubmitTask, type TaskResubmissionMode } from './resubmit'
 import { createTaskOperations } from './operations'
 
 export type { Aria2Task, Aria2File, Aria2Peer }
@@ -60,6 +60,7 @@ export const useTaskStore = defineStore('task', () => {
   const currentTaskPeers = ref<Aria2Peer[]>([])
   const taskList = ref<Aria2Task[]>([])
   const removingGids = ref<string[]>([])
+  const resubmittingGids = ref<string[]>([])
   const taskListTransitionRevision = ref(0)
   const taskCounts = reactive<TaskCounts>({ all: 0, progress: 0, failed: 0, completed: 0 })
   const taskPagination = reactive({
@@ -75,6 +76,7 @@ export const useTaskStore = defineStore('task', () => {
   let apiReady = false
   let countRequestId = 0
   let listRequestId = 0
+  const resubmissionPromises = new Map<string, Promise<void>>()
 
   /** In-memory map: GID → original .torrent file path for post-download cleanup. */
   const torrentSourcePaths = new Map<string, string>()
@@ -474,9 +476,18 @@ export const useTaskStore = defineStore('task', () => {
    * aria2 either continues with every file or pauses for selection according
    * to the application-owned magnet selection policy.
    */
-  async function addMagnetUri(data: { uri: string; options: Aria2EngineOptions }): Promise<string> {
+  async function addMagnetUri(data: {
+    uri: string
+    options: Aria2EngineOptions
+    fileCategory?: { enabled: boolean; categories: import('@shared/types').FileCategory[] }
+  }): Promise<string> {
     const policy = preferenceStore.config.magnetFileSelectionPolicy
-    const options = { ...buildMagnetOptions(data.options, policy), 'check-integrity': 'true', 'force-save': 'true' }
+    const classifyFiles = Boolean(data.fileCategory?.enabled && data.fileCategory.categories.length > 0)
+    const options = {
+      ...buildMagnetOptions(data.options, policy, classifyFiles),
+      'check-integrity': 'true',
+      'force-save': 'true',
+    }
 
     const gids = await api.addUri({
       uris: [data.uri],
@@ -491,7 +502,7 @@ export const useTaskStore = defineStore('task', () => {
     const historyStore = useHistoryStore()
     historyStore.recordTaskBirth(gid, now).catch((e) => logger.debug('taskBirth.write', e))
 
-    if (policy !== 'download-all') {
+    if (policy !== 'download-all' || classifyFiles) {
       const { useAppStore } = await import('@/stores/app')
       useAppStore().queueMagnetSelection(gid, policy === 'prompt')
     }
@@ -532,11 +543,16 @@ export const useTaskStore = defineStore('task', () => {
   // The ops object is populated when setApi() is called.
   const taskOps = {} as ReturnType<typeof createTaskOperations>
 
-  async function restartTask(task: Aria2Task) {
+  function resubmitTerminalTask(task: Aria2Task, mode: TaskResubmissionMode): Promise<void> {
+    const existing = resubmissionPromises.get(task.gid)
+    if (existing) return existing
+
     const historyStore = useHistoryStore()
     const policy = preferenceStore.config.magnetFileSelectionPolicy
-    await restartTaskImpl(
+    resubmittingGids.value = [...resubmittingGids.value, task.gid]
+    const operation = resubmitTask(
       task,
+      mode,
       { ...api, fetchList, saveSession: () => api.saveSession() },
       historyStore,
       policy,
@@ -545,7 +561,13 @@ export const useTaskStore = defineStore('task', () => {
         useAppStore().queueMagnetSelection(gid, policy === 'prompt')
       },
     )
-    await refreshTaskCounts()
+      .then(() => refreshTaskCounts())
+      .finally(() => {
+        resubmissionPromises.delete(task.gid)
+        resubmittingGids.value = resubmittingGids.value.filter((gid) => gid !== task.gid)
+      })
+    resubmissionPromises.set(task.gid, operation)
+    return operation
   }
 
   return {
@@ -559,6 +581,7 @@ export const useTaskStore = defineStore('task', () => {
     currentTaskPeers,
     taskList,
     removingGids,
+    resubmittingGids,
     taskListTransitionRevision,
     taskPagination,
     currentTaskPageCount,
@@ -592,8 +615,8 @@ export const useTaskStore = defineStore('task', () => {
     finishSharing: (task: Aria2Task) => taskOps.finishSharing(task),
     finishSharingTasks: (gids: string[]) => taskOps.finishSharingTasks(gids),
     resumeTask: (task: Aria2Task) => taskOps.resumeTask(task),
-    applyMagnetFileSelection: (task: Aria2Task, selectFile: string) =>
-      taskOps.applyMagnetFileSelection(task, selectFile),
+    applyMagnetFileSelection: (task: Aria2Task, selectFile: string, targetDir?: string) =>
+      taskOps.applyMagnetFileSelection(task, selectFile, targetDir),
     pauseAllTask: () => taskOps.pauseAllTask(),
     resumeAllTask: () => taskOps.resumeAllTask(),
     toggleTask: (task: Aria2Task) => taskOps.toggleTask(task),
@@ -601,7 +624,8 @@ export const useTaskStore = defineStore('task', () => {
     purgeTaskRecord: () => taskOps.purgeTaskRecord(),
     saveSession: () => taskOps.saveSession(),
     batchRemoveTask: (gids: string[]) => taskOps.batchRemoveTask(gids),
-    restartTask,
+    retryTask: (task: Aria2Task) => resubmitTerminalTask(task, 'retry'),
+    redownloadTask: (task: Aria2Task) => resubmitTerminalTask(task, 'redownload'),
 
     registerTorrentSource,
     consumeTorrentSource,

@@ -100,17 +100,26 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
     }
   }
 
-  async function applyMagnetFileSelection(task: Aria2Task, selectFile: string): Promise<void> {
+  async function applyMagnetFileSelection(task: Aria2Task, selectFile: string, targetDir?: string): Promise<void> {
     if (task.status !== TASK_STATUS.PAUSED && task.status !== TASK_STATUS.WAITING) {
       throw new Error(`Cannot apply magnet file selection while task is ${task.status}`)
     }
 
     try {
-      await api.changeOption({ gid: task.gid, options: { 'select-file': selectFile } })
+      await api.changeOption({
+        gid: task.gid,
+        options: {
+          'select-file': selectFile,
+          ...(targetDir ? { dir: targetDir } : {}),
+        },
+      })
       if (task.status === TASK_STATUS.PAUSED) {
         await api.resumeTask({ gid: task.gid })
       }
-      logger.info('TaskOps.applyMagnetFileSelection', `gid=${task.gid} status=${task.status}`)
+      logger.info(
+        'TaskOps.applyMagnetFileSelection',
+        `gid=${task.gid} status=${task.status} classified=${Boolean(targetDir)}`,
+      )
     } finally {
       await fetchList()
       await api.saveSession()

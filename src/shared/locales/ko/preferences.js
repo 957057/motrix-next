@@ -374,7 +374,7 @@ export default {
   'file-category-reset': '기본값 복원',
   'file-category-reset-confirm': '다시 클릭하여 복원',
   'file-category-custom-label': '카테고리 이름',
-  'file-category-auto-archive-hint': '인식되지 않는 유형은 기본 경로에 저장되고 다운로드 후 자동으로 아카이브됩니다',
+  'file-category-auto-archive-hint': '인식된 파일은 카테고리 폴더에 저장되고 나머지는 기본 경로를 사용합니다',
   'file-category-manage': '관리',
   'file-category-manager-title': '다운로드 분류',
   'file-category-manager-hint': '파일 형식, URL 규칙, 대상 폴더를 설정합니다',

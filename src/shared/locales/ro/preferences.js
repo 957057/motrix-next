@@ -380,8 +380,7 @@ export default {
   'file-category-reset': 'Restaurare implicite',
   'file-category-reset-confirm': 'Faceți clic din nou pentru restaurare',
   'file-category-custom-label': 'Numele categoriei',
-  'file-category-auto-archive-hint':
-    'Tipurile nerecunoscute sunt salvate în calea implicită și arhivate automat după descărcare',
+  'file-category-auto-archive-hint': 'Fișierele recunoscute sunt salvate în folderele categoriilor, iar celelalte folosesc calea implicită',
   'file-category-manage': 'Gestionează',
   'file-category-manager-title': 'Categorii de descărcare',
   'file-category-manager-hint': 'Configurează tipuri de fișiere, reguli URL și foldere țintă',

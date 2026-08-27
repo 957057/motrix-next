@@ -26,7 +26,7 @@ import type {
 } from '@shared/types'
 import { logger } from '@shared/logger'
 import { resolveDownloadDir } from '@shared/utils/fileCategory'
-import { sanitizeAria2OutHint } from '@shared/utils/batchHelpers'
+import { extractDecodedFilename, sanitizeAria2OutHint } from '@shared/utils/batchHelpers'
 import { summarizeAria2Options, summarizeExternalInput } from '@shared/utils/externalInputDiagnostics'
 import { useEngineStore } from '@/stores/engine'
 import { getActivePinia } from 'pinia'
@@ -150,9 +150,15 @@ export async function addUri(params: {
     // Smart file classification: resolve per-URI download directory
     if (fileCategory?.enabled && fileCategory.categories.length > 0) {
       const context = fileCategory.contexts?.[uri]
-      opts.dir = resolveDownloadDir(opts.out || uri, opts.dir || '', true, fileCategory.categories, {
-        urls: [uri, context?.finalUrl ?? '', context?.url ?? '', context?.referer ?? ''],
-      })
+      opts.dir = resolveDownloadDir(
+        opts.out || extractDecodedFilename(uri) || uri,
+        opts.dir || '',
+        true,
+        fileCategory.categories,
+        {
+          urls: [uri, context?.finalUrl ?? '', context?.url ?? '', context?.referer ?? ''],
+        },
+      )
     }
 
     return invoke<string>('aria2_add_uri', { uris: [uri], options: opts })

@@ -381,8 +381,7 @@ export default {
   'file-category-reset': 'Alapértékek visszaállítása',
   'file-category-reset-confirm': 'Kattintson újra a visszaállításhoz',
   'file-category-custom-label': 'Kategória neve',
-  'file-category-auto-archive-hint':
-    'A fel nem ismert típusok az alapértelmezett útvonalra kerülnek, és letöltés után automatikusan archiválódnak',
+  'file-category-auto-archive-hint': 'A felismert fájlok kategóriamappákba kerülnek, a többi az alapértelmezett útvonalra',
   'file-category-manage': 'Kezelés',
   'file-category-manager-title': 'Letöltési kategóriák',
   'file-category-manager-hint': 'Fájltípusok, URL-szabályok és célmappák beállítása',

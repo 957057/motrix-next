@@ -380,8 +380,7 @@ export default {
   'file-category-reset': 'Восстановить по умолчанию',
   'file-category-reset-confirm': 'Нажмите еще раз для восстановления',
   'file-category-custom-label': 'Название категории',
-  'file-category-auto-archive-hint':
-    'Нераспознанные типы файлов сохраняются в путь по умолчанию и автоматически архивируются после загрузки',
+  'file-category-auto-archive-hint': 'Распознанные файлы сохраняются в папки категорий, остальные используют путь по умолчанию',
   'file-category-manage': 'Управление',
   'file-category-manager-title': 'Категории загрузок',
   'file-category-manager-hint': 'Настройте типы файлов, правила URL и папки назначения',

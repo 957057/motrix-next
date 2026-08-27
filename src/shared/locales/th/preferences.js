@@ -372,7 +372,7 @@ export default {
   'file-category-reset': 'กู้คืนค่าเริ่มต้น',
   'file-category-reset-confirm': 'คลิกอีกครั้งเพื่อคืนค่า',
   'file-category-custom-label': 'ชื่อหมวดหมู่',
-  'file-category-auto-archive-hint': 'ไฟล์ที่ไม่รู้จักจะถูกบันทึกไว้ในเส้นทางเริ่มต้นและจัดเก็บอัตโนมัติหลังดาวน์โหลด',
+  'file-category-auto-archive-hint': 'ไฟล์ที่รู้จักจะถูกบันทึกในโฟลเดอร์หมวดหมู่ ส่วนไฟล์อื่นใช้เส้นทางเริ่มต้น',
   'file-category-manage': 'จัดการ',
   'file-category-manager-title': 'หมวดหมู่การดาวน์โหลด',
   'file-category-manager-hint': 'กำหนดประเภทไฟล์ กฎ URL และโฟลเดอร์ปลายทาง',

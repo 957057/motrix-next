@@ -375,8 +375,7 @@ export default {
   'file-category-reset': 'デフォルトに戻す',
   'file-category-reset-confirm': 'もう一度クリックして復元',
   'file-category-custom-label': 'カテゴリ名',
-  'file-category-auto-archive-hint':
-    '認識できないタイプはデフォルトパスに保存され、ダウンロード後に自動的にアーカイブされます',
+  'file-category-auto-archive-hint': '認識されたファイルはカテゴリフォルダに、その他のファイルはデフォルトパスに保存されます',
   'file-category-manage': '管理',
   'file-category-manager-title': 'ダウンロードカテゴリ',
   'file-category-manager-hint': 'ファイルタイプ、URL ルール、保存先フォルダを設定',

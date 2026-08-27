@@ -14,6 +14,8 @@ import type { Aria2Task } from '@shared/types'
 const emit = defineEmits<{
   pause: [task: Aria2Task]
   resume: [task: Aria2Task]
+  retry: [task: Aria2Task]
+  redownload: [task: Aria2Task]
   'finish-sharing': [task: Aria2Task]
   delete: [task: Aria2Task]
   'delete-record': [task: Aria2Task]
@@ -272,8 +274,11 @@ function handleCardBeforeLeave(element: Element) {
           <component
             :is="taskCardComponent"
             :task="item"
+            :action-pending="taskStore.resubmittingGids.includes(item.gid)"
             @pause="emit('pause', item)"
             @resume="emit('resume', item)"
+            @retry="emit('retry', item)"
+            @redownload="emit('redownload', item)"
             @finish-sharing="emit('finish-sharing', item)"
             @delete="emit('delete', item)"
             @delete-record="emit('delete-record', item)"

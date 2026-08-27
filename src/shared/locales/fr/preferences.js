@@ -385,8 +385,7 @@ export default {
   'file-category-reset': 'Restaurer les valeurs par défaut',
   'file-category-reset-confirm': 'Cliquez à nouveau pour restaurer',
   'file-category-custom-label': 'Nom de la catégorie',
-  'file-category-auto-archive-hint':
-    'Les types non reconnus sont enregistrés dans le chemin par défaut et archivés automatiquement après le téléchargement',
+  'file-category-auto-archive-hint': 'Les fichiers reconnus sont enregistrés dans les dossiers de catégorie, les autres dans le chemin par défaut',
   'file-category-manage': 'Gérer',
   'file-category-manager-title': 'Catégories de téléchargement',
   'file-category-manager-hint': "Configurez les types de fichiers, les règles d'URL et les dossiers cibles",

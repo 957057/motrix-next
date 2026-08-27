@@ -375,8 +375,7 @@ export default {
   'file-category-reset': 'Khôi phục mặc định',
   'file-category-reset-confirm': 'Nhấp lại để khôi phục',
   'file-category-custom-label': 'Tên danh mục',
-  'file-category-auto-archive-hint':
-    'Các loại không nhận dạng được sẽ được lưu vào đường dẫn mặc định và tự động lưu trữ sau khi tải xuống',
+  'file-category-auto-archive-hint': 'Tệp được nhận dạng sẽ lưu vào thư mục danh mục, các tệp khác dùng đường dẫn mặc định',
   'file-category-manage': 'Quản lý',
   'file-category-manager-title': 'Danh mục tải xuống',
   'file-category-manager-hint': 'Cấu hình loại tệp, quy tắc URL và thư mục đích',

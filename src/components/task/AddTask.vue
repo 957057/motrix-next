@@ -11,7 +11,7 @@ import { useHttpAuthStore } from '@/stores/httpAuth'
 import { ADD_TASK_TYPE } from '@shared/constants'
 import { detectResource } from '@shared/utils'
 import { mergeRawUriLines, normalizeUriLines, extractMagnetDisplayName } from '@shared/utils/batchHelpers'
-import { resolveDownloadCategory } from '@shared/utils/fileCategory'
+import { resolveDownloadCategory, resolveFileSetCategory } from '@shared/utils/fileCategory'
 import { buildOuts } from '@shared/utils/rename'
 import {
   buildEngineOptions,
@@ -298,8 +298,32 @@ function resolveCategoryMatches(): Map<string, { label: string; directory: strin
   return matched
 }
 
+function resolveSelectedTorrentCategory(): { label: string; directory: string } | undefined {
+  const item = selectedItem.value
+  if (!item?.torrentMeta) return undefined
+
+  const selectedIndices = new Set(item.selectedFileIndices ?? [])
+  const category = resolveFileSetCategory(
+    item.torrentMeta.files
+      .filter((file) => selectedIndices.has(Number(file.index)) && Number(file.length) > 0)
+      .map((file) => ({ path: file.path })),
+    preferenceStore.config.fileCategories,
+    { urls: [item.source] },
+  )
+  if (!category) return undefined
+
+  return {
+    label: category.builtIn ? t(`preferences.${category.label}`) : category.label,
+    directory: category.directory,
+  }
+}
+
 const categoryMatches = computed(() => {
   if (!categoryEnabled.value || dirUserModified.value) return new Map<string, { label: string; directory: string }>()
+  if (activeTab.value === ADD_TASK_TYPE.TORRENT) {
+    const category = resolveSelectedTorrentCategory()
+    return category ? new Map([[category.directory, category]]) : new Map()
+  }
   return resolveCategoryMatches()
 })
 
@@ -317,6 +341,12 @@ const displayedDir = computed(() => {
 const categoryPreviewText = computed(() => {
   if (!categoryEnabled.value) return ''
   if (dirUserModified.value) return t('task.category-hint-overridden')
+
+  if (activeTab.value === ADD_TASK_TYPE.TORRENT) {
+    if (!selectedItem.value) return t('task.category-hint-active')
+    const matched = categoryMatchPreview.value
+    return matched ? t('task.category-match-single', { category: matched.label }) : t('task.category-match-none')
+  }
 
   const uris = normalizeUriLines(form.value.uris).filter((uri) => !isMagnetUri(uri))
   if (uris.length === 0) return t('task.category-hint-active')
@@ -559,22 +589,21 @@ async function handleSubmit() {
       userAgentRules: preferenceStore.config.userAgentRules,
     }
     const options = buildEngineOptions(effectiveForm)
+    const fileCategory = {
+      enabled: preferenceStore.config.fileCategoryEnabled && !dirUserModified.value,
+      categories: preferenceStore.config.fileCategories,
+    }
     let manualResult: ManualUriSubmitResult = { submittedTaskNames: [], magnetGids: [], magnetFailures: [] }
 
     if (hasBatch.value) {
-      await submitBatchItems(batch.value, options, taskStore)
+      await submitBatchItems(batch.value, options, taskStore, fileCategory)
     }
     if (form.value.uris.trim()) {
-      // User's custom path takes highest priority — skip classification when overridden
-      const shouldClassify = preferenceStore.config.fileCategoryEnabled && !dirUserModified.value
       manualResult = await submitManualUris(
         effectiveForm,
         options,
         taskStore,
-        {
-          enabled: shouldClassify,
-          categories: preferenceStore.config.fileCategories,
-        },
+        fileCategory,
         getDownloadProxy(preferenceStore.config.proxy),
       )
     }

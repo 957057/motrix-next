@@ -372,7 +372,7 @@ export default {
   'file-category-reset': 'استعادة الافتراضي',
   'file-category-reset-confirm': 'انقر مرة أخرى للاستعادة',
   'file-category-custom-label': 'اسم التصنيف',
-  'file-category-auto-archive-hint': 'الأنواع غير المعروفة تُحفظ في المسار الافتراضي وتُؤرشف تلقائياً بعد التنزيل',
+  'file-category-auto-archive-hint': 'تُحفظ الملفات المعروفة في مجلدات الفئات، وتستخدم الملفات الأخرى المسار الافتراضي',
   'file-category-manage': 'إدارة',
   'file-category-manager-title': 'تصنيفات التنزيل',
   'file-category-manager-hint': 'اضبط أنواع الملفات وقواعد URL ومجلدات الحفظ',

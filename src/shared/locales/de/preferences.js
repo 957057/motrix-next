@@ -381,8 +381,7 @@ export default {
   'file-category-reset': 'Standards wiederherstellen',
   'file-category-reset-confirm': 'Nochmals klicken zum Wiederherstellen',
   'file-category-custom-label': 'Kategoriename',
-  'file-category-auto-archive-hint':
-    'Unbekannte Dateitypen werden im Standard-Pfad gespeichert und nach dem Download automatisch archiviert',
+  'file-category-auto-archive-hint': 'Erkannte Dateien werden in Kategorieordnern gespeichert, andere im Standardpfad',
   'file-category-manage': 'Verwalten',
   'file-category-manager-title': 'Download-Kategorien',
   'file-category-manager-hint': 'Dateitypen, URL-Regeln und Zielordner konfigurieren',

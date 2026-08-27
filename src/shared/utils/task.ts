@@ -222,7 +222,8 @@ export const getRestartDescriptors = (task: Aria2Task, _withTracker = false): st
   const descriptors: string[][] = []
   for (const file of files) {
     if (file.uris && file.uris.length > 0) {
-      descriptors.push(file.uris.map((u) => u.uri))
+      const uniqueUris = [...new Set(file.uris.map((entry) => entry.uri.trim()).filter(Boolean))]
+      if (uniqueUris.length > 0) descriptors.push(uniqueUris)
     }
   }
   return descriptors

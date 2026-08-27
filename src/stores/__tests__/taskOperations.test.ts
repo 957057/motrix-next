@@ -256,11 +256,11 @@ describe('resumeTask', () => {
     })
     const task = makeTask({ gid: 'magnet-download', status: TASK_STATUS.PAUSED })
 
-    await ops.applyMagnetFileSelection(task, '2-9')
+    await ops.applyMagnetFileSelection(task, '2-9', '/downloads/Videos')
 
     expect(api.changeOption).toHaveBeenCalledWith({
       gid: 'magnet-download',
-      options: { 'select-file': '2-9' },
+      options: { 'select-file': '2-9', dir: '/downloads/Videos' },
     })
     expect(calls).toEqual(['select', 'resume'])
   })

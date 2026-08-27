@@ -34,6 +34,8 @@ const showTaskListWatermark = computed(() => preferenceStore.config.taskListWate
 const {
   handlePauseTask,
   handleResumeTask,
+  handleRetryTask,
+  handleRedownloadTask,
   handleFinishSharing,
   handleDeleteTask,
   handleDeleteRecord,
@@ -135,6 +137,8 @@ onBeforeUnmount(() => {
         <TaskList
           @pause="handlePauseTask"
           @resume="handleResumeTask"
+          @retry="handleRetryTask"
+          @redownload="handleRedownloadTask"
           @finish-sharing="handleFinishSharing"
           @delete="handleDeleteTask"
           @delete-record="handleDeleteRecord"

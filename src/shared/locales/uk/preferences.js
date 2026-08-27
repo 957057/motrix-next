@@ -379,8 +379,7 @@ export default {
   'file-category-reset': 'Відновити за замовчуванням',
   'file-category-reset-confirm': 'Натисніть ще раз, щоб відновити',
   'file-category-custom-label': 'Назва категорії',
-  'file-category-auto-archive-hint':
-    'Нерозпізнані типи зберігаються за шляхом за замовчуванням і автоматично архівуються після завантаження',
+  'file-category-auto-archive-hint': 'Розпізнані файли зберігаються в папках категорій, інші використовують шлях за замовчуванням',
   'file-category-manage': 'Керувати',
   'file-category-manager-title': 'Категорії завантажень',
   'file-category-manager-hint': 'Налаштуйте типи файлів, правила URL і цільові папки',

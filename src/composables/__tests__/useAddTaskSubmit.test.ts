@@ -8,31 +8,10 @@
  * - submitManualUris: multi-URI handling with rename
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ref } from 'vue'
 
 // ── Mock external dependencies ──────────────────────────────────────
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn(),
-}))
-
-vi.mock('vue-i18n', () => ({
-  useI18n: () => ({
-    t: (key: string, params?: Record<string, unknown>) => (params?.taskName ? `${key}:${params.taskName}` : key),
-  }),
-}))
-
-const mockRouterPush = vi.fn().mockResolvedValue(undefined)
-vi.mock('vue-router', () => ({
-  useRouter: () => ({ push: mockRouterPush }),
-}))
-
-vi.mock('naive-ui', () => ({
-  useMessage: () => ({
-    success: vi.fn(() => ({ destroy: vi.fn() })),
-    error: vi.fn(() => ({ destroy: vi.fn() })),
-    warning: vi.fn(() => ({ destroy: vi.fn() })),
-    info: vi.fn(() => ({ destroy: vi.fn() })),
-  }),
 }))
 
 // Mock isEngineReady for classifySubmitError tests
@@ -41,56 +20,11 @@ vi.mock('@/api/aria2', () => ({
   isEngineReady: () => mockIsEngineReady(),
 }))
 
-const mockAppStore = {
-  pendingBatch: [] as BatchItem[],
-  pendingMagnetGids: [] as string[],
-}
-
-const mockTaskStoreForHook = {
-  addUri: vi.fn().mockResolvedValue(['gid1']),
-  addMagnetUri: vi.fn().mockResolvedValue('magnet-gid'),
-  addTorrent: vi.fn(),
-  registerTorrentSource: vi.fn(),
-}
-
-const mockPreferenceStore = {
-  config: {
-    newTaskShowDownloading: true,
-    proxy: { mode: 'direct', server: '', scope: [], bypass: '' },
-    fileCategoryEnabled: false,
-    fileCategories: [],
-  },
-}
-
-const mockMessage = {
-  success: vi.fn(),
-  error: vi.fn(),
-  warning: vi.fn(),
-  info: vi.fn(),
-}
-
-vi.mock('@/stores/app', () => ({
-  useAppStore: () => mockAppStore,
-}))
-
-vi.mock('@/stores/task', () => ({
-  useTaskStore: () => mockTaskStoreForHook,
-}))
-
-vi.mock('@/stores/preference', () => ({
-  usePreferenceStore: () => mockPreferenceStore,
-}))
-
-vi.mock('@/composables/useAppMessage', () => ({
-  useAppMessage: () => mockMessage,
-}))
-
 import {
   buildEngineOptions,
   classifySubmitError,
   submitBatchItems,
   submitManualUris,
-  useAddTaskSubmit,
   type AddTaskForm,
 } from '../useAddTaskSubmit'
 import type { BatchItem, Aria2EngineOptions } from '@shared/types'
@@ -435,6 +369,32 @@ describe('submitBatchItems', () => {
     expect(items[0].status).toBe('submitted')
   })
 
+  it('uses native torrent metadata to select the category directory', async () => {
+    const items = [
+      readyTorrent({
+        selectedFileIndices: [1],
+        torrentMeta: {
+          name: 'movie',
+          mode: 'single',
+          infoHashV1: 'hash',
+          infoHashV2: '',
+          totalLength: '1000',
+          files: [{ index: '1', path: 'movie.mkv', length: '1000' }],
+        },
+      }),
+    ]
+
+    await submitBatchItems(items, baseOptions, mockTaskStore, {
+      enabled: true,
+      categories: [{ label: 'Videos', extensions: ['mkv'], directory: '/dl/Videos' }],
+    })
+
+    expect(mockTaskStore.addTorrent).toHaveBeenCalledWith({
+      torrent: 'base64',
+      options: { dir: '/dl/Videos', 'select-file': '1' },
+    })
+  })
+
   it('skips URI items (handled separately)', async () => {
     const items: BatchItem[] = [
       {
@@ -608,11 +568,15 @@ describe('submitManualUris', () => {
       },
       { dir: '/dl' },
       mockTaskStore,
+      {
+        enabled: true,
+        categories: [{ label: 'Archives', extensions: ['zip'], directory: '/dl/Archives' }],
+      },
     )
 
     expect(mockTaskStore.addUriAtomic).toHaveBeenCalledWith({
       uris: ['https://a.example/file.zip', 'https://b.example/file.zip'],
-      options: { dir: '/dl', out: 'file.zip', header: ['Accept-Language: en-US'] },
+      options: { dir: '/dl/Archives', out: 'file.zip', header: ['Accept-Language: en-US'] },
     })
   })
 
@@ -750,85 +714,5 @@ describe('submitManualUris', () => {
       magnetGids: ['magnet-gid-1'],
       magnetFailures: [{ uri: 'magnet:?xt=urn:btih:bad', error: 'invalid magnet' }],
     })
-  })
-})
-
-describe('useAddTaskSubmit', () => {
-  const baseForm: AddTaskForm = {
-    uris: '',
-    out: '',
-    dir: '/dl',
-    streamMaxConnections: 16,
-    userAgent: '',
-    authorization: '',
-    referer: '',
-    cookie: '',
-    httpAuthUsername: '',
-    httpAuthPassword: '',
-    saveHttpAuth: true,
-    proxyMode: 'direct',
-    customProxy: '',
-    requestHeaders: [],
-  }
-
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockAppStore.pendingBatch = []
-    mockPreferenceStore.config.newTaskShowDownloading = true
-    mockPreferenceStore.config.fileCategoryEnabled = false
-    mockPreferenceStore.config.fileCategories = []
-  })
-
-  it('keeps AddTask open when a magnet submission fails', async () => {
-    mockTaskStoreForHook.addMagnetUri.mockRejectedValueOnce(new Error('invalid magnet'))
-    const onClose = vi.fn()
-
-    const { handleSubmit } = useAddTaskSubmit({
-      form: ref({ ...baseForm, uris: 'magnet:?xt=urn:btih:bad' }),
-      onClose,
-    })
-
-    await handleSubmit()
-
-    expect(onClose).not.toHaveBeenCalled()
-    expect(mockMessage.warning).toHaveBeenCalledWith('1 task.failed', { closable: true })
-    expect(mockRouterPush).not.toHaveBeenCalled()
-  })
-
-  it('shows readable toast text for structured Tauri add-uri errors', async () => {
-    mockTaskStoreForHook.addUri.mockRejectedValueOnce({
-      Aria2: 'aria2 RPC error [1]: Unsupported URI scheme',
-    })
-    const onClose = vi.fn()
-
-    const { handleSubmit } = useAddTaskSubmit({
-      form: ref({ ...baseForm, uris: '23222233' }),
-      onClose,
-    })
-
-    await handleSubmit()
-
-    expect(onClose).not.toHaveBeenCalled()
-    expect(mockMessage.error).toHaveBeenCalledWith('task.error-aria2-next [1]: Unsupported URI scheme', {
-      closable: true,
-    })
-  })
-
-  it('uses the resolved output filename in the start toast for extensionless URLs', async () => {
-    const { invoke } = await import('@tauri-apps/api/core')
-    ;(invoke as ReturnType<typeof vi.fn>).mockResolvedValueOnce('ИТОГИ ЛДУ 2026.xlsx')
-    const onClose = vi.fn()
-
-    const { handleSubmit } = useAddTaskSubmit({
-      form: ref({
-        ...baseForm,
-        uris: 'http://127.0.0.1:18080/attachment/u/0/?ui=2&disp=safe',
-      }),
-      onClose,
-    })
-
-    await handleSubmit()
-
-    expect(mockMessage.info).toHaveBeenCalledWith('task.download-start-message:ИТОГИ ЛДУ 2026.xlsx')
   })
 })

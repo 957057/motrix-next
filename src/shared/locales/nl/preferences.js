@@ -381,8 +381,7 @@ export default {
   'file-category-reset': 'Standaardwaarden herstellen',
   'file-category-reset-confirm': 'Klik opnieuw om te herstellen',
   'file-category-custom-label': 'Categorienaam',
-  'file-category-auto-archive-hint':
-    'Niet-herkende typen worden opgeslagen in het standaardpad en automatisch gearchiveerd na het downloaden',
+  'file-category-auto-archive-hint': 'Herkende bestanden worden opgeslagen in categoriemappen, andere gebruiken het standaardpad',
   'file-category-manage': 'Beheren',
   'file-category-manager-title': 'Downloadcategorieën',
   'file-category-manager-hint': 'Configureer bestandstypen, URL-regels en doelmappen',

@@ -414,6 +414,26 @@ describe('aria2 API (invoke transport)', () => {
       })
     })
 
+    it('addUri classifies ED2K downloads by the canonical link filename', async () => {
+      mockInvoke.mockResolvedValue('gid1')
+      const uri = 'ed2k://|file|Ubuntu%2026.04.iso|123456789|0123456789abcdef0123456789abcdef|/'
+
+      await addUri({
+        uris: [uri],
+        outs: [],
+        options: { dir: '/downloads' },
+        fileCategory: {
+          enabled: true,
+          categories: [{ label: 'Archives', extensions: ['iso'], directory: '/downloads/Archives' }],
+        },
+      })
+
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_add_uri', {
+        uris: [uri],
+        options: { dir: '/downloads/Archives' },
+      })
+    })
+
     it('addUri classifies downloads by extension and URL context', async () => {
       mockInvoke.mockResolvedValue('gid1')
 

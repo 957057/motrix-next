@@ -381,8 +381,7 @@ export default {
   'file-category-reset': 'Przywróć domyślne',
   'file-category-reset-confirm': 'Kliknij ponownie, aby przywrócić',
   'file-category-custom-label': 'Nazwa kategorii',
-  'file-category-auto-archive-hint':
-    'Nierozpoznane typy są zapisywane w domyślnej ścieżce i automatycznie archiwizowane po pobraniu',
+  'file-category-auto-archive-hint': 'Rozpoznane pliki są zapisywane w folderach kategorii, pozostałe używają domyślnej ścieżki',
   'file-category-manage': 'Zarządzaj',
   'file-category-manager-title': 'Kategorie pobierania',
   'file-category-manager-hint': 'Skonfiguruj typy plików, reguły URL i foldery docelowe',

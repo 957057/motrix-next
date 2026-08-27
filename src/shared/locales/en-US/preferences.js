@@ -374,8 +374,7 @@ export default {
   'file-category-reset': 'Restore Defaults',
   'file-category-reset-confirm': 'Click again to restore',
   'file-category-custom-label': 'Category Name',
-  'file-category-auto-archive-hint':
-    'Unrecognized types are saved to the default path and auto-archived after download',
+  'file-category-auto-archive-hint': 'Recognized files are saved to category folders; other files use the default path',
   'file-category-manage': 'Manage',
   'file-category-manager-title': 'Download Categories',
   'file-category-manager-hint': 'Configure file types, URL rules, and target folders',

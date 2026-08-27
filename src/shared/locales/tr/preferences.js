@@ -377,8 +377,7 @@ export default {
   'file-category-reset': 'Varsayılanları geri yükle',
   'file-category-reset-confirm': 'Geri yüklemek için tekrar tıklayın',
   'file-category-custom-label': 'Kategori adı',
-  'file-category-auto-archive-hint':
-    'Tanınmayan türler varsayılan yola kaydedilir ve indirdikten sonra otomatik olarak arşivlenir',
+  'file-category-auto-archive-hint': 'Tanınan dosyalar kategori klasörlerine kaydedilir, diğerleri varsayılan yolu kullanır',
   'file-category-manage': 'Yönet',
   'file-category-manager-title': 'İndirme kategorileri',
   'file-category-manager-hint': 'Dosya türlerini, URL kurallarını ve hedef klasörleri yapılandır',

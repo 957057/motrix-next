@@ -375,8 +375,7 @@ export default {
   'file-category-reset': 'Defaults Restore करें',
   'file-category-reset-confirm': 'पुनर्स्थापित करने के लिए फिर क्लिक करें',
   'file-category-custom-label': 'Category name',
-  'file-category-auto-archive-hint':
-    'Unrecognized types default path में save होते हैं और download के बाद auto-archive होते हैं',
+  'file-category-auto-archive-hint': 'पहचानी गई फ़ाइलें श्रेणी फ़ोल्डर में सहेजी जाती हैं, अन्य फ़ाइलें डिफ़ॉल्ट पथ का उपयोग करती हैं',
   'file-category-manage': 'प्रबंधित करें',
   'file-category-manager-title': 'डाउनलोड श्रेणियां',
   'file-category-manager-hint': 'फ़ाइल प्रकार, URL नियम और लक्ष्य फ़ोल्डर कॉन्फ़िगर करें',

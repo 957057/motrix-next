@@ -384,8 +384,7 @@ export default {
   'file-category-reset': 'Επαναφορά προεπιλογών',
   'file-category-reset-confirm': 'Κάντε ξανά κλικ για επαναφορά',
   'file-category-custom-label': 'Όνομα κατηγορίας',
-  'file-category-auto-archive-hint':
-    'Οι μη αναγνωρισμένοι τύποι αποθηκεύονται στην προεπιλεγμένη διαδρομή και αρχειοθετούνται αυτόματα μετά τη λήψη',
+  'file-category-auto-archive-hint': 'Τα αναγνωρισμένα αρχεία αποθηκεύονται σε φακέλους κατηγοριών, τα υπόλοιπα στην προεπιλεγμένη διαδρομή',
   'file-category-manage': 'Διαχείριση',
   'file-category-manager-title': 'Κατηγορίες λήψεων',
   'file-category-manager-hint': 'Ρυθμίστε τύπους αρχείων, κανόνες URL και φακέλους προορισμού',

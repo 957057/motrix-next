@@ -365,7 +365,7 @@ export default {
   'file-category-reset': '恢复默认',
   'file-category-reset-confirm': '再次点击恢复',
   'file-category-custom-label': '分类名称',
-  'file-category-auto-archive-hint': '无法识别的类型将保存到默认路径，下载完成后自动归档',
+  'file-category-auto-archive-hint': '已识别文件保存到分类文件夹，其他文件使用默认路径',
   'file-category-manage': '管理',
   'file-category-manager-title': '下载分类',
   'file-category-manager-hint': '配置文件类型、URL 规则和保存目录',

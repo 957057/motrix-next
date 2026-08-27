@@ -139,4 +139,15 @@ describe('TaskItemActions', () => {
     expect(actions).toHaveLength(6)
     expect(actions.every((action) => Boolean(action.attributes('aria-label')))).toBe(true)
   })
+
+  it('separates retry, resume, and re-download actions', async () => {
+    const failed = mountActions(makeTask('error'))
+    await failed.find('[aria-label="task.retry-task"]').trigger('click')
+    expect(failed.emitted('retry')).toBeTruthy()
+
+    const complete = mountActions(makeTask('complete'))
+    await complete.find('[aria-label="task.restart-task"]').trigger('click')
+    expect(complete.emitted('redownload')).toBeTruthy()
+    expect(complete.emitted('resume')).toBeFalsy()
+  })
 })
