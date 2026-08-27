@@ -48,16 +48,16 @@ function createMockApi(): TaskApi {
     getFiles: vi.fn().mockResolvedValue([]),
     removeTask: vi.fn().mockResolvedValue('OK'),
     deleteTask: vi.fn().mockResolvedValue(undefined),
+    batchDeleteTasks: vi.fn().mockResolvedValue({ succeeded: ['a', 'b'], failed: [] }),
     finishSharing: vi.fn().mockResolvedValue(undefined),
+    batchFinishSharing: vi.fn().mockResolvedValue({ succeeded: ['bt', 'ed2k'], failed: [] }),
     forcePauseTask: vi.fn().mockResolvedValue('OK'),
+    forcePauseAll: vi.fn().mockResolvedValue('OK'),
     pauseTask: vi.fn().mockResolvedValue('OK'),
     resumeTask: vi.fn().mockResolvedValue('OK'),
-    batchResumeTask: vi.fn().mockResolvedValue([]),
-    batchPauseTask: vi.fn().mockResolvedValue([]),
-    batchForcePauseTask: vi.fn().mockResolvedValue([]),
-    batchRemoveTask: vi.fn().mockResolvedValue([]),
+    resumeEligible: vi.fn().mockResolvedValue({ resumed: 1, blocked: 0 }),
     removeTaskRecord: vi.fn().mockResolvedValue('OK'),
-    purgeTaskRecord: vi.fn().mockResolvedValue('OK'),
+    purgeTaskRecords: vi.fn().mockResolvedValue(undefined),
     saveSession: vi.fn().mockResolvedValue('OK'),
   }
 }
@@ -84,7 +84,17 @@ function createDeps(api: TaskApi) {
   const fetchList = vi.fn().mockResolvedValue(undefined)
   const refreshTaskCounts = vi.fn().mockResolvedValue(undefined)
   const setTaskRemoving = vi.fn()
-  return { api, taskList, currentTaskGid, hideTaskDetail, fetchList, refreshTaskCounts, setTaskRemoving }
+  const clearMagnetSelections = vi.fn()
+  return {
+    api,
+    taskList,
+    currentTaskGid,
+    hideTaskDetail,
+    fetchList,
+    refreshTaskCounts,
+    setTaskRemoving,
+    clearMagnetSelections,
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -98,6 +108,7 @@ describe('removeTask', () => {
     const ops = createTaskOperations(deps)
     await ops.removeTask(makeTask({ gid: 'task-1', infoHash: 'hash-1' }))
     expect(api.deleteTask).toHaveBeenCalledWith({ gid: 'task-1', infoHash: 'hash-1' })
+    expect(deps.clearMagnetSelections).toHaveBeenCalledWith(['task-1'])
     expect(deps.fetchList).toHaveBeenCalledOnce()
     expect(deps.refreshTaskCounts).toHaveBeenCalledOnce()
     expect(api.saveSession).toHaveBeenCalledOnce()
@@ -109,6 +120,7 @@ describe('removeTask', () => {
     const deps = createDeps(api)
     const ops = createTaskOperations(deps)
     await expect(ops.removeTask(makeTask())).rejects.toThrow('network')
+    expect(deps.clearMagnetSelections).not.toHaveBeenCalled()
     expect(deps.fetchList).toHaveBeenCalledOnce()
   })
 })
@@ -130,6 +142,22 @@ describe('finishSharing', () => {
     expect(api.deleteTask).not.toHaveBeenCalled()
     expect(deps.setTaskRemoving).not.toHaveBeenCalled()
     expect(deps.fetchList).toHaveBeenCalledOnce()
+    expect(api.saveSession).toHaveBeenCalledOnce()
+  })
+
+  it('finishes multiple BT and ED2K sharing tasks in one native call', async () => {
+    const api = createMockApi()
+    const deps = createDeps(api)
+    const ops = createTaskOperations(deps)
+
+    await expect(ops.finishSharingTasks(['bt', 'ed2k'])).resolves.toEqual({
+      succeeded: ['bt', 'ed2k'],
+      failed: [],
+    })
+
+    expect(api.batchFinishSharing).toHaveBeenCalledWith({ gids: ['bt', 'ed2k'] })
+    expect(deps.fetchList).toHaveBeenCalledOnce()
+    expect(deps.refreshTaskCounts).toHaveBeenCalledOnce()
     expect(api.saveSession).toHaveBeenCalledOnce()
   })
 })
@@ -243,7 +271,7 @@ describe('resumeTask', () => {
 // ═══════════════════════════════════════════════════════════════════
 
 describe('pauseAllTask', () => {
-  it('pauses non-seeding active tasks individually via forcePauseTask', async () => {
+  it('uses the native engine-wide pause operation', async () => {
     const api = createMockApi()
     const deps = createDeps(api)
     deps.taskList.value = [
@@ -252,13 +280,13 @@ describe('pauseAllTask', () => {
     ] as Aria2Task[]
     const ops = createTaskOperations(deps)
     await ops.pauseAllTask()
-    expect(api.forcePauseTask).toHaveBeenCalledWith({ gid: 'dl-1' })
-    expect(api.forcePauseTask).toHaveBeenCalledWith({ gid: 'dl-2' })
+    expect(api.forcePauseAll).toHaveBeenCalledOnce()
+    expect(api.forcePauseTask).not.toHaveBeenCalled()
     expect(deps.fetchList).toHaveBeenCalledOnce()
     expect(api.saveSession).toHaveBeenCalledOnce()
   })
 
-  it('pauses seeding tasks with the rest of the active queue', async () => {
+  it('keeps sharing tasks inside the native pause-all scope', async () => {
     const api = createMockApi()
     const deps = createDeps(api)
     deps.taskList.value = [
@@ -272,25 +300,7 @@ describe('pauseAllTask', () => {
     ] as Aria2Task[]
     const ops = createTaskOperations(deps)
     await ops.pauseAllTask()
-    expect(api.forcePauseTask).toHaveBeenCalledWith({ gid: 'dl-1' })
-    expect(api.forcePauseTask).toHaveBeenCalledWith({ gid: 'seed-1' })
-    expect(api.forcePauseTask).toHaveBeenCalledTimes(2)
-  })
-
-  it('pauses a queue containing only seeding tasks', async () => {
-    const api = createMockApi()
-    const deps = createDeps(api)
-    deps.taskList.value = [
-      makeTask({
-        gid: 'seed-only',
-        status: TASK_STATUS.ACTIVE,
-        bittorrent: { info: { name: 'iso.torrent' } },
-        seeder: 'true',
-      }),
-    ] as Aria2Task[]
-    const ops = createTaskOperations(deps)
-    await ops.pauseAllTask()
-    expect(api.forcePauseTask).toHaveBeenCalledWith({ gid: 'seed-only' })
+    expect(api.forcePauseAll).toHaveBeenCalledOnce()
   })
 })
 
@@ -301,7 +311,7 @@ describe('resumeAllTask', () => {
     deps.taskList.value = [makeTask({ gid: 'paused-1', status: TASK_STATUS.PAUSED })]
     const ops = createTaskOperations(deps)
     await expect(ops.resumeAllTask()).resolves.toEqual({ resumed: 1, blocked: 0 })
-    expect(api.batchResumeTask).toHaveBeenCalledWith({ gids: ['paused-1'] })
+    expect(api.resumeEligible).toHaveBeenCalledOnce()
     expect(deps.fetchList).toHaveBeenCalledOnce()
     expect(api.saveSession).toHaveBeenCalledOnce()
   })
@@ -390,13 +400,13 @@ describe('removeTaskRecord', () => {
 // ═══════════════════════════════════════════════════════════════════
 
 describe('purgeTaskRecord', () => {
-  it('clears all history records and purges aria2', async () => {
+  it('uses the native application transaction', async () => {
     const api = createMockApi()
     const deps = createDeps(api)
     const ops = createTaskOperations(deps)
     await ops.purgeTaskRecord()
-    expect(mockClearRecords).toHaveBeenCalledOnce()
-    expect(api.purgeTaskRecord).toHaveBeenCalledOnce()
+    expect(mockClearRecords).not.toHaveBeenCalled()
+    expect(api.purgeTaskRecords).toHaveBeenCalledOnce()
     expect(deps.fetchList).toHaveBeenCalledOnce()
     expect(deps.refreshTaskCounts).toHaveBeenCalledOnce()
   })
@@ -409,14 +419,13 @@ describe('purgeTaskRecord', () => {
     expect(api.saveSession).toHaveBeenCalledOnce()
   })
 
-  it('still refreshes list even if aria2 purge fails', async () => {
+  it('surfaces a native transaction failure', async () => {
     const api = createMockApi()
-    ;(api.purgeTaskRecord as Mock).mockRejectedValueOnce(new Error('fail'))
+    ;(api.purgeTaskRecords as Mock).mockRejectedValueOnce(new Error('fail'))
     const deps = createDeps(api)
     const ops = createTaskOperations(deps)
-    await ops.purgeTaskRecord()
-    // Error is caught internally, should not throw
-    expect(deps.fetchList).toHaveBeenCalledOnce()
+    await expect(ops.purgeTaskRecord()).rejects.toThrow('fail')
+    expect(deps.fetchList).not.toHaveBeenCalled()
   })
 })
 
@@ -430,20 +439,41 @@ describe('batchRemoveTask', () => {
     const deps = createDeps(api)
     const ops = createTaskOperations(deps)
     await ops.batchRemoveTask(['a', 'b'])
-    expect(api.deleteTask).toHaveBeenCalledTimes(2)
-    expect(api.deleteTask).toHaveBeenCalledWith({ gid: 'a', infoHash: undefined })
-    expect(api.deleteTask).toHaveBeenCalledWith({ gid: 'b', infoHash: undefined })
+    expect(api.batchDeleteTasks).toHaveBeenCalledWith({
+      tasks: [
+        { gid: 'a', infoHash: undefined },
+        { gid: 'b', infoHash: undefined },
+      ],
+    })
+    expect(api.deleteTask).not.toHaveBeenCalled()
+    expect(deps.clearMagnetSelections).toHaveBeenCalledWith(['a', 'b'])
     expect(deps.refreshTaskCounts).toHaveBeenCalledOnce()
     expect(api.saveSession).toHaveBeenCalledOnce()
   })
 
   it('refreshes after a failed transaction', async () => {
     const api = createMockApi()
-    ;(api.deleteTask as Mock).mockRejectedValueOnce(new Error('delete failed'))
+    ;(api.batchDeleteTasks as Mock).mockRejectedValueOnce(new Error('delete failed'))
     const deps = createDeps(api)
     const ops = createTaskOperations(deps)
     await expect(ops.batchRemoveTask(['a'])).rejects.toThrow('delete failed')
     expect(deps.fetchList).toHaveBeenCalledOnce()
+  })
+
+  it('clears selection state only for successful partial deletions', async () => {
+    const api = createMockApi()
+    ;(api.batchDeleteTasks as Mock).mockResolvedValueOnce({
+      succeeded: ['a'],
+      failed: [{ gid: 'b', message: 'busy' }],
+    })
+    const deps = createDeps(api)
+    const ops = createTaskOperations(deps)
+
+    await expect(ops.batchRemoveTask(['a', 'b'])).resolves.toEqual({
+      succeeded: ['a'],
+      failed: [{ gid: 'b', message: 'busy' }],
+    })
+    expect(deps.clearMagnetSelections).toHaveBeenCalledWith(['a'])
   })
 })
 

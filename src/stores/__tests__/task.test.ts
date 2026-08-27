@@ -76,16 +76,16 @@ function createMockApi() {
     getFiles: vi.fn().mockResolvedValue([]),
     removeTask: vi.fn().mockResolvedValue('gid1'),
     deleteTask: vi.fn().mockResolvedValue(undefined),
+    batchDeleteTasks: vi.fn().mockResolvedValue({ succeeded: ['gid1', 'gid2'], failed: [] }),
     finishSharing: vi.fn().mockResolvedValue(undefined),
+    batchFinishSharing: vi.fn().mockResolvedValue({ succeeded: [], failed: [] }),
     forcePauseTask: vi.fn().mockResolvedValue('gid1'),
+    forcePauseAll: vi.fn().mockResolvedValue('OK'),
     pauseTask: vi.fn().mockResolvedValue('gid1'),
     resumeTask: vi.fn().mockResolvedValue('gid1'),
-    batchResumeTask: vi.fn().mockResolvedValue([]),
-    batchPauseTask: vi.fn().mockResolvedValue([]),
-    batchForcePauseTask: vi.fn().mockResolvedValue([]),
-    batchRemoveTask: vi.fn().mockResolvedValue([]),
+    resumeEligible: vi.fn().mockResolvedValue({ resumed: 1, blocked: 0 }),
     removeTaskRecord: vi.fn().mockResolvedValue('OK'),
-    purgeTaskRecord: vi.fn().mockResolvedValue('OK'),
+    purgeTaskRecords: vi.fn().mockResolvedValue(undefined),
     saveSession: vi.fn().mockResolvedValue('OK'),
   }
 }
@@ -372,20 +372,49 @@ describe('TaskStore', () => {
       outs: [],
       options: { dir: '/dl', 'pause-metadata': 'true', 'check-integrity': 'true', 'force-save': 'true' },
     })
+    const { useAppStore } = await import('@/stores/app')
+    expect(useAppStore().pendingMagnetGids).toEqual(['gid3'])
+    expect(useAppStore().automaticMagnetPromptGids).toEqual(['gid3'])
+  })
+
+  it('captures manual selection for a new magnet without automatic prompting', async () => {
+    const { useAppStore } = await import('@/stores/app')
+    const { usePreferenceStore } = await import('@/stores/preference')
+    usePreferenceStore().updatePreference({ magnetFileSelectionPolicy: 'manual' })
+
+    await store.addMagnetUri({ uri: 'magnet:?xt=urn:btih:abc123', options: { dir: '/dl' } })
+
+    expect(useAppStore().pendingMagnetGids).toEqual(['gid3'])
+    expect(useAppStore().automaticMagnetPromptGids).toEqual([])
+  })
+
+  it('lets aria2 download every magnet file without creating selection state', async () => {
+    const { useAppStore } = await import('@/stores/app')
+    const { usePreferenceStore } = await import('@/stores/preference')
+    usePreferenceStore().updatePreference({ magnetFileSelectionPolicy: 'download-all' })
+
+    await store.addMagnetUri({ uri: 'magnet:?xt=urn:btih:abc123', options: { dir: '/dl' } })
+
+    expect(mockApi.addUri).toHaveBeenCalledWith({
+      uris: ['magnet:?xt=urn:btih:abc123'],
+      outs: [],
+      options: { dir: '/dl', 'pause-metadata': 'false', 'check-integrity': 'true', 'force-save': 'true' },
+    })
+    expect(useAppStore().pendingMagnetGids).toEqual([])
+    expect(useAppStore().automaticMagnetPromptGids).toEqual([])
   })
 
   // ─── pauseAllTask / resumeAllTask ───────────────────────
 
-  it('pauseAllTask pauses non-seeding tasks individually via forcePauseTask', async () => {
-    // Default mock taskList has 2 active tasks: gid1, gid2
+  it('pauseAllTask uses the native engine-wide pause operation', async () => {
     await store.fetchList()
     await store.pauseAllTask()
-    expect(mockApi.forcePauseTask).toHaveBeenCalledWith({ gid: 'gid1' })
-    expect(mockApi.forcePauseTask).toHaveBeenCalledWith({ gid: 'gid2' })
+    expect(mockApi.forcePauseAll).toHaveBeenCalledOnce()
+    expect(mockApi.forcePauseTask).not.toHaveBeenCalled()
     expect(mockApi.saveSession).toHaveBeenCalled()
   })
 
-  it('pauseAllTask includes seeding tasks', async () => {
+  it('pauseAllTask remains native when the queue contains sharing tasks', async () => {
     mockApi.fetchTaskList.mockResolvedValueOnce([
       makeMockTask('dl-1', 'active'),
       makeMockTask('seed-1', 'active', {
@@ -395,16 +424,14 @@ describe('TaskStore', () => {
     ])
     await store.fetchList()
     await store.pauseAllTask()
-    expect(mockApi.forcePauseTask).toHaveBeenCalledWith({ gid: 'dl-1' })
-    expect(mockApi.forcePauseTask).toHaveBeenCalledWith({ gid: 'seed-1' })
-    expect(mockApi.forcePauseTask).toHaveBeenCalledTimes(2)
+    expect(mockApi.forcePauseAll).toHaveBeenCalledOnce()
   })
 
   it('resumeAllTask resumes eligible paused tasks, refreshes, and saves session', async () => {
     mockApi.fetchTaskList.mockResolvedValueOnce([makeMockTask('paused-1', 'paused')])
     await store.fetchList()
     await store.resumeAllTask()
-    expect(mockApi.batchResumeTask).toHaveBeenCalledWith({ gids: ['paused-1'] })
+    expect(mockApi.resumeEligible).toHaveBeenCalledOnce()
     expect(mockApi.fetchTaskList).toHaveBeenCalled()
     expect(mockApi.saveSession).toHaveBeenCalled()
   })
@@ -539,9 +566,13 @@ describe('TaskStore', () => {
 
   it('batchRemoveTask calls API with gids and saves session', async () => {
     await store.batchRemoveTask(['gid1', 'gid2'])
-    expect(mockApi.deleteTask).toHaveBeenCalledTimes(2)
-    expect(mockApi.deleteTask).toHaveBeenCalledWith({ gid: 'gid1', infoHash: undefined })
-    expect(mockApi.deleteTask).toHaveBeenCalledWith({ gid: 'gid2', infoHash: undefined })
+    expect(mockApi.batchDeleteTasks).toHaveBeenCalledWith({
+      tasks: [
+        { gid: 'gid1', infoHash: undefined },
+        { gid: 'gid2', infoHash: undefined },
+      ],
+    })
+    expect(mockApi.deleteTask).not.toHaveBeenCalled()
     expect(mockApi.saveSession).toHaveBeenCalled()
   })
 
@@ -604,16 +635,15 @@ describe('TaskStore', () => {
 
   // ─── purgeTaskRecord ────────────────────────────────────
 
-  it('purgeTaskRecord clears DB then aria2 and refreshes list', async () => {
+  it('purgeTaskRecord uses the native application transaction', async () => {
     await store.purgeTaskRecord()
-    expect(mockHistoryFns.clearRecords).toHaveBeenCalled()
-    expect(mockApi.purgeTaskRecord).toHaveBeenCalled()
+    expect(mockApi.purgeTaskRecords).toHaveBeenCalledOnce()
+    expect(mockHistoryFns.clearRecords).not.toHaveBeenCalled()
   })
 
-  it('purgeTaskRecord survives aria2 failure', async () => {
-    mockApi.purgeTaskRecord.mockRejectedValueOnce(new Error('RPC fail'))
-    await store.purgeTaskRecord()
-    expect(mockHistoryFns.clearRecords).toHaveBeenCalled()
+  it('purgeTaskRecord surfaces a native transaction failure', async () => {
+    mockApi.purgeTaskRecords.mockRejectedValueOnce(new Error('IPC fail'))
+    await expect(store.purgeTaskRecord()).rejects.toThrow('IPC fail')
   })
 
   // ─── saveSession ────────────────────────────────────────

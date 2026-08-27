@@ -279,6 +279,19 @@ describe('hydrateAppConfig', () => {
     expect(current.shouldPersist).toBe(false)
   })
 
+  it('discards the retired magnet dialog mode and applies the new default policy', () => {
+    const legacy = {
+      configVersion: 6,
+      btFileSelectionMode: 'manual',
+    } as Partial<AppConfig> & Record<string, unknown>
+
+    const result = hydrateAppConfig(legacy)
+
+    expect(result.config.magnetFileSelectionPolicy).toBe('prompt')
+    expect(result.config).not.toHaveProperty('btFileSelectionMode')
+    expect(result.shouldPersist).toBe(true)
+  })
+
   it('does not downgrade configs from a future schema version', () => {
     const future = CONFIG_VERSION + 10
     const result = hydrateAppConfig({ configVersion: future, theme: 'light' })
@@ -294,6 +307,7 @@ describe('hydrateAppConfig', () => {
     expect(UPDATE_CHANNELS).toContain(DEFAULT_APP_CONFIG.updateChannel)
     expect(APP_LOG_LEVELS).toContain(DEFAULT_APP_CONFIG.logLevel)
     expect(ARIA2_LOG_LEVELS).toContain(DEFAULT_APP_CONFIG.aria2LogLevel)
+    expect(['download-all', 'prompt', 'manual']).toContain(DEFAULT_APP_CONFIG.magnetFileSelectionPolicy)
     expect(DEFAULT_APP_CONFIG.logLevel).toBe('warn')
     expect(DEFAULT_APP_CONFIG.aria2LogLevel).toBe('warn')
     expect(FILE_ALLOCATION_OPTIONS).toContain(DEFAULT_APP_CONFIG.fileAllocation)

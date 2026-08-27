@@ -241,7 +241,7 @@ export async function submitBatchItems(
  * Submits manually entered URIs from the textarea.
  * Handles multi-URI rename with buildOuts.
  *
- * Magnet URIs are separated and submitted via addMagnetUri (metadata-only mode).
+ * Magnet URIs are separated and submitted through the captured file-selection policy.
  * Returns an array of magnet GIDs for the caller to monitor for file selection.
  */
 export async function submitManualUris(
@@ -432,7 +432,7 @@ export function useAddTaskSubmit({ form, onClose }: UseAddTaskSubmitOptions) {
           },
           getDownloadProxy(preferenceStore.config.proxy),
         )
-        // pendingMagnetGids is set directly inside addMagnetUri (task store)
+        // addMagnetUri owns native metadata behavior and any pending selection state.
       }
 
       const failedCount = batch.filter((i) => i.status === 'failed').length + manualResult.magnetFailures.length

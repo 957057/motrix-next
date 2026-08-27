@@ -7,7 +7,7 @@ import { logger } from '@shared/logger'
 import type { Aria2Task, Aria2File, Aria2Peer, Aria2EngineOptions, TaskApi } from '@shared/types'
 
 import { historyRecordToTask, mergeHistoryIntoTasks, isMetadataTask } from '@/composables/useTaskLifecycle'
-import { buildMetadataOnlyOptions } from '@/composables/useMagnetFlow'
+import { buildMagnetOptions } from '@/composables/useMagnetFlow'
 import {
   registerAddedAt,
   trackFirstSeen,
@@ -98,6 +98,9 @@ export const useTaskStore = defineStore('task', () => {
       setTaskRemoving,
       requestMagnetSelection: (gid) => {
         void import('@/stores/app').then(({ useAppStore }) => useAppStore().requestMagnetSelection(gid))
+      },
+      clearMagnetSelections: (gids) => {
+        return import('@/stores/app').then(({ useAppStore }) => useAppStore().clearMagnetSelections(gids))
       },
       refreshTaskCounts,
     })
@@ -468,12 +471,12 @@ export const useTaskStore = defineStore('task', () => {
    * Adds a magnet URI as a normal download. The returned GID owns the complete
    * metadata, file-selection, download, and seeding lifecycle.
    *
-   * The task always pauses after metadata so users retain file-level control.
-   *
-   * Directly registers the GID for monitoring to avoid caller-chain breaks.
+   * aria2 either continues with every file or pauses for selection according
+   * to the application-owned magnet selection policy.
    */
   async function addMagnetUri(data: { uri: string; options: Aria2EngineOptions }): Promise<string> {
-    const options = { ...buildMetadataOnlyOptions(data.options), 'check-integrity': 'true', 'force-save': 'true' }
+    const policy = preferenceStore.config.magnetFileSelectionPolicy
+    const options = { ...buildMagnetOptions(data.options, policy), 'check-integrity': 'true', 'force-save': 'true' }
 
     const gids = await api.addUri({
       uris: [data.uri],
@@ -488,10 +491,10 @@ export const useTaskStore = defineStore('task', () => {
     const historyStore = useHistoryStore()
     historyStore.recordTaskBirth(gid, now).catch((e) => logger.debug('taskBirth.write', e))
 
-    // Register the GID for the event-driven file-selection queue.
-    const { useAppStore } = await import('@/stores/app')
-    const appStore = useAppStore()
-    appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, gid]
+    if (policy !== 'download-all') {
+      const { useAppStore } = await import('@/stores/app')
+      useAppStore().queueMagnetSelection(gid, policy === 'prompt')
+    }
 
     await Promise.all([fetchList(), refreshTaskCounts()])
     return gid
@@ -531,14 +534,15 @@ export const useTaskStore = defineStore('task', () => {
 
   async function restartTask(task: Aria2Task) {
     const historyStore = useHistoryStore()
+    const policy = preferenceStore.config.magnetFileSelectionPolicy
     await restartTaskImpl(
       task,
       { ...api, fetchList, saveSession: () => api.saveSession() },
       historyStore,
+      policy,
       async (gid) => {
         const { useAppStore } = await import('@/stores/app')
-        const appStore = useAppStore()
-        appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, gid]
+        useAppStore().queueMagnetSelection(gid, policy === 'prompt')
       },
     )
     await refreshTaskCounts()
@@ -586,6 +590,7 @@ export const useTaskStore = defineStore('task', () => {
     removeTask: (task: Aria2Task) => taskOps.removeTask(task),
     pauseTask: (task: Aria2Task) => taskOps.pauseTask(task),
     finishSharing: (task: Aria2Task) => taskOps.finishSharing(task),
+    finishSharingTasks: (gids: string[]) => taskOps.finishSharingTasks(gids),
     resumeTask: (task: Aria2Task) => taskOps.resumeTask(task),
     applyMagnetFileSelection: (task: Aria2Task, selectFile: string) =>
       taskOps.applyMagnetFileSelection(task, selectFile),

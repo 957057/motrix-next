@@ -224,7 +224,7 @@ export const TRACKER_SOURCE_OPTIONS = [
 export const DEFAULT_TRACKER_SOURCE = TRACKER_SOURCE_OPTIONS.map((source) => source.value)
 
 export const DEFAULT_APP_CONFIG = {
-  configVersion: 6,
+  configVersion: 7,
   dbSchemaVersion: CURRENT_DB_SCHEMA_VERSION,
   // ── Appearance ──────────────────────────────────────────────────
   theme: 'auto' as const,
@@ -274,7 +274,7 @@ export const DEFAULT_APP_CONFIG = {
   btPeerExchangeEnabled: true, // improves peer discovery inside active swarms
   btLocalPeerDiscoveryEnabled: true,
   btEncryption: 'preferred' as const,
-  btFileSelectionMode: 'auto' as const,
+  magnetFileSelectionPolicy: 'prompt' as const,
   continue: true, // aria2 default=true; resume incomplete downloads
   remoteTime: false, // aria2 default=false; file timestamp = download completion time
 

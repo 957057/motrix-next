@@ -67,16 +67,17 @@ import {
   inspectTorrent,
   removeTask,
   deleteTask,
+  batchDeleteTasks,
   finishSharing,
+  batchFinishSharing,
   pauseTask,
   resumeTask,
   forcePauseTask,
+  forcePauseAll,
+  resumeEligible,
   saveSession,
   removeTaskRecord,
-  purgeTaskRecord,
-  batchResumeTask,
-  batchPauseTask,
-  batchRemoveTask,
+  purgeTaskRecords,
 } from '../aria2'
 
 describe('aria2 API (invoke transport)', () => {
@@ -596,9 +597,9 @@ describe('aria2 API (invoke transport)', () => {
       expect(mockInvoke).toHaveBeenCalledWith('aria2_remove_download_result', { gid: 'abc' })
     })
 
-    it('purgeTaskRecord invokes aria2_purge_download_result', async () => {
-      await purgeTaskRecord()
-      expect(mockInvoke).toHaveBeenCalledWith('aria2_purge_download_result')
+    it('purgeTaskRecords invokes the native application transaction', async () => {
+      await purgeTaskRecords()
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_purge_task_records')
     })
   })
 
@@ -607,22 +608,28 @@ describe('aria2 API (invoke transport)', () => {
   describe('batch operations', () => {
     beforeEach(async () => {
       engineState.isReady = true
-      mockInvoke.mockResolvedValue([['OK'], ['OK']])
+      mockInvoke.mockResolvedValue({ succeeded: ['g1', 'g2'], failed: [] })
     })
 
-    it('batchResumeTask invokes aria2_batch_unpause with gids', async () => {
-      await batchResumeTask({ gids: ['g1', 'g2'] })
-      expect(mockInvoke).toHaveBeenCalledWith('aria2_batch_unpause', { gids: ['g1', 'g2'] })
+    it('forcePauseAll invokes the native engine operation', async () => {
+      await forcePauseAll()
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_force_pause_all')
     })
 
-    it('batchPauseTask invokes aria2_batch_force_pause with gids', async () => {
-      await batchPauseTask({ gids: ['g1', 'g2'] })
-      expect(mockInvoke).toHaveBeenCalledWith('aria2_batch_force_pause', { gids: ['g1', 'g2'] })
+    it('resumeEligible invokes the guarded native batch operation', async () => {
+      await resumeEligible()
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_resume_eligible')
     })
 
-    it('batchRemoveTask invokes aria2_batch_force_remove with gids', async () => {
-      await batchRemoveTask({ gids: ['g1'] })
-      expect(mockInvoke).toHaveBeenCalledWith('aria2_batch_force_remove', { gids: ['g1'] })
+    it('batchDeleteTasks invokes the native deletion transaction', async () => {
+      const tasks = [{ gid: 'g1', infoHash: 'hash' }]
+      await batchDeleteTasks({ tasks })
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_batch_delete_tasks', { tasks })
+    })
+
+    it('batchFinishSharing invokes the native sharing transaction', async () => {
+      await batchFinishSharing({ gids: ['g1', 'g2'] })
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_batch_finish_sharing', { gids: ['g1', 'g2'] })
     })
   })
 })

@@ -10,7 +10,7 @@ import { checkTaskIsBT, getRestartDescriptors } from '@shared/utils'
 import { logger } from '@shared/logger'
 import { changeKeysToCamelCase } from '@shared/utils/config'
 import { engineOptionKeys } from '@shared/configKeys'
-import type { Aria2Task } from '@shared/types'
+import type { Aria2Task, MagnetFileSelectionPolicy } from '@shared/types'
 
 /** Minimal API surface needed by restartTask. */
 export interface RestartTaskApi {
@@ -46,6 +46,7 @@ export async function restartTask(
   task: Aria2Task,
   api: RestartTaskApi,
   historyApi: RestartHistoryApi,
+  magnetFileSelectionPolicy: MagnetFileSelectionPolicy,
   registerPendingMagnet: (gid: string) => void | Promise<void> = () => undefined,
 ): Promise<void> {
   const { status, gid, dir } = task
@@ -78,15 +79,15 @@ export async function restartTask(
   if (isBT) {
     options['check-integrity'] = options['check-integrity'] ?? 'true'
     options['force-save'] = options['force-save'] ?? 'true'
-    options['pause-metadata'] = 'true'
+    options['pause-metadata'] = magnetFileSelectionPolicy === 'download-all' ? 'false' : 'true'
   }
   const createdGids: string[] = []
   try {
     for (const mirrorGroup of descriptors) {
       const newGid = await api.addUriAtomic({ uris: mirrorGroup, options })
       createdGids.push(newGid)
-      // BT restarts produce magnet URIs and always require file selection.
-      if (isBT) {
+      // BT restarts capture the current selection policy as a new engine task.
+      if (isBT && magnetFileSelectionPolicy !== 'download-all') {
         await registerPendingMagnet(newGid)
       }
     }

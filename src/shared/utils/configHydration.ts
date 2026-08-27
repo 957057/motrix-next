@@ -227,9 +227,9 @@ function normalizeScalarValues(config: Record<string, unknown>, repairs: string[
   repairEnum(config, 'btTransport', ['tcp', 'utp', 'both'] as const, DEFAULT_APP_CONFIG.btTransport, repairs)
   repairEnum(
     config,
-    'btFileSelectionMode',
-    ['auto', 'manual'] as const,
-    DEFAULT_APP_CONFIG.btFileSelectionMode,
+    'magnetFileSelectionPolicy',
+    ['download-all', 'prompt', 'manual'] as const,
+    DEFAULT_APP_CONFIG.magnetFileSelectionPolicy,
     repairs,
   )
   repairEnum(

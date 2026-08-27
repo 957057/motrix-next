@@ -89,6 +89,7 @@ export const useAppStore = defineStore('app', () => {
   const pendingUpdate = ref<TauriUpdate | null>(null)
   const updateCheckRequestId = ref(0)
   const pendingMagnetGids = ref<string[]>([])
+  const automaticMagnetPromptGids = ref<string[]>([])
   const requestedMagnetSelectionGid = ref('')
   const externalInputSubmitting = ref(false)
   let externalInputSubmitCount = 0
@@ -106,6 +107,32 @@ export const useAppStore = defineStore('app', () => {
   function requestMagnetSelection(gid: string) {
     requestedMagnetSelectionGid.value = ''
     requestedMagnetSelectionGid.value = gid
+  }
+
+  function queueMagnetSelection(gid: string, automatic: boolean) {
+    if (!pendingMagnetGids.value.includes(gid)) {
+      pendingMagnetGids.value = [...pendingMagnetGids.value, gid]
+    }
+    if (automatic && !automaticMagnetPromptGids.value.includes(gid)) {
+      automaticMagnetPromptGids.value = [...automaticMagnetPromptGids.value, gid]
+    }
+  }
+
+  function replacePendingMagnetSelections(gids: string[]) {
+    pendingMagnetGids.value = [...new Set(gids)]
+    const pending = new Set(pendingMagnetGids.value)
+    automaticMagnetPromptGids.value = automaticMagnetPromptGids.value.filter((gid) => pending.has(gid))
+  }
+
+  function clearMagnetSelections(gids: string[]) {
+    const removed = new Set(gids)
+    pendingMagnetGids.value = pendingMagnetGids.value.filter((gid) => !removed.has(gid))
+    automaticMagnetPromptGids.value = automaticMagnetPromptGids.value.filter((gid) => !removed.has(gid))
+    if (removed.has(requestedMagnetSelectionGid.value)) requestedMagnetSelectionGid.value = ''
+  }
+
+  function disableAutomaticMagnetPrompt(gid: string) {
+    automaticMagnetPromptGids.value = automaticMagnetPromptGids.value.filter((candidate) => candidate !== gid)
   }
 
   function requestUpdateCheck() {
@@ -485,7 +512,12 @@ export const useAppStore = defineStore('app', () => {
     pendingUpdate,
     updateCheckRequestId,
     pendingMagnetGids,
+    automaticMagnetPromptGids,
     requestedMagnetSelectionGid,
+    queueMagnetSelection,
+    replacePendingMagnetSelections,
+    clearMagnetSelections,
+    disableAutomaticMagnetPrompt,
     requestMagnetSelection,
     requestUpdateCheck,
     updateInterval,

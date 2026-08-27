@@ -10,13 +10,12 @@ import {
   getTaskDisplayName,
   getSharingStatusLabelKey,
   getTaskSharingState,
-  getTaskSharingTime,
   isBtMetadataTask,
   timeFormat,
   timeRemaining,
 } from '@shared/utils'
 import { buildTaskTransferSummary } from '@/composables/useTaskDetailSummary'
-import { formatSharingDuration, getBtLifecycleState } from '@/composables/useBtLifecycle'
+import { getBtLifecycleState } from '@/composables/useBtLifecycle'
 import type { Aria2Task } from '@shared/types'
 
 export interface TaskCardStatusBadge {
@@ -72,14 +71,6 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
     },
     { immediate: true },
   )
-  const sharingDurationText = computed(() =>
-    formatSharingDuration(getTaskSharingTime(task.value), {
-      day: t('task.sharing-day-unit'),
-      hour: t('app.hour') || 'h',
-      minute: t('app.minute') || 'm',
-      second: t('app.second') || 's',
-    }),
-  )
   const sharingState = computed(() => getTaskSharingState(task.value))
   const sharingKind = computed(() => sharingState.value?.kind ?? null)
   const isSharing = computed(() => checkTaskIsSharing(task.value))
@@ -109,18 +100,16 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
       }
     }
     if (sharingState.value?.phase === 'paused') {
-      const duration = sharingDurationText.value
       return {
         key: 'sharing-paused',
-        label: duration ? `${sharingLabel.value} · ${duration}` : sharingLabel.value,
+        label: sharingLabel.value,
         tone: 'muted',
       }
     }
     if (isSharing.value) {
-      const duration = sharingDurationText.value
       return {
         key: 'sharing',
-        label: duration ? `${sharingLabel.value} · ${duration}` : sharingLabel.value,
+        label: sharingLabel.value,
         tone: 'success',
       }
     }

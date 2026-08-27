@@ -28,7 +28,7 @@ export interface MagnetMetadataDeps {
 }
 
 export interface MagnetMetadataResolver {
-  request: (gid?: string) => Promise<void>
+  request: (gid: string) => Promise<void>
 }
 
 type PendingTaskLoader = () => Promise<Aria2Task[]>
@@ -58,6 +58,8 @@ export async function resolvePendingMagnetMetadata(
 
     if (!task) {
       if (queryError !== undefined) {
+        state.pendingGids = state.pendingGids.filter((candidate) => candidate !== gid)
+        state.deferredGids = state.deferredGids.filter((candidate) => candidate !== gid)
         logger.debug(
           'MagnetMetadata.resolve',
           formatLogFields({ gid, outcome: 'skipped', reason: getErrorMessage(queryError) }),
@@ -66,16 +68,14 @@ export async function resolvePendingMagnetMetadata(
       return false
     }
 
-    const files = await deps.getFiles(gid)
-    const realFiles = files.filter((file) => Number(file.length) > 0)
-    if (realFiles.length === 0) return false
+    const files = parseFilesForSelection(await deps.getFiles(gid))
+    if (files.length === 0) return false
 
     if (state.visible || !state.pendingGids.includes(gid)) return false
 
-    const parsed = parseFilesForSelection(realFiles)
-    state.files = parsed
+    state.files = files
     state.session = { gid }
-    state.name = getTaskDisplayName(task, { defaultName: parsed[0]?.name || deps.fallbackName() })
+    state.name = getTaskDisplayName(task, { defaultName: files[0]?.name || deps.fallbackName() })
     state.visible = true
     return true
   } catch (error) {
@@ -84,32 +84,24 @@ export async function resolvePendingMagnetMetadata(
   }
 }
 
-export async function resolveNextPendingMagnetMetadata(deps: MagnetMetadataDeps): Promise<void> {
-  if (deps.state.visible) return
-  let pendingTasks: Promise<Aria2Task[]> | undefined
-  const loadPendingTasks = () => (pendingTasks ??= deps.fetchPendingTasks())
-  for (const gid of [...deps.state.pendingGids]) {
-    if (await resolvePendingMagnetMetadata(deps, gid, loadPendingTasks)) return
-  }
-}
-
 export function createMagnetMetadataResolver(getDeps: () => MagnetMetadataDeps): MagnetMetadataResolver {
   let running = false
-  let requested = false
+  const requestedGids = new Set<string>()
 
-  async function request(gid?: string): Promise<void> {
-    if (gid && !getDeps().state.pendingGids.includes(gid)) return
+  async function request(gid: string): Promise<void> {
+    if (!getDeps().state.pendingGids.includes(gid)) return
 
-    requested = true
+    requestedGids.add(gid)
     if (running) return
 
     running = true
     try {
-      while (requested) {
-        requested = false
+      while (requestedGids.size > 0) {
         const deps = getDeps()
-        if (deps.state.visible) continue
-        await resolveNextPendingMagnetMetadata(deps)
+        const next = requestedGids.values().next()
+        if (next.done) break
+        requestedGids.delete(next.value)
+        await resolvePendingMagnetMetadata(deps, next.value)
       }
     } finally {
       running = false

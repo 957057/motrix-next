@@ -2,7 +2,7 @@
  *
  * Tests the pure logic extracted from the magnet flow:
  * - Detecting magnet URIs
- * - Building metadata-only options
+ * - Building policy-specific aria2 options
  * - Parsing file selection from getFiles response
  * - Building select-file option string
  */
@@ -10,13 +10,8 @@ import { describe, it, expect } from 'vitest'
 import type { Aria2File } from '@shared/types'
 
 // Dynamic import after module exists
-const {
-  isMagnetUri,
-  buildMetadataOnlyOptions,
-  buildSelectFileOption,
-  parseFilesForSelection,
-  getPendingMagnetSelectionGids,
-} = await import('@/composables/useMagnetFlow')
+const { isMagnetUri, buildMagnetOptions, buildSelectFileOption, parseFilesForSelection } =
+  await import('@/composables/useMagnetFlow')
 
 describe('useMagnetFlow', () => {
   // ── isMagnetUri ─────────────────────────────────────────────────
@@ -43,16 +38,22 @@ describe('useMagnetFlow', () => {
     })
   })
 
-  // ── buildMetadataOnlyOptions ────────────────────────────────────
+  // ── buildMagnetOptions ──────────────────────────────────────────
 
-  describe('buildMetadataOnlyOptions', () => {
-    it('sets pause-metadata for magnet file selection', () => {
-      const options = buildMetadataOnlyOptions({ dir: '/downloads', 'stream-max-connections': '8' })
+  describe('buildMagnetOptions', () => {
+    it('uses aria2 native continuation when every file should download', () => {
+      const options = buildMagnetOptions({ dir: '/downloads' }, 'download-all')
+      expect(options['pause-metadata']).toBe('false')
+    })
+
+    it('pauses metadata for prompt and manual selection', () => {
+      const options = buildMagnetOptions({ dir: '/downloads', 'stream-max-connections': '8' }, 'prompt')
       expect(options['pause-metadata']).toBe('true')
+      expect(buildMagnetOptions({}, 'manual')['pause-metadata']).toBe('true')
     })
 
     it('preserves existing options', () => {
-      const options = buildMetadataOnlyOptions({ dir: '/custom', 'stream-max-connections': '4' })
+      const options = buildMagnetOptions({ dir: '/custom', 'stream-max-connections': '4' }, 'prompt')
       expect(options.dir).toBe('/custom')
       expect(options['stream-max-connections']).toBe('4')
     })
@@ -108,6 +109,10 @@ describe('useMagnetFlow', () => {
       expect(parseFilesForSelection([])).toEqual([])
     })
 
+    it('excludes zero-length metadata entries', () => {
+      expect(parseFilesForSelection([{ ...mockFiles[0], length: '0' }])).toEqual([])
+    })
+
     it('extracts filename from Windows backslash path', () => {
       const winFiles: Aria2File[] = [
         {
@@ -156,43 +161,6 @@ describe('useMagnetFlow', () => {
 
     it('returns empty string for empty selection', () => {
       expect(buildSelectFileOption([])).toBe('')
-    })
-  })
-
-  describe('getPendingMagnetSelectionGids', () => {
-    it('restores paused single-GID BitTorrent selections', () => {
-      const gids = getPendingMagnetSelectionGids([
-        {
-          gid: 'content-gid',
-          status: 'paused',
-          totalLength: '1000',
-          completedLength: '0',
-          uploadLength: '0',
-          downloadSpeed: '0',
-          uploadSpeed: '0',
-          connections: '0',
-          dir: '/downloads',
-          files: [
-            {
-              index: '1',
-              path: '/downloads/Movie/video.mkv',
-              length: '1000',
-              completedLength: '0',
-              selected: 'true',
-              uris: [],
-            },
-          ],
-          bittorrent: {
-            info: {
-              name: 'Movie',
-            },
-            state: 'paused',
-            fileSelectionState: 'awaiting',
-          },
-        },
-      ])
-
-      expect(gids).toEqual(['content-gid'])
     })
   })
 })

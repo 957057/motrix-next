@@ -65,19 +65,19 @@ describe('restartTask', () => {
 
   it('skips active tasks (no API calls)', async () => {
     const task = makeMockTask('gid1', 'active')
-    await restartTask(task, api, mockHistoryFns)
+    await restartTask(task, api, mockHistoryFns, 'prompt')
     expect(api.addUriAtomic).not.toHaveBeenCalled()
   })
 
   it('skips paused tasks (no API calls)', async () => {
     const task = makeMockTask('gid1', 'paused')
-    await restartTask(task, api, mockHistoryFns)
+    await restartTask(task, api, mockHistoryFns, 'prompt')
     expect(api.addUriAtomic).not.toHaveBeenCalled()
   })
 
   it('skips waiting tasks (no API calls)', async () => {
     const task = makeMockTask('gid1', 'waiting')
-    await restartTask(task, api, mockHistoryFns)
+    await restartTask(task, api, mockHistoryFns, 'prompt')
     expect(api.addUriAtomic).not.toHaveBeenCalled()
   })
 
@@ -96,7 +96,7 @@ describe('restartTask', () => {
         },
       ],
     })
-    await restartTask(task, api, mockHistoryFns)
+    await restartTask(task, api, mockHistoryFns, 'prompt')
     expect(api.addUriAtomic).toHaveBeenCalledTimes(1)
   })
 
@@ -113,7 +113,7 @@ describe('restartTask', () => {
         },
       ],
     })
-    await restartTask(task, api, mockHistoryFns)
+    await restartTask(task, api, mockHistoryFns, 'prompt')
     expect(api.addUriAtomic).toHaveBeenCalledTimes(1)
   })
 
@@ -130,7 +130,7 @@ describe('restartTask', () => {
         },
       ],
     })
-    await restartTask(task, api, mockHistoryFns)
+    await restartTask(task, api, mockHistoryFns, 'prompt')
     expect(api.addUriAtomic).toHaveBeenCalledTimes(1)
   })
 
@@ -160,7 +160,7 @@ describe('restartTask', () => {
     api.addUriAtomic.mockResolvedValueOnce('new-a').mockResolvedValueOnce('new-b')
     api.getOption.mockResolvedValue({ dir: '/dl' })
 
-    await restartTask(task, api, mockHistoryFns)
+    await restartTask(task, api, mockHistoryFns, 'prompt')
 
     expect(api.addUriAtomic).toHaveBeenCalledTimes(2)
     expect(api.addUriAtomic).toHaveBeenNthCalledWith(1, {
@@ -195,7 +195,7 @@ describe('restartTask', () => {
     })
     api.getOption.mockResolvedValue({ dir: '/dl' })
 
-    await restartTask(task, api, mockHistoryFns)
+    await restartTask(task, api, mockHistoryFns, 'prompt')
 
     // Must be called exactly ONCE — one file = one addUriAtomic call
     expect(api.addUriAtomic).toHaveBeenCalledTimes(1)
@@ -231,7 +231,7 @@ describe('restartTask', () => {
       header: 'X-Custom: value',
     })
 
-    await restartTask(task, api, mockHistoryFns)
+    await restartTask(task, api, mockHistoryFns, 'prompt')
 
     expect(api.addUriAtomic).toHaveBeenCalledWith({
       uris: ['http://x.com/f.zip'],
@@ -256,7 +256,7 @@ describe('restartTask', () => {
     })
     api.getOption.mockResolvedValue({ dir: '/dl' })
 
-    await restartTask(task, api, mockHistoryFns)
+    await restartTask(task, api, mockHistoryFns, 'prompt')
 
     const call = api.addUriAtomic.mock.calls[0][0]
     expect(call.uris[0]).toContain('xt=urn:btih:0123456789abcdef0123456789abcdef01234567')
@@ -266,6 +266,30 @@ describe('restartTask', () => {
       'force-save': 'true',
       'pause-metadata': 'true',
     })
+  })
+
+  it('lets aria2 continue all files when restarting BitTorrent with download-all', async () => {
+    const task = makeMockTask('gid1', 'error', {
+      bittorrent: { info: { name: 'ubuntu.iso' } },
+      infoHash: '0123456789abcdef0123456789abcdef01234567',
+      files: [
+        {
+          index: '1',
+          path: '/ubuntu.iso',
+          length: '100',
+          completedLength: '0',
+          selected: 'true',
+          uris: [{ uri: 'magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567', status: 'used' }],
+        },
+      ],
+    })
+    const registerPendingMagnet = vi.fn()
+    api.getOption.mockResolvedValue({ dir: '/dl' })
+
+    await restartTask(task, api, mockHistoryFns, 'download-all', registerPendingMagnet)
+
+    expect(api.addUriAtomic.mock.calls[0][0].options['pause-metadata']).toBe('false')
+    expect(registerPendingMagnet).not.toHaveBeenCalled()
   })
 
   it('falls back to task.dir when getOption fails', async () => {
@@ -284,7 +308,7 @@ describe('restartTask', () => {
     })
     api.getOption.mockRejectedValue(new Error('RPC fail'))
 
-    await restartTask(task, api, mockHistoryFns)
+    await restartTask(task, api, mockHistoryFns, 'prompt')
 
     expect(api.addUriAtomic).toHaveBeenCalledWith({
       uris: ['http://x.com/f.zip'],
@@ -308,7 +332,7 @@ describe('restartTask', () => {
       ],
     })
 
-    await restartTask(task, api, mockHistoryFns)
+    await restartTask(task, api, mockHistoryFns, 'prompt')
 
     expect(api.removeTaskRecord).toHaveBeenCalledWith({ gid: 'old-gid' })
     expect(mockHistoryFns.removeRecord).toHaveBeenCalledWith('old-gid')
@@ -341,7 +365,7 @@ describe('restartTask', () => {
     })
     api.addUriAtomic.mockResolvedValueOnce('new-a').mockRejectedValueOnce(new Error('fail'))
 
-    await expect(restartTask(task, api, mockHistoryFns)).rejects.toThrow('fail')
+    await expect(restartTask(task, api, mockHistoryFns, 'prompt')).rejects.toThrow('fail')
 
     // Rollback: remove the successfully created task
     expect(api.removeTask).toHaveBeenCalledWith({ gid: 'new-a' })
@@ -355,6 +379,6 @@ describe('restartTask', () => {
   it('throws when no URIs can be extracted', async () => {
     const task = makeMockTask('gid1', 'error', { files: [] })
 
-    await expect(restartTask(task, api, mockHistoryFns)).rejects.toThrow('no download URIs')
+    await expect(restartTask(task, api, mockHistoryFns, 'prompt')).rejects.toThrow('no download URIs')
   })
 })

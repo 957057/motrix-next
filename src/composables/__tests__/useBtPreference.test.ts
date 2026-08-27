@@ -8,7 +8,7 @@ describe('BitTorrent preference contract', () => {
   it('builds the canonical default form', () => {
     const form = createForm()
 
-    expect(form.btFileSelectionMode).toBe('auto')
+    expect(form.magnetFileSelectionPolicy).toBe('prompt')
     expect(form.btEncryption).toBe('preferred')
     expect(form.btDhtEnabled).toBe(true)
     expect(form.trackerSource).toHaveLength(2)
@@ -35,11 +35,11 @@ describe('BitTorrent preference contract', () => {
   it('persists application-owned settings without UI-only fields', () => {
     const stored = transformBtForStore({
       ...createForm(),
-      btFileSelectionMode: 'manual',
+      magnetFileSelectionPolicy: 'manual',
       btTracker: 'udp://one.example:6969\nudp://two.example:6969',
     })
 
-    expect(stored.btFileSelectionMode).toBe('manual')
+    expect(stored.magnetFileSelectionPolicy).toBe('manual')
     expect(stored.btTracker).toBe('udp://one.example:6969,udp://two.example:6969')
   })
 

@@ -324,7 +324,7 @@ export interface PortConflictRecoveryConfig {
 export type BtEncryptionMode = 'preferred' | 'required' | 'disabled'
 export type BtTransportMode = 'tcp' | 'utp' | 'both'
 export type BtBlocklistScope = 'peers' | 'peers-and-trackers' | 'all'
-export type BtFileSelectionMode = 'auto' | 'manual'
+export type MagnetFileSelectionPolicy = 'download-all' | 'prompt' | 'manual'
 export type BtFilePriority = 'off' | 'normal' | 'high' | 'top'
 
 /** A file category rule mapping extensions to a download directory. */
@@ -507,7 +507,7 @@ export interface AppConfig {
   ed2kSearchTimeout: number
   btTracker: string
   btEncryption: BtEncryptionMode
-  btFileSelectionMode: BtFileSelectionMode
+  magnetFileSelectionPolicy: MagnetFileSelectionPolicy
   continue: boolean
   /** When true, aria2 applies the remote server's Last-Modified timestamp
    *  to the local file instead of using the download-completion time. */
@@ -742,6 +742,26 @@ export interface HistoryRecord {
   meta?: string
 }
 
+export interface BatchTaskFailure {
+  gid: string
+  message: string
+}
+
+export interface BatchTaskOperationResult {
+  succeeded: string[]
+  failed: BatchTaskFailure[]
+}
+
+export interface BatchDeleteTaskTarget {
+  gid: string
+  infoHash?: string
+}
+
+export interface ResumeEligibleResult {
+  resumed: number
+  blocked: number
+}
+
 /** Aria2 JSON-RPC client API surface consumed by the task store. */
 export interface TaskApi {
   fetchTaskList: (params: { type: string; limit?: number }) => Promise<Aria2Task[]>
@@ -756,15 +776,15 @@ export interface TaskApi {
   getFiles: (params: { gid: string }) => Promise<Aria2File[]>
   removeTask: (params: { gid: string }) => Promise<string>
   deleteTask: (params: { gid: string; infoHash?: string }) => Promise<void>
+  batchDeleteTasks: (params: { tasks: BatchDeleteTaskTarget[] }) => Promise<BatchTaskOperationResult>
   finishSharing: (params: { gid: string }) => Promise<void>
+  batchFinishSharing: (params: { gids: string[] }) => Promise<BatchTaskOperationResult>
   forcePauseTask: (params: { gid: string }) => Promise<string>
+  forcePauseAll: () => Promise<string>
   pauseTask: (params: { gid: string }) => Promise<string>
   resumeTask: (params: { gid: string }) => Promise<string>
-  batchResumeTask: (params: { gids: string[] }) => Promise<unknown[][]>
-  batchPauseTask: (params: { gids: string[] }) => Promise<unknown[][]>
-  batchForcePauseTask: (params: { gids: string[] }) => Promise<unknown[][]>
-  batchRemoveTask: (params: { gids: string[] }) => Promise<unknown[][]>
+  resumeEligible: () => Promise<ResumeEligibleResult>
   removeTaskRecord: (params: { gid: string }) => Promise<string>
-  purgeTaskRecord: () => Promise<string>
+  purgeTaskRecords: () => Promise<void>
   saveSession: () => Promise<string>
 }

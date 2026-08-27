@@ -25,7 +25,7 @@ import { logger } from '@shared/logger'
 import type { AppConfig } from '@shared/types'
 
 /** Current schema version. Must equal `migrations.length`. */
-export const CONFIG_VERSION = 6
+export const CONFIG_VERSION = 7
 
 /** Result returned by runMigrations for callers to act on (e.g. toast). */
 export interface MigrationResult {
@@ -187,11 +187,21 @@ const migrations: Migration[] = [
     delete legacy.dhtListenPort
     delete legacy.pauseMetadata
     delete legacy.autoSelectAllBtFilesFromExtension
-    config.btFileSelectionMode = 'auto'
     if (config.portConflictRecovery) {
       delete (config.portConflictRecovery as unknown as Record<string, unknown>).dht
     }
     logger.info('ConfigMigration', 'v6: adopted native BitTorrent settings and file-selection presentation')
+  },
+
+  // ── v6 → v7 ──────────────────────────────────────────────────────
+  // Replace the ambiguous two-state dialog presentation with a single
+  // magnet file-selection policy. The retired value is intentionally not
+  // mapped because the new default is the explicit prompt flow.
+  function migrateV7(config: Partial<AppConfig>): void {
+    const legacy = config as Partial<AppConfig> & Record<string, unknown>
+    delete legacy.btFileSelectionMode
+    config.magnetFileSelectionPolicy = 'prompt'
+    logger.info('ConfigMigration', 'v7: replaced legacy magnet dialog mode with the prompt policy')
   },
 ]
 

@@ -1,9 +1,7 @@
 /**
  * @fileoverview Extracted task CRUD operations from the Pinia task store.
  *
- * Contains: removeTask, pauseTask, resumeTask, pauseAllTask, resumeAllTask,
- * toggleTask, removeTaskRecord, purgeTaskRecord,
- * batchRemoveTask.
+ * Contains task mutation and native batch-operation orchestration.
  *
  * Uses dependency injection — accepts API + store refs instead of importing
  * them directly, enabling testability and keeping the task store thin.
@@ -12,7 +10,6 @@ import { TASK_STATUS } from '@shared/constants'
 import { checkTaskIsBT, checkTaskIsSharing } from '@shared/utils'
 import { logger } from '@shared/logger'
 import { isAwaitingBtFileSelection } from '@/composables/useBtLifecycle'
-import { useHistoryStore } from '@/stores/history'
 import type { Aria2Task, TaskApi } from '@shared/types'
 import type { Ref } from 'vue'
 
@@ -24,6 +21,7 @@ interface TaskOperationsDeps {
   fetchList: () => Promise<void>
   setTaskRemoving?: (gid: string, removing: boolean) => void
   requestMagnetSelection?: (gid: string) => void
+  clearMagnetSelections?: (gids: string[]) => void | Promise<void>
   refreshTaskCounts: () => Promise<void>
 }
 
@@ -31,21 +29,12 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
   const { api, taskList, currentTaskGid, hideTaskDetail, fetchList, refreshTaskCounts } = deps
   const setTaskRemoving = deps.setTaskRemoving ?? (() => undefined)
 
-  async function resumeTasks(tasks: Aria2Task[]): Promise<{ resumed: number; blocked: number }> {
-    const resumableGids = tasks.filter((task) => !isAwaitingBtFileSelection(task)).map((task) => task.gid)
-    const blocked = tasks.length - resumableGids.length
-
-    if (resumableGids.length > 0) {
-      await api.batchResumeTask({ gids: resumableGids })
-    }
-    return { resumed: resumableGids.length, blocked }
-  }
-
   async function removeTask(task: Aria2Task) {
     if (task.gid === currentTaskGid.value) hideTaskDetail()
     setTaskRemoving(task.gid, true)
     try {
       await api.deleteTask({ gid: task.gid, infoHash: task.infoHash })
+      await deps.clearMagnetSelections?.([task.gid])
       logger.info('TaskOps.removeTask', `gid=${task.gid}`)
       setTaskRemoving(task.gid, false)
       await Promise.all([fetchList(), refreshTaskCounts()])
@@ -74,6 +63,20 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
     try {
       await api.finishSharing({ gid: task.gid })
       logger.info('TaskOps.finishSharing', `gid=${task.gid}`)
+    } finally {
+      await Promise.all([fetchList(), refreshTaskCounts()])
+      await api.saveSession()
+    }
+  }
+
+  async function finishSharingTasks(gids: string[]) {
+    try {
+      const result = await api.batchFinishSharing({ gids })
+      logger.info(
+        'TaskOps.finishSharingTasks',
+        `finished=${result.succeeded.length} failed=${result.failed.length} gids=[${gids.join(',')}]`,
+      )
+      return result
     } finally {
       await Promise.all([fetchList(), refreshTaskCounts()])
       await api.saveSession()
@@ -116,16 +119,8 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
 
   async function pauseAllTask() {
     try {
-      const pausableTasks = taskList.value.filter(
-        (t) => t.status === TASK_STATUS.ACTIVE || t.status === TASK_STATUS.WAITING,
-      )
-      if (pausableTasks.length > 0) {
-        await Promise.allSettled(pausableTasks.map((t) => api.forcePauseTask({ gid: t.gid })))
-      }
-      logger.info(
-        'TaskOps.pauseAllTask',
-        `paused=${pausableTasks.length} gids=[${pausableTasks.map((t) => t.gid).join(',')}]`,
-      )
+      await api.forcePauseAll()
+      logger.info('TaskOps.pauseAllTask', 'native forcePauseAll completed')
     } finally {
       await fetchList()
       await api.saveSession()
@@ -134,8 +129,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
 
   async function resumeAllTask(): Promise<{ resumed: number; blocked: number }> {
     try {
-      const pausedTasks = taskList.value.filter((task) => task.status === TASK_STATUS.PAUSED)
-      const result = await resumeTasks(pausedTasks)
+      const result = await api.resumeEligible()
       logger.info('TaskOps.resumeAllTask', `resumed=${result.resumed} blocked=${result.blocked}`)
       return result
     } finally {
@@ -157,13 +151,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
   }
 
   async function purgeTaskRecord() {
-    const historyStore = useHistoryStore()
-    await historyStore.clearRecords()
-    try {
-      await api.purgeTaskRecord()
-    } catch (e) {
-      logger.debug('TaskStore.purgeTaskRecord.aria2', e)
-    }
+    await api.purgeTaskRecords()
     await Promise.all([fetchList(), refreshTaskCounts()])
     await api.saveSession()
   }
@@ -172,8 +160,15 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
     const tasks = new Map(taskList.value.map((task) => [task.gid, task]))
     gids.forEach((gid) => setTaskRemoving(gid, true))
     try {
-      await Promise.all(gids.map((gid) => api.deleteTask({ gid, infoHash: tasks.get(gid)?.infoHash })))
-      logger.info('TaskOps.batchRemoveTask', `removed ${gids.length} task(s) gids=[${gids.join(',')}]`)
+      const result = await api.batchDeleteTasks({
+        tasks: gids.map((gid) => ({ gid, infoHash: tasks.get(gid)?.infoHash })),
+      })
+      await deps.clearMagnetSelections?.(result.succeeded)
+      logger.info(
+        'TaskOps.batchRemoveTask',
+        `removed=${result.succeeded.length} failed=${result.failed.length} gids=[${gids.join(',')}]`,
+      )
+      return result
     } finally {
       gids.forEach((gid) => setTaskRemoving(gid, false))
       await Promise.all([fetchList(), refreshTaskCounts()])
@@ -209,9 +204,9 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
     removeTask,
     pauseTask,
     finishSharing,
+    finishSharingTasks,
     resumeTask,
     applyMagnetFileSelection,
-    resumeTasks,
     pauseAllTask,
     resumeAllTask,
     toggleTask,

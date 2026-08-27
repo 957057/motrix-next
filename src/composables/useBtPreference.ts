@@ -9,7 +9,13 @@
  * Tracker source URL validation (isValidTrackerSourceUrl) is co-located
  * here since it is only used in the BT tab's tracker source management.
  */
-import type { AppConfig, BtBlocklistScope, BtEncryptionMode, BtTransportMode, BtFileSelectionMode } from '@shared/types'
+import type {
+  AppConfig,
+  BtBlocklistScope,
+  BtEncryptionMode,
+  BtTransportMode,
+  MagnetFileSelectionPolicy,
+} from '@shared/types'
 import { DEFAULT_APP_CONFIG as D } from '@shared/constants'
 import { PORT_RECOVERY_RANGE_END, PORT_RECOVERY_RANGE_START } from '@shared/constants'
 import { convertCommaToLine, convertLineToComma, generateRandomInt } from '@shared/utils'
@@ -37,7 +43,7 @@ export function isValidTrackerSourceUrl(input: string): boolean {
 
 export interface BtForm {
   [key: string]: unknown
-  btFileSelectionMode: BtFileSelectionMode
+  magnetFileSelectionPolicy: MagnetFileSelectionPolicy
   btEncryption: BtEncryptionMode
   btTransport: BtTransportMode
   btMaxConnections: number
@@ -73,7 +79,7 @@ export interface BtForm {
  */
 export function buildBtForm(config: AppConfig): BtForm {
   return {
-    btFileSelectionMode: config.btFileSelectionMode ?? D.btFileSelectionMode,
+    magnetFileSelectionPolicy: config.magnetFileSelectionPolicy ?? D.magnetFileSelectionPolicy,
     btEncryption: config.btEncryption ?? D.btEncryption,
     btTransport: config.btTransport ?? D.btTransport,
     btMaxConnections: config.btMaxConnections ?? D.btMaxConnections,
@@ -107,7 +113,8 @@ export function buildBtForm(config: AppConfig): BtForm {
 
 /**
  * Converts the BT form into aria2 system config key-value pairs.
- * Magnet downloads always pause after metadata so users retain file control.
+ * The global engine default pauses magnet metadata for explicit file control.
+ * The download-all policy overrides it per task through the native RPC option.
  *
  * IMPORTANT: force-save is intentionally excluded from global config.
  * It must only be set per-download on BT tasks to prevent aria2 from

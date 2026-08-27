@@ -7,7 +7,7 @@
 
 use crate::aria2::types::*;
 use crate::error::AppError;
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -26,7 +26,8 @@ pub struct Aria2Client {
 /// Tauri managed state wrapper.
 pub struct Aria2State(pub Arc<Aria2Client>);
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ResumeEligibleResult {
     pub resumed: usize,
     pub blocked: usize,
@@ -219,11 +220,8 @@ impl Aria2Client {
             .into_iter()
             .filter(|task| task.status == "paused")
             .collect::<Vec<_>>();
-        let mut result = ResumeEligibleResult {
-            resumed: 0,
-            blocked: 0,
-        };
-
+        let mut resumable_gids = Vec::new();
+        let mut blocked = 0;
         for task in paused_tasks {
             let requires_file_selection = task
                 .bittorrent
@@ -231,15 +229,30 @@ impl Aria2Client {
                 .and_then(|bt| bt.file_selection_state.as_deref())
                 == Some("awaiting");
             if requires_file_selection {
-                result.blocked += 1;
+                blocked += 1;
                 continue;
             }
-
-            self.unpause(&task.gid).await?;
-            result.resumed += 1;
+            resumable_gids.push(task.gid);
         }
 
-        Ok(result)
+        if !resumable_gids.is_empty() {
+            let calls = resumable_gids
+                .iter()
+                .map(|gid| {
+                    (
+                        "unpause".to_string(),
+                        vec![serde_json::Value::String(gid.clone())],
+                    )
+                })
+                .collect();
+            let results = self.multicall(calls).await?;
+            validate_multicall_results("resume", &resumable_gids, &results)?;
+        }
+
+        Ok(ResumeEligibleResult {
+            resumed: resumable_gids.len(),
+            blocked,
+        })
     }
 
     /// Changes global aria2 options at runtime.
@@ -518,6 +531,35 @@ impl Aria2Client {
     }
 }
 
+fn validate_multicall_results(
+    operation: &str,
+    gids: &[String],
+    results: &[serde_json::Value],
+) -> Result<(), AppError> {
+    if results.len() != gids.len() {
+        return Err(AppError::Aria2(format!(
+            "aria2 returned {} results for {} {operation} calls",
+            results.len(),
+            gids.len()
+        )));
+    }
+    for (gid, result) in gids.iter().zip(results) {
+        if let Some(error) = result
+            .as_object()
+            .filter(|value| value.contains_key("code"))
+        {
+            let message = error
+                .get("message")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("unknown RPC error");
+            return Err(AppError::Aria2(format!(
+                "Failed to {operation} task {gid}: {message}"
+            )));
+        }
+    }
+    Ok(())
+}
+
 fn parse_jsonrpc_response<T: DeserializeOwned>(
     bytes: &[u8],
     context: &str,
@@ -679,5 +721,20 @@ mod tests {
         assert_eq!(params[1], serde_json::json!("first"));
         assert_eq!(params[2], serde_json::json!(42));
         assert_eq!(params[3], serde_json::json!({"key": "val"}));
+    }
+
+    #[test]
+    fn multicall_validation_accepts_one_result_per_gid() {
+        let gids = vec!["a".to_string(), "b".to_string()];
+        let results = vec![serde_json::json!(["a"]), serde_json::json!(["b"])];
+        assert!(validate_multicall_results("resume", &gids, &results).is_ok());
+    }
+
+    #[test]
+    fn multicall_validation_rejects_per_task_errors() {
+        let gids = vec!["a".to_string()];
+        let results = vec![serde_json::json!({"code": 1, "message": "cannot resume"})];
+        let error = validate_multicall_results("resume", &gids, &results).unwrap_err();
+        assert!(error.to_string().contains("cannot resume"));
     }
 }

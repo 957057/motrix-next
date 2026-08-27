@@ -58,6 +58,26 @@ describe('useAppStore', () => {
     resolveUnresolvedItemsMock.mockClear()
   })
 
+  it('keeps automatic prompting local to the task that captured it', () => {
+    const store = useAppStore()
+
+    store.queueMagnetSelection('prompt-gid', true)
+    store.queueMagnetSelection('manual-gid', false)
+    store.replacePendingMagnetSelections(['prompt-gid', 'manual-gid', 'restored-gid'])
+
+    expect(store.pendingMagnetGids).toEqual(['prompt-gid', 'manual-gid', 'restored-gid'])
+    expect(store.automaticMagnetPromptGids).toEqual(['prompt-gid'])
+
+    store.disableAutomaticMagnetPrompt('prompt-gid')
+
+    expect(store.pendingMagnetGids).toEqual(['prompt-gid', 'manual-gid', 'restored-gid'])
+    expect(store.automaticMagnetPromptGids).toEqual([])
+
+    store.clearMagnetSelections(['prompt-gid'])
+
+    expect(store.pendingMagnetGids).toEqual(['manual-gid', 'restored-gid'])
+  })
+
   // ── enqueueBatch ────────────────────────────────────────────────
 
   it('enqueueBatch deduplicates against items already in pendingBatch', () => {

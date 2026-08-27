@@ -175,6 +175,31 @@ describe('useMagnetMetadataEvents', () => {
     expect(state.pendingGids).toEqual(['metadata-gid'])
   })
 
+  it('keeps a registered task while magnet metadata is still loading', async () => {
+    const state: MagnetMetadataState = {
+      deferredGids: [],
+      pendingGids: ['metadata-gid'],
+      visible: false,
+      files: [],
+      session: null,
+      name: '',
+    }
+
+    const resolved = await resolvePendingMagnetMetadata(
+      {
+        state,
+        fetchTaskStatus: vi.fn().mockResolvedValue(makeTask('metadata-gid', { status: 'active' })),
+        fetchPendingTasks: vi.fn().mockResolvedValue([]),
+        getFiles: vi.fn(),
+        fallbackName: () => 'Magnet task',
+      },
+      'metadata-gid',
+    )
+
+    expect(resolved).toBe(false)
+    expect(state.pendingGids).toEqual(['metadata-gid'])
+  })
+
   it('keeps a dismissed selection pending without reopening it automatically', async () => {
     const state: MagnetMetadataState = {
       deferredGids: ['metadata-gid'],
@@ -231,6 +256,32 @@ describe('useMagnetMetadataEvents', () => {
     expect(state.pendingGids).toEqual(['metadata-a', 'metadata-b'])
   })
 
+  it('opens the explicitly requested task instead of an older pending task', async () => {
+    const state: MagnetMetadataState = {
+      deferredGids: [],
+      pendingGids: ['metadata-a', 'metadata-b'],
+      visible: false,
+      files: [],
+      session: null,
+      name: '',
+    }
+    const resolver = createMagnetMetadataResolver(() => ({
+      state,
+      fetchTaskStatus: vi.fn(async (gid: string) => makeSelectionTask(gid, gid)),
+      fetchPendingTasks: vi.fn().mockResolvedValue([]),
+      getFiles: vi
+        .fn()
+        .mockResolvedValue([
+          { index: '1', path: '/downloads/file.bin', length: '1024', completedLength: '0', selected: 'true', uris: [] },
+        ]),
+      fallbackName: () => 'Magnet task',
+    }))
+
+    await resolver.request('metadata-b')
+
+    expect(state.session).toEqual({ gid: 'metadata-b' })
+  })
+
   it('recovers the same GID from the one-shot pending task scan', async () => {
     const state: MagnetMetadataState = {
       deferredGids: [],
@@ -285,6 +336,7 @@ describe('useMagnetMetadataEvents', () => {
     )
 
     expect(resolved).toBe(false)
+    expect(state.pendingGids).toEqual([])
     expect(logger.debug).toHaveBeenCalledWith(
       'MagnetMetadata.resolve',
       'gid=metadata-gid outcome=skipped reason="Aria2 Next error [1]: GID not found"',

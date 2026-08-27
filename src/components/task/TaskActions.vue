@@ -1,6 +1,6 @@
 <script setup lang="ts">
-/** @fileoverview Batch task action buttons: resume all, pause all, delete all, purge. */
-import { ref, computed, h } from 'vue'
+/** @fileoverview Native-backed task toolbar actions and confirmations. */
+import { ref, computed, h, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
@@ -8,6 +8,7 @@ import { useTaskStore } from '@/stores/task'
 import { isEngineReady } from '@/api/aria2'
 import { TASK_STATUS } from '@shared/constants'
 import type { Aria2Task } from '@shared/types'
+import { getTaskSharingState } from '@shared/utils/task'
 import { deleteTaskFiles } from '@/composables/useFileDelete'
 
 import { logger } from '@shared/logger'
@@ -29,6 +30,7 @@ import {
   AddOutline,
   PlayOutline,
   PauseOutline,
+  StopCircleOutline,
   TrashOutline,
   RefreshOutline,
   CloseOutline,
@@ -93,7 +95,14 @@ const message = useAppMessage()
 const dialog = useDialog()
 
 const refreshing = ref(false)
-let refreshTimer: ReturnType<typeof setTimeout> | null = null
+
+async function lockDialog(d: ReturnType<typeof dialog.info>) {
+  d.loading = true
+  d.negativeButtonProps = { disabled: true }
+  d.closable = false
+  d.maskClosable = false
+  await nextTick()
+}
 
 const currentList = computed(() => taskStore.currentList)
 const allGids = computed(() => taskStore.taskList.map((t: { gid: string }) => t.gid))
@@ -102,6 +111,9 @@ const hasActiveTasks = computed(() =>
 )
 const hasPausedTasks = computed(() =>
   taskStore.taskList.some((t: { status: string }) => t.status === TASK_STATUS.PAUSED),
+)
+const sharingGids = computed(() =>
+  taskStore.taskList.filter((task) => getTaskSharingState(task) !== null).map((task) => task.gid),
 )
 
 /** Active and all views show resume, pause, and delete actions. */
@@ -137,19 +149,24 @@ function showAddTask() {
   appStore.showAddTaskDialog()
 }
 
-function onRefresh() {
-  if (refreshTimer) clearTimeout(refreshTimer)
+async function onRefresh() {
+  if (refreshing.value) return
   refreshing.value = true
-  refreshTimer = setTimeout(() => {
+  try {
+    await taskStore.fetchList()
+    message.success(t('task.refresh-list-success') || 'List refreshed')
+  } catch (error) {
+    logger.warn('TaskActions.onRefresh', getErrorMessage(error))
+  } finally {
     refreshing.value = false
-  }, 500)
-  taskStore
-    .fetchList()
-    .then(() => message.success(t('task.refresh-list-success') || 'List refreshed'))
-    .catch((e: unknown) => logger.warn('TaskActions.onRefresh', getErrorMessage(e)))
+  }
 }
 
 function onDeleteAll() {
+  if (!isEngineReady()) {
+    message.warning(t('app.engine-not-ready'))
+    return
+  }
   // In 'all' view, clear only live aria2 tasks, not DB-only history items.
   const targetGids = currentList.value === 'all' ? [...liveGids.value] : [...allGids.value]
   if (targetGids.length === 0) return
@@ -174,12 +191,7 @@ function onDeleteAll() {
     positiveText: t('app.yes'),
     negativeText: t('app.no'),
     onPositiveClick: async () => {
-      d.loading = true
-      d.negativeButtonProps = { disabled: true }
-      d.closable = false
-      d.maskClosable = false
-      // Yield to browser so the loading spinner renders before heavy IPC work
-      await new Promise((r) => setTimeout(r, 50))
+      await lockDialog(d)
       // Capture task references BEFORE removal — the store list mutates after
       // batchRemoveTask, so we'd lose the dir/path info needed for file deletion.
       const targetTasks = taskStore.taskList.filter((t) => gids.includes(t.gid))
@@ -189,25 +201,36 @@ function onDeleteAll() {
       // If file deletion fails, tasks are already cleaned up from aria2;
       // the reverse order would leave orphaned tasks with missing files.
       try {
-        await taskStore.batchRemoveTask(gids)
+        const result = await taskStore.batchRemoveTask(gids)
+        const succeeded = new Set(result.succeeded)
+        const deletedTasks = tasksToDelete.filter((task) => succeeded.has(task.gid))
+
+        let fileDeletionFailed = false
+        for (const task of deletedTasks) {
+          try {
+            await deleteTaskFiles(task, preferenceStore.config.fileDeletionMode)
+          } catch (error) {
+            fileDeletionFailed = true
+            logger.warn('TaskActions.onDeleteAllFiles', getErrorMessage(error))
+          }
+        }
+
+        if (result.failed.length > 0) {
+          const key = result.succeeded.length > 0 ? 'task.batch-delete-task-partial' : 'task.batch-delete-task-fail'
+          message[result.succeeded.length > 0 ? 'warning' : 'error'](
+            t(key, { removed: result.succeeded.length, failed: result.failed.length }),
+          )
+        } else if (!fileDeletionFailed) {
+          message.success(t('task.batch-delete-task-success'))
+        }
+        if (fileDeletionFailed) message.error(t('task.remove-task-file-fail'))
       } catch (error) {
         logger.warn('TaskActions.onDeleteAll', getErrorMessage(error))
         message.error(t('task.batch-delete-task-fail'))
-        return
+      } finally {
+        d.destroy()
       }
-
-      let fileDeletionFailed = false
-      for (const task of tasksToDelete) {
-        try {
-          await deleteTaskFiles(task, preferenceStore.config.fileDeletionMode)
-        } catch (error) {
-          fileDeletionFailed = true
-          logger.warn('TaskActions.onDeleteAllFiles', getErrorMessage(error))
-        }
-      }
-      message[fileDeletionFailed ? 'error' : 'success'](
-        t(fileDeletionFailed ? 'task.remove-task-file-fail' : 'task.batch-delete-task-success'),
-      )
+      return false
     },
   })
 }
@@ -217,21 +240,23 @@ function resumeAll() {
     message.warning(t('app.engine-not-ready'))
     return
   }
-  dialog.info({
+  const d = dialog.info({
     title: t('task.resume-all-task'),
     content: t('task.resume-all-task-confirm') || 'Resume all tasks?',
     positiveText: t('app.yes'),
     negativeText: t('app.no'),
-    onPositiveClick: () => {
-      taskStore
-        .resumeAllTask()
-        .then((result) => {
-          if (result.resumed > 0) message.success(t('task.resume-all-task-success'))
-        })
-        .catch((e) => {
-          logger.warn('TaskActions.resumeAll', getErrorMessage(e))
-          message.error(t('task.resume-all-task-fail'))
-        })
+    onPositiveClick: async () => {
+      await lockDialog(d)
+      try {
+        const result = await taskStore.resumeAllTask()
+        if (result.resumed > 0) message.success(t('task.resume-all-task-success'))
+      } catch (error) {
+        logger.warn('TaskActions.resumeAll', getErrorMessage(error))
+        message.error(t('task.resume-all-task-fail'))
+      } finally {
+        d.destroy()
+      }
+      return false
     },
   })
 }
@@ -246,26 +271,56 @@ function pauseAll() {
     content: t('task.pause-all-task-confirm') || 'Pause all tasks?',
     positiveText: t('app.yes'),
     negativeText: t('app.no'),
-    onPositiveClick: () => {
-      d.loading = true
-      d.negativeButtonProps = { disabled: true }
-      d.closable = false
-      d.maskClosable = false
-      taskStore
-        .pauseAllTask()
-        .then(async () => {
-          // aria2 accepts the pause instantly but processes asynchronously —
-          // wait briefly then re-fetch so the task list reflects the real state
-          await new Promise((r) => setTimeout(r, 500))
-          await taskStore.fetchList()
-          message.success(t('task.pause-all-task-success'))
-          d.destroy()
-        })
-        .catch((e) => {
-          logger.warn('TaskActions.pauseAll', getErrorMessage(e))
-          message.error(t('task.pause-all-task-fail'))
-          d.destroy()
-        })
+    onPositiveClick: async () => {
+      await lockDialog(d)
+      try {
+        await taskStore.pauseAllTask()
+        message.success(t('task.pause-all-task-success'))
+      } catch (error) {
+        logger.warn('TaskActions.pauseAll', getErrorMessage(error))
+        message.error(t('task.pause-all-task-fail'))
+      } finally {
+        d.destroy()
+      }
+      return false
+    },
+  })
+}
+
+function finishAllSharing() {
+  if (!isEngineReady()) {
+    message.warning(t('app.engine-not-ready'))
+    return
+  }
+  const gids = [...sharingGids.value]
+  if (gids.length === 0) return
+  const d = dialog.warning({
+    title: t('task.finish-all-sharing'),
+    content: t('task.finish-all-sharing-confirm', { count: gids.length }),
+    positiveText: t('app.yes'),
+    negativeText: t('app.no'),
+    onPositiveClick: async () => {
+      await lockDialog(d)
+      try {
+        const result = await taskStore.finishSharingTasks(gids)
+        if (result.failed.length === 0) {
+          message.success(t('task.finish-all-sharing-success', { count: result.succeeded.length }))
+        } else if (result.succeeded.length > 0) {
+          message.warning(
+            t('task.finish-all-sharing-partial', {
+              finished: result.succeeded.length,
+              failed: result.failed.length,
+            }),
+          )
+        } else {
+          message.error(t('task.finish-all-sharing-fail'))
+        }
+      } catch (error) {
+        logger.warn('TaskActions.finishAllSharing', getErrorMessage(error))
+        message.error(t('task.finish-all-sharing-fail'))
+      } finally {
+        d.destroy()
+      }
       return false
     },
   })
@@ -292,11 +347,7 @@ function purgeRecord() {
     positiveText: t('app.yes'),
     negativeText: t('app.no'),
     onPositiveClick: async () => {
-      d.loading = true
-      d.negativeButtonProps = { disabled: true }
-      d.closable = false
-      d.maskClosable = false
-      await new Promise((r) => setTimeout(r, 50))
+      await lockDialog(d)
 
       // Capture task refs BEFORE purge — the store list mutates after purgeTaskRecord
       const tasksToClean = deleteFiles.value ? [...terminalTasks.value] : []
@@ -306,7 +357,8 @@ function purgeRecord() {
       } catch (error) {
         logger.warn('TaskActions.purgeRecord', getErrorMessage(error))
         message.error(t('task.purge-record-fail'))
-        return
+        d.destroy()
+        return false
       }
 
       let fileDeletionFailed = false
@@ -321,6 +373,8 @@ function purgeRecord() {
       message[fileDeletionFailed ? 'error' : 'success'](
         t(fileDeletionFailed ? 'task.remove-task-file-fail' : 'task.purge-record-success'),
       )
+      d.destroy()
+      return false
     },
   })
 }
@@ -330,7 +384,7 @@ function purgeRecord() {
   <div class="task-actions">
     <MTooltip>
       <template #trigger>
-        <NButton type="primary" circle size="small" @click="showAddTask">
+        <NButton type="primary" circle size="small" :aria-label="t('task.new-task')" @click="showAddTask">
           <template #icon>
             <NIcon><AddOutline /></NIcon>
           </template>
@@ -347,7 +401,7 @@ function purgeRecord() {
       style="padding: 0"
     >
       <template #trigger>
-        <NButton quaternary circle size="small">
+        <NButton quaternary circle size="small" :aria-label="t('task.sort-by')">
           <template #icon>
             <NIcon><SwapVerticalOutline /></NIcon>
           </template>
@@ -375,9 +429,17 @@ function purgeRecord() {
     </NPopover>
     <MTooltip>
       <template #trigger>
-        <NButton quaternary circle size="small" @click="onRefresh">
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :aria-label="t('task.refresh-list')"
+          :loading="refreshing"
+          :disabled="refreshing"
+          @click="onRefresh"
+        >
           <template #icon>
-            <NIcon :class="{ spinning: refreshing }"><RefreshOutline /></NIcon>
+            <NIcon><RefreshOutline /></NIcon>
           </template>
         </NButton>
       </template>
@@ -385,7 +447,14 @@ function purgeRecord() {
     </MTooltip>
     <MTooltip v-if="showActiveActions">
       <template #trigger>
-        <NButton quaternary circle size="small" :disabled="!hasPausedTasks" @click="resumeAll">
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :aria-label="t('task.resume-all-task')"
+          :disabled="!hasPausedTasks"
+          @click="resumeAll"
+        >
           <template #icon>
             <NIcon><PlayOutline /></NIcon>
           </template>
@@ -395,7 +464,14 @@ function purgeRecord() {
     </MTooltip>
     <MTooltip v-if="showActiveActions">
       <template #trigger>
-        <NButton quaternary circle size="small" :disabled="!hasActiveTasks" @click="pauseAll">
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :aria-label="t('task.pause-all-task')"
+          :disabled="!hasActiveTasks"
+          @click="pauseAll"
+        >
           <template #icon>
             <NIcon><PauseOutline /></NIcon>
           </template>
@@ -405,7 +481,31 @@ function purgeRecord() {
     </MTooltip>
     <MTooltip v-if="showActiveActions">
       <template #trigger>
-        <NButton quaternary circle size="small" :disabled="deleteAllDisabled" @click="onDeleteAll">
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :aria-label="t('task.finish-all-sharing')"
+          :disabled="sharingGids.length === 0"
+          @click="finishAllSharing"
+        >
+          <template #icon>
+            <NIcon><StopCircleOutline /></NIcon>
+          </template>
+        </NButton>
+      </template>
+      {{ t('task.finish-all-sharing') }}
+    </MTooltip>
+    <MTooltip v-if="showActiveActions">
+      <template #trigger>
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :aria-label="t('task.delete-all-task')"
+          :disabled="deleteAllDisabled"
+          @click="onDeleteAll"
+        >
           <template #icon>
             <NIcon><CloseOutline /></NIcon>
           </template>
@@ -415,7 +515,14 @@ function purgeRecord() {
     </MTooltip>
     <MTooltip v-if="showStoppedActions">
       <template #trigger>
-        <NButton quaternary circle size="small" @click="purgeRecord">
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :aria-label="t('task.purge-record')"
+          :disabled="terminalTasks.length === 0"
+          @click="purgeRecord"
+        >
           <template #icon>
             <NIcon><TrashOutline /></NIcon>
           </template>
@@ -431,19 +538,6 @@ function purgeRecord() {
   display: flex;
   gap: 4px;
   align-items: center;
-}
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-.spinning {
-  animation: spin 0.6s cubic-bezier(0.2, 0, 0, 1);
-  display: inline-block;
-  transform-origin: center;
 }
 </style>
 

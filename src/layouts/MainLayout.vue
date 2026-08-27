@@ -18,7 +18,7 @@ import type { TaskSharingKind } from '@shared/utils/task'
 import type { Aria2Task, BtFileSelectionItem } from '@shared/types'
 import { ARIA2_ERROR_CODES } from '@shared/aria2ErrorCodes'
 import { useHistoryStore } from '@/stores/history'
-import { buildSelectFileOption, getPendingMagnetSelectionGids } from '@/composables/useMagnetFlow'
+import { buildSelectFileOption } from '@/composables/useMagnetFlow'
 import type { MagnetSelectionSubmission } from '@/composables/useMagnetFlow'
 import {
   createMagnetMetadataResolver,
@@ -117,7 +117,7 @@ let unlistenExitDialog: (() => void) | null = null
 let unlistenStat: (() => void) | null = null
 let unlistenTaskMonitor: Array<() => void> = []
 let unlistenAria2DownloadPause: (() => void) | null = null
-let stopPendingMagnetWatch: (() => void) | null = null
+let stopAutomaticMagnetPromptWatch: (() => void) | null = null
 let unlistenFocusRecheck: (() => void) | null = null
 let unlistenAppToast: (() => void) | null = null
 
@@ -200,7 +200,6 @@ const magnetSelectName = ref('')
 const magnetSelectSubmission = ref<MagnetSelectionSubmission>(null)
 const magnetSelectClosing = ref(false)
 const deferredMagnetGids = ref<string[]>([])
-const autoOpenBtFileSelection = computed(() => preferenceStore.config.btFileSelectionMode === 'auto')
 
 const { setupListeners } = useAppEvents({
   t,
@@ -296,7 +295,7 @@ const magnetMetadataResolver = createMagnetMetadataResolver(magnetMetadataDeps)
 async function startAria2DownloadPauseListener() {
   stopAria2DownloadPauseListener()
   unlistenAria2DownloadPause = await listenForAria2DownloadPause((gid) => {
-    if (autoOpenBtFileSelection.value) return magnetMetadataResolver.request(gid)
+    if (appStore.automaticMagnetPromptGids.includes(gid)) return magnetMetadataResolver.request(gid)
   })
 }
 
@@ -311,7 +310,7 @@ function magnetMetadataDeps() {
       return appStore.pendingMagnetGids
     },
     set pendingGids(value) {
-      appStore.pendingMagnetGids = value
+      appStore.replacePendingMagnetSelections(value)
     },
     get deferredGids() {
       return deferredMagnetGids.value
@@ -353,17 +352,17 @@ function magnetMetadataDeps() {
   }
 }
 
-async function restorePendingMagnetSelections() {
-  try {
-    const tasks = await aria2Api.fetchTaskList({ type: 'active' })
-    const gids = getPendingMagnetSelectionGids(tasks)
-    if (gids.length === 0) return
+function clearPendingMagnetSelection(gid: string) {
+  appStore.clearMagnetSelections([gid])
+  deferredMagnetGids.value = deferredMagnetGids.value.filter((candidate) => candidate !== gid)
+}
 
-    const known = new Set(appStore.pendingMagnetGids)
-    appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, ...gids.filter((gid) => !known.has(gid))]
-  } catch (e) {
-    logger.debug('MainLayout.magnetRestore', e instanceof Error ? e.message : String(e))
-  }
+function openNextAutomaticMagnetSelection() {
+  if (magnetSelectVisible.value || magnetSelectClosing.value) return
+  const gid = appStore.automaticMagnetPromptGids.find(
+    (candidate) => appStore.pendingMagnetGids.includes(candidate) && !deferredMagnetGids.value.includes(candidate),
+  )
+  if (gid) void magnetMetadataResolver.request(gid)
 }
 
 async function handleMagnetConfirm(selectedIndices: number[]) {
@@ -376,8 +375,7 @@ async function handleMagnetConfirm(selectedIndices: number[]) {
     const selectFile = buildSelectFileOption(selectedIndices)
     const task = await taskStore.fetchTaskStatus(session.gid)
     await taskStore.applyMagnetFileSelection(task, selectFile)
-    appStore.pendingMagnetGids = appStore.pendingMagnetGids.filter((gid) => gid !== session.gid)
-    deferredMagnetGids.value = deferredMagnetGids.value.filter((gid) => gid !== session.gid)
+    clearPendingMagnetSelection(session.gid)
     closeMagnetSelection()
     message.success(t('task.magnet-files-selected') || 'Files selected, download starting')
   } catch (e) {
@@ -403,15 +401,14 @@ function handleMagnetDismiss() {
   if (!deferredMagnetGids.value.includes(gid)) {
     deferredMagnetGids.value = [...deferredMagnetGids.value, gid]
   }
+  appStore.disableAutomaticMagnetPrompt(gid)
   closeMagnetSelection()
 }
 
 function handleMagnetSelectAfterLeave() {
   if (!magnetSelectClosing.value) return
   magnetSelectClosing.value = false
-  if (autoOpenBtFileSelection.value && appStore.pendingMagnetGids.length > 0) {
-    void magnetMetadataResolver.request()
-  }
+  openNextAutomaticMagnetSelection()
 }
 
 watch(
@@ -420,9 +417,7 @@ watch(
     if (!gid) return
     appStore.requestedMagnetSelectionGid = ''
     deferredMagnetGids.value = deferredMagnetGids.value.filter((candidate) => candidate !== gid)
-    if (!appStore.pendingMagnetGids.includes(gid)) {
-      appStore.pendingMagnetGids = [...appStore.pendingMagnetGids, gid]
-    }
+    appStore.queueMagnetSelection(gid, false)
     void magnetMetadataResolver.request(gid)
   },
 )
@@ -811,19 +806,10 @@ onMounted(async () => {
     if (focused) requestFileRecheck()
   })
 
-  // ── Magnet metadata recovery (app-level) ──────────────────────────
-  // WebSocket events handle the live path. This one-shot scan covers
-  // metadata that resolved before the listener was ready.
-  await restorePendingMagnetSelections()
-  stopPendingMagnetWatch = watch(
-    [() => appStore.pendingMagnetGids, autoOpenBtFileSelection],
-    ([gids, autoOpen]) => {
-      if (autoOpen && gids.length > 0 && !magnetSelectClosing.value) {
-        void magnetMetadataResolver.request()
-      }
-    },
-    { immediate: true },
-  )
+  // New prompt tasks are queued with their captured creation-time policy.
+  stopAutomaticMagnetPromptWatch = watch(() => appStore.automaticMagnetPromptGids, openNextAutomaticMagnetSelection, {
+    immediate: true,
+  })
 
   // Track maximize state for WindowControls icon toggle (maximize ↔ restore).
   // macOS: skipped — native traffic lights handle this; isMaximized() inside
@@ -930,8 +916,8 @@ onMounted(async () => {
 onUnmounted(() => {
   stopStatListener()
   stopAria2DownloadPauseListener()
-  stopPendingMagnetWatch?.()
-  stopPendingMagnetWatch = null
+  stopAutomaticMagnetPromptWatch?.()
+  stopAutomaticMagnetPromptWatch = null
   unlistenTaskMonitor.forEach((fn) => fn())
   unlistenTaskMonitor = []
   if (unlistenFocusRecheck) unlistenFocusRecheck()
