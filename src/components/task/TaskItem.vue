@@ -193,10 +193,7 @@ watch(isSharing, (now, was) => {
         />
         <div class="task-progress-info">
           <div class="progress-left" :class="{ 'info-hidden': !hasSizeInfo }">
-            <span>
-              {{ completedSize }}
-              <span v-if="hasSizeInfo"> / {{ totalSize }}</span>
-            </span>
+            <span>{{ percent }}% · {{ completedSize }} / {{ totalSize }}</span>
           </div>
           <div class="progress-right" :class="{ 'info-hidden': !isActive }">
             <span class="speed-text" :class="{ 'info-hidden': remaining <= 0 }">

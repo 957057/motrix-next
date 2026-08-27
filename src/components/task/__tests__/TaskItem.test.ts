@@ -162,6 +162,21 @@ describe('TaskItem', () => {
     expect(wrapper.text()).toContain('task.status-waiting')
   })
 
+  it('shows progress percentage in full and compact cards', () => {
+    const task = {
+      ...createTask('/downloads/active.bin'),
+      status: 'active',
+      completedLength: '25',
+      totalLength: '100',
+    } satisfies Aria2Task
+
+    const full = mount(TaskItem, { props: { task } })
+    const compact = mount(TaskCompactItem, { props: { task } })
+
+    expect(full.find('.progress-left').text()).toContain('25%')
+    expect(compact.find('.compact-meta').text()).toContain('25%')
+  })
+
   it('does not show a status tag for paused tasks', () => {
     const task = {
       ...createTask('/downloads/paused.bin'),
@@ -216,6 +231,7 @@ describe('TaskItem', () => {
     })
 
     expect(wrapper.text().match(/task\.bt-metadata-fetching/g)).toHaveLength(1)
+    expect(wrapper.find('.progress-left').classes()).toContain('info-hidden')
   })
 
   it('keeps the full card surface non-interactive', async () => {
