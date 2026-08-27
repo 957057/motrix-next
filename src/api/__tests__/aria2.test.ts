@@ -212,9 +212,9 @@ describe('aria2 API (invoke transport)', () => {
       },
     })
 
-    const logs = loggerMock.info.mock.calls.flat().join(' ')
-    expect(logs).toContain('headerNames=Accept,Cookie')
-    expect(logs).toContain('hasCookieHeader=true')
+    const fields = loggerMock.info.mock.calls[0]?.[2]
+    const logs = JSON.stringify(fields)
+    expect(fields).toEqual(expect.objectContaining({ headerNames: 'Accept,Cookie', hasCookieHeader: true }))
     expect(logs).not.toContain('session=secret')
     expect(logs).not.toContain('token=secret')
     expect(logs).not.toContain('BrowserUA')

@@ -28,6 +28,7 @@ const PROXY_CLEAR_KEYS: &[&str] = &[
 const MANAGED_KEYS: &[&str] = &[
     "allow-remote-access",
     "bt-peer-blocklist",
+    "console-log-level",
     "ed2k-node-list",
     "ed2k-server-list",
     "enable-rpc",
@@ -42,7 +43,9 @@ const MANAGED_KEYS: &[&str] = &[
     "rpc-allow-origin-all",
     "rpc-listen-all",
     "save-session",
+    "show-console-readout",
     "state-dir",
+    "summary-interval",
 ];
 
 #[derive(serde::Deserialize)]
@@ -212,6 +215,7 @@ pub(crate) fn build_runtime_config(
     insert_option(&mut options, "input-file", managed.session_path)?;
     insert_option(&mut options, "log", managed.log_file_path)?;
     insert_option(&mut options, "log-level", managed.log_level)?;
+    insert_option(&mut options, "console-log-level", managed.log_level)?;
     insert_option(
         &mut options,
         "log-max-size",
@@ -222,7 +226,19 @@ pub(crate) fn build_runtime_config(
         "log-max-files",
         crate::log_policy::MAX_LOG_FILES.to_string(),
     )?;
-    insert_option(&mut options, "quiet", "true")?;
+    insert_option(
+        &mut options,
+        "quiet",
+        if cfg!(debug_assertions) {
+            "false"
+        } else {
+            "true"
+        },
+    )?;
+    if cfg!(debug_assertions) {
+        insert_option(&mut options, "show-console-readout", "false")?;
+        insert_option(&mut options, "summary-interval", "0")?;
+    }
     insert_option(&mut options, "ed2k-server-list", managed.ed2k_server_list)?;
     insert_option(&mut options, "ed2k-node-list", managed.ed2k_node_list)?;
     if let Some(path) = managed.bt_peer_blocklist {
@@ -304,7 +320,7 @@ pub(crate) fn generate_runtime_config(
     let content = build_runtime_config(config, managed)?;
     let path = runtime_config_path(app)?;
     write_atomic(&path, &content)?;
-    log::info!(
+    log::debug!(
         "generated runtime engine config: path={} bytes={}",
         super::path_to_safe_string(&path),
         content.len()

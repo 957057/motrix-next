@@ -134,7 +134,7 @@ impl RuntimeConfigState {
         let cfg: RuntimeConfig = serde_json::from_value(prefs.clone())
             .map_err(|e| format!("Failed to parse runtime config: {e}"))?;
         *self.0.write().await = cfg;
-        log::info!("runtime_config refreshed");
+        log::debug!("runtime_config refreshed");
         Ok(())
     }
 

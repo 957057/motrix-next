@@ -276,7 +276,7 @@ pub async fn aria2_add_uri(
     }) {
         crate::commands::ed2k::inject_managed_ed2k_bootstrap_options(&app, &mut options)?;
     }
-    log::info!("aria2:add-uri count={}", uris.len());
+    log::debug!("aria2:add-uri count={}", uris.len());
     state.0.add_uri(uris, options).await
 }
 

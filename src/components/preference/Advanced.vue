@@ -196,20 +196,18 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
       restartEngine('settingsChange')
     }
 
-    // Motrix log level changes need a full app relaunch,
-    // because tauri-plugin-log is configured at process startup.
     if (changed.logLevel !== undefined && changed.logLevel !== prevConfig.logLevel) {
-      dialog.info({
-        title: t('preferences.restart-required'),
-        content: t('preferences.log-level-restart-confirm'),
-        positiveText: t('preferences.restart-now'),
-        negativeText: t('preferences.engine-restart-later'),
-        maskClosable: false,
-        onPositiveClick: async () => {
-          await engineStore.stop('appRelaunch')
-          await relaunch()
-        },
-      })
+      await invoke('set_app_log_level', { level: f.logLevel })
+    }
+
+    if (changed.aria2LogLevel !== undefined && changed.aria2LogLevel !== prevConfig.aria2LogLevel) {
+      try {
+        await invoke('aria2_change_global_option', {
+          options: { 'log-level': f.aria2LogLevel },
+        })
+      } catch (error) {
+        if (engineStore.isReady) throw error
+      }
     }
 
     // WebKitGTK rendering variables are read at process startup.

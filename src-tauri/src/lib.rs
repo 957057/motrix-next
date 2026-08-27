@@ -1,6 +1,7 @@
 mod aria2;
 mod commands;
 mod db_guard;
+mod diagnostics;
 mod engine;
 mod error;
 mod gpu_guard;
@@ -32,7 +33,7 @@ use upnp::UpnpState;
 /// Pre-reads the user's log-level preference from the raw config.json file.
 ///
 /// `tauri-plugin-store` isn't available until after `Builder.build()`, so we
-/// read the raw JSON file directly. Falls back to `Warn` when no preference
+/// read the raw JSON file directly. Falls back to `Info` when no preference
 /// has been persisted yet.
 pub(crate) fn read_log_level() -> log::LevelFilter {
     (|| -> Option<log::LevelFilter> {
@@ -49,7 +50,7 @@ pub(crate) fn read_log_level() -> log::LevelFilter {
             _ => None,
         }
     })()
-    .unwrap_or(log::LevelFilter::Warn)
+    .unwrap_or(log::LevelFilter::Info)
 }
 
 /// Tracks the application lifecycle phase for window visibility decisions.
@@ -204,16 +205,33 @@ pub(crate) fn handle_minimize_to_tray(app: &tauri::AppHandle, window: &tauri::We
 
 /// Initialises menus, tray, deep links, window state, and platform-specific
 /// workarounds.  Called once by `Builder.setup()`.
+fn install_panic_hook() {
+    let default_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let backtrace = std::backtrace::Backtrace::force_capture();
+        log::error!(
+            target: "panic",
+            event = "panic",
+            backtrace:% = backtrace;
+            "{info}"
+        );
+        log::logger().flush();
+        default_hook(info);
+    }));
+}
+
 fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let handle = app.handle();
-    match handle.path().app_log_dir() {
-        Ok(log_dir) => {
-            if let Err(error) = log_policy::remove_legacy_log_files(&log_dir) {
-                log::warn!("Failed to remove legacy log files: {error}");
-            }
-        }
-        Err(error) => log::warn!("Failed to resolve log directory for cleanup: {error}"),
-    }
+    install_panic_hook();
+    log::info!(
+        target: "lifecycle",
+        event = "app_started",
+        run_id = log_policy::run_id(),
+        version:% = handle.package_info().version,
+        os = std::env::consts::OS,
+        arch = std::env::consts::ARCH;
+        "app_started"
+    );
     #[cfg(target_os = "macos")]
     {
         let m = menu::build_menu(handle)?;
@@ -532,14 +550,19 @@ pub fn run() {
     // Tauri's thread pool, the async runtime, or any plugin initialisation.
     gpu_guard::pre_flight();
 
-    // ── Panic hook: route panics through log crate for file persistence ──
-    // Must be set BEFORE Tauri Builder so even plugin init panics are caught.
-    // Without this, panics only reach stderr and are lost on process exit.
-    std::panic::set_hook(Box::new(|info| {
-        log::error!("PANIC: {}", info);
-    }));
-
     let log_level = read_log_level();
+    let log_control = log_policy::LogLevelControl::new(log_level);
+    let log_filter = log_control.clone();
+    let mut log_targets = vec![tauri_plugin_log::Target::new(
+        tauri_plugin_log::TargetKind::LogDir {
+            file_name: Some("motrix-next".into()),
+        },
+    )];
+    if cfg!(debug_assertions) {
+        log_targets.push(tauri_plugin_log::Target::new(
+            tauri_plugin_log::TargetKind::Stdout,
+        ));
+    }
 
     // ── Pre-flight DB migration guard ────────────────────────────
     // Must run BEFORE tauri_plugin_sql to prevent panic on downgrade.
@@ -552,46 +575,25 @@ pub fn run() {
     let mut builder = tauri::Builder::default()
         .plugin(
             tauri_plugin_log::Builder::new()
-                .targets([
-                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir {
-                        file_name: Some("motrix-next".into()),
-                    }),
-                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
-                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Webview),
-                ])
+                .clear_targets()
+                .targets(log_targets)
                 .format(|out, message, record| {
-                    let now = chrono::Local::now();
-                    let source = if record
-                        .target()
-                        .starts_with(tauri_plugin_log::WEBVIEW_TARGET)
-                    {
-                        "webview"
-                    } else {
-                        "rust"
-                    };
-                    out.finish(format_args!(
-                        "{} [{:<5}] [{}] {}",
-                        now.format("%Y-%m-%dT%H:%M:%S%.3f%:z"),
-                        record.level(),
-                        source,
-                        message
-                    ))
+                    out.finish(format_args!("{}", log_policy::format_record(message, record)))
                 })
                 .max_file_size(log_policy::MAX_LOG_FILE_SIZE.into())
-                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
-                .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
-                .level(log_level)
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(
+                    log_policy::MAX_LOG_FILES,
+                ))
+                .level(log::LevelFilter::Debug)
                 .level_for("maxminddb", log::LevelFilter::Warn)
                 .level_for("sqlx", log::LevelFilter::Warn)
                 .level_for("zbus", log::LevelFilter::Warn)
                 .level_for("hyper_util", log::LevelFilter::Warn)
                 .level_for("reqwest", log::LevelFilter::Warn)
-                .filter(|metadata| {
-                    !metadata.target().starts_with("tao")
-                        && !metadata.target().starts_with("tracing")
-                })
+                .filter(move |metadata| log_filter.enabled(metadata))
                 .build(),
         )
+        .manage(log_control)
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(
@@ -734,6 +736,7 @@ pub fn run() {
             commands::fetch_tracker_sources,
             commands::is_autostart_launch,
             commands::clear_log_file,
+            commands::set_app_log_level,
             commands::export_diagnostic_logs,
             commands::check_path_exists,
             commands::check_path_is_dir,

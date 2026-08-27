@@ -257,7 +257,6 @@ export default {
   'export-diagnostic-logs-success': 'Jurnalele au fost exportate în {path}',
   'export-diagnostic-logs-failed': 'Exportul jurnalelor a eșuat',
   'log-level': 'Nivel jurnal',
-  'log-level-restart-confirm': 'Modificarea nivelului de jurnal va fi aplicată după repornirea aplicației.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Repornește acum',

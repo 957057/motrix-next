@@ -253,7 +253,6 @@ export default {
   'export-diagnostic-logs-success': 'ログを {path} にエクスポートしました',
   'export-diagnostic-logs-failed': 'ログのエクスポートに失敗しました',
   'log-level': 'ログレベル',
-  'log-level-restart-confirm': 'ログレベルの変更はアプリの再起動後に反映されます。',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': '今すぐ再起動',

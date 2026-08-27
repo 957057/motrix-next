@@ -254,7 +254,6 @@ export default {
   'export-diagnostic-logs-success': '로그가 {path}에 내보내졌습니다',
   'export-diagnostic-logs-failed': '로그 내보내기 실패',
   'log-level': '로그 수준',
-  'log-level-restart-confirm': '로그 수준 변경은 앱을 재시작한 후 적용됩니다.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': '지금 재시작',

@@ -10,6 +10,7 @@ use crate::error::AppError;
 use serde::{de::DeserializeOwned, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::time::Instant;
 use tokio::sync::RwLock;
 
 /// Aria2 JSON-RPC HTTP client.  Thread-safe via interior mutability.
@@ -55,7 +56,7 @@ impl Aria2Client {
     pub async fn update_credentials(&self, port: u16, secret: String) {
         *self.port.write().await = port;
         *self.secret.write().await = secret;
-        log::info!("aria2 client credentials updated: port={}", port);
+        log::debug!("aria2 client credentials updated: port={}", port);
     }
 
     /// Returns the current local RPC port and secret for companion transports.
@@ -95,41 +96,45 @@ impl Aria2Client {
             params,
         };
 
-        let url = format!("http://127.0.0.1:{port}/jsonrpc");
-        let resp: reqwest::Response = self
-            .http
-            .post(&url)
-            .json(&req)
-            .send()
-            .await
-            .map_err(|e| AppError::Aria2(format!("HTTP request to aria2 failed: {e}")))?;
+        let started = Instant::now();
+        let result =
+            async {
+                let url = format!("http://127.0.0.1:{port}/jsonrpc");
+                let resp: reqwest::Response =
+                    self.http.post(&url).json(&req).send().await.map_err(|e| {
+                        AppError::Aria2(format!("HTTP request to aria2 failed: {e}"))
+                    })?;
 
-        let bytes = resp
-            .bytes()
-            .await
-            .map_err(|e| AppError::Aria2(format!("Failed to read aria2 response: {e}")))?;
-        let body: JsonRpcResponse<T> = parse_jsonrpc_response(&bytes, "aria2")?;
+                let bytes = resp
+                    .bytes()
+                    .await
+                    .map_err(|e| AppError::Aria2(format!("Failed to read aria2 response: {e}")))?;
+                let body: JsonRpcResponse<T> = parse_jsonrpc_response(&bytes, "aria2")?;
 
-        if let Some(err) = body.error {
-            if let Some(kind @ ("invalidBase64" | "torrentTooLarge" | "invalidTorrent")) = err
-                .data
-                .as_ref()
-                .and_then(|data| data.get("kind"))
-                .and_then(serde_json::Value::as_str)
-            {
-                return Err(AppError::TorrentInspection {
-                    kind: kind.to_string(),
-                    message: err.message,
-                });
+                if let Some(err) = body.error {
+                    if let Some(kind @ ("invalidBase64" | "torrentTooLarge" | "invalidTorrent")) =
+                        err.data
+                            .as_ref()
+                            .and_then(|data| data.get("kind"))
+                            .and_then(serde_json::Value::as_str)
+                    {
+                        return Err(AppError::TorrentInspection {
+                            kind: kind.to_string(),
+                            message: err.message,
+                        });
+                    }
+                    return Err(AppError::Aria2(format!(
+                        "aria2 RPC error [{}]: {}",
+                        err.code, err.message
+                    )));
+                }
+
+                body.result
+                    .ok_or_else(|| AppError::Aria2("aria2 returned null result".into()))
             }
-            return Err(AppError::Aria2(format!(
-                "aria2 RPC error [{}]: {}",
-                err.code, err.message
-            )));
-        }
-
-        body.result
-            .ok_or_else(|| AppError::Aria2("aria2 returned null result".into()))
+            .await;
+        record_rpc_result(method, id, started, &result);
+        result
     }
 
     async fn call<T: DeserializeOwned>(
@@ -503,31 +508,89 @@ impl Aria2Client {
             params: vec![serde_json::Value::Array(methods)],
         };
 
-        let url = format!("http://127.0.0.1:{port}/jsonrpc");
-        let resp = self
-            .http
-            .post(&url)
-            .json(&req)
-            .send()
-            .await
-            .map_err(|e| AppError::Aria2(format!("HTTP request to aria2 failed: {e}")))?;
+        let started = Instant::now();
+        let result =
+            async {
+                let url = format!("http://127.0.0.1:{port}/jsonrpc");
+                let resp =
+                    self.http.post(&url).json(&req).send().await.map_err(|e| {
+                        AppError::Aria2(format!("HTTP request to aria2 failed: {e}"))
+                    })?;
 
-        let bytes = resp
-            .bytes()
-            .await
-            .map_err(|e| AppError::Aria2(format!("Failed to read multicall response: {e}")))?;
-        let body: JsonRpcResponse<Vec<serde_json::Value>> =
-            parse_jsonrpc_response(&bytes, "multicall")?;
+                let bytes = resp.bytes().await.map_err(|e| {
+                    AppError::Aria2(format!("Failed to read multicall response: {e}"))
+                })?;
+                let body: JsonRpcResponse<Vec<serde_json::Value>> =
+                    parse_jsonrpc_response(&bytes, "multicall")?;
 
-        if let Some(err) = body.error {
-            return Err(AppError::Aria2(format!(
-                "aria2 multicall error [{}]: {}",
-                err.code, err.message
-            )));
-        }
+                if let Some(err) = body.error {
+                    return Err(AppError::Aria2(format!(
+                        "aria2 multicall error [{}]: {}",
+                        err.code, err.message
+                    )));
+                }
 
-        body.result
-            .ok_or_else(|| AppError::Aria2("aria2 multicall returned null result".into()))
+                body.result
+                    .ok_or_else(|| AppError::Aria2("aria2 multicall returned null result".into()))
+            }
+            .await;
+        record_rpc_result("system.multicall", id, started, &result);
+        result
+    }
+}
+
+fn is_polling_method(method: &str) -> bool {
+    matches!(
+        method,
+        "aria2.getVersion"
+            | "aria2.getGlobalStat"
+            | "aria2.tellActive"
+            | "aria2.tellWaiting"
+            | "aria2.tellStopped"
+            | "aria2.tellStatus"
+            | "aria2.getPeers"
+            | "aria2.getFiles"
+    )
+}
+
+fn record_rpc_result<T>(method: &str, id: u64, started: Instant, result: &Result<T, AppError>) {
+    let duration_ms = started.elapsed().as_millis() as u64;
+    match result {
+        Err(error) if is_polling_method(method) => log::debug!(
+            target: "aria2_rpc",
+            event = "rpc_unavailable",
+            rpc_id = id,
+            method,
+            duration_ms,
+            error:% = error;
+            "rpc_unavailable"
+        ),
+        Err(error) => log::error!(
+            target: "aria2_rpc",
+            event = "rpc_failed",
+            rpc_id = id,
+            method,
+            duration_ms,
+            error:% = error;
+            "rpc_failed"
+        ),
+        Ok(_) if duration_ms >= 1_000 => log::warn!(
+            target: "aria2_rpc",
+            event = "rpc_slow",
+            rpc_id = id,
+            method,
+            duration_ms;
+            "rpc_slow"
+        ),
+        Ok(_) if !is_polling_method(method) => log::debug!(
+            target: "aria2_rpc",
+            event = "rpc_completed",
+            rpc_id = id,
+            method,
+            duration_ms;
+            "rpc_completed"
+        ),
+        Ok(_) => {}
     }
 }
 

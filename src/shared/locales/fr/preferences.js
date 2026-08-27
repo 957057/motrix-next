@@ -261,8 +261,6 @@ export default {
   'export-diagnostic-logs-success': 'Journaux exportés vers {path}',
   'export-diagnostic-logs-failed': "Échec de l'exportation des journaux",
   'log-level': 'Niveau de journalisation',
-  'log-level-restart-confirm':
-    "Le changement du niveau de journalisation prendra effet après le redémarrage de l'application.",
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Redémarrer maintenant',

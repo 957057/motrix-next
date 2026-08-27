@@ -337,9 +337,10 @@ describe('useMagnetMetadataEvents', () => {
 
     expect(resolved).toBe(false)
     expect(state.pendingGids).toEqual([])
-    expect(logger.debug).toHaveBeenCalledWith(
-      'MagnetMetadata.resolve',
-      'gid=metadata-gid outcome=skipped reason="Aria2 Next error [1]: GID not found"',
-    )
+    expect(logger.debug).toHaveBeenCalledWith('MagnetMetadata.resolve', 'metadata_resolution_skipped', {
+      gid: 'metadata-gid',
+      outcome: 'skipped',
+      reason: 'Aria2 Next error [1]: GID not found',
+    })
   })
 })

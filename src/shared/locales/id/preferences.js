@@ -257,7 +257,6 @@ export default {
   'export-diagnostic-logs-success': 'Log diekspor ke {path}',
   'export-diagnostic-logs-failed': 'Gagal mengekspor log',
   'log-level': 'Level log',
-  'log-level-restart-confirm': 'Perubahan level log akan diterapkan setelah aplikasi dimulai ulang.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Mulai ulang sekarang',

@@ -254,7 +254,6 @@ export default {
   'export-diagnostic-logs-success': 'Nhật ký đã được xuất tới {path}',
   'export-diagnostic-logs-failed': 'Xuất nhật ký thất bại',
   'log-level': 'Cấp độ nhật ký',
-  'log-level-restart-confirm': 'Thay đổi cấp độ nhật ký sẽ có hiệu lực sau khi khởi động lại ứng dụng.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Khởi động lại ngay',

@@ -16,8 +16,8 @@ describe('advanced preference contract', () => {
 
     expect(form.proxy.mode).toBe('direct')
     expect(form.clipboardSftp).toBe(true)
-    expect(form.logLevel).toBe('warn')
-    expect(form.aria2LogLevel).toBe('warn')
+    expect(form.logLevel).toBe('info')
+    expect(form.aria2LogLevel).toBe('info')
   })
 
   it('maps RPC and proxy settings to engine options', () => {

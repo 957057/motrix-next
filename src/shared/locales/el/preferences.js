@@ -260,7 +260,6 @@ export default {
   'export-diagnostic-logs-success': 'Τα αρχεία εξήχθησαν στο {path}',
   'export-diagnostic-logs-failed': 'Αποτυχία εξαγωγής αρχείων',
   'log-level': 'Επίπεδο καταγραφής',
-  'log-level-restart-confirm': 'Η αλλαγή επιπέδου καταγραφής θα εφαρμοστεί μετά την επανεκκίνηση της εφαρμογής.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Επανεκκίνηση τώρα',

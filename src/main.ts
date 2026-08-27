@@ -88,7 +88,7 @@ if (import.meta.env.PROD) {
       }
       preferenceStore.updateAndSave({ lastCheckUpdateTime: Date.now() })
     } catch (e) {
-      logger.warn('Updater', 'auto check failed: ' + (e as Error).message)
+      logger.debug('Updater', 'update_check_failed', { reason: getErrorMessage(e) })
     }
   }
 
@@ -365,7 +365,7 @@ if (import.meta.env.PROD) {
       // - spawn_speed_scheduler() runs a 60s timer in tokio (no WebView needed)
       if (ok) {
         await preferenceStore.reloadPreferenceFromDisk()
-        logger.info('Engine', 'Rust on_engine_ready completed: options synced, services spawned')
+        logger.debug('Engine', 'runtime_services_ready')
         emitAppToast({ type: 'success', key: 'app.engine-ready' })
       }
     } catch (e) {

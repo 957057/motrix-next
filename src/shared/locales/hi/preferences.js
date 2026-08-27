@@ -254,7 +254,6 @@ export default {
   'export-diagnostic-logs-success': 'Logs {path} पर export हुए',
   'export-diagnostic-logs-failed': 'Logs export नहीं हुए',
   'log-level': 'Log level',
-  'log-level-restart-confirm': 'Log level बदलने का असर app restart के बाद होगा।',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'अभी Restart करें',

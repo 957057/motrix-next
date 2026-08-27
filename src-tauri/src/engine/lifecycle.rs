@@ -170,7 +170,7 @@ fn spawn_engine(
     app: &tauri::AppHandle,
     args: &[String],
 ) -> Result<(Receiver<CommandEvent>, CommandChild), String> {
-    log::info!("spawning engine process: argument_count={}", args.len());
+    log::info!(target: "engine", event = "engine_spawn_started", argument_count = args.len(); "engine_spawn_started");
     app.shell()
         .sidecar(ENGINE_SIDECAR_NAME)
         .map_err(|error| format!("Failed to create sidecar: {error}"))?
@@ -191,6 +191,13 @@ fn monitor_engine(
             match event {
                 CommandEvent::Stdout(line) => {
                     let text = strip_ansi(&String::from_utf8_lossy(&line));
+                    #[cfg(debug_assertions)]
+                    if !text.trim().is_empty() {
+                        println!(
+                            "{}",
+                            crate::log_policy::format_engine_terminal_record(&text)
+                        );
+                    }
                     if let Some(kind) = port_guard::aria2_runtime_bind_error_kind(&text) {
                         crate::engine::supervisor::report_port_conflict(
                             app.clone(),
@@ -211,7 +218,14 @@ fn monitor_engine(
                 }
                 CommandEvent::Terminated(payload) => {
                     let exit_code = payload.code.unwrap_or(-1);
-                    log::warn!("engine terminated: exit_code={exit_code}");
+                    log::warn!(
+                        target: "engine",
+                        event = "engine_terminated",
+                        pid = process_id,
+                        generation,
+                        exit_code;
+                        "engine_terminated"
+                    );
 
                     let is_stale = app
                         .try_state::<EngineState>()
@@ -268,7 +282,7 @@ pub fn start_engine(app: &tauri::AppHandle) -> Result<(), String> {
     let args = prepare_engine_args(app, &config)?;
     let (receiver, child) = spawn_engine(app, &args)?;
 
-    log::info!("started engine process: PID {}", child.pid());
+    log::info!(target: "engine", event = "engine_started", pid = child.pid(); "engine_started");
 
     let spawned_pid = child.pid();
     *child_lock = Some(child);

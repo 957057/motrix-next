@@ -27,7 +27,7 @@ import {
 } from '@shared/utils/batchHelpers'
 import { buildOuts } from '@shared/utils/rename'
 import { invoke } from '@tauri-apps/api/core'
-import { formatLogFields, logger } from '@shared/logger'
+import { logger } from '@shared/logger'
 import type {
   Aria2EngineOptions,
   BatchItem,
@@ -254,17 +254,14 @@ export async function submitManualUris(
   if (!form.uris.trim()) return { submittedTaskNames: [], magnetGids: [], magnetFailures: [] }
   const parsedInput = parseAria2Input(form.uris)
   const allUris = parsedInput.entries.flatMap((entry) => entry.uris)
-  logger.info(
-    'submitManualUris',
-    formatLogFields({
-      regular: allUris.filter((u) => !isMagnetUri(u)).length,
-      magnet: allUris.filter(isMagnetUri).length,
-      hasUserAgent: Boolean(form.userAgent),
-      hasReferer: Boolean(form.referer),
-      hasCookie: Boolean(form.cookie),
-      ...summarizeSubmitHeaderForwarding(form),
-    }),
-  )
+  logger.info('submitManualUris', 'manual_uris_submitted', {
+    regular: allUris.filter((u) => !isMagnetUri(u)).length,
+    magnet: allUris.filter(isMagnetUri).length,
+    has_user_agent: Boolean(form.userAgent),
+    has_referer: Boolean(form.referer),
+    has_cookie: Boolean(form.cookie),
+    ...summarizeSubmitHeaderForwarding(form),
+  })
 
   const magnetUris = allUris.filter(isMagnetUri)
   const regularEntries: ManualRegularEntry[] = parsedInput.entries

@@ -259,7 +259,6 @@ export default {
   'export-diagnostic-logs-success': 'Protokolle exportiert nach {path}',
   'export-diagnostic-logs-failed': 'Export der Protokolle fehlgeschlagen',
   'log-level': 'Protokollstufe',
-  'log-level-restart-confirm': 'Die Änderung der Protokollstufe wird nach dem Neustart der App wirksam.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Jetzt neu starten',

@@ -12,7 +12,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { listen } from '@tauri-apps/api/event'
-import { formatLogFields, logger } from '@shared/logger'
+import { logger } from '@shared/logger'
 import { STAT_BASE_INTERVAL, STAT_PER_TASK_INTERVAL, STAT_MIN_INTERVAL, STAT_MAX_INTERVAL } from '@shared/timing'
 import {
   detectExternalInputKind,
@@ -279,22 +279,26 @@ export const useAppStore = defineStore('app', () => {
           result.autoSubmitted += routed.autoSubmitted
         } else {
           result.ignored += 1
-          const fields = formatLogFields({
+          const fields = {
             action: motrixDeepLink.action,
             hasUrl: motrixDeepLink.downloadUrl ? 'true' : 'false',
             reason: motrixDeepLink.downloadUrl ? 'unhandled-action' : 'wake-only',
-          })
+          }
           if (motrixDeepLink.downloadUrl) {
-            logger.warn('DeepLink.ignored', fields)
+            logger.warn('DeepLink.ignored', 'deep_link_ignored', fields)
           } else {
-            logger.debug('DeepLink.ignored', fields)
+            logger.debug('DeepLink.ignored', 'deep_link_ignored', fields)
           }
         }
         continue
       }
       if (motrixDeepLink.reason === 'malformed') {
         result.ignored += 1
-        logger.warn('DeepLink.ignored', formatLogFields({ action: 'unknown', hasUrl: 'false', reason: 'malformed' }))
+        logger.warn('DeepLink.ignored', 'deep_link_ignored', {
+          action: 'unknown',
+          hasUrl: 'false',
+          reason: 'malformed',
+        })
         continue
       }
 
@@ -386,21 +390,18 @@ export const useAppStore = defineStore('app', () => {
 
     const preferenceStore = usePreferenceStore()
     const autoSubmit = preferenceStore.config.autoSubmitFromExtension
-    logger.info(
-      'ExternalInput.new',
-      formatLogFields({
-        url: summarizeExternalInput(downloadUrl),
-        kind,
-        source: input.source || 'unknown',
-        traceId: context.traceId ?? 'none',
-        hasUserAgent: context.userAgent ? 'true' : 'false',
-        hasCookie: context.cookie ? 'true' : 'false',
-        headerCount: context.requestHeaders?.length ?? 0,
-        filename: input.filename ? 'present' : 'none',
-        resolvedFilename: resolvedHint ? 'present' : 'none',
-        autoSubmit,
-      }),
-    )
+    logger.debug('ExternalInput.new', 'external_input_received', {
+      url: summarizeExternalInput(downloadUrl),
+      kind,
+      input_source: input.source || 'unknown',
+      trace_id: context.traceId ?? 'none',
+      has_user_agent: context.userAgent ? 'true' : 'false',
+      has_cookie: context.cookie ? 'true' : 'false',
+      header_count: context.requestHeaders?.length ?? 0,
+      filename: input.filename ? 'present' : 'none',
+      resolved_filename: resolvedHint ? 'present' : 'none',
+      auto_submit: autoSubmit,
+    })
 
     if (autoSubmit && kind === 'uri') {
       void autoSubmitExtensionUrl(downloadUrl, context, resolvedHint)
@@ -445,14 +446,11 @@ export const useAppStore = defineStore('app', () => {
       const taskNames = result.submittedTaskNames.length > 0 ? result.submittedTaskNames : [filenameHint || url]
       externalInputStartHandler?.(taskNames)
       preferenceStore.recordHistoryDirectory(form.dir || preferenceStore.config.dir)
-      logger.info(
-        'autoSubmit',
-        formatLogFields({
-          traceId: context.traceId ?? 'none',
-          url: summarizeExternalInput(url),
-          result: 'submitted',
-        }),
-      )
+      logger.debug('autoSubmit', 'external_input_submitted', {
+        trace_id: context.traceId ?? 'none',
+        url: summarizeExternalInput(url),
+        result: 'submitted',
+      })
     } catch (e) {
       logger.error('autoSubmit', e)
       externalInputErrorHandler?.(e)

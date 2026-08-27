@@ -17,7 +17,6 @@ export const nonHotReloadableKeys: readonly string[] = aria2Options.nonHotReload
  * effect. Drives the "restart now?" dialog on preference save.
  */
 export const needRestartKeys = [
-  'aria2-log-level',
   'ed2k-listen-port',
   'ed2k-max-connections',
   'ed2k-server',

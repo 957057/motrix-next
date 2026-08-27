@@ -252,7 +252,6 @@ export default {
   'export-diagnostic-logs-success': 'تم تصدير السجلات إلى {path}',
   'export-diagnostic-logs-failed': 'فشل تصدير السجلات',
   'log-level': 'مستوى السجل',
-  'log-level-restart-confirm': 'سيتم تطبيق تغيير مستوى السجل بعد إعادة تشغيل التطبيق.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'إعادة التشغيل الآن',

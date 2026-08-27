@@ -255,7 +255,6 @@ export default {
   'export-diagnostic-logs-success': 'گزارش‌ها به {path} صادر شدند',
   'export-diagnostic-logs-failed': 'صادرات گزارش‌ها ناموفق بود',
   'log-level': 'سطح گزارش',
-  'log-level-restart-confirm': 'تغییر سطح گزارش پس از راه‌اندازی مجدد برنامه اعمال خواهد شد.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'الان راه‌اندازی مجدد',

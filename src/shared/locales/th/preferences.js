@@ -251,7 +251,6 @@ export default {
   'export-diagnostic-logs-success': 'ส่งออกบันทึกไปที่ {path} แล้ว',
   'export-diagnostic-logs-failed': 'ไม่สามารถส่งออกบันทึกได้',
   'log-level': 'ระดับบันทึก',
-  'log-level-restart-confirm': 'การเปลี่ยนระดับบันทึกจะมีผลหลังจากรีสตาร์ทแอป',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'รีสตาร์ทตอนนี้',

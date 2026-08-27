@@ -256,7 +256,6 @@ export default {
   'export-diagnostic-logs-success': 'Günlükler {path} konumuna aktarıldı',
   'export-diagnostic-logs-failed': 'Günlükler dışa aktarılamadı',
   'log-level': 'Günlük seviyesi',
-  'log-level-restart-confirm': 'Günlük seviyesi değişikliği uygulamayı yeniden başlattıktan sonra uygulanacaktır.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Şimdi yeniden başlat',

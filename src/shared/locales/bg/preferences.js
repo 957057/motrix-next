@@ -257,7 +257,6 @@ export default {
   'export-diagnostic-logs-success': 'Логовете са експортирани в {path}',
   'export-diagnostic-logs-failed': 'Неуспешно експортиране на логове',
   'log-level': 'Ниво на логване',
-  'log-level-restart-confirm': 'Промяната на нивото на логване ще влезе в сила след рестартиране на приложението.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Рестартирай сега',

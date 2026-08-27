@@ -259,7 +259,6 @@ export default {
   'export-diagnostic-logs-success': 'Dzienniki wyeksportowane do {path}',
   'export-diagnostic-logs-failed': 'Nie udało się wyeksportować dzienników',
   'log-level': 'Poziom logowania',
-  'log-level-restart-confirm': 'Zmiana poziomu logowania zostanie zastosowana po ponownym uruchomieniu aplikacji.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Uruchom ponownie teraz',

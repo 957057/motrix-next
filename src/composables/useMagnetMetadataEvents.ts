@@ -1,5 +1,5 @@
 import { listen } from '@tauri-apps/api/event'
-import { formatLogFields, logger } from '@shared/logger'
+import { logger } from '@shared/logger'
 import {
   findPendingMagnetSelectionTask,
   isPendingMagnetSelectionTask,
@@ -60,10 +60,11 @@ export async function resolvePendingMagnetMetadata(
       if (queryError !== undefined) {
         state.pendingGids = state.pendingGids.filter((candidate) => candidate !== gid)
         state.deferredGids = state.deferredGids.filter((candidate) => candidate !== gid)
-        logger.debug(
-          'MagnetMetadata.resolve',
-          formatLogFields({ gid, outcome: 'skipped', reason: getErrorMessage(queryError) }),
-        )
+        logger.debug('MagnetMetadata.resolve', 'metadata_resolution_skipped', {
+          gid,
+          outcome: 'skipped',
+          reason: getErrorMessage(queryError),
+        })
       }
       return false
     }
@@ -79,7 +80,11 @@ export async function resolvePendingMagnetMetadata(
     state.visible = true
     return true
   } catch (error) {
-    logger.debug('MagnetMetadata.resolve', formatLogFields({ gid, outcome: 'skipped', reason: getErrorMessage(error) }))
+    logger.debug('MagnetMetadata.resolve', 'metadata_resolution_skipped', {
+      gid,
+      outcome: 'skipped',
+      reason: getErrorMessage(error),
+    })
     return false
   }
 }

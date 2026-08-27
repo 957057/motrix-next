@@ -258,7 +258,6 @@ export default {
   'export-diagnostic-logs-success': 'Журналы экспортированы в {path}',
   'export-diagnostic-logs-failed': 'Не удалось экспортировать журналы',
   'log-level': 'Уровень журналирования',
-  'log-level-restart-confirm': 'Изменение уровня журналирования вступит в силу после перезапуска приложения.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Перезапустить сейчас',

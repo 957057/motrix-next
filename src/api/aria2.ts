@@ -24,7 +24,7 @@ import type {
   BatchTaskOperationResult,
   ResumeEligibleResult,
 } from '@shared/types'
-import { formatLogFields, logger } from '@shared/logger'
+import { logger } from '@shared/logger'
 import { resolveDownloadDir } from '@shared/utils/fileCategory'
 import { sanitizeAria2OutHint } from '@shared/utils/batchHelpers'
 import { summarizeAria2Options, summarizeExternalInput } from '@shared/utils/externalInputDiagnostics'
@@ -159,15 +159,12 @@ export async function addUri(params: {
   })
 
   const gids = await Promise.all(tasks)
-  logger.info(
-    'aria2.addUri',
-    formatLogFields({
-      added: gids.length,
-      gids: `[${gids.join(',')}]`,
-      first: uris[0] ? summarizeExternalInput(uris[0]) : 'none',
-      ...summarizeAria2Options(engineOptions),
-    }),
-  )
+  logger.info('aria2.addUri', 'downloads_added', {
+    added: gids.length,
+    gids: gids.join(','),
+    first: uris[0] ? summarizeExternalInput(uris[0]) : 'none',
+    ...summarizeAria2Options(engineOptions),
+  })
   return gids
 }
 

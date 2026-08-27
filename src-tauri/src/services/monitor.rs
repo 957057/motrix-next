@@ -412,11 +412,12 @@ pub async fn process_lifecycle_task(
     };
     let webview_alive = app.get_webview_window("main").is_some();
     log::info!(
-        "task_lifecycle:event type={} gid={} name={:?} webview_alive={}",
-        event_name,
-        payload.gid,
-        payload.name,
-        webview_alive
+        target: "task_lifecycle",
+        event = event_name,
+        gid = payload.gid.as_str(),
+        task_name:% = payload.name,
+        webview_alive;
+        "task_lifecycle_event"
     );
     send_task_notification(app, event_name, &payload, &runtime_config);
     if let Err(error) = app.emit(event_name, &payload) {

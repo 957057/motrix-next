@@ -102,7 +102,7 @@ describe('checkIsNeedRestart', () => {
     expect(checkIsNeedRestart({ btLocalPeerDiscoveryEnabled: false })).toBe(false)
     expect(checkIsNeedRestart({ btEncryption: 'required' })).toBe(false)
     expect(checkIsNeedRestart({ btMaxPeers: 256 })).toBe(false)
-    expect(checkIsNeedRestart({ aria2LogLevel: 'info' })).toBe(true)
+    expect(checkIsNeedRestart({ aria2LogLevel: 'info' })).toBe(false)
   })
   it('returns true for ED2K restart keys from AppConfig camelCase fields', () => {
     expect(checkIsNeedRestart({ ed2kListenPort: 4663 })).toBe(true)

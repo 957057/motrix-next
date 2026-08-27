@@ -218,7 +218,13 @@ impl EngineSupervisor {
         }
         let _ = app.emit("engine-state-changed", &snapshot);
         log::info!(
-            "engine_supervisor: state={phase:?} operation_id={operation_id} attempt={attempt} cause={cause:?}"
+            target: "engine_supervisor",
+            event = "engine_state_changed",
+            operation_id,
+            phase:? = phase,
+            attempt,
+            cause:? = cause;
+            "engine_state_changed"
         );
     }
 

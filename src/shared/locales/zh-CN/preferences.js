@@ -248,7 +248,6 @@ export default {
   'export-diagnostic-logs-success': '日志已导出至 {path}',
   'export-diagnostic-logs-failed': '导出日志失败',
   'log-level': '日志级别',
-  'log-level-restart-confirm': '日志级别更改将在重启应用后生效。',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': '立即重启',

@@ -259,7 +259,6 @@ export default {
   'export-diagnostic-logs-success': 'Naplók exportálva ide: {path}',
   'export-diagnostic-logs-failed': 'Naplók exportálása sikertelen',
   'log-level': 'Naplózási szint',
-  'log-level-restart-confirm': 'A naplózási szint változása az alkalmazás újraindítása után lép érvénybe.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Újraindítás most',

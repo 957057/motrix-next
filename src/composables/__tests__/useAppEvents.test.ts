@@ -61,10 +61,6 @@ vi.mock('@/api/aria2', () => ({
 }))
 
 vi.mock('@shared/logger', () => ({
-  formatLogFields: (fields: Record<string, string | number | boolean | null | undefined>) =>
-    Object.entries(fields)
-      .map(([key, value]) => `${key}=${String(value)}`)
-      .join(' '),
   logger: loggerMock,
 }))
 
@@ -418,7 +414,11 @@ describe('useAppEvents', () => {
 
     expect(appStore.handleDeepLinkUrls).toHaveBeenCalledTimes(1)
     expect(appStore.handleDeepLinkUrls).toHaveBeenCalledWith([deepLink])
-    expect(loggerMock.warn).toHaveBeenCalledWith('ExternalInput', expect.stringContaining('stage=setFocus'))
+    expect(loggerMock.warn).toHaveBeenCalledWith(
+      'ExternalInput',
+      'window_stage_failed',
+      expect.objectContaining({ stage: 'setFocus', result: 'failed' }),
+    )
     expect(loggerMock.info.mock.calls.flat().join(' ')).not.toContain('secret-token')
   })
 
@@ -432,7 +432,11 @@ describe('useAppEvents', () => {
     await eventCallbacks['deep-link-open']?.({ payload: [deepLink] })
 
     expect(appStore.handleDeepLinkUrls).toHaveBeenCalledWith([deepLink])
-    expect(loggerMock.info).toHaveBeenCalledWith('ExternalInput', expect.stringContaining('queued=1'))
+    expect(loggerMock.info).toHaveBeenCalledWith(
+      'ExternalInput',
+      'download_routing_completed',
+      expect.objectContaining({ queued: 1, result: 'ok' }),
+    )
   })
 
   it('attaches the external input trace id before routing structured payloads', async () => {

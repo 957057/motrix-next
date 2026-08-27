@@ -258,7 +258,6 @@ export default {
   'export-diagnostic-logs-success': 'Logboeken geëxporteerd naar {path}',
   'export-diagnostic-logs-failed': 'Exporteren van logboeken mislukt',
   'log-level': 'Logniveau',
-  'log-level-restart-confirm': 'De wijziging van het logniveau wordt toegepast na het herstarten van de app.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Nu herstarten',

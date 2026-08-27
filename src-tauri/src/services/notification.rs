@@ -291,7 +291,7 @@ pub fn send_task_start_notification_from_names(
     };
 
     send_native_notification(app, &content)?;
-    log::info!(
+    log::debug!(
         "notification:submitted type={:?} locale={} webview_alive={}",
         content.kind,
         content.locale,
@@ -413,7 +413,7 @@ fn log_notification_success(
 ) {
     match dispatch {
         NotificationDispatchResult::Submitted => {
-            log::info!(
+            log::debug!(
                 "notification:submitted type={:?} gid={} locale={} webview_alive={}",
                 content.kind,
                 event.gid,

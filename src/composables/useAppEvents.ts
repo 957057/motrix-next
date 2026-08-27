@@ -11,7 +11,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { useRouter, useRoute } from 'vue-router'
-import { formatLogFields, logger } from '@shared/logger'
+import { logger } from '@shared/logger'
 import { isEngineReady } from '@/api/aria2'
 import { detectKind, createBatchItem } from '@shared/utils/batchHelpers'
 import { createExternalInputTraceId, summarizeExternalInputBatch } from '@shared/utils/externalInputDiagnostics'
@@ -180,10 +180,10 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
   ) {
     try {
       await operation()
-      logger.debug('ExternalInput', formatLogFields({ traceId, stage, result: 'ok' }))
+      logger.debug('ExternalInput', 'window_stage_completed', { trace_id: traceId, stage, result: 'ok' })
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error)
-      logger.warn('ExternalInput', formatLogFields({ traceId, stage, result: 'failed', reason }))
+      logger.warn('ExternalInput', 'window_stage_failed', { trace_id: traceId, stage, result: 'failed', reason })
     }
   }
 
@@ -482,13 +482,19 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
           if (await mainWindow.isVisible()) return
           const { invoke } = await import('@tauri-apps/api/core')
           await invoke('minimize_to_tray')
-          logger.info('ExternalInput', formatLogFields({ traceId, stage: 'silent-cleanup', result: 'ok' }))
+          logger.info('ExternalInput', 'silent_cleanup_completed', {
+            trace_id: traceId,
+            stage: 'silent-cleanup',
+            result: 'ok',
+          })
         } catch (error) {
           const reason = error instanceof Error ? error.message : String(error)
-          logger.debug(
-            'ExternalInput',
-            formatLogFields({ traceId, stage: 'silent-cleanup', result: 'skipped', reason }),
-          )
+          logger.debug('ExternalInput', 'silent_cleanup_skipped', {
+            trace_id: traceId,
+            stage: 'silent-cleanup',
+            result: 'skipped',
+            reason,
+          })
         }
       })()
     }, 7000)
@@ -497,16 +503,13 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
   async function processIncomingDeepLinks(urls: string[], options: { silent?: boolean } = {}) {
     const traceId = createExternalInputTraceId()
     const silent = options.silent === true
-    logger.info(
-      'ExternalInput',
-      formatLogFields({
-        traceId,
-        stage: 'received',
-        route: route.path,
-        silent,
-        ...summarizeExternalInputBatch(urls),
-      }),
-    )
+    logger.info('ExternalInput', 'deep_links_received', {
+      trace_id: traceId,
+      stage: 'received',
+      route: route.path,
+      silent,
+      ...summarizeExternalInputBatch(urls),
+    })
     if (!silent) {
       const mainWindow = getCurrentWindow()
       await runExternalInputWindowStage(traceId, 'unminimize', () => mainWindow.unminimize())
@@ -521,34 +524,48 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
     if (!silent && hasNewTask && route.path !== '/task/all') {
       try {
         await router.push('/task/all')
-        logger.debug('ExternalInput', formatLogFields({ traceId, stage: 'navigate', result: 'ok', route: '/task/all' }))
+        logger.debug('ExternalInput', 'navigation_completed', {
+          trace_id: traceId,
+          stage: 'navigate',
+          result: 'ok',
+          route: '/task/all',
+        })
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error)
-        logger.warn(
-          'ExternalInput',
-          formatLogFields({ traceId, stage: 'navigate', result: 'failed', route: '/task/all', reason }),
-        )
+        logger.warn('ExternalInput', 'navigation_failed', {
+          trace_id: traceId,
+          stage: 'navigate',
+          result: 'failed',
+          route: '/task/all',
+          reason,
+        })
       }
     }
 
-    logger.info('ExternalInput', formatLogFields({ traceId, stage: 'route-download', result: 'start' }))
+    logger.debug('ExternalInput', 'download_routing_started', {
+      trace_id: traceId,
+      stage: 'route-download',
+      result: 'start',
+    })
     try {
       const handlingResult = appStore.handleDeepLinkUrls(urls)
-      logger.info(
-        'ExternalInput',
-        formatLogFields({
-          traceId,
-          stage: 'route-download',
-          result: 'ok',
-          received: handlingResult?.received ?? 'unknown',
-          queued: handlingResult?.queued ?? 'unknown',
-          autoSubmitted: handlingResult?.autoSubmitted ?? 'unknown',
-          ignored: handlingResult?.ignored ?? 'unknown',
-        }),
-      )
+      logger.info('ExternalInput', 'download_routing_completed', {
+        trace_id: traceId,
+        stage: 'route-download',
+        result: 'ok',
+        received: handlingResult?.received ?? 'unknown',
+        queued: handlingResult?.queued ?? 'unknown',
+        auto_submitted: handlingResult?.autoSubmitted ?? 'unknown',
+        ignored: handlingResult?.ignored ?? 'unknown',
+      })
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error)
-      logger.error('ExternalInput', formatLogFields({ traceId, stage: 'route-download', result: 'failed', reason }))
+      logger.error('ExternalInput', error, {
+        trace_id: traceId,
+        stage: 'route-download',
+        result: 'failed',
+        reason,
+      })
       throw error
     }
     if (silent) {
@@ -559,20 +576,17 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
   async function processIncomingExternalInputs(inputs: ExternalDownloadInput[], options: { silent?: boolean } = {}) {
     const traceId = createExternalInputTraceId()
     const silent = options.silent === true
-    logger.info(
-      'ExternalInput',
-      formatLogFields({
-        traceId,
-        stage: 'received',
-        source: 'structured',
-        route: route.path,
-        silent,
-        count: inputs.length,
-        hasCookie: inputs.some((input) => Boolean(input.cookie)),
-        hasUserAgent: inputs.some((input) => Boolean(input.userAgent)),
-        headerCount: inputs.reduce((count, input) => count + (input.requestHeaders?.length ?? 0), 0),
-      }),
-    )
+    logger.info('ExternalInput', 'structured_inputs_received', {
+      trace_id: traceId,
+      stage: 'received',
+      input_source: 'structured',
+      route: route.path,
+      silent,
+      count: inputs.length,
+      has_cookie: inputs.some((input) => Boolean(input.cookie)),
+      has_user_agent: inputs.some((input) => Boolean(input.userAgent)),
+      header_count: inputs.reduce((count, input) => count + (input.requestHeaders?.length ?? 0), 0),
+    })
     if (!silent) {
       const mainWindow = getCurrentWindow()
       await runExternalInputWindowStage(traceId, 'unminimize', () => mainWindow.unminimize())
@@ -583,35 +597,49 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
     if (!silent && inputs.length > 0 && route.path !== '/task/all') {
       try {
         await router.push('/task/all')
-        logger.debug('ExternalInput', formatLogFields({ traceId, stage: 'navigate', result: 'ok', route: '/task/all' }))
+        logger.debug('ExternalInput', 'navigation_completed', {
+          trace_id: traceId,
+          stage: 'navigate',
+          result: 'ok',
+          route: '/task/all',
+        })
       } catch (error) {
         const reason = error instanceof Error ? error.message : String(error)
-        logger.warn(
-          'ExternalInput',
-          formatLogFields({ traceId, stage: 'navigate', result: 'failed', route: '/task/all', reason }),
-        )
+        logger.warn('ExternalInput', 'navigation_failed', {
+          trace_id: traceId,
+          stage: 'navigate',
+          result: 'failed',
+          route: '/task/all',
+          reason,
+        })
       }
     }
 
-    logger.info('ExternalInput', formatLogFields({ traceId, stage: 'route-download', result: 'start' }))
+    logger.debug('ExternalInput', 'download_routing_started', {
+      trace_id: traceId,
+      stage: 'route-download',
+      result: 'start',
+    })
     try {
       const tracedInputs = inputs.map((input) => ({ ...input, traceId }))
       const handlingResult = appStore.handleExternalInputs(tracedInputs)
-      logger.info(
-        'ExternalInput',
-        formatLogFields({
-          traceId,
-          stage: 'route-download',
-          result: 'ok',
-          received: handlingResult?.received ?? 'unknown',
-          queued: handlingResult?.queued ?? 'unknown',
-          autoSubmitted: handlingResult?.autoSubmitted ?? 'unknown',
-          ignored: handlingResult?.ignored ?? 'unknown',
-        }),
-      )
+      logger.info('ExternalInput', 'download_routing_completed', {
+        trace_id: traceId,
+        stage: 'route-download',
+        result: 'ok',
+        received: handlingResult?.received ?? 'unknown',
+        queued: handlingResult?.queued ?? 'unknown',
+        auto_submitted: handlingResult?.autoSubmitted ?? 'unknown',
+        ignored: handlingResult?.ignored ?? 'unknown',
+      })
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error)
-      logger.error('ExternalInput', formatLogFields({ traceId, stage: 'route-download', result: 'failed', reason }))
+      logger.error('ExternalInput', error, {
+        trace_id: traceId,
+        stage: 'route-download',
+        result: 'failed',
+        reason,
+      })
       throw error
     }
     if (silent) {

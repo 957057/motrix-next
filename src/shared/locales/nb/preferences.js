@@ -257,7 +257,6 @@ export default {
   'export-diagnostic-logs-success': 'Logger eksportert til {path}',
   'export-diagnostic-logs-failed': 'Kunne ikke eksportere logger',
   'log-level': 'Loggnivå',
-  'log-level-restart-confirm': 'Endring av loggnivå vil tre i kraft etter omstart av appen.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Start på nytt nå',

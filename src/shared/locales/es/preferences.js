@@ -261,7 +261,6 @@ export default {
   'export-diagnostic-logs-success': 'Registros exportados en {path}',
   'export-diagnostic-logs-failed': 'Error al exportar los registros',
   'log-level': 'Nivel de registro',
-  'log-level-restart-confirm': 'El cambio de nivel de registro se aplicará tras reiniciar la aplicación.',
   'motrix-next': 'Motrix Next',
   'aria2-next': 'Aria2 Next',
   'restart-now': 'Reiniciar ahora',
