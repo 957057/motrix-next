@@ -226,7 +226,6 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     log::info!(
         target: "lifecycle",
         event = "app_started",
-        run_id = log_policy::run_id(),
         version:% = handle.package_info().version,
         os = std::env::consts::OS,
         arch = std::env::consts::ARCH;
@@ -558,10 +557,18 @@ pub fn run() {
             file_name: Some("motrix-next".into()),
         },
     )];
-    if cfg!(debug_assertions) {
-        log_targets.push(tauri_plugin_log::Target::new(
-            tauri_plugin_log::TargetKind::Stdout,
-        ));
+    #[cfg(debug_assertions)]
+    {
+        log_targets.push(
+            tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout).format(
+                |out, message, record| {
+                    out.finish(format_args!(
+                        "{}",
+                        log_policy::format_terminal_record(message, record)
+                    ))
+                },
+            ),
+        );
     }
 
     // ── Pre-flight DB migration guard ────────────────────────────

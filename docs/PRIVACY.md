@@ -22,7 +22,7 @@ Application data is stored locally on your device and is not synced by Motrix Ne
 | Application logs  | app log directory                       | Diagnostics and troubleshooting    |
 | Download files    | User-specified directory                | Downloaded content                 |
 
-Diagnostic log exports are created only when the user chooses **Advanced Settings → Export Diagnostic Logs**. The exported ZIP may include log files, system/runtime metadata, and a sanitized `config.json` snapshot. RPC secrets, Extension API secrets, cookies, and proxy credentials are redacted before export.
+Diagnostic log exports are created only when the user chooses **Advanced Settings → Export Diagnostic Logs**. The exported ZIP contains the Motrix Next and Aria2 Next logs plus `diagnostics.json`, which combines system/runtime metadata with sanitized configuration. RPC secrets, Extension API secrets, cookies, and proxy credentials are redacted before export.
 
 ## Automatic Network Connections
 

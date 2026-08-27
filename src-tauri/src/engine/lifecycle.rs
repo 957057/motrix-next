@@ -193,7 +193,7 @@ fn monitor_engine(
                     let text = strip_ansi(&String::from_utf8_lossy(&line));
                     #[cfg(debug_assertions)]
                     if !text.trim().is_empty() {
-                        println!(
+                        anstream::println!(
                             "{}",
                             crate::log_policy::format_engine_terminal_record(&text)
                         );
@@ -218,21 +218,44 @@ fn monitor_engine(
                 }
                 CommandEvent::Terminated(payload) => {
                     let exit_code = payload.code.unwrap_or(-1);
-                    log::warn!(
-                        target: "engine",
-                        event = "engine_terminated",
-                        pid = process_id,
-                        generation,
-                        exit_code;
-                        "engine_terminated"
-                    );
-
                     let is_stale = app
                         .try_state::<EngineState>()
                         .is_none_or(|state| !state.is_current_generation(generation));
                     if is_stale {
-                        log::debug!("stale monitor (generation={generation}) ignored termination");
+                        log::debug!(
+                            target: "engine",
+                            event = "stale_engine_terminated",
+                            pid = process_id,
+                            generation,
+                            exit_code;
+                            "stale_engine_terminated"
+                        );
                         break;
+                    }
+
+                    let expected = app
+                        .try_state::<crate::engine::supervisor::EngineSupervisor>()
+                        .is_none_or(|supervisor| supervisor.is_process_exit_expected());
+                    if expected {
+                        log::info!(
+                            target: "engine",
+                            event = "engine_stopped",
+                            pid = process_id,
+                            generation,
+                            exit_code,
+                            signal:? = payload.signal;
+                            "engine_stopped"
+                        );
+                    } else {
+                        log::warn!(
+                            target: "engine",
+                            event = "engine_crashed",
+                            pid = process_id,
+                            generation,
+                            exit_code,
+                            signal:? = payload.signal;
+                            "engine_crashed"
+                        );
                     }
 
                     if let Some(state) = app.try_state::<EngineState>() {
@@ -246,12 +269,14 @@ fn monitor_engine(
                             }
                         }
                     }
-                    crate::engine::supervisor::report_process_exit(
-                        app.clone(),
-                        generation,
-                        exit_code,
-                        payload.signal,
-                    );
+                    if !expected {
+                        crate::engine::supervisor::report_process_exit(
+                            app.clone(),
+                            generation,
+                            exit_code,
+                            payload.signal,
+                        );
+                    }
                     break;
                 }
                 _ => {}

@@ -149,6 +149,12 @@ impl EngineSupervisor {
         self.snapshot().phase == EnginePhase::Running
     }
 
+    pub(crate) fn is_process_exit_expected(&self) -> bool {
+        let snapshot = self.snapshot();
+        self.desired_state() == DesiredEngineState::Stopped
+            || snapshot.phase != EnginePhase::Running
+    }
+
     fn desired_state(&self) -> DesiredEngineState {
         if self.desired.load(Ordering::SeqCst) == 1 {
             DesiredEngineState::Running
@@ -1015,6 +1021,19 @@ mod tests {
         assert!(*first_cancelled.borrow());
         assert!(!supervisor.is_current(first_id));
         assert_eq!(supervisor.desired_state(), DesiredEngineState::Stopped);
+    }
+
+    #[test]
+    fn process_exit_is_unexpected_only_while_running_is_desired() {
+        let supervisor = EngineSupervisor::new();
+        assert!(supervisor.is_process_exit_expected());
+
+        let _ = supervisor.begin_operation(DesiredEngineState::Running);
+        supervisor.snapshot.write().expect("snapshot").phase = EnginePhase::Running;
+        assert!(!supervisor.is_process_exit_expected());
+
+        supervisor.snapshot.write().expect("snapshot").phase = EnginePhase::Stopping;
+        assert!(supervisor.is_process_exit_expected());
     }
 
     #[test]
