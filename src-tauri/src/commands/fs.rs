@@ -94,15 +94,7 @@ pub fn clear_log_file(app: AppHandle) -> Result<(), AppError> {
     clear_managed_log_files_in_dir(&log_dir)
 }
 
-/// Collects all log files from the app log directory and compresses them
-/// into a ZIP archive at the user-specified path (chosen via a save dialog
-/// on the frontend). Includes:
-/// - `system-info.json` with enriched machine/runtime context for diagnostics
-/// - Motrix Next logs under `motrix-next/`
-/// - Aria2 Next logs under `aria2-next/`
-/// - `config.json` user configuration snapshot for issue reproduction
-///
-/// Returns the full path to the created ZIP file.
+/// Exports a redacted runtime snapshot and the complete application and engine logs.
 #[tauri::command]
 pub async fn export_diagnostic_logs(app: AppHandle, save_path: String) -> Result<String, AppError> {
     let log_dir = app
@@ -156,18 +148,9 @@ pub async fn export_diagnostic_logs(app: AppHandle, save_path: String) -> Result
         .await;
     }
 
-    let artifacts = crate::diagnostics::collect_logs(&log_dir)?;
-    let timeline = crate::diagnostics::build_timeline(&artifacts);
-    let diagnostics =
-        crate::diagnostics::runtime_snapshot(&app, raw_config.as_ref(), &timeline).await;
-
-    crate::diagnostics::write_archive(
-        &zip_path,
-        &artifacts,
-        &timeline,
-        &diagnostics,
-        raw_config.as_ref(),
-    )?;
+    let logs = crate::diagnostics::collect_logs(&log_dir)?;
+    let diagnostics = crate::diagnostics::runtime_snapshot(&app, raw_config.as_ref()).await;
+    crate::diagnostics::write_archive(&zip_path, &logs, &diagnostics)?;
 
     log::info!(target: "diagnostics", event = "diagnostics_exported", path:% = zip_path.display(); "diagnostics_exported");
     Ok(crate::engine::path_to_safe_string(&zip_path))
