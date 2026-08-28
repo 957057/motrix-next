@@ -6,6 +6,10 @@ authors = ["AnInsomniacy"]
 license = "MIT"
 edition = "2021"
 
+[workspace]
+members = [".", "native-messaging"]
+resolver = "2"
+
 [lib]
 name = "motrix_next_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
@@ -65,6 +69,7 @@ content_disposition = "0.4"
 rfc2047-decoder = "1.1"
 strip-ansi-escapes = "0.2.1"
 tempfile = "3"
+motrix-next-browser-launcher = { path = "native-messaging" }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [

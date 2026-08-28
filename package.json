@@ -15,6 +15,7 @@
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write 'src/**/*.{ts,vue,css,json}'",
     "format:check": "prettier --check 'src/**/*.{ts,vue,css,json}'",
+    "build:native-launcher": "node scripts/build-native-messaging-launcher.mjs",
     "tauri": "tauri",
     "prepare": "husky"
   },

@@ -9,6 +9,7 @@ mod history;
 mod log_policy;
 #[cfg(target_os = "macos")]
 mod menu;
+mod native_messaging;
 mod services;
 mod tray;
 mod upnp;
@@ -231,6 +232,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         arch = std::env::consts::ARCH;
         "app_started"
     );
+    native_messaging::schedule_repair(app.handle());
     #[cfg(target_os = "macos")]
     {
         let m = menu::build_menu(handle)?;

@@ -465,7 +465,7 @@ Two parallel jobs:
 | Job        | Steps                                                                                                                        |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `frontend` | `pnpm install` → `pnpm lint` → `pnpm format:check` → `vue-tsc --noEmit` → `vitest run` → `vite build`                        |
-| `backend`  | `cargo fmt --check` → `cargo clippy --all-targets -- -D warnings` → `cargo check --all-targets` → `cargo test --all-targets` |
+| `backend`  | `cargo fmt --all -- --check` → `pnpm build:native-launcher` → `cargo clippy --workspace --all-targets -- -D warnings` → `cargo check --workspace --all-targets` → `cargo test --workspace --all-targets` |
 
 ### `release.yml` (Release Published)
 
@@ -520,8 +520,9 @@ pnpm check:repo            # Locale parity + i18n literal-key usage (CI runs thi
 npx vue-tsc --noEmit       # TypeScript type checking
 
 # Backend
-cargo check --all-targets  # Fast compilation check
-cargo test --all-targets   # Rust unit tests
+pnpm build:native-launcher       # Build the target-specific Native Messaging sidecar
+cargo check --workspace --all-targets  # Fast compilation check
+cargo test --workspace --all-targets   # Rust unit tests
 
 # Version (when bumping)
 ./scripts/bump-version.sh <version>
@@ -537,4 +538,4 @@ All fast checks must pass with zero errors before any PR or release.
 
 ## I. Testing Constraints
 
-> **DO NOT use browser tools (Playwright, browser subagent, etc.) to test this app.** Tauri renders in a native webview — `localhost:1420` in a browser lacks IPC, tray, and sidecar access. Use CLI checks (`vue-tsc`, `pnpm test`, `cargo test --all-targets`) or ask the user to verify UI via `pnpm tauri dev`.
+> **DO NOT use browser tools (Playwright, browser subagent, etc.) to test this app.** Tauri renders in a native webview — `localhost:1420` in a browser lacks IPC, tray, and sidecar access. Use CLI checks (`vue-tsc`, `pnpm test`, `cargo test --workspace --all-targets`) or ask the user to verify UI via `pnpm tauri dev`.

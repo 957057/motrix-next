@@ -24,9 +24,10 @@ pnpm tauri dev    # Start dev server (Tauri + Vite)
 Rust backend (standalone):
 
 ```bash
+pnpm build:native-launcher
 cd src-tauri
-cargo check --all-targets
-cargo test --all-targets
+cargo check --workspace --all-targets
+cargo test --workspace --all-targets
 ```
 
 ## ✅ Code Quality
@@ -39,10 +40,10 @@ pnpm format:check                              # Prettier formatting
 npx vue-tsc --noEmit                           # TypeScript strict mode
 pnpm test                                      # Vitest
 npx vite build                                 # Frontend production build
-cd src-tauri && cargo fmt -- --check           # Rust formatting
-cd src-tauri && cargo clippy --all-targets -- -D warnings
-cd src-tauri && cargo check --all-targets
-cd src-tauri && cargo test --all-targets
+cd src-tauri && cargo fmt --all -- --check     # Rust formatting
+cd src-tauri && cargo clippy --workspace --all-targets -- -D warnings
+cd src-tauri && cargo check --workspace --all-targets
+cd src-tauri && cargo test --workspace --all-targets
 ```
 
 Pre-commit hooks (husky + lint-staged) auto-run `eslint --fix` and `prettier --write` on staged files.
@@ -151,10 +152,10 @@ pnpm format:check
 npx vue-tsc --noEmit
 pnpm test
 npx vite build
-cd src-tauri && cargo fmt -- --check
-cd src-tauri && cargo clippy --all-targets -- -D warnings
-cd src-tauri && cargo check --all-targets
-cd src-tauri && cargo test --all-targets
+cd src-tauri && cargo fmt --all -- --check
+cd src-tauri && cargo clippy --workspace --all-targets -- -D warnings
+cd src-tauri && cargo check --workspace --all-targets
+cd src-tauri && cargo test --workspace --all-targets
 ```
 
 ### i18n changes
