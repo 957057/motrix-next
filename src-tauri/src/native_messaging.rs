@@ -7,6 +7,8 @@ use motrix_next_browser_launcher::{
     chromium_manifest_json, firefox_manifest_json, HOST_NAME, LAUNCHER_FILE_STEM,
 };
 use tauri::AppHandle;
+#[cfg(any(windows, target_os = "linux"))]
+use tauri::Manager;
 
 use crate::error::AppError;
 
