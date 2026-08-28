@@ -20,7 +20,8 @@ coverage
 # Tauri / Rust build artifacts
 src-tauri/target
 src-tauri/gen
-src-tauri/binaries/motrix-next-browser-launcher-*
+src-tauri/generated-binaries/*
+!src-tauri/generated-binaries/README.md
 
 # TypeScript build info
 *.tsbuildinfo

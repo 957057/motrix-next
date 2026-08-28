@@ -38,7 +38,7 @@
     "publisher": "AnInsomniacy",
     "copyright": "Copyright © 2025–present AnInsomniacy",
     "createUpdaterArtifacts": true,
-    "externalBin": ["binaries/motrix-next-engine", "binaries/motrix-next-browser-launcher"],
+    "externalBin": ["binaries/motrix-next-engine", "generated-binaries/motrix-next-browser-launcher"],
     "resources": [
       "data/ed2k-bootstrap/server.met",
       "data/ed2k-bootstrap/nodes.dat",
