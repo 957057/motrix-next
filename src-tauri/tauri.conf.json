@@ -3,7 +3,10 @@
   "productName": "MotrixNext",
   "identifier": "com.motrix.next",
   "build": {
-    "beforeDevCommand": "pnpm build:native-launcher && pnpm dev",
+    "beforeDevCommand": {
+      "script": "pnpm build:native-launcher && node node_modules/vite/bin/vite.js",
+      "wait": false
+    },
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "pnpm build:native-launcher && pnpm build",
     "frontendDist": "../dist"
