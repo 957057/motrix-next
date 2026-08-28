@@ -658,7 +658,6 @@ describe('useAppStore', () => {
       await new Promise((resolve) => setTimeout(resolve, 0))
 
       expect(submitManualUrisMock).toHaveBeenCalledTimes(1)
-      expect(submitManualUrisMock.mock.calls[0][1]).not.toMatchObject({ 'pause-metadata': 'false' })
       expect(store.addTaskVisible).toBe(false)
     })
 
@@ -700,9 +699,7 @@ describe('useAppStore', () => {
       store.handleDeepLinkUrls([buildDeepLink('https://example.com/file.zip', 'https://example.com')])
 
       const submittedForm = submitManualUrisMock.mock.calls[0][0]
-      const submittedOptions = submitManualUrisMock.mock.calls[0][1]
       expect(submittedForm.referer).toBe('https://example.com')
-      expect(submittedOptions.referer).toBe('https://example.com')
       expect(store.pendingReferer).toBe('')
     })
 
@@ -715,9 +712,7 @@ describe('useAppStore', () => {
       store.handleDeepLinkUrls([buildDeepLink('https://cdn.quark.cn/file.zip', 'https://pan.quark.cn', 'auth=secret')])
 
       const submittedForm = submitManualUrisMock.mock.calls[0][0]
-      const submittedOptions = submitManualUrisMock.mock.calls[0][1]
       expect(submittedForm.cookie).toBe('auth=secret')
-      expect(submittedOptions.header).toContain('Cookie: auth=secret')
       expect(store.pendingCookie).toBe('')
     })
 
@@ -743,14 +738,10 @@ describe('useAppStore', () => {
       await new Promise((resolve) => setTimeout(resolve, 0))
 
       const submittedForm = submitManualUrisMock.mock.calls[0][0]
-      const submittedOptions = submitManualUrisMock.mock.calls[0][1]
       expect(submittedForm.userAgent).toBe('BrowserUA/1.0')
+      expect(submittedForm.referer).toBe('https://www.amd.com/support')
+      expect(submittedForm.cookie).toBe('auth=secret')
       expect(submittedForm.requestHeaders).toEqual([{ name: 'Accept', value: 'application/octet-stream' }])
-      expect(submittedOptions).toMatchObject({
-        'user-agent': 'BrowserUA/1.0',
-        referer: 'https://www.amd.com/support',
-        header: ['Accept: application/octet-stream', 'Cookie: auth=secret'],
-      })
     })
 
     it('falls back to configured user agent when structured input has none', async () => {
@@ -768,8 +759,8 @@ describe('useAppStore', () => {
       ])
       await new Promise((resolve) => setTimeout(resolve, 0))
 
-      const submittedOptions = submitManualUrisMock.mock.calls[0][1]
-      expect(submittedOptions['user-agent']).toBe('ConfiguredUA/1.0')
+      const submittedForm = submitManualUrisMock.mock.calls[0][0]
+      expect(submittedForm.userAgent).toBe('ConfiguredUA/1.0')
     })
 
     it('keeps structured request headers for manual dialog submission', async () => {

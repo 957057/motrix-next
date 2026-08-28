@@ -601,7 +601,6 @@ async function handleSubmit() {
     if (form.value.uris.trim()) {
       manualResult = await submitManualUris(
         effectiveForm,
-        options,
         taskStore,
         fileCategory,
         getDownloadProxy(preferenceStore.config.proxy),

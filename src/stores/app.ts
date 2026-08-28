@@ -22,8 +22,7 @@ import {
 } from '@shared/utils/batchHelpers'
 import { summarizeExternalInput } from '@shared/utils/externalInputDiagnostics'
 import { parseMotrixDeepLink } from '@shared/utils/motrixDeepLink'
-import { buildEngineOptions, submitManualUris } from '@/composables/useAddTaskSubmit'
-import { getDownloadProxy } from '@/composables/useAddTaskSubmit'
+import { getDownloadProxy, submitManualUris } from '@/composables/useAddTaskSubmit'
 import { usePreferenceStore } from '@/stores/preference'
 import { useTaskStore } from '@/stores/task'
 import type {
@@ -429,13 +428,11 @@ export const useAppStore = defineStore('app', () => {
     const taskStore = useTaskStore()
 
     const form = buildExtensionSubmitForm(url, preferenceStore, context, filenameHint)
-    const options = buildEngineOptions(form)
     externalInputSubmitCount += 1
     externalInputSubmitting.value = true
     try {
       const result = await submitManualUris(
         form,
-        options,
         taskStore,
         {
           enabled: preferenceStore.config.fileCategoryEnabled,
