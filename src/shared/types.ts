@@ -416,6 +416,8 @@ export interface AppConfig {
   btFirstLastPieceFirst: boolean
   btRateLimitOverhead: boolean
   btAnonymousMode: boolean
+  btUserAgent: string
+  btPeerIdPrefix: string
   btBlocklistScope: BtBlocklistScope
   btDhtEnabled: boolean
   btPeerExchangeEnabled: boolean

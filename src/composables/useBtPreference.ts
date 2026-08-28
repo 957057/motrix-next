@@ -52,6 +52,8 @@ export interface BtForm {
   btFirstLastPieceFirst: boolean
   btRateLimitOverhead: boolean
   btAnonymousMode: boolean
+  btUserAgent: string
+  btPeerIdPrefix: string
   btBlocklistScope: BtBlocklistScope
   btDhtEnabled: boolean
   btPeerExchangeEnabled: boolean
@@ -88,6 +90,8 @@ export function buildBtForm(config: AppConfig): BtForm {
     btFirstLastPieceFirst: config.btFirstLastPieceFirst ?? D.btFirstLastPieceFirst,
     btRateLimitOverhead: config.btRateLimitOverhead ?? D.btRateLimitOverhead,
     btAnonymousMode: config.btAnonymousMode ?? D.btAnonymousMode,
+    btUserAgent: config.btUserAgent ?? D.btUserAgent,
+    btPeerIdPrefix: config.btPeerIdPrefix ?? D.btPeerIdPrefix,
     btBlocklistScope: config.btBlocklistScope ?? D.btBlocklistScope,
     btDhtEnabled: config.btDhtEnabled ?? D.btDhtEnabled,
     btPeerExchangeEnabled: config.btPeerExchangeEnabled ?? D.btPeerExchangeEnabled,
@@ -135,6 +139,8 @@ export function buildBtSystemConfig(f: BtForm): Record<string, string> {
     'bt-first-last-piece-first': String(!!f.btFirstLastPieceFirst),
     'bt-rate-limit-overhead': String(!!f.btRateLimitOverhead),
     'bt-anonymous-mode': String(!!f.btAnonymousMode),
+    'bt-user-agent': f.btUserAgent,
+    'bt-peer-id-prefix': f.btPeerIdPrefix,
     'bt-blocklist-scope': f.btBlocklistScope,
     'enable-dht': String(!!f.btDhtEnabled),
     'enable-peer-exchange': String(!!f.btPeerExchangeEnabled),

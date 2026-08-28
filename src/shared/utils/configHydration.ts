@@ -20,6 +20,7 @@ import { normalizeProxyMode } from '@shared/utils/proxy'
 import type { AppConfig, ClipboardConfig, PortConflictRecoveryConfig, ProxyConfig } from '@shared/types'
 import { normalizeFileCategory } from '@shared/utils/fileCategory'
 import { isValidOptionalIpAddress } from '@shared/utils/ipAddress'
+import { isValidBtPeerIdPrefix, isValidBtUserAgent } from '@shared/utils/btIdentity'
 import {
   normalizeRecentUserAgentProfileIds,
   normalizeUserAgentProfiles,
@@ -225,6 +226,14 @@ function normalizeScalarValues(config: Record<string, unknown>, repairs: string[
     repairs,
   )
   repairEnum(config, 'btTransport', ['tcp', 'utp', 'both'] as const, DEFAULT_APP_CONFIG.btTransport, repairs)
+  if (!isValidBtUserAgent(config.btUserAgent)) {
+    config.btUserAgent = DEFAULT_APP_CONFIG.btUserAgent
+    repairs.push('btUserAgent')
+  }
+  if (!isValidBtPeerIdPrefix(config.btPeerIdPrefix)) {
+    config.btPeerIdPrefix = DEFAULT_APP_CONFIG.btPeerIdPrefix
+    repairs.push('btPeerIdPrefix')
+  }
   repairEnum(
     config,
     'magnetFileSelectionPolicy',

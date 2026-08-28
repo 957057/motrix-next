@@ -23,6 +23,8 @@ describe('BitTorrent preference contract', () => {
     expect(config).toMatchObject({
       'bt-encryption': 'preferred',
       'bt-transport': 'both',
+      'bt-user-agent': 'qBittorrent/5.2.3',
+      'bt-peer-id-prefix': '-qB5230-',
       'enable-dht': 'true',
       'pause-metadata': 'true',
       'bt-tracker': 'udp://one.example:6969,udp://two.example:6969',

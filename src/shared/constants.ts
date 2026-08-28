@@ -88,6 +88,8 @@ export const PORT_RECOVERY_RANGE_START = 29000
 export const PORT_RECOVERY_RANGE_END = 29999
 export const ENGINE_DEFAULT_STREAM_CONNECTIONS = 64
 export const ENGINE_DEFAULT_BT_MAX_PEERS = 128
+export const ENGINE_DEFAULT_BT_USER_AGENT = 'qBittorrent/5.2.3'
+export const ENGINE_DEFAULT_BT_PEER_ID_PREFIX = '-qB5230-'
 
 // Safe thresholds — values above these trigger a user confirmation warning.
 // These are "recommended" values displayed in UI labels; exceeding them is allowed
@@ -269,6 +271,8 @@ export const DEFAULT_APP_CONFIG = {
   btFirstLastPieceFirst: false,
   btRateLimitOverhead: false,
   btAnonymousMode: false,
+  btUserAgent: ENGINE_DEFAULT_BT_USER_AGENT,
+  btPeerIdPrefix: ENGINE_DEFAULT_BT_PEER_ID_PREFIX,
   btBlocklistScope: 'peers' as const,
   btDhtEnabled: true,
   btPeerExchangeEnabled: true, // improves peer discovery inside active swarms

@@ -160,6 +160,18 @@ describe('hydrateAppConfig', () => {
     expect(result.repairs).toEqual(expect.arrayContaining(['btExternalIp', 'btExternalPort']))
   })
 
+  it('repairs invalid BitTorrent identity values', () => {
+    const result = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
+      btUserAgent: 'invalid\nidentity',
+      btPeerIdPrefix: '超过二十字节的节点标识前缀',
+    })
+
+    expect(result.config.btUserAgent).toBe(DEFAULT_APP_CONFIG.btUserAgent)
+    expect(result.config.btPeerIdPrefix).toBe(DEFAULT_APP_CONFIG.btPeerIdPrefix)
+    expect(result.repairs).toEqual(expect.arrayContaining(['btUserAgent', 'btPeerIdPrefix']))
+  })
+
   it('preserves stream connection values accepted by the engine', () => {
     const valid = hydrateAppConfig({
       configVersion: CONFIG_VERSION,

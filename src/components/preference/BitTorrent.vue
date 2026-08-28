@@ -15,6 +15,7 @@ import { DEFAULT_TRACKER_SOURCE, SAFE_LIMIT_BT_MAX_PEERS, TRACKER_SOURCE_OPTIONS
 import { logger } from '@shared/logger'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { buildSystemConfigFromAppConfig } from '@shared/utils/systemConfig'
+import { BT_PEER_ID_PREFIX_MAX_BYTES, isValidBtPeerIdPrefix, isValidBtUserAgent } from '@shared/utils/btIdentity'
 import { useAppMessage } from '@/composables/useAppMessage'
 import {
   buildBtForm,
@@ -217,6 +218,18 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } =
       : null,
   beforeSave: async (f) => {
     pendingPortSwitch.value = null
+    if (!isValidBtUserAgent(f.btUserAgent)) {
+      message.error(t('preferences.bt-user-agent-invalid'))
+      return false
+    }
+    if (!isValidBtPeerIdPrefix(f.btPeerIdPrefix)) {
+      message.error(
+        t('preferences.bt-peer-id-prefix-invalid', {
+          max: BT_PEER_ID_PREFIX_MAX_BYTES,
+        }),
+      )
+      return false
+    }
     const endpointValidationKey = validateBtEndpoint(f)
     if (endpointValidationKey) {
       message.error(t(endpointValidationKey))
@@ -260,15 +273,20 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } =
     reconcileBlocklistInBackground()
   },
 })
-const numericFieldsValid = computed(() =>
-  areConfigFieldsValid({
-    btMaxPeers: form.value.btMaxPeers,
-    btMaxConnections: form.value.btMaxConnections,
-    btMaxUploads: form.value.btMaxUploads,
-    btMaxUploadsPerTorrent: form.value.btMaxUploadsPerTorrent,
-    listenPort: form.value.listenPort,
-    btExternalPort: form.value.btExternalPort,
-  }),
+const btUserAgentValid = computed(() => isValidBtUserAgent(form.value.btUserAgent))
+const btPeerIdPrefixValid = computed(() => isValidBtPeerIdPrefix(form.value.btPeerIdPrefix))
+const formFieldsValid = computed(
+  () =>
+    btUserAgentValid.value &&
+    btPeerIdPrefixValid.value &&
+    areConfigFieldsValid({
+      btMaxPeers: form.value.btMaxPeers,
+      btMaxConnections: form.value.btMaxConnections,
+      btMaxUploads: form.value.btMaxUploads,
+      btMaxUploadsPerTorrent: form.value.btMaxUploadsPerTorrent,
+      listenPort: form.value.listenPort,
+      btExternalPort: form.value.btExternalPort,
+    }),
 )
 
 function onBtPortDice() {
@@ -541,7 +559,7 @@ onMounted(() => {
           <NSwitch v-model:value="form.btDhtEnabled" />
         </NFormItem>
 
-        <NDivider title-placement="left">{{ t('preferences.bt-privacy-section') }}</NDivider>
+        <NDivider title-placement="left">{{ t('preferences.bt-identity-privacy-section') }}</NDivider>
         <NFormItem>
           <template #label>
             <PreferenceHintLabel
@@ -550,6 +568,31 @@ onMounted(() => {
             />
           </template>
           <NSwitch v-model:value="form.btAnonymousMode" />
+        </NFormItem>
+        <NFormItem
+          :validation-status="btUserAgentValid ? undefined : 'error'"
+          :feedback="btUserAgentValid ? undefined : t('preferences.bt-user-agent-invalid')"
+        >
+          <template #label>
+            <PreferenceHintLabel :label="t('preferences.bt-user-agent')" :hint="t('preferences.bt-user-agent-hint')" />
+          </template>
+          <NInput v-model:value="form.btUserAgent" class="pref-control-auto" />
+        </NFormItem>
+        <NFormItem
+          :validation-status="btPeerIdPrefixValid ? undefined : 'error'"
+          :feedback="
+            btPeerIdPrefixValid
+              ? undefined
+              : t('preferences.bt-peer-id-prefix-invalid', { max: BT_PEER_ID_PREFIX_MAX_BYTES })
+          "
+        >
+          <template #label>
+            <PreferenceHintLabel
+              :label="t('preferences.bt-peer-id-prefix')"
+              :hint="t('preferences.bt-peer-id-prefix-hint', { max: BT_PEER_ID_PREFIX_MAX_BYTES })"
+            />
+          </template>
+          <NInput v-model:value="form.btPeerIdPrefix" class="pref-control-auto" />
         </NFormItem>
 
         <NDivider title-placement="left">{{ t('preferences.bt-peer-blocklist') }}</NDivider>
@@ -706,7 +749,7 @@ onMounted(() => {
         </NFormItem>
       </NForm>
     </div>
-    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionBar :is-dirty="isDirty" :is-valid="formFieldsValid" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 

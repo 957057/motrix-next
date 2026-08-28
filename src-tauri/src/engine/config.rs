@@ -97,7 +97,8 @@ pub(crate) struct ManagedEngineConfig<'a> {
 }
 
 fn preserves_empty_value(key: &str) -> bool {
-    PROXY_CLEAR_KEYS.contains(&key) || key == "seed-time"
+    PROXY_CLEAR_KEYS.contains(&key)
+        || matches!(key, "seed-time" | "bt-user-agent" | "bt-peer-id-prefix")
 }
 
 fn config_bool(config: &serde_json::Value, key: &str) -> bool {
@@ -493,7 +494,9 @@ mod tests {
             &json!({
                 "all-proxy": "",
                 "all-proxy-user": "",
-                "seed-time": ""
+                "seed-time": "",
+                "bt-user-agent": "",
+                "bt-peer-id-prefix": ""
             }),
             managed(),
         )
@@ -502,6 +505,8 @@ mod tests {
         assert_eq!(option_value(&content, "all-proxy"), Some(""));
         assert_eq!(option_value(&content, "all-proxy-user"), Some(""));
         assert_eq!(option_value(&content, "seed-time"), Some(""));
+        assert_eq!(option_value(&content, "bt-user-agent"), Some(""));
+        assert_eq!(option_value(&content, "bt-peer-id-prefix"), Some(""));
     }
 
     #[test]
