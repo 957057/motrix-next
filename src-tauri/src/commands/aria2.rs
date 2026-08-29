@@ -525,36 +525,6 @@ async fn remove_engine_task(client: &Aria2Client, gid: &str) -> Result<(), AppEr
     }
 }
 
-fn uploaded_torrent_metadata_path(options: &serde_json::Value) -> Option<PathBuf> {
-    let path = PathBuf::from(options.get("torrent-file")?.as_str()?);
-    let name = path.file_name()?.to_str()?;
-    let hash = name.strip_suffix(".torrent")?;
-    (hash.len() == 40 && hash.bytes().all(|byte| byte.is_ascii_hexdigit())).then_some(path)
-}
-
-async fn remove_uploaded_torrent_metadata(client: &Aria2Client, gid: &str) {
-    let Some(path) = client
-        .get_option(gid)
-        .await
-        .ok()
-        .as_ref()
-        .and_then(uploaded_torrent_metadata_path)
-    else {
-        return;
-    };
-    match std::fs::remove_file(&path) {
-        Ok(()) => log::debug!(
-            "aria2: removed uploaded torrent metadata {}",
-            path.display()
-        ),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-        Err(error) => log::warn!(
-            "aria2: failed to remove uploaded torrent metadata {}: {error}",
-            path.display()
-        ),
-    }
-}
-
 fn is_p2p_sharing_task(task: &Aria2Task) -> bool {
     matches!(task.status.as_str(), "active" | "paused")
         && (task.bittorrent.is_some() || task.ed2k.is_some())
@@ -604,7 +574,6 @@ async fn delete_task(
     info_hash: Option<&str>,
 ) -> Result<(), AppError> {
     log::info!("aria2:delete gid={gid}");
-    remove_uploaded_torrent_metadata(client, gid).await;
     remove_engine_task(client, gid).await?;
     history.remove_task_records(gid, info_hash).await
 }
@@ -630,7 +599,6 @@ async fn finish_sharing_task(
         added_at,
     );
     history.add_record(&record).await?;
-    remove_uploaded_torrent_metadata(client, gid).await;
     remove_engine_task(client, gid).await
 }
 
@@ -805,28 +773,9 @@ pub async fn aria2_resume_eligible(
 mod tests {
     use super::{
         is_download_result_transitioning, is_missing_download, is_p2p_sharing_task,
-        is_terminal_download_status, sanitize_out_option, uploaded_torrent_metadata_path, AppError,
+        is_terminal_download_status, sanitize_out_option, AppError,
     };
     use crate::aria2::types::{Aria2BtInfo, Aria2Ed2kInfo, Aria2Task};
-
-    #[test]
-    fn uploaded_torrent_metadata_accepts_engine_hash_names() {
-        let options = serde_json::json!({
-            "torrent-file": "/tmp/0123456789abcdef0123456789abcdef01234567.torrent"
-        });
-        assert_eq!(
-            uploaded_torrent_metadata_path(&options)
-                .as_deref()
-                .and_then(std::path::Path::to_str),
-            Some("/tmp/0123456789abcdef0123456789abcdef01234567.torrent")
-        );
-    }
-
-    #[test]
-    fn uploaded_torrent_metadata_rejects_user_filenames() {
-        let options = serde_json::json!({ "torrent-file": "/downloads/release.torrent" });
-        assert!(uploaded_torrent_metadata_path(&options).is_none());
-    }
 
     #[test]
     fn bare_filename_passes_through() {

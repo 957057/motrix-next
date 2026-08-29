@@ -216,7 +216,6 @@ describe('filterHotReloadableKeys', () => {
       out: 'output.zip',
       pause: 'true',
       'select-file': '1-3',
-      'rpc-save-upload-metadata': 'true',
     }
     expect(filterHotReloadableKeys(config)).toEqual({})
   })

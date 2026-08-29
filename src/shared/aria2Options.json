@@ -81,7 +81,6 @@
     "remote-time",
     "retry-wait",
     "rpc-listen-port",
-    "rpc-save-upload-metadata",
     "rpc-secret",
     "seed-ratio",
     "seed-time",
@@ -101,7 +100,6 @@
     "out",
     "pause",
     "rpc-listen-port",
-    "rpc-save-upload-metadata",
     "rpc-secret",
     "select-file"
   ]
