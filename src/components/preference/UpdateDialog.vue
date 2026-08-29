@@ -385,7 +385,11 @@ defineExpose({ open, present })
           {{ t('app.close') }}
         </NButton>
         <NButton class="action-btn" :type="actionType" :disabled="actionDisabled" @click="handleActionClick">
-          {{ t(actionLabel) }}
+          <span class="action-label">
+            <Transition name="action-label-swap" mode="out-in">
+              <span :key="actionLabel">{{ t(actionLabel) }}</span>
+            </Transition>
+          </span>
         </NButton>
       </footer>
     </section>
@@ -456,7 +460,13 @@ defineExpose({ open, present })
 }
 .action-btn {
   min-width: 150px;
-  transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.action-label {
+  display: inline-grid;
+  place-items: center;
+}
+.action-label > span {
+  grid-area: 1 / 1;
 }
 .update-dialog-title-group {
   display: flex;
@@ -771,6 +781,29 @@ defineExpose({ open, present })
   .update-dialog-footer {
     padding-right: 20px;
     padding-left: 20px;
+  }
+}
+</style>
+
+<style>
+.action-label-swap-enter-active {
+  animation: action-pulse 0.4s ease;
+  transition: opacity 0.28s cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+.action-label-swap-leave-active {
+  transition: opacity 0.18s cubic-bezier(0.3, 0, 0.8, 0.15);
+}
+.action-label-swap-enter-from,
+.action-label-swap-leave-to {
+  opacity: 0;
+}
+@keyframes action-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
   }
 }
 </style>
