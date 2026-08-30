@@ -93,7 +93,6 @@ src-tauri/
 │   │   ├── http_api.rs         # Local HTTP API server for browser extensions
 │   │   ├── monitor.rs          # Task lifecycle monitor, history DB persistence, event emission
 │   │   ├── notification.rs     # Native notification dispatch service
-│   │   ├── notification_i18n.rs # Localised notification strings
 │   │   ├── port_guard.rs       # Runtime port conflict detection and recovery
 │   │   ├── power.rs            # Sleep prevention and power guard service
 │   │   ├── stat.rs             # Global stat polling, Dock badge, Dock progress bar (custom NSProgressIndicator)
@@ -101,10 +100,12 @@ src-tauri/
 │   ├── db_guard.rs             # Database health check, corruption detection, and auto-rebuild
 │   ├── gpu_guard.rs            # GPU compatibility detection and WebView renderer fallback
 │   ├── history.rs              # HistoryDbState: Rust-side SQLite history record persistence
+│   ├── i18n.rs                 # Native locale negotiation and rust-i18n message access
 │   ├── error.rs                # AppError enum (Store, Engine, Io, NotFound, Updater, Upnp)
 │   ├── menu.rs                 # Native menu builder (macOS only, cfg-gated)
 │   ├── tray.rs                 # System tray setup + native event handling (lightweight mode safe)
 │   └── upnp.rs                 # UPnP/IGD port mapping with renewal loop
+├── locales/                    # Compile-time embedded native JSON translations
 ├── migrations/
 │   ├── 001_download_history.sql  # Initial history table schema
 │   ├── 002_add_added_at.sql      # Added added_at column + task_birth table
@@ -269,8 +270,9 @@ The hooks file defines three injection points:
 ### Rules
 
 1. **NEVER edit locale files manually one by one.** Always use a Python batch script.
-2. Strings containing `'` must be escaped as `\'` in JS source files.
-3. English (`en-US`) keys serve as the fallback — always verify this locale first.
+2. Every locale owns one `messages.json`; preserve its nested namespaces and placeholders.
+3. English (`en-US`) is the schema and fallback — always verify it first.
+4. Register locale metadata in `src/shared/locales/catalog.json` and native strings in `src-tauri/locales/<locale>.json`.
 
 ### 27 Locale Directories
 
@@ -283,9 +285,10 @@ ar bg ca de el en-US es fa fr hi hu id it ja ko nb nl pl pt-BR ro ru th tr uk vi
 ```python
 #!/usr/bin/env python3
 """Batch-update locale files with native translations."""
-import os, re
+import json
+from pathlib import Path
 
-LOCALES_DIR = "src/shared/locales"
+LOCALES_DIR = Path("src/shared/locales")
 
 TRANSLATIONS = {
     "ar":    ("Arabic text",),
@@ -297,20 +300,16 @@ TRANSLATIONS = {
 }
 
 def update_locale(locale_dir, values):
-    filepath = os.path.join(LOCALES_DIR, locale_dir, "preferences.js")
-    with open(filepath, "r", encoding="utf-8") as f:
-        content = f.read()
-    # Use regex or string replacement to insert/update keys
-    # Escape single quotes in values: value.replace("'", "\\'")
-    # Write back
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(content)
+    filepath = LOCALES_DIR / locale_dir / "messages.json"
+    messages = json.loads(filepath.read_text(encoding="utf-8"))
+    messages["preferences"]["new-key"] = values[0]
+    filepath.write_text(json.dumps(messages, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 for locale, vals in sorted(TRANSLATIONS.items()):
     update_locale(locale, vals)
 ```
 
-> **Critical:** After running, verify with `npx vite build` — locale parse errors will surface here.
+> **Critical:** After running, verify with `pnpm lint`, `pnpm check:repo`, `npx vue-tsc --noEmit`, and `npx vite build`.
 
 ---
 

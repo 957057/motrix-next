@@ -2,6 +2,7 @@
 import { parseInt } from 'lodash-es'
 import { join } from '@tauri-apps/api/path'
 import type { Aria2Task, Aria2File } from '@shared/types'
+import type { I18nKey } from '@shared/i18nTypes'
 import { resolveTaskFilePath } from '@/composables/useArchivedPaths'
 
 /** Calculates download progress as a percentage. */
@@ -149,16 +150,16 @@ export const checkTaskIsSharing = (task: Aria2Task): boolean => {
   return getTaskSharingPhase(task) === 'active'
 }
 
-export const getSharingActionLabelKey = (kind: TaskSharingKind, action: 'pause' | 'resume' | 'finish'): string => {
+export const getSharingActionLabelKey = (kind: TaskSharingKind, action: 'pause' | 'resume' | 'finish'): I18nKey => {
   return kind === 'bt' ? `task.${action}-seeding` : `task.${action}-sharing`
 }
 
-export const getSharingStatusLabelKey = (state: TaskSharingState): string => {
+export const getSharingStatusLabelKey = (state: TaskSharingState): I18nKey => {
   if (state.phase === 'paused') return state.kind === 'bt' ? 'task.seeding-paused' : 'task.sharing-paused'
   return state.kind === 'bt' ? 'task.seeding' : 'task.sharing'
 }
 
-export const getSharingResultLabelKey = (kind: TaskSharingKind, result: 'success' | 'fail'): string => {
+export const getSharingResultLabelKey = (kind: TaskSharingKind, result: 'success' | 'fail'): I18nKey => {
   return kind === 'bt' ? `task.finish-seeding-${result}` : `task.finish-sharing-${result}`
 }
 

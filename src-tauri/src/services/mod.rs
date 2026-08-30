@@ -22,7 +22,6 @@ pub mod frontend_action;
 pub mod http_api;
 pub mod monitor;
 pub mod notification;
-pub mod notification_i18n;
 pub mod port_guard;
 pub mod power;
 pub mod speed;

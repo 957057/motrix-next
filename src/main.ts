@@ -2,7 +2,8 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router'
-import { i18n, loadLocale, SUPPORTED_LOCALES } from '@/composables/useLocale'
+import { i18n, loadLocale } from '@/composables/useLocale'
+import { isSupportedLocale, SUPPORTED_LOCALES, type SupportedLocale } from '@shared/localeCatalog'
 import { setI18nLocale } from '@shared/utils/i18n'
 import { usePreferenceStore } from './stores/preference'
 import { useTaskStore } from './stores/task'
@@ -279,7 +280,7 @@ if (import.meta.env.PROD) {
     await preferenceStore.loadPreference()
 
     const storedLocale = preferenceStore.locale
-    let resolvedLocale: string
+    let resolvedLocale: SupportedLocale
 
     if (!storedLocale || storedLocale === 'auto') {
       // First install (empty/auto) or explicit Follow System mode:
@@ -302,16 +303,14 @@ if (import.meta.env.PROD) {
       // overwrite it — the config stays 'auto' across restarts.
     } else {
       // Explicit locale chosen by the user (e.g. 'zh-CN', 'ja').
-      resolvedLocale = storedLocale
+      resolvedLocale = isSupportedLocale(storedLocale) ? storedLocale : 'en-US'
     }
 
     // Apply resolved locale to vue-i18n and expose it on the store
     // so downstream consumers (direction, General.vue) can read it.
     // Locale messages are lazily loaded — only en-US ships in the main bundle.
-    if (resolvedLocale) {
-      await loadLocale(resolvedLocale)
-      setI18nLocale(i18n, resolvedLocale)
-    }
+    await loadLocale(resolvedLocale)
+    setI18nLocale(i18n, resolvedLocale)
 
     // Flush deferred migration toasts now that i18n locale is active.
     // loadPreference() buffers these signals to avoid showing English toasts.

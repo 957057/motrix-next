@@ -7,7 +7,9 @@
  * Codes 0 (FINISHED) and 31 (REMOVED/reserved) are intentionally excluded.
  * Unknown codes fall back to displaying aria2's raw errorMessage.
  */
-export const ARIA2_ERROR_CODES: Record<string, string> = {
+import type { I18nKey } from '@shared/i18nTypes'
+
+export const ARIA2_ERROR_CODES: Record<string, I18nKey> = {
   '1': 'task.error-unknown',
   '2': 'task.error-timeout',
   '3': 'task.error-not-found',

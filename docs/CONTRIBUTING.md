@@ -72,28 +72,15 @@ First you need to determine the English abbreviation of a language as **locale**
 
 The internationalization of Motrix Next uses [vue-i18n](https://vue-i18n.intlify.dev/).
 
-The configuration files are divided by **locale** under `src/shared/locales/`, such as `src/shared/locales/en-US` and `src/shared/locales/zh-CN`.
-
-There are language files in each directory organized by business module:
-
-- `about.js`
-- `app.js`
-- `edit.js`
-- `help.js`
-- `index.js`
-- `menu.js`
-- `preferences.js`
-- `subnav.js`
-- `task.js`
-- `window.js`
+Desktop translations live in `src/shared/locales/<locale>/messages.json`. Each file contains the same nested namespaces, with `en-US` as the canonical schema and fallback. Locale metadata is registered once in `src/shared/locales/catalog.json`.
 
 ### Adding a New Language
 
-1. Create a new directory under `src/shared/locales/` with the locale code (e.g. `src/shared/locales/de/`)
-2. Copy the files from `src/shared/locales/en-US/` as a template
-3. Translate each file
-4. Register the locale in `src/shared/locales/index.js`
-5. Submit a Pull Request
+1. Create `src/shared/locales/<locale>/messages.json` from the en-US resource
+2. Translate every value without changing keys or placeholders
+3. Register the locale in `src/shared/locales/catalog.json`
+4. Add the native Rust resource at `src-tauri/locales/<locale>.json`
+5. Run `pnpm lint`, `pnpm check:repo`, and `npx vue-tsc --noEmit`
 
 ## 💬 Commit Messages
 

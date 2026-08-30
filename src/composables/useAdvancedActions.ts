@@ -22,6 +22,7 @@ import { buildSystemConfigFromAppConfig } from '@shared/utils/systemConfig'
 import { useEngineStore } from '@/stores/engine'
 import type { AppConfig, HistoryRecord } from '@shared/types'
 import type { DataTableSortState, PaginationProps } from 'naive-ui'
+import type { I18nKey } from '@shared/i18nTypes'
 
 interface AdvancedActionsDeps {
   t: (key: string, params?: Record<string, unknown>) => string
@@ -51,7 +52,7 @@ interface AdvancedActionsDeps {
   resetSnapshot: () => void
 }
 
-const STATUS_I18N_MAP: Record<string, string> = {
+const STATUS_I18N_MAP: Record<string, I18nKey> = {
   complete: 'task.task-complete',
   error: 'task.task-error',
   removed: 'task.task-removed',

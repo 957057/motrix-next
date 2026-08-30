@@ -400,7 +400,7 @@ watch(
                 type="error"
                 @click="removeProfile"
               >
-                {{ t('edit.delete') }}
+                {{ t('app.delete') }}
               </NButton>
               <NButton
                 v-else-if="activePanel === 'rules' && selectedRuleId"
@@ -410,7 +410,7 @@ watch(
                 type="error"
                 @click="removeRule"
               >
-                {{ t('edit.delete') }}
+                {{ t('app.delete') }}
               </NButton>
               <NText v-else key="delete-empty" depth="3" />
             </Transition>

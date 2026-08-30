@@ -13,7 +13,8 @@ import { getVersion as getAppVersion } from '@tauri-apps/api/app'
 import { getVersion as getAria2Version } from '@/api/aria2'
 import { getLocale } from 'tauri-plugin-locale-api'
 import { resolveSystemLocale } from '@shared/utils/locale'
-import { SUPPORTED_LOCALES, loadLocale } from '@/composables/useLocale'
+import { loadLocale } from '@/composables/useLocale'
+import { isSupportedLocale, LOCALE_CATALOG, SUPPORTED_LOCALES } from '@shared/localeCatalog'
 import { logger } from '@shared/logger'
 import { writeAppClipboardText } from '@shared/utils'
 import {
@@ -94,7 +95,9 @@ const { form, isDirty, handleSave, handleReset, patchSnapshot, resetSnapshot } =
     const prevLocale = prevConfig.locale || 'auto'
     if (f.locale !== prevLocale) {
       // Determine the actual target locale for bilingual dialog rendering.
-      const targetLocale = f.locale === 'auto' ? detectedLocaleCode.value || 'en-US' : f.locale
+      const targetLocale = isSupportedLocale(f.locale)
+        ? f.locale
+        : resolveSystemLocale(detectedLocaleCode.value, SUPPORTED_LOCALES)
       const isEn = targetLocale === 'en-US'
       // Locale messages are lazy-loaded — pull in the target locale so the
       // dialog can render in it (falls back to English if loading fails).
@@ -200,35 +203,7 @@ watch(
   },
 )
 
-const localeOptions = [
-  { label: 'English', value: 'en-US' },
-  { label: '简体中文 · Chinese Simplified', value: 'zh-CN' },
-  { label: '繁體中文 · Chinese Traditional', value: 'zh-TW' },
-  { label: '日本語 · Japanese', value: 'ja' },
-  { label: '한국어 · Korean', value: 'ko' },
-  { label: 'Français · French', value: 'fr' },
-  { label: 'Deutsch · German', value: 'de' },
-  { label: 'Español · Spanish', value: 'es' },
-  { label: 'Português · Portuguese (Brazil)', value: 'pt-BR' },
-  { label: 'Русский · Russian', value: 'ru' },
-  { label: 'Türkçe · Turkish', value: 'tr' },
-  { label: 'العربية · Arabic', value: 'ar' },
-  { label: 'Български · Bulgarian', value: 'bg' },
-  { label: 'Català · Catalan', value: 'ca' },
-  { label: 'Ελληνικά · Greek', value: 'el' },
-  { label: 'فارسی · Persian', value: 'fa' },
-  { label: 'Magyar · Hungarian', value: 'hu' },
-  { label: 'हिन्दी · Hindi', value: 'hi' },
-  { label: 'Bahasa Indonesia · Indonesian', value: 'id' },
-  { label: 'Italiano · Italian', value: 'it' },
-  { label: 'Norsk Bokmål · Norwegian', value: 'nb' },
-  { label: 'Nederlands · Dutch', value: 'nl' },
-  { label: 'Polski · Polish', value: 'pl' },
-  { label: 'Română · Romanian', value: 'ro' },
-  { label: 'ไทย · Thai', value: 'th' },
-  { label: 'Українська · Ukrainian', value: 'uk' },
-  { label: 'Tiếng Việt · Vietnamese', value: 'vi' },
-]
+const localeOptions = LOCALE_CATALOG.map(({ code, label }) => ({ label, value: code }))
 
 /** Dynamic label for the 'auto' option. */
 const autoLocaleLabel = computed(() => {

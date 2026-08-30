@@ -2,10 +2,11 @@
 
 use super::config::RuntimeConfig;
 use super::monitor::{events, TaskEvent};
-use super::notification_i18n::{
-    format_batch_task_message, format_error_message, format_task_message, texts_for_locale,
-};
 use crate::error::AppError;
+use crate::i18n::{
+    bt_complete, download_complete, download_failed, download_start, ed2k_complete,
+    resolve_preferred_locale,
+};
 use tauri::Manager;
 
 #[cfg(target_os = "linux")]
@@ -136,7 +137,7 @@ pub struct TaskNotificationContent {
     pub kind: TaskNotificationKind,
     pub title: String,
     pub body: String,
-    pub locale: &'static str,
+    pub locale: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -194,51 +195,28 @@ pub fn build_task_notification(
         return None;
     }
 
-    let requested_locale = if config.locale == "auto" {
-        sys_locale::get_locale().unwrap_or_else(|| "en-US".to_string())
-    } else {
-        config.locale.clone()
-    };
-    let locale = super::notification_i18n::resolve_supported_locale(&requested_locale);
-    let texts = texts_for_locale(locale);
+    let locale = resolve_preferred_locale(&config.locale);
     let task_name = event.name.as_str();
 
-    let (title, body) = match kind {
+    let message = match kind {
         TaskNotificationKind::Start => return None,
-        TaskNotificationKind::Complete => (
-            texts.download_complete_title.to_string(),
-            format_task_message(texts.download_complete_body, task_name),
-        ),
+        TaskNotificationKind::Complete => download_complete(&locale, task_name),
         TaskNotificationKind::P2pDownloadComplete => {
             if event.sharing_kind == Some("ed2k") {
-                (
-                    texts.ed2k_complete_title.to_string(),
-                    format_task_message(texts.ed2k_complete_body, task_name),
-                )
+                ed2k_complete(&locale, task_name)
             } else {
-                (
-                    texts.bt_complete_title.to_string(),
-                    format_task_message(texts.bt_complete_body, task_name),
-                )
+                bt_complete(&locale, task_name)
             }
         }
         TaskNotificationKind::Error => {
-            let reason = event
-                .error_message
-                .as_deref()
-                .filter(|message| !message.trim().is_empty())
-                .unwrap_or(texts.error_unknown);
-            (
-                texts.download_failed_title.to_string(),
-                format_error_message(texts.download_failed_body, task_name, reason),
-            )
+            download_failed(&locale, task_name, event.error_message.as_deref())
         }
     };
 
     Some(TaskNotificationContent {
         kind,
-        title,
-        body,
+        title: message.title,
+        body: message.body,
         locale,
     })
 }
@@ -255,27 +233,13 @@ pub fn build_task_start_notification(
         .iter()
         .map(|name| name.trim())
         .find(|name| !name.is_empty())?;
-    let requested_locale = if config.locale == "auto" {
-        sys_locale::get_locale().unwrap_or_else(|| "en-US".to_string())
-    } else {
-        config.locale.clone()
-    };
-    let locale = super::notification_i18n::resolve_supported_locale(&requested_locale);
-    let texts = texts_for_locale(locale);
-    let body = if task_names.len() == 1 {
-        format_task_message(texts.download_start_body, first_name)
-    } else {
-        format_batch_task_message(
-            texts.download_batch_start_body,
-            first_name,
-            task_names.len().saturating_sub(1),
-        )
-    };
+    let locale = resolve_preferred_locale(&config.locale);
+    let message = download_start(&locale, first_name, task_names.len().saturating_sub(1));
 
     Some(TaskNotificationContent {
         kind: TaskNotificationKind::Start,
-        title: texts.download_start_title.to_string(),
-        body,
+        title: message.title,
+        body: message.body,
         locale,
     })
 }
@@ -315,7 +279,7 @@ pub fn send_app_notification(
         kind: TaskNotificationKind::Start,
         title: title.to_string(),
         body: body.to_string(),
-        locale: "frontend",
+        locale: "frontend".to_string(),
     };
     send_native_notification(app, &content)
 }

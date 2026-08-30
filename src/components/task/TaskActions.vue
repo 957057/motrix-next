@@ -8,6 +8,7 @@ import { useTaskStore } from '@/stores/task'
 import { isEngineReady } from '@/api/aria2'
 import { TASK_STATUS } from '@shared/constants'
 import type { Aria2Task } from '@shared/types'
+import type { I18nKey } from '@shared/i18nTypes'
 import { getTaskSharingState } from '@shared/utils/task'
 import { deleteTaskFiles } from '@/composables/useFileDelete'
 
@@ -48,7 +49,7 @@ const preferenceStore = usePreferenceStore()
 const currentTab = computed(() => taskStore.currentList)
 
 /** Map sort field key to its i18n label. */
-const SORT_LABELS: Record<string, string> = {
+const SORT_LABELS: Record<ProgressSortField | TerminalSortField | AllSortField, I18nKey> = {
   manual: 'task.sort-manual',
   'added-at': 'task.sort-added-at',
   'completed-at': 'task.sort-completed-at',

@@ -1,6 +1,7 @@
 /** @fileoverview Application-wide constants: themes, intervals, suffixes, limits. */
 import { DEFAULT_TASK_MANUAL_ORDER, DEFAULT_TASK_SORT } from '@/composables/useTaskSort'
 import type { AppLogLevel, Aria2LogLevel } from '@shared/types'
+import type { I18nKey } from '@shared/i18nTypes'
 export const EMPTY_STRING = ''
 export const IS_PORTABLE = false
 
@@ -15,7 +16,7 @@ export interface ColorSchemeDefinition {
   /** Unique identifier stored in config (kebab-case). */
   id: string
   /** i18n key suffix: `preferences.color-scheme-{id}` */
-  labelKey: string
+  labelKey: I18nKey
   /** Seed hex fed to MCU `themeFromSourceColor` to generate the full M3 tonal palette. */
   seed: string
   /** Palette generation mode. Content keeps low-chroma colors visually neutral. */
@@ -466,27 +467,6 @@ export const DETECT_RESOURCE_MAX_LINES = 200
  * - SHA-256 hex: exactly 64 hexadecimal characters (BitTorrent v2)
  */
 export const BARE_INFO_HASH_RE = /^(?:[0-9a-fA-F]{40}|[A-Z2-7]{32}|[0-9a-fA-F]{64})$/
-
-export const SUPPORT_RTL_LOCALES = [
-  /* 'العربية', Arabic */
-  'ar',
-  /* 'فارسی', Persian */
-  'fa',
-  /* 'עברית', Hebrew */
-  'he',
-  /* 'Kurdî / كوردی', Kurdish */
-  'ku',
-  /* 'پنجابی', Western Punjabi */
-  'pa',
-  /* 'پښتو', Pashto, */
-  'ps',
-  /* 'سنڌي', Sindhi */
-  'sd',
-  /* 'اردو', Urdu */
-  'ur',
-  /* 'ייִדיש', Yiddish */
-  'yi',
-]
 
 export const IMAGE_SUFFIXES = [
   '.ai',

@@ -10,6 +10,7 @@ import { useAppStore } from '@/stores/app'
 import { usePreferenceStore } from '@/stores/preference'
 import { useTaskStore } from '@/stores/task'
 import type { TaskScope } from '@/composables/useTaskSort'
+import type { I18nKey } from '@shared/i18nTypes'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -18,7 +19,7 @@ const appStore = useAppStore()
 const preferenceStore = usePreferenceStore()
 const taskStore = useTaskStore()
 
-const items: { key: TaskScope; labelKey: string; icon: Component; route: string }[] = [
+const items: { key: TaskScope; labelKey: I18nKey; icon: Component; route: string }[] = [
   { key: 'all', labelKey: 'task.scope-all', icon: ListOutline, route: '/task/all' },
   { key: 'progress', labelKey: 'task.scope-progress', icon: PlayOutline, route: '/task/progress' },
   { key: 'failed', labelKey: 'task.scope-failed', icon: AlertCircleOutline, route: '/task/failed' },

@@ -581,7 +581,7 @@ onUnmounted(() => {
                 type="error"
                 @click="handleDeleteCategory"
               >
-                {{ t('edit.delete') }}
+                {{ t('app.delete') }}
               </NButton>
               <NText v-else key="delete-empty" depth="3" />
             </Transition>

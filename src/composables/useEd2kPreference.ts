@@ -6,6 +6,7 @@
  * restart instead of hot reloading through changeGlobalOption.
  */
 import type { AppConfig } from '@shared/types'
+import type { I18nKey } from '@shared/i18nTypes'
 import { PORT_RECOVERY_RANGE_END, PORT_RECOVERY_RANGE_START, DEFAULT_APP_CONFIG as D } from '@shared/constants'
 import { convertCommaToLine, convertLineToComma, generateRandomInt } from '@shared/utils'
 
@@ -139,7 +140,7 @@ export function randomEd2kPort(): number {
   return generateRandomInt(PORT_RECOVERY_RANGE_START, PORT_RECOVERY_RANGE_END + 1)
 }
 
-export function getEd2kSearchToastKey(outcome: Ed2kSearchOutcome, resultCount: number): string {
+export function getEd2kSearchToastKey(outcome: Ed2kSearchOutcome, resultCount: number): I18nKey {
   if (outcome === 'cancelled') {
     return resultCount > 0 ? 'preferences.ed2k-search-cancelled-with-results' : 'preferences.ed2k-search-cancelled'
   }

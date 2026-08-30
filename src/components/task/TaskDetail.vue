@@ -2,6 +2,7 @@
 /** @fileoverview Detailed task view with file list, peers, and BT info. */
 import { ref, computed, watch, defineComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
+import type { I18nKey } from '@shared/i18nTypes'
 import { logger } from '@shared/logger'
 import { writeAppClipboardText } from '@shared/utils'
 import {
@@ -180,7 +181,7 @@ const prevTabIndex = ref(0)
 
 interface TabDef {
   key: string
-  labelKey: string
+  labelKey: I18nKey
   icon: typeof InformationCircleOutline
   btOnly?: boolean
   protocolOnly?: boolean

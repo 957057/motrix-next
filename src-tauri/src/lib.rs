@@ -1,3 +1,5 @@
+rust_i18n::i18n!("locales", fallback = "en-US");
+
 mod aria2;
 mod commands;
 mod db_guard;
@@ -6,6 +8,7 @@ mod engine;
 mod error;
 mod gpu_guard;
 mod history;
+mod i18n;
 mod log_policy;
 #[cfg(target_os = "macos")]
 mod menu;
@@ -554,13 +557,14 @@ pub fn run() {
     let log_level = read_log_level();
     let log_control = log_policy::LogLevelControl::new(log_level);
     let log_filter = log_control.clone();
-    let mut log_targets = vec![tauri_plugin_log::Target::new(
+    let log_targets = vec![tauri_plugin_log::Target::new(
         tauri_plugin_log::TargetKind::LogDir {
             file_name: Some("motrix-next".into()),
         },
     )];
     #[cfg(debug_assertions)]
-    {
+    let log_targets = {
+        let mut log_targets = log_targets;
         log_targets.push(
             tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout).format(
                 |out, message, record| {
@@ -571,7 +575,8 @@ pub fn run() {
                 },
             ),
         );
-    }
+        log_targets
+    };
 
     // ── Pre-flight DB migration guard ────────────────────────────
     // Must run BEFORE tauri_plugin_sql to prevent panic on downgrade.

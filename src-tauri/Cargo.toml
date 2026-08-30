@@ -70,6 +70,8 @@ rfc2047-decoder = "1.1"
 strip-ansi-escapes = "0.2.1"
 tempfile = "3"
 motrix-next-browser-launcher = { path = "native-messaging" }
+rust-i18n = "4.2.1"
+fluent-langneg = { version = "0.14.2", features = ["cldr"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
