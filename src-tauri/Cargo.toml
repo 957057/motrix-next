@@ -73,6 +73,8 @@ motrix-next-browser-launcher = { path = "native-messaging" }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
+    "Win32_NetworkManagement_IpHelper",
+    "Win32_Networking_WinSock",
     "Win32_System_Power",
     "Win32_System_Com",
     "Win32_System_Registry",

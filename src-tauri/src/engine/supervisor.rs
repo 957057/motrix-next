@@ -155,6 +155,10 @@ impl EngineSupervisor {
             || snapshot.phase != EnginePhase::Running
     }
 
+    pub(crate) fn allows_process_spawn(&self) -> bool {
+        self.desired_state() == DesiredEngineState::Running
+    }
+
     fn desired_state(&self) -> DesiredEngineState {
         if self.desired.load(Ordering::SeqCst) == 1 {
             DesiredEngineState::Running
@@ -376,7 +380,7 @@ impl EngineSupervisor {
                 last_failure.clone(),
             );
             let app_for_start = app.clone();
-            let spawn_result =
+            let start_result =
                 match tokio::task::spawn_blocking(move || start_engine(&app_for_start)).await {
                     Ok(result) => result,
                     Err(error) => {
@@ -389,9 +393,14 @@ impl EngineSupervisor {
                         return self.fail(app, operation_id, attempt, cause, failure);
                     }
                 };
-            if let Err(message) = spawn_result {
-                let failure = failure_from_message(EngineFailureStage::Spawn, message, false, app);
-                return self.fail(app, operation_id, attempt, cause, failure);
+            match start_result {
+                Ok(super::StartEngineOutcome::Started) => {}
+                Ok(super::StartEngineOutcome::Cancelled) => return Err(cancelled_error()),
+                Err(message) => {
+                    let failure =
+                        failure_from_message(EngineFailureStage::Spawn, message, false, app);
+                    return self.fail(app, operation_id, attempt, cause, failure);
+                }
             }
 
             self.publish(
@@ -1027,13 +1036,18 @@ mod tests {
     fn process_exit_is_unexpected_only_while_running_is_desired() {
         let supervisor = EngineSupervisor::new();
         assert!(supervisor.is_process_exit_expected());
+        assert!(!supervisor.allows_process_spawn());
 
         let _ = supervisor.begin_operation(DesiredEngineState::Running);
         supervisor.snapshot.write().expect("snapshot").phase = EnginePhase::Running;
         assert!(!supervisor.is_process_exit_expected());
+        assert!(supervisor.allows_process_spawn());
 
         supervisor.snapshot.write().expect("snapshot").phase = EnginePhase::Stopping;
         assert!(supervisor.is_process_exit_expected());
+
+        let _ = supervisor.begin_operation(DesiredEngineState::Stopped);
+        assert!(!supervisor.allows_process_spawn());
     }
 
     #[test]

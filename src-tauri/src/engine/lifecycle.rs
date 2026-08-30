@@ -14,6 +14,8 @@ const ENGINE_SIDECAR_NAME: &str = "motrix-next-engine";
 const DEFAULT_RPC_PORT_STR: &str = "29100";
 const ENGINE_PORT_RELEASE_TIMEOUT_MS: u64 = 2600;
 const ENGINE_PORT_RELEASE_POLL_MS: u64 = 100;
+const WINDOWS_DBG_TERMINATE_PROCESS: u32 = 0x4001_0004;
+const WINDOWS_STATUS_DLL_INIT_FAILED_LOGOFF: u32 = 0xC000_026B;
 const PROXY_ENV_VARS: &[&str] = &[
     "http_proxy",
     "https_proxy",
@@ -72,34 +74,32 @@ fn ensure_download_session(path: &std::path::Path) -> Result<(), String> {
     }
 }
 
+#[cfg(not(windows))]
 fn kill_process_by_pid(pid: u32) -> Result<(), String> {
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
-
-        let status = std::process::Command::new("taskkill")
-            .args(["/PID", &pid.to_string(), "/T", "/F"])
-            .creation_flags(CREATE_NO_WINDOW)
-            .status()
-            .map_err(|e| format!("Failed to execute taskkill for PID {pid}: {e}"))?;
-        if status.success() {
-            return Ok(());
-        }
-        return Err(format!("taskkill failed for PID {pid}: {status}"));
+    let status = std::process::Command::new("kill")
+        .args(["-TERM", &pid.to_string()])
+        .status()
+        .map_err(|e| format!("Failed to execute kill for PID {pid}: {e}"))?;
+    if status.success() {
+        return Ok(());
     }
+    Err(format!("kill failed for PID {pid}: {status}"))
+}
 
-    #[cfg(not(windows))]
-    {
-        let status = std::process::Command::new("kill")
-            .args(["-TERM", &pid.to_string()])
-            .status()
-            .map_err(|e| format!("Failed to execute kill for PID {pid}: {e}"))?;
-        if status.success() {
-            return Ok(());
-        }
-        Err(format!("kill failed for PID {pid}: {status}"))
-    }
+fn is_windows_session_shutdown_exit(exit_code: i32) -> bool {
+    matches!(
+        exit_code as u32,
+        WINDOWS_DBG_TERMINATE_PROCESS | WINDOWS_STATUS_DLL_INIT_FAILED_LOGOFF
+    )
+}
+
+fn is_system_shutdown_exit(exit_code: i32) -> bool {
+    cfg!(windows) && is_windows_session_shutdown_exit(exit_code)
+}
+
+fn process_spawn_allowed(app: &tauri::AppHandle) -> bool {
+    app.try_state::<crate::engine::supervisor::EngineSupervisor>()
+        .is_some_and(|supervisor| supervisor.allows_process_spawn())
 }
 
 pub(crate) fn wait_for_engine_ports_release(app: &tauri::AppHandle) {
@@ -233,9 +233,11 @@ fn monitor_engine(
                         break;
                     }
 
-                    let expected = app
+                    let supervisor_expected = app
                         .try_state::<crate::engine::supervisor::EngineSupervisor>()
                         .is_none_or(|supervisor| supervisor.is_process_exit_expected());
+                    let shutdown_exit = is_system_shutdown_exit(exit_code);
+                    let expected = supervisor_expected || shutdown_exit;
                     if expected {
                         log::info!(
                             target: "engine",
@@ -243,6 +245,8 @@ fn monitor_engine(
                             pid = process_id,
                             generation,
                             exit_code,
+                            exit_code_unsigned = exit_code as u32,
+                            reason = if shutdown_exit { "windows-session-end" } else { "expected" },
                             signal:? = payload.signal;
                             "engine_stopped"
                         );
@@ -286,12 +290,22 @@ fn monitor_engine(
 }
 
 /// Spawns Aria2 Next from the current persisted system configuration.
-pub fn start_engine(app: &tauri::AppHandle) -> Result<(), String> {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum StartEngineOutcome {
+    Started,
+    Cancelled,
+}
+
+pub fn start_engine(app: &tauri::AppHandle) -> Result<StartEngineOutcome, String> {
+    if !process_spawn_allowed(app) {
+        return Ok(StartEngineOutcome::Cancelled);
+    }
+
     let state = app.state::<EngineState>();
     let mut child_lock = state.child.lock().map_err(|e| e.to_string())?;
 
     if child_lock.is_some() {
-        return Ok(());
+        return Ok(StartEngineOutcome::Started);
     }
 
     let config = crate::commands::config::read_engine_config_snapshot(app.clone())
@@ -305,6 +319,9 @@ pub fn start_engine(app: &tauri::AppHandle) -> Result<(), String> {
     cleanup_port(port);
 
     let args = prepare_engine_args(app, &config)?;
+    if !process_spawn_allowed(app) {
+        return Ok(StartEngineOutcome::Cancelled);
+    }
     let (receiver, child) = spawn_engine(app, &args)?;
 
     log::info!(target: "engine", event = "engine_started", pid = child.pid(); "engine_started");
@@ -315,7 +332,7 @@ pub fn start_engine(app: &tauri::AppHandle) -> Result<(), String> {
     let my_gen = state.next_generation();
     monitor_engine(app.clone(), receiver, spawned_pid, my_gen);
 
-    Ok(())
+    Ok(StartEngineOutcome::Started)
 }
 
 /// Stops the running engine process.
@@ -327,16 +344,13 @@ pub fn start_engine(app: &tauri::AppHandle) -> Result<(), String> {
 ///   because the OS reclaims all child resources when the main process exits
 ///   moments later.  No sleep is needed — we will never reuse the port.
 ///
-/// - **`for_exit = false`** (restart / command): uses `kill_process_by_pid()`
-///   (`taskkill /T /F` on Windows, `kill -TERM` on Unix) to ensure the entire
-///   process tree is dead, then sleeps 100 ms for the OS to release the RPC
-///   port before a new engine instance binds to it.
+/// - **`for_exit = false`** (restart / command): terminates the owned child
+///   directly on Windows and sends `SIGTERM` on Unix, then sleeps 100 ms for
+///   the OS to release the RPC port before a new engine instance binds to it.
 ///
 /// Aria2 Next is a single-process, multi-threaded binary — it never spawns child
-/// processes — so `CommandChild::kill()` and `taskkill /T` are functionally
-/// equivalent for termination.  The distinction matters only for timing: the
-/// fast path avoids the ~800 ms overhead of spawning `taskkill.exe` and the
-/// subsequent 100 ms sleep, which is unnecessary during app exit.
+/// processes, so direct child ownership covers the Windows process lifetime
+/// without launching an additional system command.
 pub fn stop_engine(app: &tauri::AppHandle, for_exit: bool) -> Result<(), String> {
     let state = app.state::<EngineState>();
     state.invalidate_generation();
@@ -351,12 +365,21 @@ pub fn stop_engine(app: &tauri::AppHandle, for_exit: bool) -> Result<(), String>
         }
     } else {
         // Thorough path: must guarantee process tree is dead and port is free.
+        #[cfg(windows)]
+        if let Some(child) = child_lock.take() {
+            let pid = child.pid();
+            child
+                .kill()
+                .map_err(|error| format!("Failed to terminate engine PID {pid}: {error}"))?;
+            log::info!("stopped engine process: PID {}", pid);
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+        #[cfg(not(windows))]
         if let Some(child) = child_lock.as_ref() {
             let pid = child.pid();
             kill_process_by_pid(pid)?;
             *child_lock = None;
             log::info!("stopped engine process: PID {}", pid);
-            // Brief wait for the OS to fully terminate the process and release the port.
             std::thread::sleep(std::time::Duration::from_millis(100));
         }
     }
@@ -384,6 +407,19 @@ pub fn wait_for_engine_exit(app: &tauri::AppHandle, timeout: std::time::Duration
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn windows_session_shutdown_codes_are_classified_by_unsigned_value() {
+        assert!(is_windows_session_shutdown_exit(
+            WINDOWS_DBG_TERMINATE_PROCESS as i32
+        ));
+        assert!(is_windows_session_shutdown_exit(
+            WINDOWS_STATUS_DLL_INIT_FAILED_LOGOFF as i32
+        ));
+        assert!(!is_windows_session_shutdown_exit(0));
+        assert!(!is_windows_session_shutdown_exit(1));
+        assert!(!is_windows_session_shutdown_exit(0xC000_0142_u32 as i32));
+    }
 
     #[test]
     fn ensure_download_session_creates_an_empty_file_without_overwriting_existing_state() {
