@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent Manager",
     "ua-manager-description": "User-Agent 프로필을 저장하고 도메인별로 자동 적용합니다",
     "ua-add-profile": "User-Agent 추가",
-    "ua-add-rule": "규칙 추가",
+    "ua-add-rule": "추가",
     "ua-rules-require-profile": "자동 규칙을 만들기 전에 User-Agent를 저장하세요",
     "ua-rule-order-hint": "규칙은 위에서 아래로 확인하며 첫 번째 일치 항목을 사용합니다",
     "ua-rule-reorder": "규칙 순서 변경",

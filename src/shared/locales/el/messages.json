@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent Manager",
     "ua-manager-description": "Αποθηκεύστε προφίλ User-Agent και εφαρμόστε τα αυτόματα ανά τομέα",
     "ua-add-profile": "Προσθήκη User-Agent",
-    "ua-add-rule": "Προσθήκη κανόνα",
+    "ua-add-rule": "Προσθήκη",
     "ua-rules-require-profile": "Προσθέστε έναν αποθηκευμένο User-Agent πριν δημιουργήσετε αυτόματο κανόνα",
     "ua-rule-order-hint": "Οι κανόνες ελέγχονται από πάνω προς τα κάτω και ισχύει η πρώτη αντιστοίχιση",
     "ua-rule-reorder": "Αναδιάταξη κανόνα",

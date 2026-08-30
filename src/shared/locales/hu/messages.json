@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent Manager",
     "ua-manager-description": "User-Agent profilok mentése és automatikus alkalmazása tartomány szerint",
     "ua-add-profile": "User-Agent hozzáadása",
-    "ua-add-rule": "Szabály hozzáadása",
+    "ua-add-rule": "Hozzáadás",
     "ua-rules-require-profile": "Automatikus szabály létrehozása előtt adj hozzá egy mentett User-Agentet",
     "ua-rule-order-hint": "A szabályok felülről lefelé futnak; az első találat érvényes",
     "ua-rule-reorder": "Szabály átrendezése",

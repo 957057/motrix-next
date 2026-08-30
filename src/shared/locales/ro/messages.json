@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent Manager",
     "ua-manager-description": "Salvează profiluri User-Agent și aplică-le automat după domeniu",
     "ua-add-profile": "Adaugă User-Agent",
-    "ua-add-rule": "Adaugă regulă",
+    "ua-add-rule": "Adaugă",
     "ua-rules-require-profile": "Adaugă un User-Agent salvat înainte de a crea o regulă automată",
     "ua-rule-order-hint": "Regulile sunt verificate de sus în jos; prima potrivire se aplică",
     "ua-rule-reorder": "Reordonează regula",

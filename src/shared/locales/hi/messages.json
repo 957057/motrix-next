@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent Manager",
     "ua-manager-description": "User-Agent प्रोफ़ाइल सहेजें और डोमेन के अनुसार अपने आप लागू करें",
     "ua-add-profile": "User-Agent जोड़ें",
-    "ua-add-rule": "नियम जोड़ें",
+    "ua-add-rule": "जोड़ें",
     "ua-rules-require-profile": "स्वचालित नियम बनाने से पहले सहेजा हुआ User-Agent जोड़ें",
     "ua-rule-order-hint": "नियम ऊपर से नीचे मिलाए जाते हैं; पहला मिलान लागू होता है",
     "ua-rule-reorder": "नियम का क्रम बदलें",

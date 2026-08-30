@@ -387,19 +387,17 @@ onMounted(async () => {
           </template>
           <NSwitch v-model:value="form.fileCategoryEnabled" />
         </NFormItem>
-        <NCollapseTransition :show="form.fileCategoryEnabled">
-          <NFormItem :show-label="false">
-            <div class="file-category-summary-row">
-              <div class="file-category-summary-text">
-                <span>{{ categorySummary }}</span>
-                <NText depth="3">{{ t('preferences.file-category-manager-hint') }}</NText>
-              </div>
-              <NButton size="small" @click="showCategoryManager = true">
-                {{ t('preferences.file-category-manage') }}
-              </NButton>
+        <NFormItem :show-label="false">
+          <div class="file-category-summary-row">
+            <div class="file-category-summary-text">
+              <span>{{ categorySummary }}</span>
+              <NText depth="3">{{ t('preferences.file-category-manager-hint') }}</NText>
             </div>
-          </NFormItem>
-        </NCollapseTransition>
+            <NButton size="small" @click="showCategoryManager = true">
+              {{ t('preferences.file-category-manage') }}
+            </NButton>
+          </div>
+        </NFormItem>
 
         <!-- Speed Limit -->
         <NDivider title-placement="left">{{ t('preferences.speed-limit') }}</NDivider>

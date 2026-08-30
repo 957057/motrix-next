@@ -356,8 +356,16 @@ watch(reduceMotion, (enabled) => {
 })
 
 function destroySortable() {
+  stopFloatingRectTracking()
   sortable?.destroy()
   sortable = null
+  sorting.value = false
+  lastFloatingRect = null
+  removeCategoryDragArtifacts()
+}
+
+function removeCategoryDragArtifacts() {
+  document.querySelectorAll<HTMLElement>('.category-manager-list-item--floating').forEach((element) => element.remove())
 }
 
 function resolveListElement() {
@@ -377,7 +385,11 @@ function mountSortable() {
 watch(
   () => props.show,
   async (show) => {
-    if (!show) return
+    if (!show) {
+      destroySortable()
+      return
+    }
+    removeCategoryDragArtifacts()
     draft.value = cloneCategories(
       props.categories.length > 0 ? props.categories : buildDefaultCategories(props.baseDir),
     )
@@ -391,6 +403,7 @@ watch(
 )
 
 onMounted(() => {
+  removeCategoryDragArtifacts()
   if (props.show) void nextTick(mountSortable)
 })
 
@@ -457,18 +470,11 @@ onUnmounted(() => {
             </div>
           </TransitionGroup>
           <div class="category-manager-list-actions">
-            <NButton
-              size="small"
-              dashed
-              block
-              :disabled="draft.length >= MAX_FILE_CATEGORIES"
-              @click="handleAddCategory"
-            >
+            <NButton size="small" block :disabled="draft.length >= MAX_FILE_CATEGORIES" @click="handleAddCategory">
               {{ t('preferences.file-category-add') }}
             </NButton>
             <NButton
               size="small"
-              quaternary
               block
               :type="resetConfirming ? 'error' : 'default'"
               class="category-manager-reset-button"

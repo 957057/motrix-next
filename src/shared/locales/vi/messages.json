@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent Manager",
     "ua-manager-description": "Lưu hồ sơ User-Agent và tự động áp dụng theo tên miền",
     "ua-add-profile": "Thêm User-Agent",
-    "ua-add-rule": "Thêm quy tắc",
+    "ua-add-rule": "Thêm",
     "ua-rules-require-profile": "Thêm một User-Agent đã lưu trước khi tạo quy tắc tự động",
     "ua-rule-order-hint": "Quy tắc được xét từ trên xuống; kết quả khớp đầu tiên được dùng",
     "ua-rule-reorder": "Sắp xếp lại quy tắc",

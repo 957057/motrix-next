@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent Manager",
     "ua-manager-description": "Lagre User-Agent-profiler og bruk dem automatisk etter domene",
     "ua-add-profile": "Legg til User-Agent",
-    "ua-add-rule": "Legg til regel",
+    "ua-add-rule": "Legg til",
     "ua-rules-require-profile": "Legg til en lagret User-Agent før du oppretter en automatisk regel",
     "ua-rule-order-hint": "Regler sjekkes ovenfra og ned; første treff brukes",
     "ua-rule-reorder": "Endre rekkefølge på regel",

@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent Manager",
     "ua-manager-description": "احفظ معرّفات User-Agent وأدر تطبيقها تلقائيًا حسب النطاق",
     "ua-add-profile": "إضافة User-Agent",
-    "ua-add-rule": "إضافة قاعدة",
+    "ua-add-rule": "إضافة",
     "ua-rules-require-profile": "أضف User-Agent محفوظًا قبل إنشاء قاعدة تلقائية",
     "ua-rule-order-hint": "تُطابق القواعد من الأعلى إلى الأسفل، ويُستخدم أول تطابق",
     "ua-rule-reorder": "إعادة ترتيب القاعدة",

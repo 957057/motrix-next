@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent Manager",
     "ua-manager-description": "User-Agent profillerini kaydedin ve etki alanına göre otomatik uygulayın",
     "ua-add-profile": "User-Agent ekle",
-    "ua-add-rule": "Kural ekle",
+    "ua-add-rule": "Ekle",
     "ua-rules-require-profile": "Otomatik kural oluşturmadan önce kayıtlı bir User-Agent ekleyin",
     "ua-rule-order-hint": "Kurallar yukarıdan aşağı eşleşir; ilk eşleşme uygulanır",
     "ua-rule-reorder": "Kuralı yeniden sırala",

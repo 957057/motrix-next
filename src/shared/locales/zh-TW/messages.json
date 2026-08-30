@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent 管理",
     "ua-manager-description": "儲存常用 User-Agent，並依網域自動套用",
     "ua-add-profile": "新增 User-Agent",
-    "ua-add-rule": "新增規則",
+    "ua-add-rule": "新增",
     "ua-rules-require-profile": "請先儲存一個 User-Agent，再建立自動規則",
     "ua-rule-order-hint": "規則由上至下比對，首個符合項目生效",
     "ua-rule-reorder": "調整規則順序",

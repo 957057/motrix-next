@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent Manager",
     "ua-manager-description": "Simpan profil User-Agent dan terapkan otomatis berdasarkan domain",
     "ua-add-profile": "Tambah User-Agent",
-    "ua-add-rule": "Tambah aturan",
+    "ua-add-rule": "Tambah",
     "ua-rules-require-profile": "Tambahkan User-Agent tersimpan sebelum membuat aturan otomatis",
     "ua-rule-order-hint": "Aturan dicocokkan dari atas ke bawah; kecocokan pertama digunakan",
     "ua-rule-reorder": "Ubah urutan aturan",

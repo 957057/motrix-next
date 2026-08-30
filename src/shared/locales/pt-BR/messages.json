@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent Manager",
     "ua-manager-description": "Salve perfis de User-Agent e aplique-os automaticamente por domínio",
     "ua-add-profile": "Adicionar User-Agent",
-    "ua-add-rule": "Adicionar regra",
+    "ua-add-rule": "Adicionar",
     "ua-rules-require-profile": "Adicione um User-Agent salvo antes de criar uma regra automática",
     "ua-rule-order-hint": "As regras são avaliadas de cima para baixo; a primeira correspondência vence",
     "ua-rule-reorder": "Reordenar regra",

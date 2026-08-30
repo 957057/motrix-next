@@ -307,7 +307,7 @@
     "ua-manager-title": "User-Agent 管理",
     "ua-manager-description": "保存常用 User-Agent，并按域名自动应用",
     "ua-add-profile": "添加 User-Agent",
-    "ua-add-rule": "添加规则",
+    "ua-add-rule": "添加",
     "ua-rules-require-profile": "请先保存一个 User-Agent，再创建自动规则",
     "ua-rule-order-hint": "规则从上到下匹配，首条命中生效",
     "ua-rule-reorder": "调整规则顺序",
