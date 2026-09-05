@@ -8,7 +8,7 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
   remove: vi.fn().mockResolvedValue(undefined),
 }))
 
-const { isMetadataTask, shouldRunStaleCleanup, historyRecordToTask, mergeHistoryIntoTasks, extractHistoryFilePaths } =
+const { isMetadataTask, historyRecordToTask, mergeHistoryIntoTasks, extractHistoryFilePaths } =
   await import('../useTaskLifecycle')
 
 // ── Test data factories ──────────────────────────────────────────────
@@ -56,26 +56,6 @@ describe('isMetadataTask', () => {
     })
 
     expect(isMetadataTask(task)).toBe(false)
-  })
-})
-
-// ── shouldRunStaleCleanup ────────────────────────────────────────────
-
-describe('shouldRunStaleCleanup', () => {
-  it('returns true when autoDeleteStaleRecords is true', () => {
-    expect(shouldRunStaleCleanup({ autoDeleteStaleRecords: true })).toBe(true)
-  })
-
-  it('returns false when autoDeleteStaleRecords is false', () => {
-    expect(shouldRunStaleCleanup({ autoDeleteStaleRecords: false })).toBe(false)
-  })
-
-  it('returns false when config is undefined', () => {
-    expect(shouldRunStaleCleanup(undefined)).toBe(false)
-  })
-
-  it('returns false when autoDeleteStaleRecords is missing', () => {
-    expect(shouldRunStaleCleanup({})).toBe(false)
   })
 })
 

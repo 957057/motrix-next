@@ -659,44 +659,16 @@ mod tests {
     // ── UpdateCancelState ───────────────────────────────────────────
 
     #[test]
-    fn cancel_state_starts_not_cancelled() {
+    fn cancellation_can_be_reset_for_the_next_download() {
         let state = UpdateCancelState::new();
         assert!(!state.is_cancelled());
-    }
-
-    #[test]
-    fn cancel_state_cancel_sets_flag() {
-        let state = UpdateCancelState::new();
         state.cancel();
-        assert!(state.is_cancelled());
-    }
-
-    #[test]
-    fn cancel_state_reset_clears_flag() {
-        let state = UpdateCancelState::new();
         state.cancel();
         assert!(state.is_cancelled());
         state.reset();
         assert!(!state.is_cancelled());
-    }
-
-    #[test]
-    fn cancel_state_double_cancel_is_idempotent() {
-        let state = UpdateCancelState::new();
-        state.cancel();
         state.cancel();
         assert!(state.is_cancelled());
-    }
-
-    #[test]
-    fn cancel_state_reset_cancel_cycle() {
-        let state = UpdateCancelState::new();
-        for _ in 0..5 {
-            state.cancel();
-            assert!(state.is_cancelled());
-            state.reset();
-            assert!(!state.is_cancelled());
-        }
     }
 
     // ── endpoint_for_channel ────────────────────────────────────────

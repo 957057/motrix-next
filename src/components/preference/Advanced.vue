@@ -17,13 +17,12 @@ import { relaunch } from '@tauri-apps/plugin-process'
 import { appDataDir, appLogDir, join, tempDir } from '@tauri-apps/api/path'
 import { APP_LOG_LEVELS, ARIA2_LOG_LEVELS } from '@shared/constants'
 import {
-  generateSecret,
   buildAdvancedForm,
   buildAdvancedSystemConfig,
   transformAdvancedForStore,
-  validateAdvancedForm,
   randomRpcPort,
 } from '@/composables/useAdvancedPreference'
+import { generateConfigSecret } from '@shared/utils/configHydration'
 import {
   NForm,
   NFormItem,
@@ -117,11 +116,6 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
   buildSystemConfig: buildAdvancedSystemConfig,
   transformForStore: transformAdvancedForStore,
   beforeSave: async (f) => {
-    const error = validateAdvancedForm(f)
-    if (error) {
-      message.error(t(error))
-      return false
-    }
     // Only warn when user actively clears the secret (non-empty → empty).
     // If it was already empty before this edit session, no need to re-warn.
     const prevSecret = preferenceStore.config.rpcSecret
@@ -250,7 +244,7 @@ const numericFieldsValid = computed(() =>
 )
 
 function buildForm() {
-  return buildAdvancedForm(preferenceStore.config).form
+  return buildAdvancedForm(preferenceStore.config)
 }
 
 function loadForm() {
@@ -292,11 +286,11 @@ function onRpcPortDice() {
 }
 
 function onRpcSecretDice() {
-  form.value.rpcSecret = generateSecret()
+  form.value.rpcSecret = generateConfigSecret()
 }
 
 function onApiSecretDice() {
-  form.value.extensionApiSecret = generateSecret()
+  form.value.extensionApiSecret = generateConfigSecret()
 }
 
 async function copyToClipboard(text: string, label: string) {

@@ -1,9 +1,9 @@
 /** @fileoverview Unit tests for TaskStore with mocked TaskApi. */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useTaskStore } from '../task'
+let useTaskStore: typeof import('../task').useTaskStore
 import type { Aria2Task, Aria2Peer, TaskStatus, HistoryRecord } from '@shared/types'
-import { _resetForTesting, registerAddedAt } from '@/composables/useTaskOrder'
+let registerAddedAt: typeof import('@/composables/useTaskOrder').registerAddedAt
 
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn().mockResolvedValue(undefined),
@@ -94,7 +94,10 @@ describe('TaskStore', () => {
   let store: ReturnType<typeof useTaskStore>
   let mockApi: ReturnType<typeof createMockApi>
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    vi.resetModules()
+    ;({ useTaskStore } = await import('../task'))
+    ;({ registerAddedAt } = await import('@/composables/useTaskOrder'))
     setActivePinia(createPinia())
     store = useTaskStore()
     mockApi = createMockApi()
@@ -106,8 +109,6 @@ describe('TaskStore', () => {
     mockHistoryFns.recordTaskBirth.mockResolvedValue(undefined)
     mockHttpAuthFns.findByUrl.mockResolvedValue(null)
     mockHttpAuthFns.markUsed.mockResolvedValue(undefined)
-    // Reset in-memory task order state
-    _resetForTesting()
   })
 
   // ─── fetchList ──────────────────────────────────────────

@@ -129,22 +129,26 @@ describe('aria2 API (invoke transport)', () => {
 
     it('changeGlobalOption invokes with formatted options', async () => {
       mockInvoke.mockResolvedValueOnce('OK')
-      await changeGlobalOption({ maxConcurrentDownloads: 10 } as never)
-      expect(mockInvoke).toHaveBeenCalledWith('aria2_change_global_option', { options: expect.any(Object) })
+      await changeGlobalOption({ maxConcurrentDownloads: 10 })
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_change_global_option', {
+        options: { 'max-concurrent-downloads': '10' },
+      })
     })
 
     it('getOption invokes with gid and converts to camelCase', async () => {
       mockInvoke.mockResolvedValueOnce({ 'max-download-limit': '0', 'select-file': '2-9' })
       const result = await getOption({ gid: 'abc' })
       expect(mockInvoke).toHaveBeenCalledWith('aria2_get_option', { gid: 'abc' })
-      expect(result).toHaveProperty('maxDownloadLimit')
-      expect(result).toHaveProperty('selectFile', '2-9')
+      expect(result).toEqual({ maxDownloadLimit: '0', selectFile: '2-9' })
     })
 
     it('changeOption invokes with gid and formatted options', async () => {
       mockInvoke.mockResolvedValueOnce('OK')
-      await changeOption({ gid: 'abc', options: { maxDownloadLimit: '0' } as never })
-      expect(mockInvoke).toHaveBeenCalledWith('aria2_change_option', { gid: 'abc', options: expect.any(Object) })
+      await changeOption({ gid: 'abc', options: { 'max-download-limit': '0' } })
+      expect(mockInvoke).toHaveBeenCalledWith('aria2_change_option', {
+        gid: 'abc',
+        options: { 'max-download-limit': '0' },
+      })
     })
 
     it('getFiles invokes and returns camelCase typed files', async () => {

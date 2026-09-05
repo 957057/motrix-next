@@ -23,15 +23,6 @@ export const getTaskCompletedLength = (task: Aria2Task): number => {
   return parseLength(task.completedLength)
 }
 
-/** Calculates upload-to-download ratio for shared-upload tasks. */
-export const calcRatio = (totalLength: string | number, uploadLength: string | number): number => {
-  const total = parseInt(String(totalLength), 10)
-  const upload = parseInt(String(uploadLength), 10)
-  if (total === 0 || upload === 0) return 0
-  const percentage = upload / total
-  return parseFloat(percentage.toFixed(4))
-}
-
 const getFileNameFromFile = (file?: Aria2File): string => {
   if (!file) return ''
   const { path } = file
@@ -101,12 +92,6 @@ export const getTaskDisplayName = (task: Aria2Task | null, options: { defaultNam
   } catch {
     return name
   }
-}
-
-/** Returns true if the task is a magnet link still resolving metadata. */
-export const isMagnetTask = (task: Aria2Task): boolean => {
-  const { bittorrent } = task
-  return !!bittorrent && !bittorrent.info
 }
 
 /** Returns true when native aria2 is still resolving torrent metadata. */
@@ -240,25 +225,6 @@ export const getTaskUri = (task: Aria2Task, withTracker = false): string => {
  *  Returns false when the record lacks both a download URI and a BT infoHash. */
 export const canRestart = (task: Aria2Task): boolean => {
   return getTaskUris(task, true).length > 0
-}
-
-export const checkTaskTitleIsEmpty = (task: Aria2Task): boolean => {
-  const { files, bittorrent } = task
-  const [file] = files
-  const { path } = file
-  let result = path
-  if (bittorrent && bittorrent.info && bittorrent.info.name) {
-    result = bittorrent.info.name
-  }
-  return result === ''
-}
-
-export const mergeTaskResult = (response: unknown[][] = []): unknown[] => {
-  let result: unknown[] = []
-  for (const res of response) {
-    result = result.concat(...res)
-  }
-  return result
 }
 
 /**

@@ -3,7 +3,6 @@ import { DEFAULT_TASK_MANUAL_ORDER, DEFAULT_TASK_SORT } from '@/composables/useT
 import type { AppLogLevel, Aria2LogLevel } from '@shared/types'
 import type { I18nKey } from '@shared/i18nTypes'
 export const EMPTY_STRING = ''
-export const IS_PORTABLE = false
 
 export const APP_THEME = {
   AUTO: 'auto',
@@ -50,12 +49,6 @@ export const COLOR_SCHEMES: ColorSchemeDefinition[] = [
 export const CUSTOM_COLOR_SCHEME_ID = 'custom'
 export const DEFAULT_CUSTOM_COLOR_SCHEME = '#737373'
 
-export const APP_RUN_MODE = {
-  STANDARD: 1,
-  TRAY: 2,
-  HIDE_TRAY: 3,
-}
-
 export const ADD_TASK_TYPE = {
   URI: 'uri',
   TORRENT: 'torrent',
@@ -75,8 +68,6 @@ export const APP_LOG_LEVELS = ['error', 'warn', 'info', 'debug'] as const satisf
 export const ARIA2_LOG_LEVELS = ['error', 'warn', 'info', 'debug', 'trace'] as const satisfies readonly Aria2LogLevel[]
 
 export const MAX_NUM_OF_DIRECTORIES = 5
-
-export const ENGINE_RPC_HOST = '127.0.0.1'
 export const ENGINE_RPC_PORT = 29100
 export const EXTENSION_API_PORT = 29110
 export const BT_LISTEN_PORT = 29120
@@ -99,7 +90,6 @@ export const SAFE_LIMIT_BT_MAX_PEERS = 128
 
 export const UNKNOWN_PEERID = '%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00'
 export const UNKNOWN_PEERID_NAME = 'unknown'
-export const GRAPHIC = '░▒▓█'
 
 export const ONE_SECOND = 1000
 export const ONE_MINUTE = ONE_SECOND * 60
@@ -107,9 +97,6 @@ export const ONE_HOUR = ONE_MINUTE * 60
 export const ONE_DAY = ONE_HOUR * 24
 export const COMPLETED_RECORD_RETENTION_FOREVER = 0
 export const COMPLETED_RECORD_RETENTION_OPTIONS = [0, 1, 7, 180, 365] as const
-
-// One Week
-export const AUTO_CHECK_UPDATE_INTERVAL = ONE_DAY * 7
 
 export const UPDATE_CHANNELS = ['stable', 'beta', 'latest'] as const
 
@@ -424,25 +411,6 @@ export const PROXY_SCOPE_OPTIONS = [
 
 export const NONE_SELECTED_FILES = 'none'
 export const SELECTED_ALL_FILES = 'all'
-
-export const IP_VERSION = {
-  V4: 4,
-  V6: 6,
-}
-
-export const LOGIN_SETTING_OPTIONS = {
-  // For Windows
-  args: ['--opened-at-login=1'],
-}
-
-export const TRAY_CANVAS_CONFIG = {
-  WIDTH: 66,
-  HEIGHT: 16,
-  ICON_WIDTH: 16,
-  ICON_HEIGHT: 16,
-  TEXT_WIDTH: 46,
-  TEXT_FONT_SIZE: 8,
-}
 
 export const COMMON_RESOURCE_TAGS = ['http://', 'https://', 'sftp://', 'magnet:', 'ed2k://']
 export const THUNDER_RESOURCE_TAGS = ['thunder://']

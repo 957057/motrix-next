@@ -45,11 +45,6 @@ export function extractHistoryFilePaths(record: HistoryRecord): string[] {
   return []
 }
 
-/** Determine if stale record cleanup should run based on user config. */
-export function shouldRunStaleCleanup(config: Partial<{ autoDeleteStaleRecords: boolean }> | undefined): boolean {
-  return config?.autoDeleteStaleRecords === true
-}
-
 /** Reconstruct an Aria2Task from a persisted HistoryRecord.
  *
  * Synthesizes the `files[]` and optional `bittorrent` fields so TaskItem can

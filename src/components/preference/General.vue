@@ -17,11 +17,7 @@ import { loadLocale } from '@/composables/useLocale'
 import { isSupportedLocale, LOCALE_CATALOG, SUPPORTED_LOCALES } from '@shared/localeCatalog'
 import { logger } from '@shared/logger'
 import { writeAppClipboardText } from '@shared/utils'
-import {
-  buildGeneralForm,
-  buildGeneralSystemConfig,
-  transformGeneralForStore,
-} from '@/composables/useGeneralPreference'
+import { buildGeneralForm } from '@/composables/useGeneralPreference'
 import { COLOR_SCHEMES, CUSTOM_COLOR_SCHEME_ID } from '@shared/constants'
 import { normalizeCustomColorScheme } from '@shared/utils/colorSchemeConfig'
 import { useAppMessage } from '@/composables/useAppMessage'
@@ -88,8 +84,6 @@ function buildForm() {
 
 const { form, isDirty, handleSave, handleReset, patchSnapshot, resetSnapshot } = usePreferenceForm({
   buildForm,
-  buildSystemConfig: buildGeneralSystemConfig,
-  transformForStore: transformGeneralForStore,
   afterSave: async (f, prevConfig) => {
     // Locale change → restart prompt
     const prevLocale = prevConfig.locale || 'auto'

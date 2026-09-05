@@ -1,6 +1,5 @@
 /** @fileoverview TDD tests for the download history Pinia store (SQLite-backed).
  *
- * Tests are written BEFORE implementation per the TDD Iron Law.
  * The `@tauri-apps/plugin-sql` module is mocked to use an in-memory
  * array, keeping tests synchronous and deterministic.
  */

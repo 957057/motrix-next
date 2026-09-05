@@ -745,7 +745,6 @@ onMounted(async () => {
     const i18nKey = task.errorCode ? ARIA2_ERROR_CODES[task.errorCode] : undefined
     const errorText = i18nKey ? t(i18nKey) : task.errorMessage || t('task.error-unknown')
     handleTaskError(task, errorText, {
-      messageSuccess: message.success,
       messageError: message.error,
       t,
     })

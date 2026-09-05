@@ -21,7 +21,6 @@
   },
   "packageManager": "pnpm@11.5.2",
   "dependencies": {
-    "@bany/curl-to-json": "^1.2.10",
     "@formatjs/intl-localematcher": "~0.8.13",
     "@formkit/auto-animate": "^0.9.0",
     "@material/material-color-utilities": "^0.4.0",

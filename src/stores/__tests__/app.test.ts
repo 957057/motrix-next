@@ -45,12 +45,11 @@ vi.mock('@/composables/useAddTaskFileOps', async (importOriginal) => {
 })
 
 import { useAppStore } from '../app'
-import { createBatchItem, resetBatchIdCounter } from '@shared/utils/batchHelpers'
+import { createBatchItem } from '@shared/utils/batchHelpers'
 
 describe('useAppStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    resetBatchIdCounter()
     submitManualUrisMock.mockReset()
     submitManualUrisMock.mockResolvedValue({ submittedTaskNames: [], magnetGids: [], magnetFailures: [] })
     submitBatchItemsMock.mockReset()

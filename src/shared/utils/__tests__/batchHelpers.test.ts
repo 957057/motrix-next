@@ -1,13 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   createBatchItem,
   detectExternalInputKind,
   detectKind,
   extractMagnetDisplayName,
-  mergeUriLines,
   mergeRawUriLines,
   normalizeUriLines,
-  resetBatchIdCounter,
   decodePathSegment,
   extractDecodedFilename,
   sanitizeAria2OutHint,
@@ -162,54 +160,6 @@ describe('parseAria2Input', () => {
   })
 })
 
-describe('mergeUriLines', () => {
-  it('merges existing textarea content with incoming uri payloads and deduplicates per line', () => {
-    const merged = mergeUriLines('https://a.example/file\nhttps://b.example/file', [
-      'https://b.example/file',
-      'https://c.example/file',
-      'https://a.example/file\nhttps://d.example/file',
-    ])
-
-    expect(merged).toBe(
-      ['https://a.example/file', 'https://b.example/file', 'https://c.example/file', 'https://d.example/file'].join(
-        '\n',
-      ),
-    )
-  })
-
-  it('treats multiline incoming payloads as independent uri lines instead of one opaque blob', () => {
-    const merged = mergeUriLines('https://a.example/file', ['https://b.example/file\nhttps://c.example/file'])
-
-    expect(merged).toBe(['https://a.example/file', 'https://b.example/file', 'https://c.example/file'].join('\n'))
-  })
-
-  it('returns normalized existing content when incoming payloads are empty or duplicates', () => {
-    const merged = mergeUriLines(' https://a.example/file \n\nhttps://a.example/file ', [
-      '',
-      'https://a.example/file',
-      '   ',
-    ])
-
-    expect(merged).toBe('https://a.example/file')
-  })
-
-  it('normalizes bare info hashes in incoming payloads before deduping and merging', () => {
-    const hash = 'd8988e034cb5de79d319242e3365bf30a7741a6e'
-    const merged = mergeUriLines(`magnet:?xt=urn:btih:${hash}`, [hash, 'TCIY4A2MWXPHTUYZEQUOMNS7GCDXOQTG'])
-
-    expect(merged).toBe(
-      [`magnet:?xt=urn:btih:${hash}`, 'magnet:?xt=urn:btih:TCIY4A2MWXPHTUYZEQUOMNS7GCDXOQTG'].join('\n'),
-    )
-  })
-
-  it('keeps Thunder links wrapped when merging incoming payloads', () => {
-    const thunder = 'thunder://' + btoa('AAhttps://example.com/file.zipZZ')
-    const merged = mergeUriLines('', [thunder])
-
-    expect(merged).toBe(thunder)
-  })
-})
-
 describe('mergeRawUriLines', () => {
   it('keeps Thunder links raw while still trimming blanks and deduplicating exact lines', () => {
     const thunder = 'thunder://' + btoa('AAhttps://example.com/file.zipZZ')
@@ -330,20 +280,15 @@ describe('extractMagnetDisplayName', () => {
 })
 
 describe('createBatchItem', () => {
-  beforeEach(() => {
-    resetBatchIdCounter()
-  })
-
   it('uses source as payload for uri items', () => {
     const item = createBatchItem('uri', 'magnet:?xt=urn:btih:abc')
     expect(item.payload).toBe('magnet:?xt=urn:btih:abc')
   })
 
-  it('creates stable sequential ids for deterministic tests', () => {
+  it('assigns distinct IDs to separate items', () => {
     const a = createBatchItem('uri', 'https://a.example/file')
     const b = createBatchItem('uri', 'https://b.example/file')
-    expect(a.id).toBe('batch-1')
-    expect(b.id).toBe('batch-2')
+    expect(a.id).not.toBe(b.id)
   })
 })
 

@@ -116,11 +116,6 @@ export function createBatchItem(kind: BatchItemKind, source: string, payload = '
   }
 }
 
-/** Reset the ID counter (useful for testing). */
-export function resetBatchIdCounter(): void {
-  nextId = 0
-}
-
 // ── URI normalization ───────────────────────────────────────────────
 
 /** If the line is a bare BitTorrent info hash, wrap it as a magnet URI. */
@@ -254,27 +249,6 @@ export function normalizeUriLines(text: string): string[] {
     }
   }
   return result
-}
-
-/**
- * Merge existing textarea content with incoming URI payloads.
- * Each incoming payload is treated as potentially multiline (split by \\n).
- * Returns a single string with order-preserving, deduplicated URI lines.
- */
-export function mergeUriLines(existingText: string, incoming: string[]): string {
-  const existing = normalizeUriLines(existingText)
-  const seen = new Set(existing)
-  for (const payload of incoming) {
-    // Each payload may itself contain multiple lines (e.g. multiline deep-link arg)
-    for (const raw of payload.split('\n')) {
-      const line = normalizeUriLine(raw)
-      if (line && !seen.has(line)) {
-        seen.add(line)
-        existing.push(line)
-      }
-    }
-  }
-  return existing.join('\n')
 }
 
 /**

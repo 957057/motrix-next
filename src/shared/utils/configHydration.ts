@@ -207,6 +207,13 @@ function normalizeTaskSort(value: unknown, repairs: string[]): TaskSortConfig {
 }
 
 function normalizeScalarValues(config: Record<string, unknown>, repairs: string[]): void {
+  for (const [key, fallback] of Object.entries(DEFAULT_APP_CONFIG)) {
+    if (key === 'rpcSecret' || key === 'extensionApiSecret') continue
+    if ((typeof fallback === 'boolean' || typeof fallback === 'string') && typeof config[key] !== typeof fallback) {
+      config[key] = fallback
+      repairs.push(key)
+    }
+  }
   repairEnum(config, 'theme', ['auto', 'light', 'dark'] as const, DEFAULT_APP_CONFIG.theme, repairs)
   repairEnum(config, 'taskCardMode', ['full', 'compact'] as const, DEFAULT_APP_CONFIG.taskCardMode, repairs)
   repairEnum(config, 'colorScheme', getAllowedColorSchemeIds(), DEFAULT_APP_CONFIG.colorScheme, repairs)

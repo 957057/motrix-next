@@ -632,11 +632,6 @@ export interface TaskOptionParams {
   options: Aria2EngineOptions
 }
 
-/** Aria2File enriched with a parsed file extension (used by file filter utilities). */
-export interface EnrichedFile extends Aria2File {
-  extension?: string
-}
-
 /** Update metadata returned by the Rust `check_for_update` command. */
 export interface TauriUpdate {
   version: string
