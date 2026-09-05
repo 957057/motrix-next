@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /** @fileoverview Advanced preference tab: RPC, extension, clipboard, default programs, engine, log, history, diagnostics. */
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useEventListener } from '@vueuse/core'
 import { invoke } from '@tauri-apps/api/core'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { usePlatform } from '@/composables/usePlatform'
@@ -69,6 +70,9 @@ const dialog = useDialog()
 const protocolHandlers = useProtocolHandlers()
 const protocolStatus = protocolHandlers.status
 const protocolPending = protocolHandlers.pending
+const protocolBusy = protocolHandlers.busy
+
+useEventListener(window, 'focus', () => protocolHandlers.refreshAll())
 
 const { isLinux } = usePlatform()
 
@@ -252,7 +256,32 @@ function loadForm() {
 }
 
 async function handleProtocolToggle(protocol: ProtocolKey, enabled: boolean) {
-  await protocolHandlers.setProtocolEnabled(protocol, enabled)
+  const result = await protocolHandlers.setProtocolEnabled(protocol, enabled)
+  switch (result.kind) {
+    case 'success':
+      message.success(
+        enabled
+          ? t('preferences.protocol-registered', { protocol })
+          : t('preferences.protocol-unregistered', { protocol }),
+      )
+      break
+    case 'failed':
+      message.error(
+        enabled
+          ? t('preferences.protocol-register-failed', { protocol, reason: result.reason })
+          : t('preferences.protocol-unregister-failed', { protocol, reason: result.reason }),
+      )
+      break
+    case 'unchanged':
+      message.warning(t('preferences.protocol-unchanged', { protocol }))
+      break
+    case 'manual':
+      message.info(t('preferences.protocol-manual-required'))
+      break
+    case 'query-failed':
+      message.error(t('preferences.protocol-query-failed', { protocol }))
+      break
+  }
 }
 
 async function loadPaths() {
@@ -351,24 +380,7 @@ onMounted(async () => {
   resetSnapshot()
   loadPaths()
 
-  try {
-    await protocolHandlers.refreshAll()
-  } catch (e) {
-    logger.debug('Advanced.protocolCheck', e)
-  }
-})
-
-watch(protocolHandlers.lastError, (error) => {
-  if (!error) return
-  logger.warn(
-    'Advanced.protocol',
-    `Failed to ${error.enabled ? 'register' : 'unregister'} ${error.protocol}: ${error.reason}`,
-  )
-  if (!error.enabled && error.reason.includes('manual_change_required')) {
-    message.warning(t('preferences.protocol-unregister-manual-required'))
-  } else {
-    message.error(t('preferences.protocol-failed', { protocol: error.protocol, reason: error.reason }))
-  }
+  await protocolHandlers.refreshAll()
 })
 </script>
 
@@ -681,6 +693,7 @@ watch(protocolHandlers.lastError, (error) => {
         <NFormItem :label="t('preferences.protocol-magnet')">
           <NSwitch
             :value="protocolStatus.magnet"
+            :disabled="protocolBusy"
             :loading="protocolPending === 'magnet'"
             @update:value="(value) => handleProtocolToggle('magnet', value)"
           />
@@ -688,6 +701,7 @@ watch(protocolHandlers.lastError, (error) => {
         <NFormItem :label="t('preferences.protocol-ed2k')">
           <NSwitch
             :value="protocolStatus.ed2k"
+            :disabled="protocolBusy"
             :loading="protocolPending === 'ed2k'"
             @update:value="(value) => handleProtocolToggle('ed2k', value)"
           />
@@ -695,6 +709,7 @@ watch(protocolHandlers.lastError, (error) => {
         <NFormItem :label="t('preferences.protocol-thunder')">
           <NSwitch
             :value="protocolStatus.thunder"
+            :disabled="protocolBusy"
             :loading="protocolPending === 'thunder'"
             @update:value="(value) => handleProtocolToggle('thunder', value)"
           />
@@ -702,6 +717,7 @@ watch(protocolHandlers.lastError, (error) => {
         <NFormItem :label="t('preferences.protocol-motrixnext')">
           <NSwitch
             :value="protocolStatus.motrixnext"
+            :disabled="protocolBusy"
             :loading="protocolPending === 'motrixnext'"
             @update:value="(value) => handleProtocolToggle('motrixnext', value)"
           />
