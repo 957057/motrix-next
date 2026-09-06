@@ -276,8 +276,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // History database — opens the same DB as tauri-plugin-sql migrations.
     {
         use tauri::Manager;
-        let app_data = app.path().app_data_dir()?;
-        let db_path = app_data.join("history.db");
+        let db_path = app.path().app_config_dir()?.join("history.db");
         let history_db = history::HistoryDb::open(&db_path)
             .map_err(|e| format!("Failed to open history.db: {e}"))?;
         app.manage(history::HistoryDbState(std::sync::Arc::new(history_db)));
@@ -580,10 +579,12 @@ pub fn run() {
 
     // ── Pre-flight DB migration guard ────────────────────────────
     // Must run BEFORE tauri_plugin_sql to prevent panic on downgrade.
-    // Uses the platform-specific app data directory (same path that
-    // tauri_plugin_sql's "sqlite:history.db" resolves to).
-    if let Some(dir) = dirs::data_dir().map(|d| d.join("com.motrix.next")) {
-        db_guard::check(&dir);
+    // SQL uses AppConfig; the preferences store uses AppData.
+    if let (Some(config), Some(data)) = (dirs::config_dir(), dirs::data_dir()) {
+        db_guard::check(
+            &config.join("com.motrix.next"),
+            &data.join("com.motrix.next"),
+        );
     }
 
     let mut builder = tauri::Builder::default()

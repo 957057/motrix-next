@@ -382,12 +382,7 @@ if (import.meta.env.PROD) {
 
     // Initialize download history database, then schedule lightweight cleanup.
     historyStore
-      .init({
-        onCorrupt: () => logger.warn('HistoryDB', 'Database corrupted, rebuilding…'),
-        onError: (e) => logger.warn('HistoryDB', `Load failed, rebuilding… ${e}`),
-        onRebuilt: () => logger.info('HistoryDB', 'Database rebuilt successfully'),
-        onRebuildFailed: (e) => logger.error('HistoryDB', `Rebuild failed: ${e}`),
-      })
+      .init()
       .then(() => {
         const runCleanup = async () => {
           try {

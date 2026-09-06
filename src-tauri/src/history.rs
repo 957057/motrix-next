@@ -11,7 +11,7 @@
 use crate::error::AppError;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::Path;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -47,12 +47,14 @@ pub struct HistoryDb {
 pub struct HistoryDbState(pub Arc<HistoryDb>);
 
 impl HistoryDb {
-    /// Opens (or creates) the history database at the given path.
+    /// Opens the existing database after the SQL plugin has applied migrations.
     ///
-    /// Applies WAL journal mode and busy timeout PRAGMAs matching the
-    /// frontend's `applyPragmas()` function.
-    pub fn open(path: &PathBuf) -> Result<Self, AppError> {
-        let conn = Connection::open(path)?;
+    /// Applies the same connection PRAGMAs as the frontend history store.
+    pub fn open(path: &Path) -> Result<Self, AppError> {
+        let conn = Connection::open_with_flags(path, rusqlite::OpenFlags::SQLITE_OPEN_READ_WRITE)?;
+        // Fail at initialization instead of silently creating a second, empty database.
+        conn.prepare("SELECT gid, added_at FROM task_birth LIMIT 0")?;
+        conn.prepare("SELECT gid, added_at, meta FROM download_history LIMIT 0")?;
         conn.execute_batch(
             "PRAGMA journal_mode = WAL;
              PRAGMA synchronous = NORMAL;
@@ -341,6 +343,32 @@ impl HistoryDb {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn opens_only_the_migrated_database_and_shares_records() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("history.db");
+        assert!(HistoryDb::open(&path).is_err());
+        assert!(!path.exists());
+        let frontend = Connection::open(&path).unwrap();
+        assert!(HistoryDb::open(&path).is_err());
+        for migration in [
+            include_str!("../migrations/001_download_history.sql"),
+            include_str!("../migrations/002_add_added_at.sql"),
+            include_str!("../migrations/003_http_auth_credentials.sql"),
+        ] {
+            frontend.execute_batch(migration).unwrap();
+        }
+        let backend = HistoryDb::open(&path).unwrap();
+        backend
+            .add_record(&make_record("shared", "file.txt", "complete"))
+            .await
+            .unwrap();
+        let gid: String = frontend
+            .query_row("SELECT gid FROM download_history", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(gid, "shared");
+    }
 
     fn make_record(gid: &str, name: &str, status: &str) -> HistoryRecord {
         HistoryRecord {

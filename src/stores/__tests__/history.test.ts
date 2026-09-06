@@ -198,15 +198,6 @@ vi.mock('@tauri-apps/plugin-sql', () => ({
   },
 }))
 
-vi.mock('@tauri-apps/plugin-fs', () => ({
-  exists: vi.fn().mockResolvedValue(false),
-  remove: vi.fn().mockResolvedValue(undefined),
-}))
-
-vi.mock('@tauri-apps/api/path', () => ({
-  appDataDir: vi.fn().mockResolvedValue('/mock/data'),
-}))
-
 vi.mock('@shared/logger', () => ({
   logger: {
     info: vi.fn(),
@@ -649,94 +640,35 @@ describe('HistoryStore', () => {
     })
   })
 
-  // ── closeConnection ────────────────────────────────────────────
-
-  describe('closeConnection', () => {
-    it('closes the database connection and allows re-initialization', async () => {
-      // Add a record before closing
-      await store.addRecord(makeRecord({ gid: 'before-close' }))
-      await store.closeConnection()
-
-      // After closing, the next operation should re-initialize the database
-      // (initPromise is reset so getDb() triggers a fresh init)
-      const results = await store.getRecords()
-      // The mock Database.load creates a fresh connection,
-      // so in-memory mock rows still contain the record
-      expect(results).toHaveLength(1)
-      expect(results[0].gid).toBe('before-close')
-    })
-  })
-
-  // ── init recovery after total failure ──────────────────────────
-
-  describe('init recovery after rebuild failure', () => {
-    it('allows re-initialization when both initial load and rebuild fail', async () => {
-      // Reset to a clean slate so we can control the init sequence
-      await store.closeConnection()
-
+  describe('initialization', () => {
+    it('shares initialization and preserves records when loading fails', async () => {
+      await store.addRecord(makeRecord({ gid: 'preserved' }))
+      setActivePinia(createPinia())
+      store = useHistoryStore()
       const Database = (await import('@tauri-apps/plugin-sql')).default
-      const loadFn = Database.load as ReturnType<typeof vi.fn>
+      const load = vi.mocked(Database.load)
+      load.mockClear()
+      load.mockRejectedValueOnce(new Error('disk full'))
 
-      // Force TWO consecutive failures:
-      //   1st rejection → init() catches it, tries rebuildDatabase()
-      //   2nd rejection → rebuildDatabase() also fails
-      // After this, initPromise MUST be reset so a future init() can retry.
-      loadFn.mockRejectedValueOnce(new Error('simulated disk full'))
-      loadFn.mockRejectedValueOnce(new Error('simulated disk full'))
-
-      // This init() will fail internally but should NOT throw — it
-      // swallows errors via the health callback. The critical invariant
-      // is that the store doesn't permanently wedge itself.
-      await store.init()
-
-      // Restore normal Database.load behavior for the retry
-      loadFn.mockResolvedValue({
-        execute: vi.fn((q: string, p: unknown[]) => Promise.resolve(mockExecute(q, p))),
-        select: vi.fn((q: string, p: unknown[]) => Promise.resolve(mockSelect(q, p))),
-        close: vi.fn().mockResolvedValue(undefined),
-      })
-
-      // CRITICAL ASSERTION: A second init() call must trigger a fresh
-      // initialization attempt — not silently reuse the old failed promise.
-      await store.init()
-
-      // If initPromise was not reset, getRecords() would crash on `db!`
-      // being null. A successful call here proves the store recovered.
-      const results = await store.getRecords()
-      expect(results).toBeDefined()
-      expect(Array.isArray(results)).toBe(true)
+      const results = await Promise.allSettled([store.init(), store.init()])
+      expect(results.map((result) => result.status)).toEqual(['rejected', 'rejected'])
+      expect(load).toHaveBeenCalledTimes(1)
+      expect(await store.getRecords()).toEqual([expect.objectContaining({ gid: 'preserved' })])
+      expect(load).toHaveBeenCalledTimes(2)
     })
 
-    it('recovered store supports full CRUD after retry', async () => {
-      // Start from a failure state
-      await store.closeConnection()
-
+    it('rejects a failed integrity check without rebuilding the database', async () => {
       const Database = (await import('@tauri-apps/plugin-sql')).default
-      const loadFn = Database.load as ReturnType<typeof vi.fn>
+      const connection = await store.init()
+      vi.mocked(connection.select).mockResolvedValueOnce([{ integrity_check: 'corrupt' }])
+      vi.mocked(Database.load).mockClear()
+      setActivePinia(createPinia())
+      store = useHistoryStore()
 
-      loadFn.mockRejectedValueOnce(new Error('corruption'))
-      loadFn.mockRejectedValueOnce(new Error('corruption'))
-
-      await store.init()
-
-      // Restore
-      loadFn.mockResolvedValue({
-        execute: vi.fn((q: string, p: unknown[]) => Promise.resolve(mockExecute(q, p))),
-        select: vi.fn((q: string, p: unknown[]) => Promise.resolve(mockSelect(q, p))),
-        close: vi.fn().mockResolvedValue(undefined),
-      })
-
-      // Retry — should recover
-      await store.init()
-
-      // Full CRUD cycle to prove the store is fully operational
-      await store.addRecord(makeRecord({ gid: 'after-recovery', name: 'recovered.zip' }))
-      const records = await store.getRecords()
-      expect(records.some((r) => r.gid === 'after-recovery')).toBe(true)
-
-      await store.removeRecord('after-recovery')
-      const afterRemove = await store.getRecords()
-      expect(afterRemove.every((r) => r.gid !== 'after-recovery')).toBe(true)
+      await expect(store.init()).rejects.toThrow('integrity check failed')
+      expect(Database.load).toHaveBeenCalledTimes(1)
+      expect(connection.close).not.toHaveBeenCalled()
+      await expect(store.init()).resolves.toBe(connection)
     })
   })
 })

@@ -8,9 +8,6 @@
  */
 import { defineStore } from 'pinia'
 import Database from '@tauri-apps/plugin-sql'
-import { remove } from '@tauri-apps/plugin-fs'
-import { invoke } from '@tauri-apps/api/core'
-import { appDataDir } from '@tauri-apps/api/path'
 import { collectTaskIdentityBuckets } from '@shared/utils/task'
 import type { Aria2Task, HistoryRecord } from '@shared/types'
 import { logger } from '@shared/logger'
@@ -68,101 +65,33 @@ function appendInClause(clauses: string[], params: string[], expression: string,
   params.push(...values)
 }
 
-/** Callbacks for database health events — allows UI layer to show toasts
- *  without coupling the store to any specific UI framework. */
-export interface DbHealthCallbacks {
-  onCorrupt?: () => void
-  onError?: (error: unknown) => void
-  onRebuilt?: () => void
-  onRebuildFailed?: (error: unknown) => void
-}
-
 export const useHistoryStore = defineStore('history', () => {
-  let db: Awaited<ReturnType<typeof Database.load>> | null = null
-  let initPromise: Promise<void> | null = null
+  let initPromise: Promise<Database> | null = null
 
-  /** Apply SQLite PRAGMA optimizations to an open connection. */
-  async function applyPragmas(conn: NonNullable<typeof db>): Promise<void> {
-    await conn.execute('PRAGMA journal_mode = WAL', [])
-    await conn.execute('PRAGMA synchronous = NORMAL', [])
-    await conn.execute('PRAGMA busy_timeout = 5000', [])
-    await conn.execute('PRAGMA foreign_keys = ON', [])
-  }
-
-  /** Delete the database files from disk (db + WAL + SHM). */
-  async function deleteDbFiles(): Promise<void> {
-    try {
-      const dataDir = await appDataDir()
-      const suffixes = ['history.db', 'history.db-wal', 'history.db-shm']
-      for (const suffix of suffixes) {
-        const path = `${dataDir}/${suffix}`
-        if (await invoke<boolean>('check_path_exists', { path })) {
-          await remove(path)
-        }
-      }
-    } catch (e) {
-      logger.warn('HistoryDB', `deleteDbFiles failed: ${e}`)
-    }
-  }
-
-  /** Attempt to rebuild the database from scratch after corruption. */
-  async function rebuildDatabase(callbacks?: DbHealthCallbacks): Promise<void> {
-    try {
-      if (db) {
-        try {
-          await db.close()
-        } catch (e) {
-          logger.debug('HistoryDB', `close before rebuild failed (already broken): ${e}`)
-        }
-        db = null
-      }
-      await deleteDbFiles()
-      db = await Database.load(DB_NAME)
-      await applyPragmas(db)
-      logger.info('HistoryDB', 'Database rebuilt successfully')
-      callbacks?.onRebuilt?.()
-    } catch (e) {
-      logger.error('HistoryDB', `Rebuild failed: ${e}`)
-      db = null
-      initPromise = null
-      callbacks?.onRebuildFailed?.(e)
-    }
-  }
-
-  /** Initialize the database connection, verify integrity, and auto-recover
-   *  from corruption. Safe to call multiple times — subsequent calls are no-ops.
-   *
-   *  @param callbacks Optional UI notification hooks for health events. */
-  async function init(callbacks?: DbHealthCallbacks): Promise<void> {
-    if (db) return
+  /** Share initialization and preserve the database on any failure. */
+  function init(): Promise<Database> {
     if (!initPromise) {
       initPromise = (async () => {
-        try {
-          db = await Database.load(DB_NAME)
-          await applyPragmas(db)
-
-          // Verify structural integrity on every cold start
-          const result = await db.select<{ integrity_check: string }[]>('PRAGMA integrity_check', [])
-          const status = result[0]?.integrity_check ?? 'unknown'
-          if (status !== 'ok') {
-            logger.warn('HistoryDB', `Integrity check failed: ${status}`)
-            callbacks?.onCorrupt?.()
-            await rebuildDatabase(callbacks)
-          }
-        } catch (e) {
-          logger.warn('HistoryDB', `Init failed: ${e}`)
-          callbacks?.onError?.(e)
-          await rebuildDatabase(callbacks)
+        const conn = await Database.load(DB_NAME)
+        await conn.execute('PRAGMA journal_mode = WAL', [])
+        await conn.execute('PRAGMA synchronous = NORMAL', [])
+        await conn.execute('PRAGMA busy_timeout = 5000', [])
+        await conn.execute('PRAGMA foreign_keys = ON', [])
+        const result = await conn.select<{ integrity_check: string }[]>('PRAGMA integrity_check', [])
+        if (result.length !== 1 || result[0].integrity_check !== 'ok') {
+          throw new Error('History database integrity check failed')
         }
-      })()
+        return conn
+      })().catch((error: unknown) => {
+        initPromise = null
+        throw error
+      })
     }
-    await initPromise
+    return initPromise
   }
 
-  /** Returns the active database connection, auto-initializing if needed. */
-  async function getDb() {
-    if (!db) await init()
-    return db!
+  function getDb(): Promise<Database> {
+    return init()
   }
 
   async function getStatusCounts(): Promise<HistoryStatusCounts> {
@@ -357,16 +286,6 @@ export const useHistoryStore = defineStore('history', () => {
     return result[0]?.integrity_check ?? 'unknown'
   }
 
-  /** Close the database connection and reset initialization state.
-   *  After calling, the next init() or getDb() will re-open the database. */
-  async function closeConnection(): Promise<void> {
-    if (db) {
-      await db.close()
-      db = null
-    }
-    initPromise = null
-  }
-
   /** Persist task birth timestamp to the task_birth table.
    *  INSERT OR IGNORE ensures the first write wins — added_at is immutable. */
   async function recordTaskBirth(gid: string, addedAt?: string): Promise<void> {
@@ -411,7 +330,6 @@ export const useHistoryStore = defineStore('history', () => {
     removeStaleRecords,
     removeByInfoHash,
     checkIntegrity,
-    closeConnection,
     recordTaskBirth,
     loadBirthRecords,
     getSchemaVersion,

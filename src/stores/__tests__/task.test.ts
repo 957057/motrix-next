@@ -20,7 +20,6 @@ const mockHistoryFns = {
   clearRecords: vi.fn().mockResolvedValue(undefined),
   removeStaleRecords: vi.fn().mockResolvedValue(undefined),
   checkIntegrity: vi.fn().mockResolvedValue('ok'),
-  closeConnection: vi.fn().mockResolvedValue(undefined),
   recordTaskBirth: vi.fn().mockResolvedValue(undefined),
   loadBirthRecords: vi.fn().mockResolvedValue([]),
   getSchemaVersion: vi.fn().mockResolvedValue(2),

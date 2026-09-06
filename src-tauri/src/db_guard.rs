@@ -34,8 +34,8 @@ const REGISTERED_VERSIONS: &[i64] = &[1, 2, 3];
 /// - Missing DB file or missing `_sqlx_migrations` table → no-op.
 /// - All applied versions in [`REGISTERED_VERSIONS`] → no-op.
 /// - Unknown versions → native dialog; user picks reset or quit.
-pub fn check(app_data_dir: &Path) {
-    let db_path = app_data_dir.join("history.db");
+pub fn check(app_config_dir: &Path, app_data_dir: &Path) {
+    let db_path = app_config_dir.join("history.db");
     if !db_path.exists() {
         return; // Fresh install — nothing to check.
     }
@@ -75,7 +75,7 @@ pub fn check(app_data_dir: &Path) {
     match result {
         rfd::MessageDialogResult::Custom(ref selection) if selection == &texts.confirm => {
             log::info!("db_guard: user chose RESET — deleting history.db");
-            delete_db_files(app_data_dir);
+            delete_db_files(app_config_dir);
         }
         _ => {
             log::info!("db_guard: user chose QUIT");
