@@ -18,6 +18,8 @@ import type { TaskSharingKind } from '@shared/utils/task'
 import type { Aria2Task, BtFileSelectionItem } from '@shared/types'
 import { ARIA2_ERROR_CODES } from '@shared/aria2ErrorCodes'
 import { useHistoryStore } from '@/stores/history'
+import { useDatabaseStore } from '@/stores/database'
+import { useDatabaseReset } from '@/composables/useDatabaseReset'
 import { buildSelectFileOption, isPendingMagnetSelectionTask } from '@/composables/useMagnetFlow'
 import type { MagnetSelectionSubmission } from '@/composables/useMagnetFlow'
 import {
@@ -60,6 +62,18 @@ const taskStore = useTaskStore()
 const preferenceStore = usePreferenceStore()
 const navDialog = useDialog()
 const message = useAppMessage()
+const database = useDatabaseStore()
+const { showDatabaseReset } = useDatabaseReset()
+watch(
+  () => database.phase,
+  (phase) => {
+    if (phase === 'failed' && !database.notified) {
+      database.notified = true
+      showDatabaseReset(true)
+    }
+  },
+  { immediate: true, flush: 'post' },
+)
 const isTaskPage = computed(() => route.path.startsWith('/task'))
 const isPreferencePage = computed(() => route.path.startsWith('/preference'))
 const showAbout = ref(false)

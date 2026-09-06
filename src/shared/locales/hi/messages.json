@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Database integrity जांची जा रही है...",
     "db-integrity-check-ok": "Database ठीक है",
     "db-integrity-check-fail": "Integrity check failed",
-    "db-reset": "History साफ करें",
-    "db-reset-confirm": "सभी completed download records स्थायी रूप से हट जाएंगे। इसे undo नहीं किया जा सकता।",
-    "db-reset-success": "History साफ हुई",
+    "db-reset": "डेटाबेस रीसेट करें",
+    "db-reset-confirm": "रीसेट करने से डाउनलोड इतिहास और वेबसाइटों के सहेजे गए लॉगिन विवरण मिट जाएँगे\nडाउनलोड की गई फ़ाइलें और प्राथमिकताएँ सुरक्षित रहेंगी",
     "auto-cleanup": "Auto cleanup",
     "notification-and-confirm": "Notifications और Confirmation",
     "db-browse": "History देखें",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "अधिकतम ED2K कनेक्शन 1 से 1024 के बीच होने चाहिए",
     "ed2k-invalid-search-timeout": "ED2K search duration 10 से 600 seconds के बीच होनी चाहिए",
     "ed2k-invalid-server": "ED2K server host:port format में होना चाहिए",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "डेटाबेस उपलब्ध नहीं है",
+    "db-unavailable-description": "कुछ सुविधाएँ उपलब्ध नहीं हैं। अभी या बाद में सेटिंग्स से रीसेट करें",
+    "db-reset-restart": "रीसेट करके पुनः शुरू करें",
+    "db-reset-later": "अभी नहीं",
+    "db-reset-failed": "डेटाबेस रीसेट नहीं हो सका"
   },
   "subnav": {
     "task-list": "कार्य",

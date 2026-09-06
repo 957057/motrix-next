@@ -27,6 +27,7 @@ import {
 } from '@/composables/useTaskSort'
 import { DEFAULT_TASK_SORT } from '@/composables/useTaskSort'
 import { useHistoryStore } from '@/stores/history'
+import { useDatabaseStore } from '@/stores/database'
 import { useHttpAuthStore } from '@/stores/httpAuth'
 import { usePreferenceStore } from '@/stores/preference'
 
@@ -193,11 +194,11 @@ export const useTaskStore = defineStore('task', () => {
       const historyStore = useHistoryStore()
       const [liveTasks, statusCounts] = await Promise.all([
         api.fetchTaskList({ type: 'active' }).then((tasks) => tasks.filter((task) => !checkTaskIsEd2kSearch(task))),
-        historyStore.getStatusCounts(),
+        useDatabaseStore().isReady ? historyStore.getStatusCounts() : { completed: 0, failed: 0 },
       ])
       const [completedOverlap, failedOverlap] = await Promise.all([
-        historyStore.countRecordsMatchingTaskIdentities(liveTasks, 'complete'),
-        historyStore.countRecordsMatchingTaskIdentities(liveTasks, 'error'),
+        useDatabaseStore().isReady ? historyStore.countRecordsMatchingTaskIdentities(liveTasks, 'complete') : 0,
+        useDatabaseStore().isReady ? historyStore.countRecordsMatchingTaskIdentities(liveTasks, 'error') : 0,
       ])
       if (requestId !== countRequestId) return
 
@@ -223,7 +224,7 @@ export const useTaskStore = defineStore('task', () => {
         const historyStore = useHistoryStore()
         const status = scope === 'failed' ? 'error' : 'complete'
         const [records, liveTasks] = await Promise.all([
-          historyStore.getRecords(status),
+          useDatabaseStore().isReady ? historyStore.getRecords(status) : [],
           api.fetchTaskList({ type: 'active' }),
         ])
         const recordByGid = new Map(records.map((record) => [record.gid, record]))
@@ -243,7 +244,7 @@ export const useTaskStore = defineStore('task', () => {
       } else if (scope === 'all') {
         const [activeTasks, historyRecords] = await Promise.all([
           api.fetchTaskList({ type: 'active' }),
-          useHistoryStore().getRecords(),
+          useDatabaseStore().isReady ? useHistoryStore().getRecords() : [],
         ])
         data = mergeHistoryIntoTasks(activeTasks, historyRecords)
         data = data.filter((t) => !checkTaskIsEd2kSearch(t))

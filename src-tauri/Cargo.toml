@@ -58,7 +58,6 @@ dunce = "1"
 os_info = "3"
 sys-locale = "0.3"
 rusqlite = { version = "0.31", features = ["bundled"] }
-rfd = { version = "0.16", default-features = false }
 maxminddb = { version = "0.27", features = ["mmap"] }
 axum = "0.8"
 tower-http = { version = "0.6", features = ["cors"] }

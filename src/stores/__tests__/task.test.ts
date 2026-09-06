@@ -98,6 +98,8 @@ describe('TaskStore', () => {
     ;({ useTaskStore } = await import('../task'))
     ;({ registerAddedAt } = await import('@/composables/useTaskOrder'))
     setActivePinia(createPinia())
+    const { useDatabaseStore } = await import('@/stores/database')
+    useDatabaseStore().phase = 'ready'
     store = useTaskStore()
     mockApi = createMockApi()
     store.setApi(mockApi)
@@ -111,6 +113,17 @@ describe('TaskStore', () => {
   })
 
   // ─── fetchList ──────────────────────────────────────────
+
+  it('keeps live tasks and counts available when the database fails', async () => {
+    const { useDatabaseStore } = await import('@/stores/database')
+    useDatabaseStore().phase = 'failed'
+    await store.changeCurrentList('all')
+    await store.refreshTaskCounts()
+    expect(store.taskList).toHaveLength(2)
+    expect(store.taskCounts).toEqual({ all: 2, progress: 2, completed: 0, failed: 0 })
+    expect(mockHistoryFns.getRecords).not.toHaveBeenCalled()
+    expect(mockHistoryFns.getStatusCounts).not.toHaveBeenCalled()
+  })
 
   it('fetchList populates taskList from API', async () => {
     await store.fetchList()

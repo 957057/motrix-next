@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Đang kiểm tra tính toàn vẹn cơ sở dữ liệu...",
     "db-integrity-check-ok": "Cơ sở dữ liệu bình thường",
     "db-integrity-check-fail": "Kiểm tra tính toàn vẹn thất bại",
-    "db-reset": "Xóa lịch sử",
-    "db-reset-confirm": "Tất cả bản ghi tải xuống đã hoàn thành sẽ bị xóa vĩnh viễn. Không thể hoàn tác hành động này.",
-    "db-reset-success": "Đã xóa lịch sử",
+    "db-reset": "Đặt lại cơ sở dữ liệu",
+    "db-reset-confirm": "Việc đặt lại sẽ xóa lịch sử tải xuống và thông tin đăng nhập trang web đã lưu\nCác tệp đã tải xuống và tùy chọn sẽ được giữ lại",
     "auto-cleanup": "Tự động dọn dẹp",
     "notification-and-confirm": "Thông báo và xác nhận",
     "db-browse": "Xem lịch sử",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Số kết nối ED2K tối đa phải từ 1 đến 1024",
     "ed2k-invalid-search-timeout": "Thời lượng tìm kiếm ED2K phải từ 10 đến 600 giây",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "Cơ sở dữ liệu không khả dụng",
+    "db-unavailable-description": "Một số tính năng không khả dụng. Đặt lại ngay hoặc sau trong Cài đặt",
+    "db-reset-restart": "Đặt lại và khởi động lại",
+    "db-reset-later": "Để sau",
+    "db-reset-failed": "Không thể đặt lại cơ sở dữ liệu"
   },
   "subnav": {
     "task-list": "Tác vụ",

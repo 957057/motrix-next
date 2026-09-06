@@ -378,9 +378,8 @@
     "db-integrity-check-running": "데이터베이스 무결성 검사 중...",
     "db-integrity-check-ok": "데이터베이스 정상",
     "db-integrity-check-fail": "무결성 검사 실패",
-    "db-reset": "기록 삭제",
-    "db-reset-confirm": "모든 완료된 다운로드 기록이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
-    "db-reset-success": "기록이 삭제되었습니다",
+    "db-reset": "데이터베이스 초기화",
+    "db-reset-confirm": "초기화하면 다운로드 기록과 저장된 웹사이트 로그인 정보가 삭제됩니다\n다운로드한 파일과 환경설정은 유지됩니다",
     "auto-cleanup": "자동 정리",
     "notification-and-confirm": "알림 및 확인",
     "db-browse": "기록 보기",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "최대 ED2K 연결 수는 1에서 1024 사이여야 합니다",
     "ed2k-invalid-search-timeout": "ED2K 검색 시간은 10초에서 600초 사이여야 합니다",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "무작위"
+    "random-port": "무작위",
+    "db-unavailable": "데이터베이스 오류",
+    "db-unavailable-description": "일부 기능을 사용할 수 없습니다. 지금 초기화하거나 나중에 설정에서 초기화하세요",
+    "db-reset-restart": "초기화 후 다시 시작",
+    "db-reset-later": "나중에",
+    "db-reset-failed": "데이터베이스를 초기화하지 못했습니다"
   },
   "subnav": {
     "task-list": "작업 목록",

@@ -7,12 +7,11 @@
  * Database: sqlite:history.db (managed by tauri-plugin-sql with migrations).
  */
 import { defineStore } from 'pinia'
-import Database from '@tauri-apps/plugin-sql'
+import { useDatabaseStore } from '@/stores/database'
 import { collectTaskIdentityBuckets } from '@shared/utils/task'
 import type { Aria2Task, HistoryRecord } from '@shared/types'
 import { logger } from '@shared/logger'
 
-const DB_NAME = 'sqlite:history.db'
 export type HistoryRecordSortField = 'name' | 'status' | 'total_length' | 'task_type' | 'completed_at'
 export type HistoryRecordSortOrder = 'ascend' | 'descend' | false
 
@@ -66,33 +65,9 @@ function appendInClause(clauses: string[], params: string[], expression: string,
 }
 
 export const useHistoryStore = defineStore('history', () => {
-  let initPromise: Promise<Database> | null = null
-
-  /** Share initialization and preserve the database on any failure. */
-  function init(): Promise<Database> {
-    if (!initPromise) {
-      initPromise = (async () => {
-        const conn = await Database.load(DB_NAME)
-        await conn.execute('PRAGMA journal_mode = WAL', [])
-        await conn.execute('PRAGMA synchronous = NORMAL', [])
-        await conn.execute('PRAGMA busy_timeout = 5000', [])
-        await conn.execute('PRAGMA foreign_keys = ON', [])
-        const result = await conn.select<{ integrity_check: string }[]>('PRAGMA integrity_check', [])
-        if (result.length !== 1 || result[0].integrity_check !== 'ok') {
-          throw new Error('History database integrity check failed')
-        }
-        return conn
-      })().catch((error: unknown) => {
-        initPromise = null
-        throw error
-      })
-    }
-    return initPromise
-  }
-
-  function getDb(): Promise<Database> {
-    return init()
-  }
+  const database = useDatabaseStore()
+  const init = database.init
+  const getDb = database.init
 
   async function getStatusCounts(): Promise<HistoryStatusCounts> {
     const rows = await (

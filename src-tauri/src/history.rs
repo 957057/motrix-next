@@ -13,7 +13,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::{MappedMutexGuard, Mutex, MutexGuard};
 
 /// Rust-side mirror of the TypeScript `HistoryRecord` interface.
 ///
@@ -40,13 +40,40 @@ pub struct HistoryRecord {
 /// some configurations.  The mutex is uncontended in practice — backend
 /// writes are infrequent and read-only queries are fast.
 pub struct HistoryDb {
-    conn: Arc<Mutex<Connection>>,
+    conn: Mutex<Option<Connection>>,
 }
 
 /// Tauri managed state wrapper.
 pub struct HistoryDbState(pub Arc<HistoryDb>);
 
 impl HistoryDb {
+    pub fn unavailable() -> Self {
+        Self {
+            conn: Mutex::new(None),
+        }
+    }
+
+    pub async fn is_ready(&self) -> bool {
+        self.conn.lock().await.is_some()
+    }
+
+    pub async fn initialize(&self, path: &Path) -> Result<(), AppError> {
+        let mut conn = self.conn.lock().await;
+        if conn.is_none() {
+            *conn = Self::open(path)?.conn.into_inner();
+        }
+        Ok(())
+    }
+
+    pub async fn close(&self) {
+        self.conn.lock().await.take();
+    }
+
+    async fn connection(&self) -> Result<MappedMutexGuard<'_, Connection>, AppError> {
+        MutexGuard::try_map(self.conn.lock().await, Option::as_mut)
+            .map_err(|_| AppError::Database("Database is unavailable".into()))
+    }
+
     /// Opens the existing database after the SQL plugin has applied migrations.
     ///
     /// Applies the same connection PRAGMAs as the frontend history store.
@@ -62,7 +89,7 @@ impl HistoryDb {
              PRAGMA foreign_keys = ON;",
         )?;
         Ok(Self {
-            conn: Arc::new(Mutex::new(conn)),
+            conn: Mutex::new(Some(conn)),
         })
     }
 
@@ -91,7 +118,7 @@ impl HistoryDb {
              );",
         )?;
         Ok(Self {
-            conn: Arc::new(Mutex::new(conn)),
+            conn: Mutex::new(Some(conn)),
         })
     }
 
@@ -100,7 +127,7 @@ impl HistoryDb {
     /// Uses ON CONFLICT(gid) DO UPDATE to preserve the immutable `added_at`.
     /// Matches the frontend's `addRecord()` SQL exactly.
     pub async fn add_record(&self, record: &HistoryRecord) -> Result<(), AppError> {
-        let conn = self.conn.lock().await;
+        let conn = self.connection().await?;
         conn.execute(
             "INSERT INTO download_history
                 (gid, name, uri, dir, total_length, status, task_type, added_at, completed_at, meta)
@@ -141,7 +168,7 @@ impl HistoryDb {
 
     /// Returns whether a lifecycle record already exists for the GID.
     pub async fn contains_record(&self, gid: &str) -> Result<bool, AppError> {
-        let conn = self.conn.lock().await;
+        let conn = self.connection().await?;
         let exists = conn.query_row(
             "SELECT EXISTS(SELECT 1 FROM download_history WHERE gid = ?1)",
             params![gid],
@@ -158,7 +185,7 @@ impl HistoryDb {
         status: Option<&str>,
         limit: Option<u32>,
     ) -> Result<Vec<HistoryRecord>, AppError> {
-        let conn = self.conn.lock().await;
+        let conn = self.connection().await?;
         let order = "ORDER BY COALESCE(added_at, completed_at) DESC";
         let limit_clause = limit
             .map(|l| format!(" LIMIT {}", l.min(10_000)))
@@ -182,7 +209,7 @@ impl HistoryDb {
 
     /// Remove a single record by GID.
     pub async fn remove_record(&self, gid: &str) -> Result<(), AppError> {
-        let conn = self.conn.lock().await;
+        let conn = self.connection().await?;
         conn.execute("DELETE FROM download_history WHERE gid = ?1", params![gid])?;
         Ok(())
     }
@@ -193,7 +220,7 @@ impl HistoryDb {
         gid: &str,
         info_hash: Option<&str>,
     ) -> Result<(), AppError> {
-        let mut conn = self.conn.lock().await;
+        let mut conn = self.connection().await?;
         let transaction = conn.transaction()?;
         transaction.execute("DELETE FROM download_history WHERE gid = ?1", params![gid])?;
         if let Some(info_hash) = info_hash.filter(|value| !value.is_empty()) {
@@ -209,7 +236,7 @@ impl HistoryDb {
 
     /// Clear all records, optionally filtered by status.
     pub async fn clear_records(&self, status: Option<&str>) -> Result<(), AppError> {
-        let mut conn = self.conn.lock().await;
+        let mut conn = self.connection().await?;
         let transaction = conn.transaction()?;
         if let Some(status) = status {
             transaction.execute(
@@ -239,7 +266,7 @@ impl HistoryDb {
         if gids.is_empty() {
             return Ok(());
         }
-        let conn = self.conn.lock().await;
+        let conn = self.connection().await?;
         let placeholders: Vec<String> = gids
             .iter()
             .enumerate()
@@ -264,7 +291,7 @@ impl HistoryDb {
         if info_hash.is_empty() {
             return Ok(());
         }
-        let conn = self.conn.lock().await;
+        let conn = self.connection().await?;
         if let Some(exclude) = exclude_gid {
             conn.execute(
                 "DELETE FROM download_history WHERE json_extract(meta, '$.infoHash') = ?1 AND gid != ?2",
@@ -281,7 +308,7 @@ impl HistoryDb {
 
     /// Record a task birth timestamp (INSERT OR IGNORE — first write wins).
     pub async fn record_task_birth(&self, gid: &str, added_at: &str) -> Result<(), AppError> {
-        let conn = self.conn.lock().await;
+        let conn = self.connection().await?;
         conn.execute(
             "INSERT OR IGNORE INTO task_birth (gid, added_at) VALUES (?1, ?2)",
             params![gid, added_at],
@@ -291,7 +318,7 @@ impl HistoryDb {
 
     /// Return the first recorded birth timestamp for a task GID.
     pub async fn get_task_birth(&self, gid: &str) -> Result<Option<String>, AppError> {
-        let conn = self.conn.lock().await;
+        let conn = self.connection().await?;
         let added_at = conn
             .query_row(
                 "SELECT added_at FROM task_birth WHERE gid = ?1",
@@ -304,7 +331,7 @@ impl HistoryDb {
 
     /// Load all birth records for pre-populating in-memory maps.
     pub async fn load_birth_records(&self) -> Result<Vec<(String, String)>, AppError> {
-        let conn = self.conn.lock().await;
+        let conn = self.connection().await?;
         let mut stmt = conn.prepare("SELECT gid, added_at FROM task_birth")?;
         let records = stmt
             .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
@@ -314,7 +341,7 @@ impl HistoryDb {
 
     /// Check database integrity.
     pub async fn check_integrity(&self) -> Result<String, AppError> {
-        let conn = self.conn.lock().await;
+        let conn = self.connection().await?;
         let result: Option<String> = conn
             .query_row("PRAGMA integrity_check", [], |row| row.get(0))
             .optional()?;
@@ -359,7 +386,10 @@ mod tests {
         ] {
             frontend.execute_batch(migration).unwrap();
         }
-        let backend = HistoryDb::open(&path).unwrap();
+        let backend = HistoryDb::unavailable();
+        assert!(!backend.is_ready().await);
+        backend.initialize(&path).await.unwrap();
+        assert!(backend.is_ready().await);
         backend
             .add_record(&make_record("shared", "file.txt", "complete"))
             .await
@@ -368,6 +398,9 @@ mod tests {
             .query_row("SELECT gid FROM download_history", [], |row| row.get(0))
             .unwrap();
         assert_eq!(gid, "shared");
+        backend.close().await;
+        assert!(!backend.is_ready().await);
+        assert!(backend.get_records(None, None).await.is_err());
     }
 
     fn make_record(gid: &str, name: &str, status: &str) -> HistoryRecord {

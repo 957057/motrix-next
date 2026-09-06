@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Comprovant la integritat de la base de dades...",
     "db-integrity-check-ok": "La base de dades és correcta",
     "db-integrity-check-fail": "La comprovació d'integritat ha fallat",
-    "db-reset": "Esborra l'historial",
-    "db-reset-confirm": "S'eliminaran permanentment tots els registres de descàrregues completades. Aquesta acció no es pot desfer.",
-    "db-reset-success": "Historial esborrat",
+    "db-reset": "Restableix la base de dades",
+    "db-reset-confirm": "Esborraràs l’historial de baixades i les credencials web desades\nEs conservaran els fitxers baixats i les preferències",
     "auto-cleanup": "Neteja automàtica",
     "notification-and-confirm": "Notificacions i confirmació",
     "db-browse": "Veure historial",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "El màxim de connexions ED2K ha de ser entre 1 i 1024",
     "ed2k-invalid-search-timeout": "El temps de cerca ED2K ha d'estar entre 10 i 600 segons",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "Base de dades no disponible",
+    "db-unavailable-description": "Algunes funcions no estan disponibles. Restableix-la ara o més tard a la configuració",
+    "db-reset-restart": "Restableix i reinicia",
+    "db-reset-later": "Ara no",
+    "db-reset-failed": "No s’ha pogut restablir la base de dades"
   },
   "subnav": {
     "task-list": "Tasques",

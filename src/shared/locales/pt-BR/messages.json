@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Verificando integridade do banco de dados...",
     "db-integrity-check-ok": "Banco de dados está OK",
     "db-integrity-check-fail": "Verificação de integridade falhou",
-    "db-reset": "Limpar histórico",
-    "db-reset-confirm": "Todos os registros de downloads concluídos serão excluídos permanentemente. Esta ação não pode ser desfeita.",
-    "db-reset-success": "Histórico limpo",
+    "db-reset": "Redefinir banco de dados",
+    "db-reset-confirm": "A redefinição apagará o histórico de downloads e as credenciais de sites salvas\nOs arquivos baixados e as preferências serão mantidos",
     "auto-cleanup": "Limpeza automática",
     "notification-and-confirm": "Notificações e confirmação",
     "db-browse": "Ver histórico",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "O máximo de conexões ED2K deve estar entre 1 e 1024",
     "ed2k-invalid-search-timeout": "A duração da busca ED2K deve ficar entre 10 e 600 segundos",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Aleatório"
+    "random-port": "Aleatório",
+    "db-unavailable": "Banco de dados indisponível",
+    "db-unavailable-description": "Algumas funções estão indisponíveis. Redefina agora ou depois nas configurações",
+    "db-reset-restart": "Redefinir e reiniciar",
+    "db-reset-later": "Agora não",
+    "db-reset-failed": "Não foi possível redefinir o banco de dados"
   },
   "subnav": {
     "task-list": "Tarefas",

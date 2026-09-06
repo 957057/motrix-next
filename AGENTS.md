@@ -97,7 +97,6 @@ src-tauri/
 │   │   ├── power.rs            # Sleep prevention and power guard service
 │   │   ├── stat.rs             # Global stat polling, Dock badge, Dock progress bar (custom NSProgressIndicator)
 │   │   └── speed.rs            # Speed limit scheduler (time-of-day limits)
-│   ├── db_guard.rs             # Database health check, corruption detection, and auto-rebuild
 │   ├── gpu_guard.rs            # GPU compatibility detection and WebView renderer fallback
 │   ├── history.rs              # HistoryDbState: Rust-side SQLite history record persistence
 │   ├── i18n.rs                 # Native locale negotiation and rust-i18n message access
@@ -210,6 +209,10 @@ Follow this exact checklist:
 - SQL migration files live in `src-tauri/migrations/` with `NNN_description.sql` naming
 - Each migration is registered as a `tauri_plugin_sql::Migration` struct in the `.add_migrations()` call in `lib.rs`
 - The plugin tracks executed versions in an internal `_sqlx_migrations` table
+- `src/stores/database.ts` owns deferred initialization after the UI mounts; `Database.load()` applies migrations without blocking window creation
+- `src-tauri/src/commands/database.rs` inspects the database and handles explicit reset; failures leave the UI and live downloads available
+- History and HTTP credentials share this lifecycle; never call `Database.load()` from individual stores
+- Reset closes both connection owners before removing database files and restarting; never delete a database automatically on initialization failure
 - Old users receive new migrations transparently on upgrade — no manual action needed
 
 ### Adding a New Migration
@@ -224,12 +227,11 @@ Follow this exact checklist:
        kind: tauri_plugin_sql::MigrationKind::Up,
    },
    ```
-3. Update `REGISTERED_VERSIONS` in `src-tauri/src/db_guard.rs`
-4. Update `CURRENT_DB_SCHEMA_VERSION` in `src/shared/constants.ts`
-5. If the migration adds/renames columns used by the frontend, update `HistoryRecord` in `src/shared/types.ts`
-6. Update relevant SQL queries in `src/stores/history.ts`
-7. Add a regression test that fresh installs persist the current DB schema version and do not show a false DB upgrade toast on second launch
-8. Run `cargo check` to verify the Rust compiles
+3. Update `CURRENT_DB_SCHEMA_VERSION` in `src/shared/constants.ts`
+4. If the migration adds/renames columns used by the frontend, update `HistoryRecord` in `src/shared/types.ts`
+5. Update relevant SQL queries in `src/stores/history.ts`
+6. Add a regression test that fresh installs persist the current DB schema version and do not show a false DB upgrade toast on second launch
+7. Run `cargo check` to verify the Rust compiles
 
 ### Rules
 

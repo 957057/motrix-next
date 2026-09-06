@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Sprawdzanie integralności bazy danych...",
     "db-integrity-check-ok": "Baza danych jest OK",
     "db-integrity-check-fail": "Sprawdzanie integralności nie powiodło się",
-    "db-reset": "Wyczyść historię",
-    "db-reset-confirm": "Wszystkie ukończone rekordy pobierania zostaną trwale usunięte. Tej operacji nie można cofnąć.",
-    "db-reset-success": "Historia wyczyszczona",
+    "db-reset": "Resetuj bazę danych",
+    "db-reset-confirm": "Resetowanie usunie historię pobierania i zapisane dane logowania do witryn\nPobrane pliki i preferencje zostaną zachowane",
     "auto-cleanup": "Automatyczne czyszczenie",
     "notification-and-confirm": "Powiadomienia i potwierdzenie",
     "db-browse": "Wyświetl historię",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Maksymalna liczba połączeń ED2K musi wynosić od 1 do 1024",
     "ed2k-invalid-search-timeout": "Czas wyszukiwania ED2K musi wynosić od 10 do 600 sekund",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "Baza danych jest niedostępna",
+    "db-unavailable-description": "Niektóre funkcje są niedostępne. Zresetuj bazę teraz lub później w ustawieniach",
+    "db-reset-restart": "Resetuj i uruchom ponownie",
+    "db-reset-later": "Nie teraz",
+    "db-reset-failed": "Nie udało się zresetować bazy danych"
   },
   "subnav": {
     "task-list": "Zadania",

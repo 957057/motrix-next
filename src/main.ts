@@ -9,6 +9,7 @@ import { usePreferenceStore } from './stores/preference'
 import { useTaskStore } from './stores/task'
 import { useAppStore } from './stores/app'
 import { useHistoryStore } from './stores/history'
+import { useDatabaseStore } from './stores/database'
 import { useEngineStore } from './stores/engine'
 import aria2Api from './api/aria2'
 import { DEFAULT_TRACKER_SOURCE, ENGINE_RPC_PORT, PROXY_SCOPES } from '@shared/constants'
@@ -237,6 +238,7 @@ if (import.meta.env.PROD) {
           'rpc-listen-port': String(port),
         },
       })
+      if (useDatabaseStore().phase === 'resetting') return false
       const snapshot = await engineStore.ensureRunning('startup')
       logger.info('Engine', `supervisor completed startup on port ${port}`)
       return snapshot.phase === 'running'
@@ -321,6 +323,10 @@ if (import.meta.env.PROD) {
     // on their first run. The native window is still hidden until
     // MainLayout.onMounted explicitly shows it.
     app.mount('#app')
+    // The UI remains usable if database inspection or migrations fail.
+    const database = useDatabaseStore()
+    await database.init().catch(() => undefined)
+    if (database.phase === 'resetting') return
     await engineStore.initialize()
 
     const config = preferenceStore.config

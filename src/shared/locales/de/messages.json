@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Datenbankintegrität wird geprüft...",
     "db-integrity-check-ok": "Datenbank ist in Ordnung",
     "db-integrity-check-fail": "Integritätsprüfung fehlgeschlagen",
-    "db-reset": "Verlauf löschen",
-    "db-reset-confirm": "Alle abgeschlossenen Download-Einträge werden dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
-    "db-reset-success": "Verlauf gelöscht",
+    "db-reset": "Datenbank zurücksetzen",
+    "db-reset-confirm": "Das Zurücksetzen löscht den Downloadverlauf und gespeicherte Website-Zugangsdaten\nHeruntergeladene Dateien und Einstellungen bleiben erhalten",
     "auto-cleanup": "Automatische Bereinigung",
     "notification-and-confirm": "Benachrichtigungen",
     "db-browse": "Verlauf anzeigen",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Die maximale Anzahl der ED2K-Verbindungen muss zwischen 1 und 1024 liegen",
     "ed2k-invalid-search-timeout": "Die ED2K-Suchdauer muss zwischen 10 und 600 Sekunden liegen",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Zufällig"
+    "random-port": "Zufällig",
+    "db-unavailable": "Datenbank nicht verfügbar",
+    "db-unavailable-description": "Einige Funktionen sind nicht verfügbar. Jetzt oder später in den Einstellungen zurücksetzen",
+    "db-reset-restart": "Zurücksetzen und neu starten",
+    "db-reset-later": "Nicht jetzt",
+    "db-reset-failed": "Datenbank konnte nicht zurückgesetzt werden"
   },
   "subnav": {
     "task-list": "Aufgaben",

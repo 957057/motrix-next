@@ -20,6 +20,7 @@ import { resolveUserVisibleDownloadDir } from '@shared/utils/userVisibleDirector
 import { buildSettingsBackup, parseSettingsBackup } from '@shared/utils/settingsBackup'
 import { buildSystemConfigFromAppConfig } from '@shared/utils/systemConfig'
 import { useEngineStore } from '@/stores/engine'
+import { useDatabaseReset } from '@/composables/useDatabaseReset'
 import type { AppConfig, HistoryRecord } from '@shared/types'
 import type { DataTableSortState, PaginationProps } from 'naive-ui'
 import type { I18nKey } from '@shared/i18nTypes'
@@ -40,7 +41,6 @@ interface AdvancedActionsDeps {
       sortField?: string
       sortOrder?: 'ascend' | 'descend' | false
     }) => Promise<{ records: HistoryRecord[]; total: number }>
-    clearRecords: () => Promise<void>
   }
   preferenceStore: {
     config: AppConfig
@@ -63,6 +63,7 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
 
   const dialog = useDialog()
   const engineStore = useEngineStore()
+  const { showDatabaseReset } = useDatabaseReset()
 
   // ── DB Browse state ──────────────────────────────────────────────────
   const showDbBrowse = ref(false)
@@ -269,21 +270,7 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
   }
 
   function handleDbReset() {
-    dialog.error({
-      title: t('preferences.db-reset'),
-      content: t('preferences.db-reset-confirm'),
-      positiveText: t('app.yes'),
-      negativeText: t('app.no'),
-      onPositiveClick: async () => {
-        try {
-          await historyStore.clearRecords()
-          message.success(t('preferences.db-reset-success'))
-        } catch (e) {
-          message.error(`${t('preferences.db-reset')}: ${(e as Error).message}`)
-          logger.error('Advanced.dbReset', e)
-        }
-      },
-    })
+    showDatabaseReset()
   }
 
   async function handleExportLogs() {

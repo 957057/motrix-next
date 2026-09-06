@@ -737,7 +737,9 @@ async fn prepare_app_exit(
         let history = app.try_state::<HistoryDbState>().ok_or_else(|| {
             AppError::Store("History database is unavailable during app exit".into())
         })?;
-        history.0.clear_records(Some("complete")).await?;
+        if history.0.is_ready().await {
+            history.0.clear_records(Some("complete")).await?;
+        }
     }
 
     log::info!(

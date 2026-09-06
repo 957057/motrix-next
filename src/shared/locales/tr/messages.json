@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Veritabanı bütünlüğü kontrol ediliyor...",
     "db-integrity-check-ok": "Veritabanı sorunsuz",
     "db-integrity-check-fail": "Bütünlük kontrolü başarısız",
-    "db-reset": "Geçmişi Sil",
-    "db-reset-confirm": "Tamamlanan tüm indirme kayıtları kalıcı olarak silinecektir. Bu işlem geri alınamaz.",
-    "db-reset-success": "Geçmiş silindi",
+    "db-reset": "Veritabanını Sıfırla",
+    "db-reset-confirm": "Sıfırlama, indirme geçmişini ve kayıtlı web sitesi giriş bilgilerini siler\nİndirilen dosyalar ve tercihler korunur",
     "auto-cleanup": "Otomatik temizlik",
     "notification-and-confirm": "Bildirimler ve onay",
     "db-browse": "Geçmişi Görüntüle",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "En fazla ED2K bağlantısı 1 ile 1024 arasında olmalıdır",
     "ed2k-invalid-search-timeout": "ED2K arama süresi 10 ile 600 saniye arasında olmalıdır",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "Veritabanı Kullanılamıyor",
+    "db-unavailable-description": "Bazı özellikler kullanılamıyor. Şimdi veya daha sonra Ayarlar’dan sıfırlayın",
+    "db-reset-restart": "Sıfırla ve Yeniden Başlat",
+    "db-reset-later": "Şimdi Değil",
+    "db-reset-failed": "Veritabanı sıfırlanamadı"
   },
   "subnav": {
     "task-list": "Görevler",

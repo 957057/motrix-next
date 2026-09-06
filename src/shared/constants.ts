@@ -193,8 +193,7 @@ export const MAX_FILE_CATEGORIES = 20
 export const BUILTIN_CATEGORY_LABELS: ReadonlySet<string> = new Set(BUILTIN_CATEGORY_TEMPLATES.map((t) => t.label))
 
 /** Latest registered SQLite migration version for history.db.
- *  Keep this in sync with tauri_plugin_sql migrations in src-tauri/src/lib.rs
- *  and REGISTERED_VERSIONS in src-tauri/src/db_guard.rs. */
+ *  Keep this in sync with tauri_plugin_sql migrations in src-tauri/src/lib.rs. */
 export const CURRENT_DB_SCHEMA_VERSION = 3
 
 /** Official, independently hosted tracker-list sources. */

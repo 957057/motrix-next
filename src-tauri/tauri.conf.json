@@ -132,9 +132,6 @@
       "desktop": {
         "schemes": ["magnet", "ed2k", "thunder", "motrixnext"]
       }
-    },
-    "sql": {
-      "preload": ["sqlite:history.db"]
     }
   }
 }

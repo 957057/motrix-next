@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Verificando integridad de la base de datos...",
     "db-integrity-check-ok": "La base de datos está bien",
     "db-integrity-check-fail": "La verificación de integridad falló",
-    "db-reset": "Borrar historial",
-    "db-reset-confirm": "Se eliminarán permanentemente todos los registros de descargas completadas. Esta acción no se puede deshacer.",
-    "db-reset-success": "Historial borrado",
+    "db-reset": "Restablecer base de datos",
+    "db-reset-confirm": "Se borrarán el historial de descargas y las credenciales web guardadas\nSe conservarán los archivos descargados y las preferencias",
     "auto-cleanup": "Limpieza automática",
     "notification-and-confirm": "Notificaciones y confirmación",
     "db-browse": "Ver historial",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "El máximo de conexiones ED2K debe estar entre 1 y 1024",
     "ed2k-invalid-search-timeout": "La duración de búsqueda ED2K debe estar entre 10 y 600 segundos",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Aleatorio"
+    "random-port": "Aleatorio",
+    "db-unavailable": "Base de datos no disponible",
+    "db-unavailable-description": "Algunas funciones no están disponibles. Restablécela ahora o más tarde en Ajustes",
+    "db-reset-restart": "Restablecer y reiniciar",
+    "db-reset-later": "Ahora no",
+    "db-reset-failed": "No se pudo restablecer la base de datos"
   },
   "subnav": {
     "task-list": "Tareas",

@@ -378,9 +378,8 @@
     "db-integrity-check-running": "در حال بررسی یکپارچگی پایگاه داده...",
     "db-integrity-check-ok": "پایگاه داده سالم است",
     "db-integrity-check-fail": "بررسی یکپارچگی ناموفق بود",
-    "db-reset": "پاک کردن تاریخچه",
-    "db-reset-confirm": "همه سوابق دانلودهای تکمیل‌شده برای همیشه حذف خواهند شد. این عمل قابل بازگشت نیست.",
-    "db-reset-success": "تاریخچه پاک شد",
+    "db-reset": "بازنشانی پایگاه داده",
+    "db-reset-confirm": "بازنشانی، تاریخچهٔ دانلود و اطلاعات ورود ذخیره‌شدهٔ وب‌سایت‌ها را پاک می‌کند\nفایل‌های دانلودشده و تنظیمات حفظ می‌شوند",
     "auto-cleanup": "پاکسازی خودکار",
     "notification-and-confirm": "اعلان‌ها و تأیید",
     "db-browse": "مشاهده تاریخچه",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "حداکثر اتصال‌های ED2K باید بین ۱ و ۱۰۲۴ باشد",
     "ed2k-invalid-search-timeout": "مدت جستجوی ED2K باید بین ۱۰ تا ۶۰۰ ثانیه باشد",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "پایگاه داده در دسترس نیست",
+    "db-unavailable-description": "برخی قابلیت‌ها در دسترس نیستند؛ اکنون یا بعداً از تنظیمات بازنشانی کنید",
+    "db-reset-restart": "بازنشانی و راه‌اندازی مجدد",
+    "db-reset-later": "فعلاً نه",
+    "db-reset-failed": "بازنشانی پایگاه داده انجام نشد"
   },
   "subnav": {
     "task-list": "وظایف",

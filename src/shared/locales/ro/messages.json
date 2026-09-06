@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Verificarea integrității bazei de date...",
     "db-integrity-check-ok": "Baza de date este OK",
     "db-integrity-check-fail": "Verificarea integrității a eșuat",
-    "db-reset": "Șterge istoricul",
-    "db-reset-confirm": "Toate înregistrările descărcărilor finalizate vor fi șterse permanent. Această acțiune nu poate fi anulată.",
-    "db-reset-success": "Istoric șters",
+    "db-reset": "Resetează baza de date",
+    "db-reset-confirm": "Resetarea șterge istoricul descărcărilor și datele de autentificare salvate pentru site-uri\nFișierele descărcate și preferințele vor fi păstrate",
     "auto-cleanup": "Curățare automată",
     "notification-and-confirm": "Notificări și confirmare",
     "db-browse": "Vizualizare istoric",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Numărul maxim de conexiuni ED2K trebuie să fie între 1 și 1024",
     "ed2k-invalid-search-timeout": "Durata căutării ED2K trebuie să fie între 10 și 600 de secunde",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "Baza de date nu este disponibilă",
+    "db-unavailable-description": "Unele funcții nu sunt disponibile. Resetează acum sau mai târziu din setări",
+    "db-reset-restart": "Resetează și repornește",
+    "db-reset-later": "Nu acum",
+    "db-reset-failed": "Baza de date nu a putut fi resetată"
   },
   "subnav": {
     "task-list": "Sarcini",

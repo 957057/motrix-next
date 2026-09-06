@@ -244,6 +244,8 @@ function makeTask(overrides: Partial<Aria2Task> = {}): Aria2Task {
 
 // ── Tests ────────────────────────────────────────────────────────────
 
+vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn().mockResolvedValue(false) }))
+
 describe('HistoryStore', () => {
   let store: ReturnType<typeof useHistoryStore>
 
@@ -594,36 +596,6 @@ describe('HistoryStore', () => {
     })
   })
 
-  // ── PRAGMA initialization ──────────────────────────────────────
-
-  describe('PRAGMA initialization', () => {
-    it('sets WAL journal mode on init', async () => {
-      const walQueries = executedQueries.filter(
-        (q) => q.toUpperCase().includes('JOURNAL_MODE') && q.toUpperCase().includes('WAL'),
-      )
-      expect(walQueries.length).toBeGreaterThanOrEqual(1)
-    })
-
-    it('sets synchronous=NORMAL on init', async () => {
-      const syncQueries = executedQueries.filter(
-        (q) => q.toUpperCase().includes('SYNCHRONOUS') && q.toUpperCase().includes('NORMAL'),
-      )
-      expect(syncQueries.length).toBeGreaterThanOrEqual(1)
-    })
-
-    it('sets busy_timeout on init', async () => {
-      const busyQueries = executedQueries.filter((q) => q.toUpperCase().includes('BUSY_TIMEOUT'))
-      expect(busyQueries.length).toBeGreaterThanOrEqual(1)
-    })
-
-    it('sets foreign_keys=ON on init', async () => {
-      const fkQueries = executedQueries.filter(
-        (q) => q.toUpperCase().includes('FOREIGN_KEYS') && q.toUpperCase().includes('ON'),
-      )
-      expect(fkQueries.length).toBeGreaterThanOrEqual(1)
-    })
-  })
-
   // ── checkIntegrity ─────────────────────────────────────────────
 
   describe('checkIntegrity', () => {
@@ -637,38 +609,6 @@ describe('HistoryStore', () => {
       await store.checkIntegrity()
       const integrityQueries = executedQueries.filter((q) => q.toUpperCase().includes('INTEGRITY_CHECK'))
       expect(integrityQueries.length).toBe(1)
-    })
-  })
-
-  describe('initialization', () => {
-    it('shares initialization and preserves records when loading fails', async () => {
-      await store.addRecord(makeRecord({ gid: 'preserved' }))
-      setActivePinia(createPinia())
-      store = useHistoryStore()
-      const Database = (await import('@tauri-apps/plugin-sql')).default
-      const load = vi.mocked(Database.load)
-      load.mockClear()
-      load.mockRejectedValueOnce(new Error('disk full'))
-
-      const results = await Promise.allSettled([store.init(), store.init()])
-      expect(results.map((result) => result.status)).toEqual(['rejected', 'rejected'])
-      expect(load).toHaveBeenCalledTimes(1)
-      expect(await store.getRecords()).toEqual([expect.objectContaining({ gid: 'preserved' })])
-      expect(load).toHaveBeenCalledTimes(2)
-    })
-
-    it('rejects a failed integrity check without rebuilding the database', async () => {
-      const Database = (await import('@tauri-apps/plugin-sql')).default
-      const connection = await store.init()
-      vi.mocked(connection.select).mockResolvedValueOnce([{ integrity_check: 'corrupt' }])
-      vi.mocked(Database.load).mockClear()
-      setActivePinia(createPinia())
-      store = useHistoryStore()
-
-      await expect(store.init()).rejects.toThrow('integrity check failed')
-      expect(Database.load).toHaveBeenCalledTimes(1)
-      expect(connection.close).not.toHaveBeenCalled()
-      await expect(store.init()).resolves.toBe(connection)
     })
   })
 })

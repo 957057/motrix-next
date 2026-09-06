@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Databaseintegriteit controleren...",
     "db-integrity-check-ok": "Database is in orde",
     "db-integrity-check-fail": "Integriteitscontrole mislukt",
-    "db-reset": "Geschiedenis wissen",
-    "db-reset-confirm": "Alle voltooide downloadrecords worden permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.",
-    "db-reset-success": "Geschiedenis gewist",
+    "db-reset": "Database opnieuw instellen",
+    "db-reset-confirm": "De downloadgeschiedenis en opgeslagen inloggegevens voor websites worden gewist\nGedownloade bestanden en voorkeuren blijven behouden",
     "auto-cleanup": "Automatisch opruimen",
     "notification-and-confirm": "Meldingen en bevestiging",
     "db-browse": "Geschiedenis bekijken",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Het maximale aantal ED2K-verbindingen moet tussen 1 en 1024 liggen",
     "ed2k-invalid-search-timeout": "ED2K-zoekduur moet tussen 10 en 600 seconden zijn",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "Database niet beschikbaar",
+    "db-unavailable-description": "Sommige functies zijn niet beschikbaar. Stel de database nu opnieuw in of later via Instellingen",
+    "db-reset-restart": "Opnieuw instellen en herstarten",
+    "db-reset-later": "Niet nu",
+    "db-reset-failed": "De database kon niet opnieuw worden ingesteld"
   },
   "subnav": {
     "task-list": "Taken",

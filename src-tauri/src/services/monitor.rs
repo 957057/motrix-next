@@ -366,6 +366,9 @@ async fn persist_lifecycle_event(
         ));
     };
     let db = db_state.0.clone();
+    if !db.is_ready().await {
+        return Ok(());
+    }
     let existing_added_at = db.get_task_birth(&payload.gid).await?;
     let record = build_history_record_with_added_at(payload, event_name, existing_added_at);
 
@@ -390,7 +393,12 @@ pub async fn process_lifecycle_task(
     }
 
     let payload = TaskEvent::from_aria2(task);
-    persist_lifecycle_event(app, event_name, &payload).await?;
+    if let Err(error) = persist_lifecycle_event(app, event_name, &payload).await {
+        log::error!(
+            "task_lifecycle:persist-failed gid={} error={error}",
+            payload.gid
+        );
+    }
 
     if !notify {
         return Ok(());
@@ -436,6 +444,9 @@ pub async fn reconcile_stopped_tasks(
         ));
     };
     let db = db_state.0.clone();
+    if !db.is_ready().await {
+        return Ok(0);
+    }
     let mut reconciled = 0;
 
     for task in aria2.tell_all_stopped().await? {

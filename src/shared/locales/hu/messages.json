@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Adatbázis integritásának ellenőrzése...",
     "db-integrity-check-ok": "Az adatbázis rendben van",
     "db-integrity-check-fail": "Az integritás-ellenőrzés sikertelen",
-    "db-reset": "Előzmények törlése",
-    "db-reset-confirm": "Az összes befejezett letöltési rekord véglegesen törlődik. Ez a művelet nem vonható vissza.",
-    "db-reset-success": "Előzmények törölve",
+    "db-reset": "Adatbázis alaphelyzetbe állítása",
+    "db-reset-confirm": "Az alaphelyzetbe állítás törli a letöltési előzményeket és a mentett webhelyes bejelentkezési adatokat\nA letöltött fájlok és a beállítások megmaradnak",
     "auto-cleanup": "Automatikus tisztítás",
     "notification-and-confirm": "Értesítések és megerősítés",
     "db-browse": "Előzmények megtekintése",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Az ED2K-kapcsolatok felső határának 1 és 1024 között kell lennie",
     "ed2k-invalid-search-timeout": "Az ED2K keresési időnek 10 és 600 másodperc között kell lennie",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "Az adatbázis nem érhető el",
+    "db-unavailable-description": "Egyes funkciók nem érhetők el. Állítsd alaphelyzetbe most vagy később a beállításokban",
+    "db-reset-restart": "Alaphelyzetbe állítás és újraindítás",
+    "db-reset-later": "Most nem",
+    "db-reset-failed": "Az adatbázis alaphelyzetbe állítása sikertelen"
   },
   "subnav": {
     "task-list": "Feladatok",

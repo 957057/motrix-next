@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Memeriksa integritas database...",
     "db-integrity-check-ok": "Database OK",
     "db-integrity-check-fail": "Pemeriksaan integritas gagal",
-    "db-reset": "Hapus Riwayat",
-    "db-reset-confirm": "Semua catatan unduhan yang selesai akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.",
-    "db-reset-success": "Riwayat dihapus",
+    "db-reset": "Atur Ulang Basis Data",
+    "db-reset-confirm": "Pengaturan ulang akan menghapus riwayat unduhan dan kredensial situs web yang tersimpan\nFile yang diunduh dan preferensi akan tetap disimpan",
     "auto-cleanup": "Pembersihan Otomatis",
     "notification-and-confirm": "Notifikasi dan konfirmasi",
     "db-browse": "Lihat Riwayat",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Koneksi ED2K maksimum harus antara 1 dan 1024",
     "ed2k-invalid-search-timeout": "Durasi pencarian ED2K harus antara 10 dan 600 detik",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "Basis Data Tidak Tersedia",
+    "db-unavailable-description": "Beberapa fitur tidak tersedia. Atur ulang sekarang atau nanti melalui Pengaturan",
+    "db-reset-restart": "Atur Ulang dan Mulai Ulang",
+    "db-reset-later": "Nanti Saja",
+    "db-reset-failed": "Basis data tidak dapat diatur ulang"
   },
   "subnav": {
     "task-list": "Tugas",

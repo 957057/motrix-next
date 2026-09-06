@@ -378,9 +378,8 @@
     "db-integrity-check-running": "กำลังตรวจสอบความสมบูรณ์ของฐานข้อมูล...",
     "db-integrity-check-ok": "ฐานข้อมูลปกติ",
     "db-integrity-check-fail": "การตรวจสอบความสมบูรณ์ล้มเหลว",
-    "db-reset": "ล้างประวัติ",
-    "db-reset-confirm": "บันทึกการดาวน์โหลดที่เสร็จสิ้นทั้งหมดจะถูกลบอย่างถาวร การดำเนินการนี้ไม่สามารถยกเลิกได้",
-    "db-reset-success": "ล้างประวัติแล้ว",
+    "db-reset": "รีเซ็ตฐานข้อมูล",
+    "db-reset-confirm": "การรีเซ็ตจะล้างประวัติการดาวน์โหลดและข้อมูลเข้าสู่ระบบเว็บไซต์ที่บันทึกไว้\nไฟล์ที่ดาวน์โหลดและการตั้งค่าจะยังคงอยู่",
     "auto-cleanup": "ล้างข้อมูลอัตโนมัติ",
     "notification-and-confirm": "การแจ้งเตือนและการยืนยัน",
     "db-browse": "ดูประวัติ",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "การเชื่อมต่อ ED2K สูงสุดต้องอยู่ระหว่าง 1 ถึง 1024",
     "ed2k-invalid-search-timeout": "ระยะเวลาค้นหา ED2K ต้องอยู่ระหว่าง 10 ถึง 600 วินาที",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "ฐานข้อมูลไม่พร้อมใช้งาน",
+    "db-unavailable-description": "บางฟังก์ชันไม่พร้อมใช้งาน รีเซ็ตตอนนี้หรือภายหลังในการตั้งค่าได้",
+    "db-reset-restart": "รีเซ็ตและเริ่มใหม่",
+    "db-reset-later": "ไว้ภายหลัง",
+    "db-reset-failed": "ไม่สามารถรีเซ็ตฐานข้อมูลได้"
   },
   "subnav": {
     "task-list": "รายการงาน",

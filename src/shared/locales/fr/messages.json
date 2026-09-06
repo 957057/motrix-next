@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Vérification de l'intégrité de la base de données...",
     "db-integrity-check-ok": "La base de données est OK",
     "db-integrity-check-fail": "La vérification d'intégrité a échoué",
-    "db-reset": "Effacer l'historique",
-    "db-reset-confirm": "Tous les enregistrements de téléchargements terminés seront définitivement supprimés. Cette action est irréversible.",
-    "db-reset-success": "Historique effacé",
+    "db-reset": "Réinitialiser la base de données",
+    "db-reset-confirm": "La réinitialisation effacera l’historique des téléchargements et les identifiants web enregistrés\nLes fichiers téléchargés et les préférences seront conservés",
     "auto-cleanup": "Nettoyage automatique",
     "notification-and-confirm": "Notifications et confirmation",
     "db-browse": "Voir l'historique",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Le nombre maximal de connexions ED2K doit être compris entre 1 et 1024",
     "ed2k-invalid-search-timeout": "La durée de recherche ED2K doit être comprise entre 10 et 600 secondes",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Aléatoire"
+    "random-port": "Aléatoire",
+    "db-unavailable": "Base de données indisponible",
+    "db-unavailable-description": "Certaines fonctions sont indisponibles. Réinitialisez maintenant ou plus tard dans les paramètres",
+    "db-reset-restart": "Réinitialiser et redémarrer",
+    "db-reset-later": "Pas maintenant",
+    "db-reset-failed": "Impossible de réinitialiser la base de données"
   },
   "subnav": {
     "task-list": "Tâches",

@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Перевірка цілісності бази даних...",
     "db-integrity-check-ok": "База даних у порядку",
     "db-integrity-check-fail": "Перевірка цілісності не вдалася",
-    "db-reset": "Очистити історію",
-    "db-reset-confirm": "Усі записи про завершені завантаження буде остаточно видалено. Цю дію не можна скасувати.",
-    "db-reset-success": "Історію очищено",
+    "db-reset": "Скинути базу даних",
+    "db-reset-confirm": "Скидання видалить історію завантажень і збережені дані входу на сайти\nЗавантажені файли та налаштування буде збережено",
     "auto-cleanup": "Автоочищення",
     "notification-and-confirm": "Сповіщення та підтвердження",
     "db-browse": "Переглянути історію",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Максимальна кількість з’єднань ED2K має бути від 1 до 1024",
     "ed2k-invalid-search-timeout": "Тривалість пошуку ED2K має бути від 10 до 600 секунд",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "База даних недоступна",
+    "db-unavailable-description": "Деякі функції недоступні. Виконайте скидання зараз або пізніше в налаштуваннях",
+    "db-reset-restart": "Скинути й перезапустити",
+    "db-reset-later": "Не зараз",
+    "db-reset-failed": "Не вдалося скинути базу даних"
   },
   "subnav": {
     "task-list": "Завдання",

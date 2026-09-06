@@ -2,7 +2,6 @@ rust_i18n::i18n!("locales", fallback = "en-US");
 
 mod aria2;
 mod commands;
-mod db_guard;
 mod diagnostics;
 mod engine;
 mod error;
@@ -273,14 +272,10 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // visibility decisions.  See AppLifecycleState doc and issue #206.
     app.manage(AppLifecycleState::new());
 
-    // History database — opens the same DB as tauri-plugin-sql migrations.
-    {
-        use tauri::Manager;
-        let db_path = app.path().app_config_dir()?.join("history.db");
-        let history_db = history::HistoryDb::open(&db_path)
-            .map_err(|e| format!("Failed to open history.db: {e}"))?;
-        app.manage(history::HistoryDbState(std::sync::Arc::new(history_db)));
-    }
+    // Database failures must not prevent the window from opening.
+    app.manage(history::HistoryDbState(std::sync::Arc::new(
+        history::HistoryDb::unavailable(),
+    )));
 
     #[cfg(target_os = "macos")]
     app.on_menu_event(|app, event| match event.id().as_ref() {
@@ -577,16 +572,6 @@ pub fn run() {
         log_targets
     };
 
-    // ── Pre-flight DB migration guard ────────────────────────────
-    // Must run BEFORE tauri_plugin_sql to prevent panic on downgrade.
-    // SQL uses AppConfig; the preferences store uses AppData.
-    if let (Some(config), Some(data)) = (dirs::config_dir(), dirs::data_dir()) {
-        db_guard::check(
-            &config.join("com.motrix.next"),
-            &data.join("com.motrix.next"),
-        );
-    }
-
     let mut builder = tauri::Builder::default()
         .plugin(
             tauri_plugin_log::Builder::new()
@@ -727,6 +712,9 @@ pub fn run() {
             commands::engine_recover_runtime_state,
             commands::resolve_bt_listen_port,
             commands::factory_reset,
+            commands::database_prepare,
+            commands::database_initialize,
+            commands::database_reset,
             commands::update_tray_title,
             commands::update_tray_menu_labels,
             commands::update_menu_labels,

@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Checking database integrity...",
     "db-integrity-check-ok": "Database is OK",
     "db-integrity-check-fail": "Integrity check failed",
-    "db-reset": "Clear History",
-    "db-reset-confirm": "All completed download records will be permanently deleted. This action cannot be undone.",
-    "db-reset-success": "History cleared",
+    "db-reset": "Reset Database",
+    "db-reset-confirm": "Resetting clears download history and saved website credentials\nDownloaded files and preferences will be kept",
     "auto-cleanup": "Auto Cleanup",
     "notification-and-confirm": "Notifications & Confirmation",
     "db-browse": "View History",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "ED2K maximum connections must be between 1 and 1024",
     "ed2k-invalid-search-timeout": "ED2K search duration must be between 10 and 600 seconds",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "Database Unavailable",
+    "db-unavailable-description": "Some features are unavailable. Reset now or later in Settings",
+    "db-reset-restart": "Reset and Restart",
+    "db-reset-later": "Not Now",
+    "db-reset-failed": "Could not reset the database"
   },
   "subnav": {
     "task-list": "Tasks",

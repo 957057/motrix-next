@@ -1,9 +1,5 @@
 {
   "_version": 1,
-  "database-conflict.body": "下载历史数据库由更新版本的 Motrix Next 创建，\n与当前版本不兼容。\n\n继续使用需要重置下载历史记录。\n已下载的文件不会受到影响。",
-  "database-conflict.cancel": "退出",
-  "database-conflict.confirm": "重置并启动",
-  "database-conflict.title": "数据库版本不兼容",
   "notification.bt-complete-body": "做种中：%{task_name}",
   "notification.bt-complete-title": "BT 下载完成",
   "notification.download-batch-start-body": "下载中：%{task_name} 等 %{count} 个任务",

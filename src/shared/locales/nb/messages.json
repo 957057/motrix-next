@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Sjekker databaseintegritet...",
     "db-integrity-check-ok": "Databasen er OK",
     "db-integrity-check-fail": "Integritetssjekken mislyktes",
-    "db-reset": "Tøm historikk",
-    "db-reset-confirm": "Alle fullførte nedlastingsoppføringer slettes permanent. Denne handlingen kan ikke angres.",
-    "db-reset-success": "Historikk tømt",
+    "db-reset": "Tilbakestill database",
+    "db-reset-confirm": "Tilbakestilling sletter nedlastingshistorikken og lagrede påloggingsopplysninger for nettsteder\nNedlastede filer og innstillinger beholdes",
     "auto-cleanup": "Automatisk opprydding",
     "notification-and-confirm": "Varsler og bekreftelse",
     "db-browse": "Vis historikk",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Maksimalt antall ED2K-tilkoblinger må være mellom 1 og 1024",
     "ed2k-invalid-search-timeout": "ED2K-søketid må være mellom 10 og 600 sekunder",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "Databasen er utilgjengelig",
+    "db-unavailable-description": "Enkelte funksjoner er utilgjengelige. Tilbakestill nå eller senere i innstillingene",
+    "db-reset-restart": "Tilbakestill og start på nytt",
+    "db-reset-later": "Ikke nå",
+    "db-reset-failed": "Kunne ikke tilbakestille databasen"
   },
   "subnav": {
     "task-list": "Oppgaver",

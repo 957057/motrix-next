@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Проверка на целостта на базата данни...",
     "db-integrity-check-ok": "Базата данни е наред",
     "db-integrity-check-fail": "Проверката на целостта е неуспешна",
-    "db-reset": "Изчисти историята",
-    "db-reset-confirm": "Всички завършени записи за изтеглянията ще бъдат изтрити завинаги. Това действие е необратимо.",
-    "db-reset-success": "Историята е изчистена",
+    "db-reset": "Нулиране на базата данни",
+    "db-reset-confirm": "Нулирането изтрива историята на изтеглянията и запазените данни за вход в сайтове\nИзтеглените файлове и предпочитанията ще се запазят",
     "auto-cleanup": "Автоматично почистване",
     "notification-and-confirm": "Известия и потвърждение",
     "db-browse": "Преглед на историята",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Максималният брой ED2K връзки трябва да е между 1 и 1024",
     "ed2k-invalid-search-timeout": "Времето за ED2K търсене трябва да е между 10 и 600 секунди",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "Базата данни е недостъпна",
+    "db-unavailable-description": "Някои функции са недостъпни. Нулирайте сега или по-късно от настройките",
+    "db-reset-restart": "Нулиране и рестартиране",
+    "db-reset-later": "Не сега",
+    "db-reset-failed": "Базата данни не можа да бъде нулирана"
   },
   "subnav": {
     "task-list": "Задачи",

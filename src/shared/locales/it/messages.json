@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Controllo integrità del database in corso...",
     "db-integrity-check-ok": "Il database è OK",
     "db-integrity-check-fail": "Controllo integrità fallito",
-    "db-reset": "Cancella cronologia",
-    "db-reset-confirm": "Tutti i record di download completati verranno eliminati in modo permanente. Questa azione non può essere annullata.",
-    "db-reset-success": "Cronologia cancellata",
+    "db-reset": "Reimposta database",
+    "db-reset-confirm": "La reimpostazione cancella la cronologia dei download e le credenziali web salvate\nI file scaricati e le preferenze verranno conservati",
     "auto-cleanup": "Pulizia automatica",
     "notification-and-confirm": "Notifiche e conferma",
     "db-browse": "Visualizza cronologia",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Le connessioni ED2K massime devono essere comprese tra 1 e 1024",
     "ed2k-invalid-search-timeout": "La durata della ricerca ED2K deve essere tra 10 e 600 secondi",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "Database non disponibile",
+    "db-unavailable-description": "Alcune funzioni non sono disponibili. Reimposta ora o più tardi nelle impostazioni",
+    "db-reset-restart": "Reimposta e riavvia",
+    "db-reset-later": "Non ora",
+    "db-reset-failed": "Impossibile reimpostare il database"
   },
   "subnav": {
     "task-list": "Attività",

@@ -378,9 +378,8 @@
     "db-integrity-check-running": "正在检查数据库完整性...",
     "db-integrity-check-ok": "数据库正常",
     "db-integrity-check-fail": "完整性检查失败",
-    "db-reset": "清空历史记录",
-    "db-reset-confirm": "将永久删除所有已完成的下载记录，此操作不可撤销。",
-    "db-reset-success": "历史记录已清空",
+    "db-reset": "重置数据库",
+    "db-reset-confirm": "重置将清空下载历史和已保存的网站登录凭据\n已下载文件和偏好设置将保留",
     "auto-cleanup": "自动清理",
     "notification-and-confirm": "通知与确认",
     "db-browse": "查看历史记录",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "ED2K 最大连接数必须在 1 到 1024 之间",
     "ed2k-invalid-search-timeout": "ED2K 搜索时长必须在 10 到 600 秒之间",
     "ed2k-invalid-server": "ED2K 服务器必须使用 host:port 格式",
-    "random-port": "随机"
+    "random-port": "随机",
+    "db-unavailable": "数据库异常",
+    "db-unavailable-description": "部分功能暂不可用，可立即重置或稍后在设置中重置",
+    "db-reset-restart": "重置并重启",
+    "db-reset-later": "暂不处理",
+    "db-reset-failed": "数据库重置失败"
   },
   "subnav": {
     "task-list": "任务列表",

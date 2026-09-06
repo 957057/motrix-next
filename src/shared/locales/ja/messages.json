@@ -378,9 +378,8 @@
     "db-integrity-check-running": "データベースの整合性をチェック中...",
     "db-integrity-check-ok": "データベースは正常です",
     "db-integrity-check-fail": "整合性チェックに失敗しました",
-    "db-reset": "履歴を消去",
-    "db-reset-confirm": "完了済みのすべてのダウンロード記録が完全に削除されます。この操作は取り消せません。",
-    "db-reset-success": "履歴を消去しました",
+    "db-reset": "データベースをリセット",
+    "db-reset-confirm": "ダウンロード履歴と保存済みのウェブサイトのログイン情報が削除されます\nダウンロード済みのファイルと環境設定は保持されます",
     "auto-cleanup": "自動クリーンアップ",
     "notification-and-confirm": "通知と確認",
     "db-browse": "履歴を表示",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "ED2K 最大接続数は 1 から 1024 の範囲で指定してください",
     "ed2k-invalid-search-timeout": "ED2K 検索時間は 10 から 600 秒の間にしてください",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "ランダム"
+    "random-port": "ランダム",
+    "db-unavailable": "データベースに問題があります",
+    "db-unavailable-description": "一部の機能を利用できません。今すぐ、または後で設定からリセットしてください",
+    "db-reset-restart": "リセットして再起動",
+    "db-reset-later": "後で",
+    "db-reset-failed": "データベースをリセットできませんでした"
   },
   "subnav": {
     "task-list": "タスク一覧",

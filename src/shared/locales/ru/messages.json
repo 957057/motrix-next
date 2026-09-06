@@ -378,9 +378,8 @@
     "db-integrity-check-running": "Проверка целостности базы данных...",
     "db-integrity-check-ok": "База данных в порядке",
     "db-integrity-check-fail": "Проверка целостности не удалась",
-    "db-reset": "Очистить историю",
-    "db-reset-confirm": "Все записи о завершённых загрузках будут удалены навсегда. Это действие нельзя отменить.",
-    "db-reset-success": "История очищена",
+    "db-reset": "Сбросить базу данных",
+    "db-reset-confirm": "Сброс удалит историю загрузок и сохранённые данные входа на сайты\nСкачанные файлы и настройки сохранятся",
     "auto-cleanup": "Автоочистка",
     "notification-and-confirm": "Уведомления и подтверждение",
     "db-browse": "Просмотр истории",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "Максимальное число соединений ED2K должно быть от 1 до 1024",
     "ed2k-invalid-search-timeout": "Длительность поиска ED2K должна быть от 10 до 600 секунд",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Случайно"
+    "random-port": "Случайно",
+    "db-unavailable": "База данных недоступна",
+    "db-unavailable-description": "Некоторые функции недоступны. Выполните сброс сейчас или позже в настройках",
+    "db-reset-restart": "Сбросить и перезапустить",
+    "db-reset-later": "Не сейчас",
+    "db-reset-failed": "Не удалось сбросить базу данных"
   },
   "subnav": {
     "task-list": "Задачи",

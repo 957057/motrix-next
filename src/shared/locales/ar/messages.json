@@ -378,9 +378,8 @@
     "db-integrity-check-running": "جارٍ فحص سلامة قاعدة البيانات...",
     "db-integrity-check-ok": "قاعدة البيانات سليمة",
     "db-integrity-check-fail": "فشل فحص السلامة",
-    "db-reset": "مسح السجل",
-    "db-reset-confirm": "سيؤدي هذا إلى حذف جميع سجلات التنزيل المكتملة نهائيًا. لا يمكن التراجع.‏",
-    "db-reset-success": "تم مسح السجل بنجاح",
+    "db-reset": "إعادة تعيين قاعدة البيانات",
+    "db-reset-confirm": "ستؤدي إعادة التعيين إلى مسح سجل التنزيلات وبيانات تسجيل الدخول المحفوظة للمواقع\nسيتم الاحتفاظ بالملفات المنزّلة والتفضيلات",
     "auto-cleanup": "التنظيف التلقائي",
     "notification-and-confirm": "الإشعارات والتأكيد",
     "db-browse": "عرض السجل",
@@ -579,7 +578,12 @@
     "ed2k-invalid-max-connections": "يجب أن يكون الحد الأقصى لاتصالات ED2K بين 1 و1024",
     "ed2k-invalid-search-timeout": "يجب أن تكون مهلة بحث ED2K بين 10 و600 ثانية",
     "ed2k-invalid-server": "ED2K server must use host:port format",
-    "random-port": "Random"
+    "random-port": "Random",
+    "db-unavailable": "قاعدة البيانات غير متاحة",
+    "db-unavailable-description": "بعض الميزات غير متاحة، يمكنك إعادة التعيين الآن أو لاحقًا من الإعدادات",
+    "db-reset-restart": "إعادة التعيين وإعادة التشغيل",
+    "db-reset-later": "ليس الآن",
+    "db-reset-failed": "تعذرت إعادة تعيين قاعدة البيانات"
   },
   "subnav": {
     "task-list": "المهام",
