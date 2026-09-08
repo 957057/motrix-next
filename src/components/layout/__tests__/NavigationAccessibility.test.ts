@@ -38,7 +38,6 @@ vi.mock('@/stores/app', () => ({
 vi.mock('@/stores/task', () => ({
   useTaskStore: () => ({
     taskCounts: { all: 8, progress: 3, failed: 1, completed: 4 },
-    refreshTaskCounts: vi.fn().mockResolvedValue(undefined),
   }),
 }))
 

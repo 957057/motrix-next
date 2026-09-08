@@ -26,13 +26,8 @@ pub async fn aria2_fetch_task_list(
     limit: Option<i64>,
 ) -> Result<Vec<Aria2Task>, AppError> {
     match r#type.as_str() {
-        "active" => {
-            let (active, waiting) =
-                tokio::try_join!(state.0.tell_active(), state.0.tell_waiting(0, 1000),)?;
-            let mut result = active;
-            result.extend(waiting);
-            Ok(result)
-        }
+        "all" => state.0.tell_task_snapshot(true).await,
+        "active" => state.0.tell_task_snapshot(false).await,
         "waiting" => state.0.tell_waiting(0, limit.unwrap_or(1000)).await,
         _ => state.0.tell_stopped(0, limit.unwrap_or(1000)).await,
     }

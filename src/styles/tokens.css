@@ -122,6 +122,11 @@
   --font-size-xs: 12px;
   --border-radius: 6px;
   --transition-all: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  --task-motion-enter: 200ms;
+  --task-motion-leave: 150ms;
+  --task-motion-progress: 300ms;
+  --task-motion-state: 400ms;
+  --task-motion-ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* ── Dark Theme ────────────────────────────────────────────────────── */

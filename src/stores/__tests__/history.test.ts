@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import type { Aria2Task, HistoryRecord } from '@shared/types'
+import type { HistoryRecord } from '@shared/types'
 
 // ── Mock: in-memory SQLite substitute ────────────────────────────────
 let rows: HistoryRecord[] = []
@@ -226,22 +226,6 @@ function makeRecord(overrides: Partial<HistoryRecord> = {}): HistoryRecord {
   }
 }
 
-function makeTask(overrides: Partial<Aria2Task> = {}): Aria2Task {
-  return {
-    gid: 'task-gid',
-    status: 'active',
-    totalLength: '1',
-    completedLength: '1',
-    uploadLength: '0',
-    downloadSpeed: '0',
-    uploadSpeed: '0',
-    connections: '0',
-    dir: '/downloads',
-    files: [],
-    ...overrides,
-  }
-}
-
 // ── Tests ────────────────────────────────────────────────────────────
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn().mockResolvedValue(false) }))
@@ -308,48 +292,6 @@ describe('HistoryStore', () => {
       expect(results[0].gid).toBe('min1')
     })
   })
-
-  describe('countRecordsMatchingTaskIdentities', () => {
-    it('counts history records that match live task identities without double-counting', async () => {
-      rows = [
-        makeRecord({ gid: 'same-gid' }),
-        makeRecord({
-          gid: 'old-bt-gid',
-          task_type: 'bt',
-          meta: JSON.stringify({ infoHash: 'bt-hash' }),
-        }),
-        makeRecord({
-          gid: 'old-ed2k-gid',
-          task_type: 'ed2k',
-          meta: JSON.stringify({ ed2kHash: 'ed2k-hash', ed2kLink: 'ed2k://|file|demo|1|hash|/' }),
-        }),
-        makeRecord({ gid: 'unrelated' }),
-      ]
-
-      const liveTasks = [
-        makeTask({ gid: 'same-gid' }),
-        makeTask({ gid: 'new-bt-gid', bittorrent: { info: { name: 'bt' } }, infoHash: 'bt-hash' }),
-        makeTask({
-          gid: 'new-ed2k-gid',
-          ed2k: { hash: 'ed2k-hash', ed2kLink: 'ed2k://|file|demo|1|hash|/' },
-        }),
-      ]
-
-      await expect(store.countRecordsMatchingTaskIdentities(liveTasks, 'complete')).resolves.toBe(3)
-    })
-  })
-
-  describe('getStatusCounts', () => {
-    it('returns separate successful and failed totals', async () => {
-      await store.addRecord(makeRecord({ gid: 'done-1', status: 'complete' }))
-      await store.addRecord(makeRecord({ gid: 'done-2', status: 'complete' }))
-      await store.addRecord(makeRecord({ gid: 'failed-1', status: 'error' }))
-
-      await expect(store.getStatusCounts()).resolves.toEqual({ completed: 2, failed: 1 })
-    })
-  })
-
-  // ── getRecords ─────────────────────────────────────────────────
 
   describe('getRecords', () => {
     it('returns all records when no filter is specified', async () => {

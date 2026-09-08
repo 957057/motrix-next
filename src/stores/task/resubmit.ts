@@ -19,8 +19,6 @@ export interface TaskResubmissionApi {
   getOption: (params: { gid: string }) => Promise<Record<string, string>>
   removeTask: (params: { gid: string }) => Promise<string>
   removeTaskRecord: (params: { gid: string }) => Promise<string>
-  fetchList: () => Promise<unknown>
-  saveSession: () => Promise<string>
 }
 
 export interface TaskResubmissionHistoryApi {
@@ -116,7 +114,7 @@ export async function resubmitTask(
   historyApi: TaskResubmissionHistoryApi,
   magnetFileSelectionPolicy: MagnetFileSelectionPolicy,
   registerPendingMagnet: (gid: string) => void | Promise<void> = () => undefined,
-): Promise<void> {
+): Promise<string[]> {
   assertModeMatchesTask(task, mode)
 
   const descriptors = getRestartDescriptors(task, true)
@@ -150,6 +148,5 @@ export async function resubmitTask(
     logger.debug('taskResubmission.removeHistoryRecord', error)
   }
 
-  await api.fetchList()
-  await api.saveSession()
+  return createdGids
 }

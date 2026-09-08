@@ -87,6 +87,25 @@ describe('TaskList', () => {
     expect(wrapper.find('.full-task-item').exists()).toBe(false)
   })
 
+  it('reuses the card through download, seeding, pause, and completion', async () => {
+    const store = useTaskStore()
+    store.currentList = 'all'
+    store.taskList = [createTask()]
+    const wrapper = mount(TaskList, { global: { plugins: [pinia] } })
+    const card = wrapper.find('.full-task-item').element
+    for (const update of [
+      { status: 'active', bittorrent: { state: 'seeding' } },
+      { status: 'paused', bittorrent: { state: 'seeding' } },
+      { status: 'active', bittorrent: { state: 'seeding' } },
+      { status: 'complete' },
+    ] satisfies Partial<Aria2Task>[]) {
+      store.taskList = [{ ...createTask(), ...update }]
+      await wrapper.vm.$nextTick()
+      expect(wrapper.find('.full-task-item').element).toBe(card)
+    }
+    wrapper.unmount()
+  })
+
   it('renders only the current task page', async () => {
     const wrapper = mount(TaskList, {
       global: {

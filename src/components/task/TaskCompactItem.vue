@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** @fileoverview Two-line compact task row with the same actions as the full card. */
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TASK_STATUS } from '@shared/constants'
 import { NIcon, NProgress } from 'naive-ui'
@@ -82,11 +82,6 @@ const compactStatus = computed<{ label: string; tone: string; icon: Component } 
       return { label: statusBadge.value.label, tone: statusBadge.value.tone, icon: RadioOutline }
   }
 })
-
-const sharingEnter = ref(false)
-watch(isSharing, (now, was) => {
-  if (now && !was) sharingEnter.value = true
-})
 </script>
 
 <template>
@@ -94,9 +89,7 @@ watch(isSharing, (now, was) => {
     class="task-compact-item"
     :class="{
       'is-sharing': isSharing,
-      'sharing-enter': sharingEnter,
     }"
-    @animationend="sharingEnter = false"
   >
     <TaskDragHandle class="compact-drag-rail" />
     <div class="compact-body">
@@ -181,6 +174,7 @@ watch(isSharing, (now, was) => {
   background: linear-gradient(90deg, color-mix(in srgb, var(--m3-success) 6%, transparent) 0%, transparent 40%);
   opacity: 0;
   pointer-events: none;
+  transition: opacity var(--task-motion-state) var(--task-motion-ease);
 }
 .task-compact-item.is-sharing {
   border-left-color: var(--m3-success);
@@ -197,28 +191,6 @@ watch(isSharing, (now, was) => {
 .compact-body {
   min-width: 0;
   padding: 8px 12px;
-}
-@keyframes sharing-border-enter {
-  from {
-    border-left-color: var(--m3-outline-variant);
-  }
-  to {
-    border-left-color: var(--m3-success);
-  }
-}
-@keyframes sharing-overlay-enter {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-.task-compact-item.sharing-enter {
-  animation: sharing-border-enter 1s cubic-bezier(0.05, 0.7, 0.1, 1) forwards;
-}
-.task-compact-item.sharing-enter::before {
-  animation: sharing-overlay-enter 1.2s cubic-bezier(0.05, 0.7, 0.1, 1) forwards;
 }
 .compact-header {
   display: grid;
@@ -252,7 +224,9 @@ watch(isSharing, (now, was) => {
   overflow: hidden;
 }
 .compact-progress :deep(.n-progress-graph-line-fill) {
-  transition: background-color 0.5s cubic-bezier(0.2, 0, 0, 1);
+  transition:
+    max-width var(--task-motion-progress) var(--task-motion-ease),
+    background-color var(--task-motion-state) var(--task-motion-ease);
 }
 .compact-meta {
   min-width: 0;

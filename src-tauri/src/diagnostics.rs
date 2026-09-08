@@ -161,6 +161,7 @@ pub(crate) async fn runtime_snapshot(app: &tauri::AppHandle, raw_config: Option<
             (None, None, None)
         };
     let preferences = raw_config.and_then(|value| value.get("preferences"));
+    let native_messaging = crate::native_messaging::diagnostic_snapshot(app).await;
     serde_json::json!({
         "schema_version": crate::log_policy::LOG_SCHEMA_VERSION,
         "exported_at": chrono::Local::now().to_rfc3339(),
@@ -191,6 +192,7 @@ pub(crate) async fn runtime_snapshot(app: &tauri::AppHandle, raw_config: Option<
             "xdg_session_type": std::env::var("XDG_SESSION_TYPE").unwrap_or_default(),
         },
         "configuration": raw_config.map(sanitize_config_snapshot),
+        "native_messaging": native_messaging,
     })
 }
 

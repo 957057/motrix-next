@@ -14,8 +14,6 @@ const mockHistoryFns = {
   init: vi.fn().mockResolvedValue(undefined),
   addRecord: vi.fn().mockResolvedValue(undefined),
   getRecords: vi.fn().mockResolvedValue([] as HistoryRecord[]),
-  getStatusCounts: vi.fn().mockResolvedValue({ completed: 0, failed: 0 }),
-  countRecordsMatchingTaskIdentities: vi.fn().mockResolvedValue(0),
   removeRecord: vi.fn().mockResolvedValue(undefined),
   clearRecords: vi.fn().mockResolvedValue(undefined),
   removeStaleRecords: vi.fn().mockResolvedValue(undefined),
@@ -118,11 +116,10 @@ describe('TaskStore', () => {
     const { useDatabaseStore } = await import('@/stores/database')
     useDatabaseStore().phase = 'failed'
     await store.changeCurrentList('all')
-    await store.refreshTaskCounts()
+    await store.fetchList()
     expect(store.taskList).toHaveLength(2)
     expect(store.taskCounts).toEqual({ all: 2, progress: 2, completed: 0, failed: 0 })
     expect(mockHistoryFns.getRecords).not.toHaveBeenCalled()
-    expect(mockHistoryFns.getStatusCounts).not.toHaveBeenCalled()
   })
 
   it('fetchList populates taskList from API', async () => {
@@ -131,7 +128,7 @@ describe('TaskStore', () => {
     // Active tab sorts by added-at DESC; trackFirstSeen assigns sequential
     // timestamps so gid2 (later) comes before gid1 (earlier).
     expect(store.taskList[0].gid).toBe('gid2')
-    expect(mockApi.fetchTaskList).toHaveBeenCalledWith({ type: 'active' })
+    expect(mockApi.fetchTaskList).toHaveBeenCalledWith({ type: 'all' })
   })
 
   it('manual active order survives polling and inserts new tasks above stored tasks', async () => {
@@ -199,7 +196,7 @@ describe('TaskStore', () => {
       await store.changeCurrentList('all')
 
       expect(new Set(store.taskList.map((task) => task.gid))).toEqual(new Set(['live', 'done', 'failed']))
-      expect(mockApi.fetchTaskList).toHaveBeenCalledWith({ type: 'active' })
+      expect(mockApi.fetchTaskList).toHaveBeenCalledWith({ type: 'all' })
       expect(mockHistoryFns.getRecords).toHaveBeenCalledWith()
     })
 
@@ -238,7 +235,7 @@ describe('TaskStore', () => {
 
       expect(store.taskList).toHaveLength(1)
       expect(store.taskList[0].status).toBe('error')
-      expect(mockHistoryFns.getRecords).toHaveBeenCalledWith('error')
+      expect(mockHistoryFns.getRecords).toHaveBeenCalledWith()
     })
 
     it('filters internal ED2K search groups from In Progress', async () => {
@@ -264,16 +261,58 @@ describe('TaskStore', () => {
 
     it('derives exclusive counts from live tasks and terminal history', async () => {
       mockApi.fetchTaskList.mockResolvedValueOnce([makeMockTask('sharing')])
-      mockHistoryFns.getStatusCounts.mockResolvedValueOnce({ completed: 4, failed: 2 })
-      mockHistoryFns.countRecordsMatchingTaskIdentities.mockResolvedValueOnce(1).mockResolvedValueOnce(0)
+      mockHistoryFns.getRecords.mockResolvedValueOnce([
+        { gid: 'sharing', name: 'sharing', status: 'complete' },
+        ...['c1', 'c2', 'c3'].map((gid) => ({ gid, name: gid, status: 'complete' })),
+        ...['f1', 'f2'].map((gid) => ({ gid, name: gid, status: 'error' })),
+      ])
 
-      await store.refreshTaskCounts()
+      await store.fetchList()
 
       expect(store.taskCounts).toEqual({ all: 6, progress: 1, failed: 2, completed: 3 })
     })
   })
 
   // ─── pagination ────────────────────────────────────────
+
+  it.each(['complete', 'error'] as const)('keeps %s tasks visible before history commits', async (status) => {
+    store.currentList = 'all'
+    mockApi.fetchTaskList.mockResolvedValue([makeMockTask('handoff')])
+    await store.fetchList()
+    mockApi.fetchTaskList.mockResolvedValue([makeMockTask('handoff', status)])
+    await store.fetchList()
+    expect(store.taskList.map((task) => task.gid)).toEqual(['handoff'])
+    expect(store.taskList[0].status).toBe(status)
+    mockHistoryFns.getRecords.mockResolvedValue([{ gid: 'handoff', name: 'file', status }])
+    mockApi.fetchTaskList.mockResolvedValue([])
+    await store.fetchList()
+    expect(store.taskList.map((task) => task.gid)).toEqual(['handoff'])
+    expect(store.taskCounts.all).toBe(1)
+  })
+
+  it('preserves the card key when retry replaces the engine GID', async () => {
+    store.currentList = 'all'
+    const original = makeMockTask('original', 'error', {
+      files: [
+        {
+          index: '1',
+          path: '/tmp/file',
+          length: '1000',
+          completedLength: '500',
+          selected: 'true',
+          uris: [{ uri: 'https://example.com/file', status: 'used' }],
+        },
+      ],
+    })
+    store.taskList = [original]
+    mockApi.fetchTaskItem.mockResolvedValue(makeMockTask('replacement'))
+    mockApi.addUriAtomic.mockResolvedValue('replacement')
+    mockApi.fetchTaskList.mockResolvedValue([makeMockTask('replacement')])
+    await store.retryTask(original)
+    expect(store.taskList.map((task) => task.gid)).toEqual(['replacement'])
+    expect(store.taskCardKey('replacement')).toBe('original')
+    expect(store.resubmittingGids).toEqual([])
+  })
 
   it('keeps independent task page state per tab and clamps overflowing pages', async () => {
     store.setTaskPage('progress', 3)
@@ -501,7 +540,7 @@ describe('TaskStore', () => {
     await store.changeCurrentList('completed')
 
     expect(store.currentList).toBe('completed')
-    expect(mockHistoryFns.getRecords).toHaveBeenCalledWith('complete')
+    expect(mockHistoryFns.getRecords).toHaveBeenCalledWith()
     expect(store.taskList.map((task) => task.gid)).toEqual(['fresh'])
   })
 

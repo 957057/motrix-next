@@ -8,8 +8,7 @@
  */
 import { defineStore } from 'pinia'
 import { useDatabaseStore } from '@/stores/database'
-import { collectTaskIdentityBuckets } from '@shared/utils/task'
-import type { Aria2Task, HistoryRecord } from '@shared/types'
+import type { HistoryRecord } from '@shared/types'
 import { logger } from '@shared/logger'
 
 export type HistoryRecordSortField = 'name' | 'status' | 'total_length' | 'task_type' | 'completed_at'
@@ -26,11 +25,6 @@ export interface HistoryRecordsPageInput {
 export interface HistoryRecordsPage {
   records: HistoryRecord[]
   total: number
-}
-
-export interface HistoryStatusCounts {
-  completed: number
-  failed: number
 }
 
 const HISTORY_SORT_COLUMNS: Record<HistoryRecordSortField, string> = {
@@ -57,53 +51,10 @@ function resolveHistoryOrderBy(sortField?: string, sortOrder?: HistoryRecordSort
   return 'ORDER BY COALESCE(added_at, completed_at) DESC'
 }
 
-function appendInClause(clauses: string[], params: string[], expression: string, values: string[]): void {
-  if (values.length === 0) return
-  const placeholders = values.map((_, i) => `$${params.length + i + 1}`).join(', ')
-  clauses.push(`${expression} IN (${placeholders})`)
-  params.push(...values)
-}
-
 export const useHistoryStore = defineStore('history', () => {
   const database = useDatabaseStore()
   const init = database.init
   const getDb = database.init
-
-  async function getStatusCounts(): Promise<HistoryStatusCounts> {
-    const rows = await (
-      await getDb()
-    ).select<Array<{ status: string; count: number }>>(
-      "SELECT status, COUNT(*) AS count FROM download_history WHERE status IN ('complete', 'error') GROUP BY status",
-      [],
-    )
-    const counts = new Map(rows.map((row) => [row.status, Number(row.count) || 0]))
-    return {
-      completed: Math.max(0, counts.get('complete') ?? 0),
-      failed: Math.max(0, counts.get('error') ?? 0),
-    }
-  }
-
-  async function countRecordsMatchingTaskIdentities(tasks: Aria2Task[], status: 'complete' | 'error'): Promise<number> {
-    const identities = collectTaskIdentityBuckets(tasks)
-    const identityClauses: string[] = []
-    const params: string[] = [status]
-
-    appendInClause(identityClauses, params, 'gid', identities.gids)
-    appendInClause(identityClauses, params, "json_extract(meta, '$.infoHash')", identities.btInfoHashes)
-    appendInClause(identityClauses, params, "json_extract(meta, '$.ed2kHash')", identities.ed2kHashes)
-    appendInClause(identityClauses, params, "json_extract(meta, '$.ed2kLink')", identities.ed2kLinks)
-
-    if (identityClauses.length === 0) return 0
-
-    const rows = await (
-      await getDb()
-    ).select<Array<{ count: number }>>(
-      `SELECT COUNT(DISTINCT gid) as count FROM download_history WHERE status = $1 AND (${identityClauses.join(' OR ')})`,
-      params,
-    )
-    const total = Number(rows[0]?.count ?? 0)
-    return Number.isFinite(total) ? Math.max(0, total) : 0
-  }
 
   /** Insert or update a download record (upsert by GID).
    *
@@ -296,8 +247,6 @@ export const useHistoryStore = defineStore('history', () => {
     addRecord,
     getRecords,
     getRecordsPage,
-    getStatusCounts,
-    countRecordsMatchingTaskIdentities,
     getRecordByGid,
     removeRecord,
     removeBirthRecords,

@@ -678,6 +678,8 @@ export interface BatchItem {
  * Captures all data needed to fully restore restart, delete, and stale-cleanup
  * semantics for each individual file within a multi-file download. */
 export interface HistoryFileSnapshot {
+  index?: string
+  completedLength?: string
   /** Full local file path. */
   path: string
   /** File size as string (aria2 convention). */
@@ -694,6 +696,9 @@ export interface HistoryFileSnapshot {
  * - parseHistoryMeta()  — read path
  * - extractHistoryFilePaths() — stale cleanup */
 export interface HistoryMeta {
+  completedLength?: string
+  errorCode?: string
+  errorMessage?: string
   /** BT info hash — used for magnet link reconstruction on restart. */
   infoHash?: string
   /** Engine-serialized BT magnet link. */

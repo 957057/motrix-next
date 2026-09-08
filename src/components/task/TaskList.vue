@@ -39,15 +39,12 @@ const containerTransitioning = ref(false)
 let lastFloatingRect: DOMRect | null = null
 let floatingRectFrame = 0
 let sortable: Sortable | null = null
-let renderedTransitionRevision = taskStore.taskListTransitionRevision
 const taskCardComponent = computed(() =>
   preferenceStore.config.taskCardMode === 'compact' ? TaskCompactItem : TaskItem,
 )
 const taskPage = computed(() => taskStore.taskPagination[taskStore.currentList].page)
 const pageSize = computed(() => taskStore.taskPagination.pageSize)
-const pageTransitionKey = computed(
-  () => `${taskStore.currentList}:${taskPage.value}:${pageSize.value}:${taskStore.taskListTransitionRevision}`,
-)
+const pageTransitionKey = computed(() => taskStore.currentList)
 const visibleTaskList = computed<Aria2Task[]>({
   get() {
     const start = (taskPage.value - 1) * pageSize.value
@@ -134,22 +131,10 @@ watch(
   () => taskStore.taskList,
   (v) => {
     if (sorting.value) return
-    if (renderedTransitionRevision !== taskStore.taskListTransitionRevision) return
     taskList.value = v
     taskStore.clampCurrentTaskPage()
   },
   { immediate: true },
-)
-
-watch(
-  () => taskStore.taskListTransitionRevision,
-  async (revision) => {
-    renderedTransitionRevision = revision
-    await nextTick()
-    if (sorting.value) return
-    taskList.value = taskStore.taskList
-    taskStore.clampCurrentTaskPage()
-  },
 )
 
 watch([taskPage, pageSize], () => {
@@ -270,7 +255,7 @@ function handleCardBeforeLeave(element: Element) {
         class="task-list-inner"
         @before-leave="handleCardBeforeLeave"
       >
-        <div v-for="item in visibleTaskList" :key="item.gid" class="task-list-item">
+        <div v-for="item in visibleTaskList" :key="taskStore.taskCardKey(item.gid)" class="task-list-item">
           <component
             :is="taskCardComponent"
             :task="item"

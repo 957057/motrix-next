@@ -105,7 +105,7 @@ export async function fetchActiveTaskList(): Promise<Aria2Task[]> {
   return invoke<Aria2Task[]>('aria2_fetch_active_task_list')
 }
 
-/** Fetches task list by status type: active+waiting or stopped. */
+/** Fetches a native task snapshot: all, active+waiting, or stopped. */
 export async function fetchTaskList(params: { type: string; limit?: number }): Promise<Aria2Task[]> {
   return invoke<Aria2Task[]>('aria2_fetch_task_list', {
     type: params.type,

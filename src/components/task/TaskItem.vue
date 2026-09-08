@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** @fileoverview Individual task row in the task list with progress and controls. */
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TASK_STATUS } from '@shared/constants'
 import { NProgress, NIcon } from 'naive-ui'
@@ -107,20 +107,6 @@ const statusBadgeIcon = computed(() => {
 })
 
 const { fileMissing } = useTaskFileMissing(taskRef)
-
-// ── M3 sharing state entrance animation ───────────────────────────
-// CSS transitions fail here because the store's polling cycle replaces
-// task objects entirely — even though Vue reuses the DOM element (same
-// gid key), NProgress internally rebuilds its fill node, losing the
-// transition starting point. @keyframes animations do not depend on
-// property value continuity — they always play from→to.
-const sharingEnter = ref(false)
-
-watch(isSharing, (now, was) => {
-  if (now && !was) {
-    sharingEnter.value = true
-  }
-})
 </script>
 
 <template>
@@ -128,9 +114,7 @@ watch(isSharing, (now, was) => {
     class="task-item"
     :class="{
       'is-sharing': isSharing,
-      'sharing-enter': sharingEnter,
     }"
-    @animationend="sharingEnter = false"
   >
     <TaskDragHandle class="task-drag-rail" />
     <div class="task-body">
@@ -248,6 +232,7 @@ watch(isSharing, (now, was) => {
   background: linear-gradient(90deg, color-mix(in srgb, var(--m3-success) 6%, transparent) 0%, transparent 40%);
   opacity: 0;
   pointer-events: none;
+  transition: opacity var(--task-motion-state) var(--task-motion-ease);
 }
 /* ── Seeding state (static) ────────────────────────────────────────── */
 .task-item.is-sharing {
@@ -255,31 +240,6 @@ watch(isSharing, (now, was) => {
 }
 .task-item.is-sharing::before {
   opacity: 1;
-}
-/* ── Seeding entrance animation (triggered by Vue watch) ───────────── */
-/* @keyframes always plays from→to regardless of prior DOM state,       */
-/* unlike CSS transitions which break when the element is re-rendered.  */
-@keyframes sharing-border-enter {
-  from {
-    border-left-color: var(--m3-outline-variant);
-  }
-  to {
-    border-left-color: var(--m3-success);
-  }
-}
-@keyframes sharing-overlay-enter {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-.task-item.sharing-enter {
-  animation: sharing-border-enter 1s cubic-bezier(0.05, 0.7, 0.1, 1) forwards;
-}
-.task-item.sharing-enter::before {
-  animation: sharing-overlay-enter 1.2s cubic-bezier(0.05, 0.7, 0.1, 1) forwards;
 }
 .task-item:hover .task-drag-rail {
   opacity: 0.64;
@@ -363,7 +323,9 @@ watch(isSharing, (now, was) => {
 }
 /* M3 progress-bar transition between semantic status colors. */
 .task-progress :deep(.n-progress-graph-line-fill) {
-  transition: background-color 0.5s cubic-bezier(0.2, 0, 0, 1);
+  transition:
+    max-width var(--task-motion-progress) var(--task-motion-ease),
+    background-color var(--task-motion-state) var(--task-motion-ease);
 }
 .task-progress {
   margin-top: 10px;
@@ -383,14 +345,14 @@ watch(isSharing, (now, was) => {
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
-  transition: opacity 0.4s cubic-bezier(0.2, 0, 0, 1);
+  transition: opacity var(--task-motion-state) var(--task-motion-ease);
 }
 .progress-right {
   display: flex;
   gap: 8px;
   text-align: right;
   align-items: center;
-  transition: opacity 0.4s cubic-bezier(0.2, 0, 0, 1);
+  transition: opacity var(--task-motion-state) var(--task-motion-ease);
 }
 .speed-text {
   display: inline-flex;

@@ -58,6 +58,8 @@ impl SharingKind {
 /// multi-file deletion and folder-opening after history round-trip.
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct TaskEventFile {
+    pub index: String,
+    pub completed_length: String,
     pub path: String,
     pub length: String,
     pub selected: String,
@@ -132,6 +134,8 @@ impl TaskEvent {
             .files
             .iter()
             .map(|f| TaskEventFile {
+                index: f.index.clone(),
+                completed_length: f.completed_length.clone(),
                 path: f.path.clone(),
                 length: f.length.clone(),
                 selected: f.selected.clone(),
@@ -215,9 +219,8 @@ fn is_metadata_task(task: &Aria2Task) -> bool {
 /// - `files`    → multi-file folder detection in `resolveOpenTarget()` / `deleteTaskFiles()`
 /// - `announceList` → magnet link reconstruction for restart
 ///
-/// Returns `None` for non-BT tasks with a single file and no mirrors
-/// (matches the frontend's compact-omission optimization).
-fn build_history_meta_json(event: &TaskEvent) -> Option<String> {
+/// Preserve terminal progress for every protocol and file count.
+fn build_history_meta_json(event: &TaskEvent) -> String {
     let mut meta = serde_json::Map::new();
 
     if let Some(ref hash) = event.info_hash {
@@ -266,15 +269,24 @@ fn build_history_meta_json(event: &TaskEvent) -> Option<String> {
         meta.insert("announceList".to_string(), serde_json::Value::Array(al));
     }
 
-    // Snapshot trigger: multi-file OR any file with multiple mirror URIs.
-    let has_multiple_files = event.files.len() > 1;
-    let has_mirrors = event.files.iter().any(|f| f.uris.len() > 1);
-    if has_multiple_files || has_mirrors {
+    meta.insert(
+        "completedLength".into(),
+        event.completed_length.clone().into(),
+    );
+    if let Some(value) = &event.error_code {
+        meta.insert("errorCode".into(), value.clone().into());
+    }
+    if let Some(value) = &event.error_message {
+        meta.insert("errorMessage".into(), value.clone().into());
+    }
+    if !event.files.is_empty() {
         let files: Vec<serde_json::Value> = event
             .files
             .iter()
             .map(|f| {
                 serde_json::json!({
+                    "index": f.index,
+                    "completedLength": f.completed_length,
                     "path": f.path,
                     "length": f.length,
                     "selected": f.selected,
@@ -285,11 +297,7 @@ fn build_history_meta_json(event: &TaskEvent) -> Option<String> {
         meta.insert("files".to_string(), serde_json::Value::Array(files));
     }
 
-    if meta.is_empty() {
-        None
-    } else {
-        Some(serde_json::to_string(&meta).unwrap_or_default())
-    }
+    serde_json::Value::Object(meta).to_string()
 }
 
 /// Converts a [`TaskEvent`] into a [`HistoryRecord`] for Rust-side DB persistence.
@@ -330,7 +338,7 @@ pub fn build_history_record_with_added_at(
 
     // This ensures historyRecordToTask() can reconstruct multi-file BT tasks
     // for deletion, open-folder, and deduplication.
-    let meta = build_history_meta_json(event);
+    let meta = Some(build_history_meta_json(event));
 
     let uri = event
         .files
@@ -1148,23 +1156,24 @@ mod tests {
     }
 
     #[test]
-    fn single_file_uri_task_has_no_meta() {
-        // Non-BT single-file tasks should have meta = None
-        // (matches frontend's compact-omission optimization)
-        let task = make_task("g1", "complete");
+    fn terminal_snapshot_preserves_partial_progress_and_error() {
+        let mut task = make_task("g1", "error");
+        task.completed_length = "512".into();
+        task.files[0].completed_length = "512".into();
+        task.error_code = Some("3".into());
+        task.error_message = Some("Resource not found".into());
         let event = TaskEvent::from_aria2(&task);
         let record = build_history_record(&event, events::TASK_COMPLETE);
 
-        assert!(
-            record.meta.is_none(),
-            "single-file URI tasks should omit meta"
-        );
+        let meta: serde_json::Value = serde_json::from_str(record.meta.as_ref().unwrap()).unwrap();
+        assert_eq!(meta["completedLength"], "512");
+        assert_eq!(meta["files"][0]["completedLength"], "512");
+        assert_eq!(meta["errorCode"], "3");
+        assert_eq!(meta["errorMessage"], "Resource not found");
     }
 
     #[test]
-    fn single_file_bt_meta_omits_files_but_has_info_hash() {
-        // Single-file BT task: meta should have infoHash but NOT files
-        // (files snapshot only needed for multi-file or multi-mirror)
+    fn single_file_bt_meta_preserves_files_and_info_hash() {
         let task = make_bt_task("g1", "active", true);
         let event = TaskEvent::from_aria2(&task);
         let record = build_history_record(&event, events::P2P_DOWNLOAD_COMPLETE);
@@ -1172,8 +1181,8 @@ mod tests {
         let meta: serde_json::Value = serde_json::from_str(record.meta.as_ref().unwrap()).unwrap();
         assert!(meta.get("infoHash").is_some());
         assert!(
-            meta.get("files").is_none(),
-            "single-file BT should not include files snapshot"
+            meta.get("files").is_some(),
+            "single-file BT should preserve its file snapshot"
         );
     }
 

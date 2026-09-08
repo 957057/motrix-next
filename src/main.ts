@@ -403,7 +403,7 @@ if (import.meta.env.PROD) {
               removeTaskRecord: aria2Api.removeTaskRecord,
               extractFilePaths: extractHistoryFilePaths,
             })
-            await taskStore.refreshTaskCounts()
+            await taskStore.fetchList()
           } catch (e) {
             logger.debug('HistoryMaintenance', e)
           }

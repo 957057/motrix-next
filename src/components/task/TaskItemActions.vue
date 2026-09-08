@@ -216,7 +216,7 @@ function onAction(event: string) {
             @click="onAction(action.event)"
           >
             <span class="task-action-visual" aria-hidden="true">
-              <Transition name="icon-swap" mode="out-in">
+              <Transition name="icon-swap">
                 <NIcon :key="action.event" class="task-action-icon"><component :is="action.icon" /></NIcon>
               </Transition>
             </span>
@@ -312,7 +312,7 @@ function onAction(event: string) {
   opacity: 0.56;
 }
 .task-action-visual {
-  display: inline-flex;
+  display: inline-grid;
   align-items: center;
   justify-content: center;
   width: var(--task-action-icon-size);
@@ -327,27 +327,22 @@ function onAction(event: string) {
 }
 
 .task-action-icon {
+  grid-area: 1 / 1;
   font-size: var(--task-action-icon-size);
 }
 
 /* M3 icon crossfade for play ↔ pause toggle */
 .icon-swap-enter-active {
-  transition:
-    opacity 0.2s cubic-bezier(0.05, 0.7, 0.1, 1),
-    transform 0.2s cubic-bezier(0.05, 0.7, 0.1, 1);
+  transition: opacity var(--task-motion-enter) var(--task-motion-ease);
 }
 .icon-swap-leave-active {
-  transition:
-    opacity 0.15s cubic-bezier(0.3, 0, 0.8, 0.15),
-    transform 0.15s cubic-bezier(0.3, 0, 0.8, 0.15);
+  transition: opacity var(--task-motion-leave) var(--task-motion-ease);
 }
 .icon-swap-enter-from {
   opacity: 0;
-  transform: scale(0.6);
 }
 .icon-swap-leave-to {
   opacity: 0;
-  transform: scale(0.6);
 }
 /* ── TransitionGroup: directional toolbar grow/shrink ────────── */
 

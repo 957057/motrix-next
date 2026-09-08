@@ -167,6 +167,45 @@ impl Aria2Client {
         self.call("tellActive", vec![]).await
     }
 
+    /// Read queue transitions in one native RPC dispatch, including terminal
+    /// results that have not reached application history yet.
+    pub async fn tell_task_snapshot(
+        &self,
+        include_stopped: bool,
+    ) -> Result<Vec<Aria2Task>, AppError> {
+        // aria2 clamps the requested range to the queue length, without allocating
+        // the requested capacity. Avoid silently dropping tasks after entry 1000.
+        let range = vec![0.into(), i32::MAX.into()];
+        let mut calls = vec![
+            ("tellActive".into(), vec![]),
+            ("tellWaiting".into(), range.clone()),
+        ];
+        if include_stopped {
+            calls.push(("tellStopped".into(), range));
+        }
+        let expected = calls.len();
+        let results = self.multicall(calls).await?;
+        if results.len() != expected {
+            return Err(AppError::Aria2("Incomplete task snapshot".into()));
+        }
+        let mut tasks = Vec::new();
+        let mut seen = std::collections::HashSet::new();
+        for result in results {
+            let value = result
+                .as_array()
+                .filter(|row| row.len() == 1)
+                .and_then(|row| row.first())
+                .ok_or_else(|| AppError::Aria2(format!("Invalid task snapshot: {result}")))?;
+            let page: Vec<Aria2Task> = serde_json::from_value(value.clone())
+                .map_err(|error| AppError::Aria2(format!("Invalid task snapshot: {error}")))?;
+            tasks.extend(
+                page.into_iter()
+                    .filter(|task| seen.insert(task.gid.clone())),
+            );
+        }
+        Ok(tasks)
+    }
+
     /// Returns waiting tasks starting at `offset` up to `num` entries.
     pub async fn tell_waiting(&self, offset: i64, num: i64) -> Result<Vec<Aria2Task>, AppError> {
         self.call("tellWaiting", vec![offset.into(), num.into()])

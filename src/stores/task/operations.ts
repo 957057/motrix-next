@@ -22,11 +22,10 @@ interface TaskOperationsDeps {
   setTaskRemoving?: (gid: string, removing: boolean) => void
   requestMagnetSelection?: (gid: string) => void
   clearMagnetSelections?: (gids: string[]) => void | Promise<void>
-  refreshTaskCounts: () => Promise<void>
 }
 
 export function createTaskOperations(deps: TaskOperationsDeps) {
-  const { api, taskList, currentTaskGid, hideTaskDetail, fetchList, refreshTaskCounts } = deps
+  const { api, taskList, currentTaskGid, hideTaskDetail, fetchList } = deps
   const setTaskRemoving = deps.setTaskRemoving ?? (() => undefined)
 
   async function removeTask(task: Aria2Task) {
@@ -37,7 +36,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       await deps.clearMagnetSelections?.([task.gid])
       logger.info('TaskOps.removeTask', `gid=${task.gid}`)
       setTaskRemoving(task.gid, false)
-      await Promise.all([fetchList(), refreshTaskCounts()])
+      await fetchList()
       await api.saveSession()
     } catch (error) {
       setTaskRemoving(task.gid, false)
@@ -59,12 +58,11 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
   }
 
   async function finishSharing(task: Aria2Task): Promise<void> {
-    if (task.gid === currentTaskGid.value) hideTaskDetail()
     try {
       await api.finishSharing({ gid: task.gid })
       logger.info('TaskOps.finishSharing', `gid=${task.gid}`)
     } finally {
-      await Promise.all([fetchList(), refreshTaskCounts()])
+      await fetchList()
       await api.saveSession()
     }
   }
@@ -78,7 +76,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       )
       return result
     } finally {
-      await Promise.all([fetchList(), refreshTaskCounts()])
+      await fetchList()
       await api.saveSession()
     }
   }
@@ -161,7 +159,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
 
   async function purgeTaskRecord() {
     await api.purgeTaskRecords()
-    await Promise.all([fetchList(), refreshTaskCounts()])
+    await fetchList()
     await api.saveSession()
   }
 
@@ -180,7 +178,7 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       return result
     } finally {
       gids.forEach((gid) => setTaskRemoving(gid, false))
-      await Promise.all([fetchList(), refreshTaskCounts()])
+      await fetchList()
       await api.saveSession()
     }
   }
