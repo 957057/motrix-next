@@ -10,6 +10,7 @@ import { useTaskCardModel } from '@/composables/useTaskCardModel'
 import { useTaskFileMissing } from '@/composables/useTaskFileMissing'
 import TaskDragHandle from './TaskDragHandle.vue'
 import TaskItemActions from './TaskItemActions.vue'
+import TaskTextTransition from './TaskTextTransition.vue'
 import type { Component } from 'vue'
 import type { Aria2Task } from '@shared/types'
 
@@ -96,7 +97,9 @@ const compactStatus = computed<{ label: string; tone: string; icon: Component } 
       <div class="compact-header">
         <MTooltip placement="bottom-start">
           <template #trigger>
-            <div class="compact-name">{{ taskFullName }}</div>
+            <div class="compact-name">
+              <TaskTextTransition :value="taskFullName">{{ taskFullName }}</TaskTextTransition>
+            </div>
           </template>
           {{ taskFullName }}
         </MTooltip>
@@ -134,10 +137,12 @@ const compactStatus = computed<{ label: string; tone: string; icon: Component } 
         <div class="compact-meta">
           <span>{{ percent }}%</span>
           <span v-if="hasSizeInfo">{{ completedSize }} / {{ totalSize }}</span>
-          <span v-if="compactStatus" class="compact-status" :class="{ error: compactStatus.tone === 'error' }">
-            <NIcon :size="12"><component :is="compactStatus.icon" /></NIcon>
-            {{ compactStatus.label }}
-          </span>
+          <TaskTextTransition v-show="compactStatus" :value="fileMissing ? 'file-missing' : (statusBadge?.key ?? '')">
+            <span v-if="compactStatus" class="compact-status" :class="{ error: compactStatus.tone === 'error' }">
+              <NIcon :size="12"><component :is="compactStatus.icon" /></NIcon>
+              {{ compactStatus.label }}
+            </span>
+          </TaskTextTransition>
           <span class="compact-speed">
             <NIcon :size="10"><ArrowDownOutline /></NIcon>
             {{ downloadSpeed }}/s
@@ -238,6 +243,15 @@ const compactStatus = computed<{ label: string; tone: string; icon: Component } 
   font-size: 12px;
   line-height: 14px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.compact-name > .task-text-transition {
+  display: grid;
+}
+.compact-name :deep(.task-text-transition-content) {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .compact-meta > span {

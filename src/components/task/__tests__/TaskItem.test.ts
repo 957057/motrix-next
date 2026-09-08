@@ -85,6 +85,24 @@ function createTask(path: string): Aria2Task {
 }
 
 describe('TaskItem', () => {
+  it.each([TaskItem, TaskCompactItem])('transitions semantic text changes, not progress updates', async (component) => {
+    const task = createTask('/downloads/file.bin')
+    const wrapper = mount(component, { props: { task } })
+    const surface = wrapper.element
+    const name = wrapper.findAll('.task-text-transition-content')[0].element
+    const status = wrapper.findAll('.task-text-transition-content')[1].element
+    await wrapper.setProps({ task: { ...task, completedLength: '50' } })
+    expect(wrapper.findAll('.task-text-transition-content')[0].element).toBe(name)
+    expect(wrapper.findAll('.task-text-transition-content')[1].element).toBe(status)
+    await wrapper.setProps({
+      task: { ...task, status: 'active', bittorrent: { state: 'seeding', info: { name: 'renamed.zip' } } },
+    })
+    expect(wrapper.findAll('.task-text-transition-content')[0].element).not.toBe(name)
+    expect(wrapper.findAll('.task-text-transition-content')[1].element).not.toBe(status)
+    expect(wrapper.element).toBe(surface)
+    wrapper.unmount()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()
