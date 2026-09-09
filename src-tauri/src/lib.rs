@@ -103,16 +103,19 @@ impl AppLifecycleState {
     }
 }
 
+/// Persist geometry only; platform config owns decorations and startup owns visibility.
 fn window_state_flags() -> tauri_plugin_window_state::StateFlags {
     use tauri_plugin_window_state::StateFlags;
 
+    let flags = StateFlags::SIZE | StateFlags::POSITION | StateFlags::FULLSCREEN;
+    // Preserve the macOS maximization workaround (tauri-apps/tauri#5812).
     #[cfg(target_os = "macos")]
     {
-        StateFlags::all() & !StateFlags::MAXIMIZED & !StateFlags::VISIBLE
+        flags
     }
     #[cfg(not(target_os = "macos"))]
     {
-        StateFlags::all() & !StateFlags::VISIBLE
+        flags | StateFlags::MAXIMIZED
     }
 }
 
@@ -661,37 +664,12 @@ pub fn run() {
     }
 
     builder = builder.plugin(tauri_plugin_deep_link::init());
-    // Window-state plugin: saves/restores window position and size.
-    //
-    // VISIBLE is permanently excluded from the plugin's state flags.
-    // Window visibility is managed entirely by the autostart-silent-mode
-    // guard in setup_app() and the frontend's MainLayout.vue.  Allowing
-    // the plugin to save/restore VISIBLE would cause the window to flash
-    // on autostart before the silent-mode check can hide it (#109).
-    //
-    // macOS: Also exclude StateFlags::MAXIMIZED to avoid a known bug in
-    // tao where isMaximized() triggers a new resize event, creating an
-    // infinite loop (tauri-apps/tauri#5812).  The frontend also skips
-    // isMaximized() tracking on macOS (see MainLayout.vue).
-    builder = builder.plugin({
-        use tauri_plugin_window_state::StateFlags;
-
-        let flags = {
-            #[cfg(target_os = "macos")]
-            {
-                StateFlags::all() & !StateFlags::MAXIMIZED & !StateFlags::VISIBLE
-            }
-            #[cfg(not(target_os = "macos"))]
-            {
-                StateFlags::all() & !StateFlags::VISIBLE
-            }
-        };
-
+    builder = builder.plugin(
         tauri_plugin_window_state::Builder::new()
             .skip_initial_state("main")
-            .with_state_flags(flags)
-            .build()
-    });
+            .with_state_flags(window_state_flags())
+            .build(),
+    );
 
     builder
         .manage(EngineState::new())
@@ -880,7 +858,20 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use super::AppLifecycleState;
+    use super::{window_state_flags, AppLifecycleState};
+
+    #[test]
+    fn window_state_restores_only_geometry() {
+        use tauri_plugin_window_state::StateFlags;
+
+        let flags = window_state_flags();
+        assert!(flags.contains(StateFlags::SIZE | StateFlags::POSITION | StateFlags::FULLSCREEN));
+        assert!(!flags.intersects(StateFlags::DECORATIONS | StateFlags::VISIBLE));
+        assert_eq!(
+            flags.contains(StateFlags::MAXIMIZED),
+            !cfg!(target_os = "macos")
+        );
+    }
 
     #[test]
     fn app_lifecycle_starts_cold() {
