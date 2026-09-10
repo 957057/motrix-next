@@ -445,7 +445,7 @@ One-paragraph summary of the release scope and significance.
 | -------- | --------------------- | ------------------ |
 | macOS    | Apple Silicon · Intel | `.dmg`             |
 | Windows  | x64 · ARM64           | `-setup.exe`       |
-| Linux    | x64 · ARM64           | `.AppImage` `.deb` |
+| Linux    | x64 · ARM64           | `.AppImage` `.deb` `.rpm` |
 ```
 
 **Guidelines:**

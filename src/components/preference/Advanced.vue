@@ -71,6 +71,12 @@ const protocolHandlers = useProtocolHandlers()
 const protocolStatus = protocolHandlers.status
 const protocolPending = protocolHandlers.pending
 const protocolBusy = protocolHandlers.busy
+const protocolOptions = computed<{ key: ProtocolKey; label: string }[]>(() => [
+  { key: 'magnet', label: t('preferences.protocol-magnet') },
+  { key: 'ed2k', label: t('preferences.protocol-ed2k') },
+  { key: 'thunder', label: t('preferences.protocol-thunder') },
+  { key: 'motrixnext', label: t('preferences.protocol-motrixnext') },
+])
 
 useEventListener(window, 'focus', () => protocolHandlers.refreshAll())
 
@@ -688,39 +694,23 @@ onMounted(async () => {
           </NFormItem>
         </NCollapseTransition>
 
-        <!-- Default Programs (migrated from Basic) -->
+        <!-- Default programs reflect the current OS association, not a saved preference. -->
         <NDivider title-placement="left">{{ t('preferences.default-programs') }}</NDivider>
-        <NFormItem :label="t('preferences.protocol-magnet')">
+        <NFormItem v-for="protocol in protocolOptions" :key="protocol.key" :label="protocol.label">
           <NSwitch
-            :value="protocolStatus.magnet"
-            :disabled="protocolBusy"
-            :loading="protocolPending === 'magnet'"
-            @update:value="(value) => handleProtocolToggle('magnet', value)"
+            v-if="protocolStatus[protocol.key] !== null"
+            :value="protocolStatus[protocol.key] === true"
+            :disabled="protocolBusy || protocolStatus[protocol.key] === undefined"
+            :loading="protocolPending === protocol.key || protocolStatus[protocol.key] === undefined"
+            :aria-label="protocol.label"
+            @update:value="(value) => handleProtocolToggle(protocol.key, value)"
           />
-        </NFormItem>
-        <NFormItem :label="t('preferences.protocol-ed2k')">
-          <NSwitch
-            :value="protocolStatus.ed2k"
-            :disabled="protocolBusy"
-            :loading="protocolPending === 'ed2k'"
-            @update:value="(value) => handleProtocolToggle('ed2k', value)"
-          />
-        </NFormItem>
-        <NFormItem :label="t('preferences.protocol-thunder')">
-          <NSwitch
-            :value="protocolStatus.thunder"
-            :disabled="protocolBusy"
-            :loading="protocolPending === 'thunder'"
-            @update:value="(value) => handleProtocolToggle('thunder', value)"
-          />
-        </NFormItem>
-        <NFormItem :label="t('preferences.protocol-motrixnext')">
-          <NSwitch
-            :value="protocolStatus.motrixnext"
-            :disabled="protocolBusy"
-            :loading="protocolPending === 'motrixnext'"
-            @update:value="(value) => handleProtocolToggle('motrixnext', value)"
-          />
+          <NSpace v-else align="center">
+            <span role="status">{{ t('preferences.protocol-query-failed', { protocol: protocol.key }) }}</span>
+            <NButton size="small" :disabled="protocolBusy" @click="protocolHandlers.refreshAll()">
+              {{ t('app.retry') }}
+            </NButton>
+          </NSpace>
         </NFormItem>
       </NForm>
     </div>

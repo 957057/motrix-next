@@ -3412,6 +3412,7 @@ dependencies = [
  "dunce",
  "fluent-langneg",
  "futures-util",
+ "gio",
  "igd-next",
  "ipnet",
  "keepawake",

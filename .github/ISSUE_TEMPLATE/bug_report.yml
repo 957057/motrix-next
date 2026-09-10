@@ -62,8 +62,10 @@ body:
         - Windows (ARM64)
         - Linux (x64 / AppImage)
         - Linux (x64 / deb)
+        - Linux (x64 / rpm)
         - Linux (ARM64 / AppImage)
         - Linux (ARM64 / deb)
+        - Linux (ARM64 / rpm)
     validations:
       required: true
 
