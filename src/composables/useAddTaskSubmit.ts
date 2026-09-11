@@ -7,6 +7,7 @@
  * - Manual URI submission with multi-URI rename
  * - Error classification (engine-not-ready, duplicate, generic)
  */
+import { mediaEngineOptions, type MediaOptions } from '@shared/utils/media'
 import type { useTaskStore } from '@/stores/task'
 import { isEngineReady } from '@/api/aria2'
 import { parseAria2Input, extractDecodedFilename, hasExtension, sanitizeAria2OutHint } from '@shared/utils/batchHelpers'
@@ -37,6 +38,7 @@ import { resolveDownloadDir, resolveFileSetCategory } from '@shared/utils/fileCa
 export { getDownloadProxy } from '@shared/utils/proxy'
 
 export interface AddTaskForm {
+  media?: MediaOptions
   uris: string
   out: string
   dir: string
@@ -155,6 +157,7 @@ export function buildEngineOptions(form: AddTaskForm, context?: ExternalDownload
       form.customProxyPassword,
     ),
   )
+  if (form.media) Object.assign(options, mediaEngineOptions(form.media))
   return options
 }
 

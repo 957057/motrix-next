@@ -148,6 +148,17 @@ impl Aria2Client {
 
     // ── Public API ──────────────────────────────────────────────────
 
+    pub async fn finish_media(&self, gid: &str) -> Result<String, AppError> {
+        self.call("finishMedia", vec![gid.into()]).await
+    }
+    pub async fn retry_media(
+        &self,
+        gid: &str,
+        options: serde_json::Value,
+    ) -> Result<String, AppError> {
+        self.call("retryMedia", vec![gid.into(), options]).await
+    }
+
     /// Saves the current aria2 download session to disk.
     pub async fn save_session(&self) -> Result<String, AppError> {
         self.call("saveSession", vec![]).await
@@ -272,7 +283,12 @@ impl Aria2Client {
                 .as_ref()
                 .and_then(|bt| bt.file_selection_state.as_deref())
                 == Some("awaiting");
-            if requires_file_selection {
+            if requires_file_selection
+                || task
+                    .media
+                    .as_ref()
+                    .is_some_and(|media| media.state == "awaiting-selection")
+            {
                 blocked += 1;
                 continue;
             }

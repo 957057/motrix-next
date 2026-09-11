@@ -7,7 +7,7 @@ use futures_util::{SinkExt, StreamExt};
 use serde::Deserialize;
 use std::sync::Arc;
 use std::time::Duration;
-use tauri::Emitter;
+use tauri::{Emitter, Manager};
 use tokio::sync::watch;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
@@ -193,8 +193,43 @@ async fn handle_native_event(
     event: NativeEvent,
 ) -> Result<(), AppError> {
     if event.kind == NativeEventKind::DownloadPause {
-        if let Err(error) = app.emit(DOWNLOAD_PAUSE, DownloadPauseEvent { gid: event.gid }) {
+        if let Err(error) = app.emit(
+            DOWNLOAD_PAUSE,
+            DownloadPauseEvent {
+                gid: event.gid.clone(),
+            },
+        ) {
             log::warn!("aria2_events: failed to emit download pause: {error}");
+        }
+        let foreground = app
+            .get_webview_window("main")
+            .is_some_and(|window| window.is_focused().unwrap_or(false));
+        if !foreground {
+            let task = aria2.tell_status(&event.gid).await?;
+            if task
+                .media
+                .as_ref()
+                .is_some_and(|media| media.state == "awaiting-selection")
+            {
+                let config = match app.try_state::<super::config::RuntimeConfigState>() {
+                    Some(state) => state.snapshot().await,
+                    None => super::config::RuntimeConfig::default(),
+                };
+                if config.task_notification {
+                    let locale = crate::i18n::resolve_preferred_locale(&config.locale);
+                    let name = monitor::TaskEvent::from_aria2(&task).name;
+                    super::notification::send_app_notification(
+                        app,
+                        &rust_i18n::t!("notification.selection-title", locale = &locale),
+                        &rust_i18n::t!(
+                            "notification.selection-body",
+                            locale = &locale,
+                            task_name = name
+                        ),
+                    )
+                    .await?;
+                }
+            }
         }
         return Ok(());
     }

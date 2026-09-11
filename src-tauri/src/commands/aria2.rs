@@ -126,6 +126,19 @@ pub async fn aria2_change_option(
     gid: String,
     options: serde_json::Value,
 ) -> Result<String, AppError> {
+    let changes_media = options.as_object().is_some_and(|values| {
+        values
+            .keys()
+            .any(|key| key == "media" || key.starts_with("media-"))
+    });
+    if changes_media {
+        let task = state.0.tell_status(&gid).await?;
+        if task.media.is_some() && task.status != "paused" {
+            return Err(AppError::Aria2(
+                "Pause media before changing its selection".into(),
+            ));
+        }
+    }
     state.0.change_option(&gid, options).await
 }
 
@@ -270,6 +283,16 @@ pub async fn aria2_add_uri(
             .starts_with("ed2k://|file|")
     }) {
         crate::commands::ed2k::inject_managed_ed2k_bootstrap_options(&app, &mut options)?;
+    }
+    if uris
+        .iter()
+        .all(|uri| uri.starts_with("http://") || uri.starts_with("https://"))
+    {
+        if let Some(options) = options.as_object_mut() {
+            options
+                .entry("media-pause-after-probe")
+                .or_insert_with(|| "true".into());
+        }
     }
     log::debug!("aria2:add-uri count={}", uris.len());
     state.0.add_uri(uris, options).await
@@ -1058,4 +1081,37 @@ mod tests {
             ..Aria2Task::default()
         }));
     }
+}
+
+/// Finalize committed live media without deleting its output or recovery state.
+#[tauri::command]
+pub async fn aria2_finish_media(
+    state: State<'_, Aria2State>,
+    gid: String,
+) -> Result<String, AppError> {
+    state.0.finish_media(&gid).await
+}
+
+/// Retry a failed presentation in its native recovery identity.
+#[tauri::command]
+pub async fn aria2_retry_media(
+    state: State<'_, Aria2State>,
+    gid: String,
+    options: serde_json::Value,
+) -> Result<String, AppError> {
+    state.0.retry_media(&gid, options).await
+}
+
+/// Request publication for each selected recording and retain per-task failures.
+#[tauri::command]
+pub async fn aria2_batch_finish_media(
+    state: State<'_, Aria2State>,
+    gids: Vec<String>,
+) -> Result<BatchTaskOperationResult, AppError> {
+    let mut result = BatchTaskOperationResult::default();
+    for gid in gids {
+        let operation = state.0.finish_media(&gid).await.map(|_| ());
+        result.record(gid, operation);
+    }
+    Ok(result)
 }

@@ -10,7 +10,12 @@ import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumer
 import { useHttpAuthStore } from '@/stores/httpAuth'
 import { ADD_TASK_TYPE } from '@shared/constants'
 import { detectResource } from '@shared/utils'
-import { mergeRawUriLines, normalizeUriLines, extractMagnetDisplayName } from '@shared/utils/batchHelpers'
+import {
+  mergeRawUriLines,
+  normalizeUriLines,
+  extractDecodedFilename,
+  extractMagnetDisplayName,
+} from '@shared/utils/batchHelpers'
 import { resolveDownloadCategory, resolveFileSetCategory } from '@shared/utils/fileCategory'
 import { buildOuts } from '@shared/utils/rename'
 import {
@@ -61,12 +66,13 @@ import { useAppMessage } from '@/composables/useAppMessage'
 import type { BatchItem, BatchItemKind, BtFileSelectionItem, UserAgentProfile } from '@shared/types'
 import { FolderOpenOutline, CloudUploadOutline } from '@vicons/ionicons5'
 import { vMotionAutoAnimate } from '@/directives/motionAutoAnimate'
+import { defaultMediaOptions, mediaOutputHint } from '@shared/utils/media'
 import AdvancedOptions from './addtask/AdvancedOptions.vue'
 import DirectoryPopover from '@/components/common/DirectoryPopover.vue'
 import BtFileSelector from '@/components/task/BtFileSelector.vue'
 
 const props = defineProps<{ show: boolean }>()
-const emit = defineEmits<{ close: [] }>()
+const emit = defineEmits<{ close: []; afterLeave: [] }>()
 
 const { t } = useI18n()
 const router = useRouter()
@@ -132,6 +138,7 @@ function syncPendingExternalMetadata() {
 }
 
 const form = ref<AddTaskForm>({
+  media: defaultMediaOptions(),
   uris: '',
   out: '',
   dir: preferenceStore.config.dir || '',
@@ -229,6 +236,7 @@ watch(
   () => props.show,
   (visible) => {
     if (visible) {
+      form.value.media = defaultMediaOptions()
       // When classification is enabled, clear the dir so user sees it's optional;
       // otherwise sync from preferences as usual.
       if (preferenceStore.config.fileCategoryEnabled) {
@@ -268,8 +276,6 @@ watch(
   { deep: true },
 )
 
-const submitLabel = computed(() => t('app.submit'))
-
 /** Whether file classification is currently enabled in preferences. */
 const categoryEnabled = computed(() => preferenceStore.config.fileCategoryEnabled)
 
@@ -284,7 +290,12 @@ function resolveCategoryMatches(): Map<string, { label: string; directory: strin
   for (const [index, uri] of uris.entries()) {
     const context = form.value.uriRequestContexts?.[uri]
     const category = resolveDownloadCategory(
-      outs[index] || form.value.out || uri,
+      mediaOutputHint(
+        uri,
+        outs[index] || form.value.out || extractDecodedFilename(uri),
+        form.value.media?.mode,
+        form.value.media?.format,
+      ),
       preferenceStore.config.fileCategories,
       {
         urls: [uri, context?.finalUrl ?? '', context?.url ?? '', context?.referer ?? ''],
@@ -687,7 +698,7 @@ async function handleSubmit() {
     :close-on-esc="true"
     :auto-focus="false"
     transform-origin="center"
-    :transition="{ name: 'fade-scale' }"
+    @after-leave="emit('afterLeave')"
     @update:show="
       (v: boolean) => {
         if (!v) handleClose()
@@ -855,6 +866,12 @@ async function handleSubmit() {
             :user-agent-profiles="preferenceStore.config.userAgentProfiles"
             :user-agent-rules="preferenceStore.config.userAgentRules"
             :recent-user-agent-profile-ids="preferenceStore.config.recentUserAgentProfileIds"
+            :media-mode="activeTab === ADD_TASK_TYPE.URI ? form.media?.mode : undefined"
+            @update:media-mode="
+              (mode) => {
+                if (form.media) form.media.mode = mode
+              }
+            "
             @update:user-agent="onUserAgentInput"
             @select-user-agent-profile="selectUserAgentProfile"
           />
@@ -870,7 +887,7 @@ async function handleSubmit() {
             :disabled="!canSubmit"
             @click="handleSubmit"
           >
-            {{ submitLabel }}
+            {{ t('task.create') }}
           </NButton>
         </NSpace>
       </template>

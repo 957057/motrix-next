@@ -4,6 +4,7 @@
  * All aria2 RPC calls go through Tauri invoke() to the Rust backend.
  * The Rust Aria2Client handles HTTP JSON-RPC communication with Aria2 Next.
  */
+import { mediaOutputHint } from '@shared/utils/media'
 import { invoke } from '@tauri-apps/api/core'
 import { changeKeysToCamelCase, formatOptionsForEngine } from '@shared/utils'
 import type {
@@ -146,12 +147,13 @@ export async function addUri(params: {
     // Rust sanitize_out_option is the authoritative boundary; this is belt-and-suspenders.
     if (opts.out) opts.out = sanitizeAria2OutHint(opts.out)
     if (!opts.out) delete opts.out
+    else opts.out = mediaOutputHint(uri, opts.out, opts.media, opts['media-format'])
 
     // Smart file classification: resolve per-URI download directory
     if (fileCategory?.enabled && fileCategory.categories.length > 0) {
       const context = fileCategory.contexts?.[uri]
       opts.dir = resolveDownloadDir(
-        opts.out || extractDecodedFilename(uri) || uri,
+        mediaOutputHint(uri, opts.out || extractDecodedFilename(uri) || uri, opts.media, opts['media-format']),
         opts.dir || '',
         true,
         fileCategory.categories,
@@ -285,6 +287,8 @@ export async function purgeTaskRecords(): Promise<void> {
 }
 
 const api = {
+  retryMedia,
+  finishMedia,
   getVersion,
   getGlobalStat,
   changeGlobalOption,
@@ -319,3 +323,15 @@ const api = {
 }
 
 export default api
+
+/** Request publication; completion arrives through the normal task lifecycle. */
+export async function finishMedia(gid: string): Promise<string> {
+  return invoke<string>('aria2_finish_media', { gid })
+}
+export async function retryMedia(gid: string, options: Aria2EngineOptions = {}): Promise<string> {
+  return invoke<string>('aria2_retry_media', { gid, options: formatOptionsForEngine(options) })
+}
+
+export async function batchFinishMedia(gids: string[]): Promise<BatchTaskOperationResult> {
+  return invoke<BatchTaskOperationResult>('aria2_batch_finish_media', { gids })
+}

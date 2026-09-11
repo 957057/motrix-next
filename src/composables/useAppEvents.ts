@@ -5,6 +5,7 @@
  * Contains handlers for: menu-event, tray-menu-action, deep-link-open,
  * single-instance-triggered, port changes, and drag-drop.
  */
+import { useTaskSelectionStore } from '@/stores/taskSelection'
 import { listen } from '@tauri-apps/api/event'
 import { getCurrentWebview } from '@tauri-apps/api/webview'
 import { getCurrentWindow } from '@tauri-apps/api/window'
@@ -71,7 +72,6 @@ interface AppEventsDeps {
     setExternalInputStartHandler?: (handler: ((taskNames: string[]) => void) | null) => void
     addTaskVisible: boolean
     pendingBatch: unknown[]
-    pendingMagnetGids: string[]
     externalInputSubmitting: boolean
   }
   taskStore: {
@@ -476,7 +476,7 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
         if (appStore.externalInputSubmitting) return
         if (appStore.addTaskVisible) return
         if (appStore.pendingBatch.length > 0) return
-        if (appStore.pendingMagnetGids.length > 0) return
+        if (useTaskSelectionStore().pending.length > 0) return
         const mainWindow = getCurrentWindow()
         try {
           if (await mainWindow.isVisible()) return

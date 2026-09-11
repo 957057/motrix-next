@@ -337,11 +337,11 @@ fn reveal_in_explorer(path: &str) -> Result<(), AppError> {
     // `\\?\UNC\server\share\file` → `\\server\share\file`
     // This is the fix for GitHub issue #3304.
     let path_str = canonical.to_string_lossy();
-    let fixed: PathBuf = if path_str.starts_with(r"\\?\UNC\") {
-        PathBuf::from(format!(r"\\{}", &path_str[r"\\?\UNC\".len()..]))
-    } else if path_str.starts_with(r"\\?\") {
+    let fixed: PathBuf = if let Some(suffix) = path_str.strip_prefix(r"\\?\UNC\") {
+        PathBuf::from(format!(r"\\{suffix}"))
+    } else if let Some(suffix) = path_str.strip_prefix(r"\\?\") {
         // Shouldn't happen (dunce handles this), but defensive
-        PathBuf::from(&path_str[r"\\?\".len()..])
+        PathBuf::from(suffix)
     } else {
         canonical.clone()
     };
@@ -643,13 +643,27 @@ mod tests {
     #[test]
     fn normalize_path_preserves_simple_unix_path() {
         let result = normalize_path("/home/user/downloads/file.txt");
-        assert_eq!(result, "/home/user/downloads/file.txt");
+        assert_eq!(
+            result,
+            if cfg!(windows) {
+                r"\home\user\downloads\file.txt"
+            } else {
+                "/home/user/downloads/file.txt"
+            }
+        );
     }
 
     #[test]
     fn normalize_path_preserves_path_with_spaces() {
         let result = normalize_path("/home/user/my downloads/file name.txt");
-        assert_eq!(result, "/home/user/my downloads/file name.txt");
+        assert_eq!(
+            result,
+            if cfg!(windows) {
+                r"\home\user\my downloads\file name.txt"
+            } else {
+                "/home/user/my downloads/file name.txt"
+            }
+        );
     }
 
     #[test]
@@ -692,7 +706,14 @@ mod tests {
     fn normalize_path_handles_forward_slash_only() {
         // Pure forward-slash paths (cross-platform compatible)
         let result = normalize_path("/var/log/app.log");
-        assert_eq!(result, "/var/log/app.log");
+        assert_eq!(
+            result,
+            if cfg!(windows) {
+                r"\var\log\app.log"
+            } else {
+                "/var/log/app.log"
+            }
+        );
     }
 
     // ── delete_path ─────────────────────────────────────────────────

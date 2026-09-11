@@ -34,7 +34,7 @@
 ## Why Motrix Next?
 
 > [!NOTE]
-> Motrix Next uses [Aria2 Next](https://github.com/AnInsomniacy/aria2-next) as its download engine, a maintained aria2 fork that preserves the original interfaces while fixing long-standing issues, moving to CMake, adding native ED2K support, and updating modern dependencies.
+> Motrix Next uses [Aria2 Next](https://github.com/AnInsomniacy/aria2-next) as its download engine, a maintained aria2 fork that preserves the original interfaces while fixing long-standing issues, moving to CMake, adding native ED2K and HLS/DASH support, and updating modern dependencies.
 
 [Motrix](https://github.com/agalwood/Motrix) by [agalwood](https://github.com/agalwood) was one of the best open-source download managers available — clean UI, aria2-powered, cross-platform. It inspired thousands of users and developers alike.
 
@@ -70,11 +70,12 @@ What changed is everything underneath. Every transition and micro-interaction ha
 ## Features
 
 - **Multi-protocol downloads** — HTTP, HTTPS, SFTP, ED2K, BitTorrent, Magnet, and `.torrent` tasks
+- **HLS and DASH** — Native track selection, subtitles, live recording, resumable media downloads and MP4/MKV output. See [media downloads](docs/MEDIA.md).
 - **BitTorrent** — Selective file download, DHT, peer exchange, encryption controls, metadata caching, GeoIP peer flags, and tracker probing
 - **Browser extension integration** — Embedded Extension API with independent authentication, download confirmation, smart auto-submit, filename hints, referer/cookie forwarding, and real-time controls ([Chrome Web Store](https://chromewebstore.google.com/detail/ofeajdebdjajhkmcmamagokecnbephhl) · [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/loojjolhejmakcdlbidigoniobfanjlb) · [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/motrix-next-extension/))
 - **Safe filename handling** — Content-Disposition, RFC 2047, non-UTF-8, percent-encoded, and extensionless URL resolution with path traversal sanitization
 - **Download organization** — Favorite and recent folders, optional file-type categorization, stale-record cleanup, and completed history backed by SQLite
-- **Concurrent downloads** — Independent controls for active tasks, HTTP connections per server, segments per file, and BT peer limits
+- **Concurrent downloads** — Independent limits for active tasks, stream connections, and BitTorrent peers
 - **Speed control** — Global and per-task upload/download limits with day-of-week and time-of-day scheduling
 - **System integration** — Tray operation, optional tray speed display, macOS Dock badge/progress, protocol handlers for `magnet://`, `ed2k://`, `thunder://`, and `motrixnext://`
 - **Lightweight mode** — Destroys the WebView on minimize-to-tray while Rust keeps the engine, task monitor, notifications, history, and extension routing alive

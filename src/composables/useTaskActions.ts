@@ -5,6 +5,8 @@
  * Uses dependency injection for all Vue/Pinia dependencies — stores,
  * i18n, dialog, and message are passed in via the options object.
  */
+import { finishMedia, saveSession } from '@/api/aria2'
+import { canFinishMedia } from '@shared/utils/media'
 import { ref, h } from 'vue'
 import {
   getTaskUri,
@@ -110,6 +112,22 @@ export function useTaskActions(deps: TaskActionsDeps) {
         logger.warn('TaskView.redownloadTask', getErrorMessage(error))
         message.error(t('task.restart-task-fail', { taskName }))
       })
+  }
+
+  const finishingMedia = new Set<string>()
+  async function handleFinishMedia(task: Aria2Task) {
+    if (!canFinishMedia(task) || finishingMedia.has(task.gid)) return
+    finishingMedia.add(task.gid)
+    try {
+      await finishMedia(task.gid)
+      await saveSession()
+      await taskStore.fetchList()
+    } catch (error) {
+      logger.warn('TaskView.finishMedia', getErrorMessage(error))
+      message.error(getErrorMessage(error))
+    } finally {
+      finishingMedia.delete(task.gid)
+    }
   }
 
   function handleFinishSharing(task: Aria2Task) {
@@ -346,6 +364,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     handleRetryTask,
     handleRedownloadTask,
     handleFinishSharing,
+    handleFinishMedia,
     handleDeleteTask,
     handleDeleteRecord,
     handleCopyLink,

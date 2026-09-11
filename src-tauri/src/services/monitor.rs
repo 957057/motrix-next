@@ -70,6 +70,7 @@ pub struct TaskEventFile {
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TaskEvent {
+    pub media: Option<crate::aria2::types::Aria2Media>,
     pub gid: String,
     pub name: String,
     pub status: String,
@@ -150,6 +151,7 @@ impl TaskEvent {
             .unwrap_or_default();
 
         Self {
+            media: task.media.clone(),
             gid: task.gid.clone(),
             name,
             status: task.status.clone(),
@@ -222,6 +224,9 @@ fn is_metadata_task(task: &Aria2Task) -> bool {
 /// Preserve terminal progress for every protocol and file count.
 fn build_history_meta_json(event: &TaskEvent) -> String {
     let mut meta = serde_json::Map::new();
+    if let Some(media) = &event.media {
+        meta.insert("media".into(), serde_json::json!(media));
+    }
 
     if let Some(ref hash) = event.info_hash {
         meta.insert(
@@ -324,7 +329,9 @@ pub fn build_history_record_with_added_at(
         _ => "unknown",
     };
 
-    let task_type = if event.is_bt {
+    let task_type = if event.media.is_some() {
+        Some("media".to_string())
+    } else if event.is_bt {
         Some("bt".to_string())
     } else if event.is_ed2k {
         Some("ed2k".to_string())
@@ -378,7 +385,31 @@ async fn persist_lifecycle_event(
         return Ok(());
     }
     let existing_added_at = db.get_task_birth(&payload.gid).await?;
-    let record = build_history_record_with_added_at(payload, event_name, existing_added_at);
+    let mut record = build_history_record_with_added_at(payload, event_name, existing_added_at);
+    if payload.media.is_some() {
+        if let Some(aria2) = app.try_state::<crate::aria2::client::Aria2State>() {
+            match aria2.0.get_option(&payload.gid).await {
+                Ok(options) => {
+                    let media_options: serde_json::Map<String, serde_json::Value> = options
+                        .as_object()
+                        .into_iter()
+                        .flatten()
+                        .filter(|(key, _)| key.as_str() == "media" || key.starts_with("media-"))
+                        .map(|(key, value)| (key.clone(), value.clone()))
+                        .collect();
+                    let mut meta: serde_json::Value =
+                        serde_json::from_str(record.meta.as_deref().unwrap_or("{}"))
+                            .map_err(|error| AppError::Aria2(error.to_string()))?;
+                    meta["mediaOptions"] = media_options.into();
+                    record.meta = Some(meta.to_string());
+                }
+                Err(error) => log::warn!(
+                    "media: options unavailable for history gid={} error={error}",
+                    payload.gid
+                ),
+            }
+        }
+    }
 
     if let Some(info_hash) = payload.info_hash.as_deref() {
         db.remove_by_info_hash(info_hash, Some(&payload.gid))

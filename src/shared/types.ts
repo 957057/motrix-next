@@ -210,6 +210,40 @@ export interface Aria2BtPeerAddResult {
  * Complete aria2 task object returned by tellStatus, tellActive, tellWaiting, or tellStopped.
  * All numeric values are represented as strings per the aria2 JSON-RPC protocol.
  */
+export type MediaState =
+  | 'waiting'
+  | 'probing'
+  | 'awaiting-selection'
+  | 'downloading'
+  | 'recording'
+  | 'finalizing'
+  | 'paused'
+  | 'complete'
+  | 'error'
+  | 'removed'
+export interface Aria2MediaTrack {
+  id: string
+  type: 'video' | 'audio' | 'subtitle' | 'muxed'
+  language: string
+  codec: string
+  width: string
+  height: string
+  bandwidth: string
+  selected: 'true' | 'false'
+}
+export interface Aria2Media {
+  state: MediaState
+  protocol: '' | 'hls' | 'dash'
+  live: 'true' | 'false'
+  duration: string
+  completedDuration: string
+  downloadedLength: string
+  lengthKnown: 'true' | 'false'
+  progress?: string
+  error: string
+  tracks: Aria2MediaTrack[]
+}
+
 export interface Aria2Task {
   gid: string
   status: TaskStatus
@@ -223,6 +257,8 @@ export interface Aria2Task {
   files: Aria2File[]
   bittorrent?: Aria2BtInfo
   ed2k?: Aria2Ed2kInfo
+  media?: Aria2Media
+  mediaOptions?: Record<string, string>
   infoHash?: string
   numSeeders?: string
   seeder?: string
@@ -696,6 +732,8 @@ export interface HistoryFileSnapshot {
  * - parseHistoryMeta()  — read path
  * - extractHistoryFilePaths() — stale cleanup */
 export interface HistoryMeta {
+  media?: Aria2Media
+  mediaOptions?: Record<string, string>
   completedLength?: string
   errorCode?: string
   errorMessage?: string
@@ -766,6 +804,7 @@ export interface ResumeEligibleResult {
 
 /** Aria2 JSON-RPC client API surface consumed by the task store. */
 export interface TaskApi {
+  retryMedia: (gid: string) => Promise<string>
   fetchTaskList: (params: { type: string; limit?: number }) => Promise<Aria2Task[]>
   fetchTaskItem: (params: { gid: string }) => Promise<Aria2Task>
   fetchTaskItemWithPeers: (params: { gid: string }) => Promise<Aria2Task & { peers: Aria2Peer[] }>

@@ -803,6 +803,8 @@ async fn probe_engine(
 
 async fn probe_engine_contract(client: &crate::aria2::client::Aria2Client) -> Result<(), AppError> {
     const REQUIRED_METHODS: &[&str] = &[
+        "aria2.finishMedia",
+        "aria2.retryMedia",
         "aria2.addBtPeers",
         "aria2.ed2kSearch",
         "aria2.forceBtRecheck",

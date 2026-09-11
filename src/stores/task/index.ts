@@ -1,5 +1,8 @@
 /** @fileoverview Pinia store for download task management: list, add, pause, resume, remove. */
 import { defineStore } from 'pinia'
+import { canSelectMedia } from '@shared/utils/media'
+import { isPendingMagnetSelectionTask } from '@/composables/useMagnetFlow'
+import { useTaskSelectionStore, type SelectionRequest } from '@/stores/taskSelection'
 import { reactive, ref, watch } from 'vue'
 import { EMPTY_STRING } from '@shared/constants'
 import { checkTaskIsEd2kSearch } from '@shared/utils'
@@ -58,6 +61,7 @@ export const useTaskStore = defineStore('task', () => {
   const preferenceStore = usePreferenceStore()
   const currentList = ref<TaskScope>('all')
   const taskDetailVisible = ref(false)
+  const taskDetailClosing = ref(false)
   const currentTaskGid = ref(EMPTY_STRING)
   const enabledFetchPeers = ref(false)
   const currentTaskItem = ref<Aria2Task | null>(null)
@@ -107,12 +111,9 @@ export const useTaskStore = defineStore('task', () => {
       hideTaskDetail,
       fetchList,
       setTaskRemoving,
-      requestMagnetSelection: (gid) => {
-        void import('@/stores/app').then(({ useAppStore }) => useAppStore().requestMagnetSelection(gid))
-      },
-      clearMagnetSelections: (gids) => {
-        return import('@/stores/app').then(({ useAppStore }) => useAppStore().clearMagnetSelections(gids))
-      },
+      requestMediaSelection: (task) => useTaskSelectionStore().request({ kind: 'media', gid: task.gid }),
+      requestMagnetSelection: (gid) => useTaskSelectionStore().request({ kind: 'bt', gid }),
+      clearSelections: (gids) => useTaskSelectionStore().forget(gids),
     })
     Object.assign(taskOps, ops)
   }
@@ -205,6 +206,22 @@ export const useTaskStore = defineStore('task', () => {
       // before removing its engine task.
       const historyRecords = useDatabaseStore().isReady ? await useHistoryStore().getRecords() : []
       if (requestId !== listRequestId || currentTaskTab() !== scope) return
+      const waiting: SelectionRequest[] = []
+      const available: SelectionRequest[] = []
+      for (const task of engineTasks) {
+        if (isPendingMagnetSelectionTask(task)) {
+          waiting.push({ kind: 'bt', gid: task.gid })
+          available.push({ kind: 'bt', gid: task.gid })
+        } else if (canSelectMedia(task)) {
+          available.push({ kind: 'media', gid: task.gid })
+          if (task.media?.state === 'awaiting-selection') waiting.push({ kind: 'media', gid: task.gid })
+        }
+      }
+      const selection = useTaskSelectionStore()
+      selection.reconcile(waiting, available)
+      selection.forget(
+        engineTasks.filter((task) => ['complete', 'removed'].includes(task.status)).map((task) => task.gid),
+      )
       const removing = new Set(removingGids.value)
       const tasks = mergeHistoryIntoTasks(
         engineTasks.filter((task) => task.status !== 'removed'),
@@ -343,6 +360,7 @@ export const useTaskStore = defineStore('task', () => {
   }
 
   function hideTaskDetail() {
+    if (taskDetailVisible.value) taskDetailClosing.value = true
     taskDetailVisible.value = false
   }
 
@@ -380,6 +398,7 @@ export const useTaskStore = defineStore('task', () => {
         fileCategory: data.fileCategory,
       })
       gids.push(...added)
+      added.forEach((gid) => useTaskSelectionStore().register(gid, true))
     }
 
     const now = new Date().toISOString()
@@ -395,6 +414,7 @@ export const useTaskStore = defineStore('task', () => {
     const httpAuthStore = useHttpAuthStore()
     const options = await applySavedHttpAuth(data.uris[0] ?? '', data.options, httpAuthStore)
     const gid = await api.addUriAtomic({ uris: data.uris, options })
+    useTaskSelectionStore().register(gid, true)
     const now = new Date().toISOString()
     registerAddedAt(gid, now)
     const historyStore = useHistoryStore()
@@ -457,8 +477,7 @@ export const useTaskStore = defineStore('task', () => {
     historyStore.recordTaskBirth(gid, now).catch((e) => logger.debug('taskBirth.write', e))
 
     if (policy !== 'download-all' || classifyFiles) {
-      const { useAppStore } = await import('@/stores/app')
-      useAppStore().queueMagnetSelection(gid, policy === 'prompt')
+      useTaskSelectionStore().register(gid, policy === 'prompt')
     }
 
     await fetchList()
@@ -505,11 +524,15 @@ export const useTaskStore = defineStore('task', () => {
     const policy = preferenceStore.config.magnetFileSelectionPolicy
     resubmittingGids.value = [...resubmittingGids.value, task.gid]
     listRequestId += 1
-    const operation = resubmitTask(task, mode, api, historyStore, policy, async (gid) => {
-      const { useAppStore } = await import('@/stores/app')
-      useAppStore().queueMagnetSelection(gid, policy === 'prompt')
-    })
+    const operation = (
+      task.media && mode === 'retry'
+        ? api.retryMedia(task.gid).then((gid) => [gid])
+        : resubmitTask(task, mode, api, historyStore, policy, async (gid) => {
+            useTaskSelectionStore().register(gid, policy === 'prompt')
+          })
+    )
       .then(async (gids) => {
+        if (task.media) gids.forEach((gid) => useTaskSelectionStore().register(gid, true))
         const replacement = gids[0]
         if (!replacement) return
         cardKeys.set(replacement, taskCardKey(task.gid))
@@ -546,6 +569,7 @@ export const useTaskStore = defineStore('task', () => {
     currentList,
     taskCounts,
     taskDetailVisible,
+    taskDetailClosing,
     currentTaskGid,
     enabledFetchPeers,
     currentTaskItem,

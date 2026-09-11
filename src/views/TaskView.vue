@@ -3,6 +3,7 @@
 import { computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTaskStore } from '@/stores/task'
+import { useTaskSelectionStore } from '@/stores/taskSelection'
 import { useAppStore } from '@/stores/app'
 import { usePreferenceStore } from '@/stores/preference'
 import { useTheme } from '@/composables/useTheme'
@@ -37,6 +38,7 @@ const {
   handleRetryTask,
   handleRedownloadTask,
   handleFinishSharing,
+  handleFinishMedia,
   handleDeleteTask,
   handleDeleteRecord,
   handleCopyLink,
@@ -50,7 +52,7 @@ const {
   t,
   dialog,
   message,
-  requestMagnetSelection: appStore.requestMagnetSelection,
+  requestMagnetSelection: (gid) => useTaskSelectionStore().request({ kind: 'bt', gid }),
 })
 
 const subnavs = computed(() => [
@@ -140,6 +142,7 @@ onBeforeUnmount(() => {
           @retry="handleRetryTask"
           @redownload="handleRedownloadTask"
           @finish-sharing="handleFinishSharing"
+          @finish-media="handleFinishMedia"
           @delete="handleDeleteTask"
           @delete-record="handleDeleteRecord"
           @copy-link="handleCopyLink"
