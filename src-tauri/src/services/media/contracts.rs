@@ -1,4 +1,5 @@
-//! Extension media v1 wire contract. Native RPC strings never escape this boundary.
+//! Media wire types and the single native representation boundary.
+use super::error::Error;
 use crate::aria2::types::Aria2Task;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -7,6 +8,44 @@ use uuid::Uuid;
 
 pub const LEASE_MS: i64 = 300_000;
 pub const RECEIPT_MS: i64 = 86_400_000;
+pub const HISTORY_OPTIONS: &[&str] = &[
+    "media",
+    "media-format",
+    "media-video",
+    "media-audio",
+    "media-subtitles",
+    "media-record-time",
+    "media-pause-after-probe",
+];
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SourceKind {
+    Hls,
+    Dash,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Format {
+    Mp4,
+    Mkv,
+}
+impl Format {
+    pub fn parse(value: &str) -> Result<Self, Error> {
+        match value {
+            "mp4" => Ok(Self::Mp4),
+            "mkv" => Ok(Self::Mkv),
+            _ => Err(Error::UnsupportedSelection),
+        }
+    }
+    pub fn extension(self) -> &'static str {
+        match self {
+            Self::Mp4 => "mp4",
+            Self::Mkv => "mkv",
+        }
+    }
+}
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -18,7 +57,7 @@ pub struct ProbeRequest {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Source {
     pub url: String,
-    pub kind: String,
+    pub kind: SourceKind,
     pub page_url: String,
     pub title: String,
     pub filename: String,
@@ -29,7 +68,6 @@ pub struct Source {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RequestContext {
     pub url: String,
-    pub captured_at: i64,
     pub headers: Vec<RequestHeader>,
 }
 #[derive(Clone, Serialize, Deserialize)]
@@ -44,7 +82,7 @@ pub struct Selection {
     pub video_id: Option<String>,
     pub audio_id: Option<String>,
     pub subtitle_id: Option<String>,
-    pub format: String,
+    pub format: Format,
     pub record_time_seconds: u32,
 }
 #[derive(Clone, Serialize, Deserialize)]
@@ -68,60 +106,80 @@ pub struct Track {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Presentation {
-    pub kind: String,
+    pub kind: SourceKind,
     pub title: String,
     pub live: bool,
     pub duration_ms: Option<u64>,
     pub size: Option<u64>,
     pub tracks: Vec<Track>,
-    pub formats: Vec<String>,
+    pub formats: Vec<Format>,
     pub defaults: Selection,
 }
 
-fn http_url(value: &str) -> Result<Url, &'static str> {
+fn http_url(value: &str) -> Result<Url, Error> {
     if value.len() > 16_384 {
-        return Err("unsupported_source");
+        return Err(Error::UnsupportedSource);
     }
-    let url = Url::parse(value).map_err(|_| "unsupported_source")?;
+    let url = Url::parse(value).map_err(|_| Error::UnsupportedSource)?;
     if !matches!(url.scheme(), "http" | "https")
         || !url.username().is_empty()
         || url.password().is_some()
     {
-        return Err("unsupported_source");
+        return Err(Error::UnsupportedSource);
     }
     Ok(url)
 }
 
 impl Source {
-    pub fn validate(&self, now: i64) -> Result<(), &'static str> {
+    pub fn output_name(&self, format: Format) -> Option<String> {
+        let hint = if self.title.trim().is_empty() {
+            std::path::Path::new(&self.filename).file_stem()?.to_str()?
+        } else {
+            self.title.trim()
+        };
+        let mut name = sanitize_filename::sanitize_with_options(
+            hint,
+            sanitize_filename::Options {
+                windows: true,
+                truncate: true,
+                replacement: "_",
+            },
+        );
+        while name.len() > 251 {
+            name.pop();
+        }
+        (!name.is_empty()).then(|| format!("{name}.{}", format.extension()))
+    }
+
+    pub fn validate(&self) -> Result<(), Error> {
         http_url(&self.url)?;
         http_url(&self.page_url)?;
-        if !matches!(self.kind.as_str(), "file" | "hls" | "dash")
-            || self.title.encode_utf16().count() > 512
+        if self.title.encode_utf16().count() > 512
             || self.filename.encode_utf16().count() > 255
             || self.mime.len() > 128
             || self.request_contexts.len() > 8
         {
-            return Err("unsupported_source");
+            return Err(Error::UnsupportedSource);
         }
         let mut origins = std::collections::HashSet::new();
         for context in &self.request_contexts {
             let origin = http_url(&context.url)?.origin().ascii_serialization();
-            if !origins.insert(origin)
-                || context.headers.len() > 32
-                || context.captured_at < now - LEASE_MS
-                || context.captured_at > now + 30_000
-            {
-                return Err("source_expired");
+            if !origins.insert(origin) || context.headers.len() > 32 {
+                return Err(Error::UnsupportedSource);
             }
             let mut names = std::collections::HashSet::new();
+            let mut bytes = 0;
             for field in &context.headers {
+                bytes += field.name.len() + field.value.len();
                 let name = field.name.to_ascii_lowercase();
-                if name.len() > 128
+                if bytes > 16_384
+                    || name.len() > 128
                     || field.value.len() > 8192
                     || !names.insert(name.clone())
                     || axum::http::HeaderName::from_bytes(name.as_bytes()).is_err()
                     || axum::http::HeaderValue::from_str(&field.value).is_err()
+                    || name.starts_with("proxy-")
+                    || name.starts_with("if-")
                     || matches!(
                         name.as_str(),
                         "host"
@@ -129,6 +187,8 @@ impl Source {
                             | "content-length"
                             | "transfer-encoding"
                             | "range"
+                            | "accept-encoding"
+                            | "keep-alive"
                             | "if-range"
                             | "if-match"
                             | "if-none-match"
@@ -141,7 +201,7 @@ impl Source {
                             | "trailer"
                     )
                 {
-                    return Err("unsupported_source");
+                    return Err(Error::UnsupportedSource);
                 }
             }
         }
@@ -149,22 +209,52 @@ impl Source {
     }
 }
 
-fn number(value: &str) -> u64 {
-    value.parse::<u64>().unwrap_or(0).min(9_007_199_254_740_991)
+fn number(value: &str) -> Result<u64, Error> {
+    value
+        .parse::<u64>()
+        .ok()
+        .filter(|n| *n <= 9_007_199_254_740_991)
+        .ok_or(Error::ProbeFailed)
+}
+
+fn frame_rate(value: &str) -> Result<f64, Error> {
+    value
+        .parse::<f64>()
+        .ok()
+        .filter(|n| n.is_finite() && (0.0..=1000.0).contains(n))
+        .ok_or(Error::ProbeFailed)
 }
 
 impl Presentation {
-    pub fn from_task(task: &Aria2Task, format: &str) -> Result<Self, &'static str> {
+    pub fn from_task(task: &Aria2Task, format: Format) -> Result<Self, Error> {
         let title = task
             .files
             .first()
             .and_then(|f| f.path.rsplit(['/', '\\']).next())
             .unwrap_or("Media")
             .to_string();
-        let media = task.media.as_ref().ok_or("unsupported_source")?;
+        let media = task.media.as_ref().ok_or(Error::UnsupportedSource)?;
         if !matches!(media.protocol.as_str(), "hls" | "dash") || media.tracks.len() > 256 {
-            return Err("unsupported_source");
+            return Err(Error::UnsupportedSource);
         }
+        let mut ids = std::collections::HashSet::new();
+        if media.tracks.iter().any(|track| {
+            !ids.insert(&track.id)
+                || track.id.is_empty()
+                || track.id.len() > 128
+                || !matches!(
+                    track.r#type.as_str(),
+                    "video" | "audio" | "muxed" | "subtitle"
+                )
+        }) {
+            return Err(Error::ProbeFailed);
+        }
+        let live = match media.live.as_str() {
+            "true" => true,
+            "false" => false,
+            _ => return Err(Error::ProbeFailed),
+        };
+        let duration = number(&media.duration)?;
         let selected = |kind: &str| {
             media
                 .tracks
@@ -174,31 +264,37 @@ impl Presentation {
         };
         let muxed = selected("muxed");
         let value = Self {
-            kind: media.protocol.clone(),
+            kind: match media.protocol.as_str() {
+                "hls" => SourceKind::Hls,
+                "dash" => SourceKind::Dash,
+                _ => return Err(Error::UnsupportedSource),
+            },
             title,
-            live: media.live == "true",
-            duration_ms: (number(&media.duration) > 0).then(|| number(&media.duration)),
+            live,
+            duration_ms: (duration > 0).then_some(duration),
             size: None,
             tracks: media
                 .tracks
                 .iter()
-                .map(|t| Track {
-                    id: t.id.clone(),
-                    r#type: t.r#type.clone(),
-                    language: t.language.clone(),
-                    codec: t.codec.clone(),
-                    width: number(&t.width),
-                    height: number(&t.height),
-                    bandwidth: number(&t.bandwidth),
-                    frame_rate: 0.0,
+                .map(|t| {
+                    Ok(Track {
+                        id: t.id.clone(),
+                        r#type: t.r#type.clone(),
+                        language: t.language.clone(),
+                        codec: t.codec.clone(),
+                        width: number(&t.width)?,
+                        height: number(&t.height)?,
+                        bandwidth: number(&t.bandwidth)?,
+                        frame_rate: frame_rate(&t.frame_rate)?,
+                    })
                 })
-                .collect(),
-            formats: vec!["mp4".into(), "mkv".into()],
+                .collect::<Result<_, Error>>()?,
+            formats: vec![Format::Mp4, Format::Mkv],
             defaults: Selection {
                 video_id: selected("video").or(muxed.clone()),
                 audio_id: selected("audio").or(muxed),
                 subtitle_id: selected("subtitle"),
-                format: format.into(),
+                format,
                 record_time_seconds: 0,
             },
         };
@@ -206,8 +302,8 @@ impl Presentation {
         Ok(value)
     }
 
-    pub fn validate_selection(&self, value: &Selection) -> Result<(), &'static str> {
-        let invalid = || Err("unsupported_selection");
+    pub fn validate_selection(&self, value: &Selection) -> Result<(), Error> {
+        let invalid = || Err(Error::UnsupportedSelection);
         if !self.formats.contains(&value.format)
             || value.record_time_seconds > 31_536_000
             || (!self.live && value.record_time_seconds != 0)

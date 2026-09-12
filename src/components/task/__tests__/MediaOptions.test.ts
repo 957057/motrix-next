@@ -7,7 +7,7 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (key: string) => key, locale: 
 import MediaOptions from '../MediaOptions.vue'
 
 const muxed: Aria2MediaTrack = {
-  id: '0:0',
+  id: 'muxed-main',
   type: 'muxed',
   language: 'en',
   codec: 'avc1,mp4a',
@@ -39,7 +39,10 @@ describe('contextual media controls', () => {
     expect(wrapper.find('[data-label="media.record-time"]').exists()).toBe(false)
     expect(wrapper.find('[data-label="media.video"]').exists()).toBe(true)
     const video = wrapper.find('[data-label="media.video"]').findComponent({ name: 'Select' })
-    expect(video.props('options')).toContainEqual({ value: '0:0', label: 'English · 1280×720 · avc1,mp4a · 1000 kb/s' })
+    expect(video.props('options')).toContainEqual({
+      value: 'muxed-main',
+      label: 'English · 1280×720 · avc1,mp4a · 1000 kb/s',
+    })
     wrapper.unmount()
   })
   it('switches multiplexed media to audio-only without contradictory video selection', async () => {

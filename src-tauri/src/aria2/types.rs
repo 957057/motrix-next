@@ -183,6 +183,8 @@ pub struct Aria2Media {
     pub progress: Option<String>,
     pub error: String,
     pub tracks: Vec<Aria2MediaTrack>,
+    #[serde(default)]
+    pub error_code: String,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -194,6 +196,8 @@ pub struct Aria2MediaTrack {
     pub width: String,
     pub height: String,
     pub bandwidth: String,
+    #[serde(default, rename = "frameRate")]
+    pub frame_rate: String,
     pub selected: String,
 }
 

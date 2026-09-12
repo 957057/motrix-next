@@ -141,7 +141,7 @@ export async function resubmitTask(
     options.mediaPauseAfterProbe = 'true'
     // Representation IDs belong to one manifest inspection, never another task.
     for (const key of ['mediaVideo', 'mediaAudio', 'mediaSubtitles']) {
-      if (options[key]?.includes(':')) options[key] = 'best'
+      if (task.media.tracks.some((track) => track.id === options[key])) options[key] = 'best'
     }
   }
 

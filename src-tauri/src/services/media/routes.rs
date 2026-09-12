@@ -1,4 +1,5 @@
 //! Thin authenticated HTTP adapter; media work never depends on a frontend event.
+use super::error::Error;
 use super::{
     contracts::{ProbeRequest, SubmitRequest},
     service,
@@ -17,27 +18,21 @@ use tauri::Manager;
 use tower_http::cors::{AllowOrigin, CorsLayer};
 use uuid::Uuid;
 
-pub struct MediaError(pub &'static str);
-impl From<&'static str> for MediaError {
-    fn from(code: &'static str) -> Self {
-        Self(code)
-    }
-}
-impl IntoResponse for MediaError {
+impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        let status = match self.0 {
-            "api_auth_failed" => StatusCode::UNAUTHORIZED,
-            "origin_denied" => StatusCode::FORBIDDEN,
-            "not_found" => StatusCode::NOT_FOUND,
-            "conflict" => StatusCode::CONFLICT,
-            "expired" => StatusCode::GONE,
-            "unavailable" => StatusCode::SERVICE_UNAVAILABLE,
+        let status = match self {
+            Error::ApiAuthFailed => StatusCode::UNAUTHORIZED,
+            Error::OriginDenied => StatusCode::FORBIDDEN,
+            Error::NotFound => StatusCode::NOT_FOUND,
+            Error::Conflict => StatusCode::CONFLICT,
+            Error::Expired => StatusCode::GONE,
+            Error::Unavailable => StatusCode::SERVICE_UNAVAILABLE,
             _ => StatusCode::UNPROCESSABLE_ENTITY,
         };
         (
             status,
             [(header::CACHE_CONTROL, "no-store")],
-            Json(json!({"error":self.0})),
+            Json(json!({"error":self})),
         )
             .into_response()
     }
@@ -55,15 +50,15 @@ fn extension_origin(value: &str) -> bool {
     })
 }
 
-fn authorize(ctx: &ApiContext, headers: &HeaderMap) -> Result<(), MediaError> {
+fn authorize(ctx: &ApiContext, headers: &HeaderMap) -> Result<(), Error> {
     if let Some(origin) = headers.get(header::ORIGIN) {
         if !origin.to_str().is_ok_and(extension_origin) {
-            return Err(MediaError("origin_denied"));
+            return Err(Error::OriginDenied);
         }
     }
     let secret = read_api_secret(&ctx.app);
     if secret.is_empty() || validate_bearer_token(headers, &secret).is_err() {
-        return Err(MediaError("api_auth_failed"));
+        return Err(Error::ApiAuthFailed);
     }
     Ok(())
 }
@@ -87,7 +82,7 @@ pub fn router() -> Router<Arc<ApiContext>> {
         )
 }
 
-type Reply = Result<([(axum::http::HeaderName, &'static str); 1], Json<Value>), MediaError>;
+type Reply = Result<([(axum::http::HeaderName, &'static str); 1], Json<Value>), Error>;
 fn reply(value: Value) -> Reply {
     Ok(([(header::CACHE_CONTROL, "no-store")], Json(value)))
 }
@@ -101,7 +96,7 @@ async fn create(
     body: Result<Json<ProbeRequest>, axum::extract::rejection::JsonRejection>,
 ) -> Reply {
     authorize(&ctx, &headers)?;
-    let Json(request) = body.map_err(|_| MediaError("unsupported_source"))?;
+    let Json(request) = body.map_err(|_| Error::UnsupportedSource)?;
     let service = service(&ctx.app).await?;
     service.capabilities().await?;
     let config = ctx
@@ -111,7 +106,10 @@ async fn create(
         .await;
     reply(
         service
-            .create(request, &config.media_default_format)
+            .create(
+                request,
+                super::contracts::Format::parse(&config.media_default_format)?,
+            )
             .await?,
     )
 }
@@ -130,7 +128,7 @@ async fn submit(
     body: Result<Json<SubmitRequest>, axum::extract::rejection::JsonRejection>,
 ) -> Reply {
     authorize(&ctx, &headers)?;
-    let Json(request) = body.map_err(|_| MediaError("unsupported_selection"))?;
+    let Json(request) = body.map_err(|_| Error::UnsupportedSelection)?;
     reply(service(&ctx.app).await?.submit(id, request).await?)
 }
 async fn cancel(
@@ -140,8 +138,8 @@ async fn cancel(
     body: Result<Json<Value>, axum::extract::rejection::JsonRejection>,
 ) -> Reply {
     authorize(&ctx, &headers)?;
-    if body.map_err(|_| MediaError("unsupported_source"))?.0 != json!({}) {
-        return Err(MediaError("unsupported_source"));
+    if body.map_err(|_| Error::UnsupportedSource)?.0 != json!({}) {
+        return Err(Error::UnsupportedSource);
     }
     reply(service(&ctx.app).await?.cancel(id).await?)
 }

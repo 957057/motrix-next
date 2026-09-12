@@ -229,6 +229,7 @@ export interface Aria2MediaTrack {
   width: string
   height: string
   bandwidth: string
+  frameRate?: string
   selected: 'true' | 'false'
 }
 export interface Aria2Media {
@@ -241,6 +242,7 @@ export interface Aria2Media {
   lengthKnown: 'true' | 'false'
   progress?: string
   error: string
+  errorCode?: string
   tracks: Aria2MediaTrack[]
 }
 

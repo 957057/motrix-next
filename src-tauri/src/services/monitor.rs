@@ -394,7 +394,9 @@ async fn persist_lifecycle_event(
                         .as_object()
                         .into_iter()
                         .flatten()
-                        .filter(|(key, _)| key.as_str() == "media" || key.starts_with("media-"))
+                        .filter(|(key, _)| {
+                            super::media::contracts::HISTORY_OPTIONS.contains(&key.as_str())
+                        })
                         .map(|(key, value)| (key.clone(), value.clone()))
                         .collect();
                     let mut meta: serde_json::Value =

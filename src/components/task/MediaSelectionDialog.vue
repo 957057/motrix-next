@@ -4,7 +4,7 @@ import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NModal, NCard, NButton, NSpace, NForm, NAlert, NSpin } from 'naive-ui'
 import { useTaskStore } from '@/stores/task'
-import { getOption, changeOption, resumeTask, retryMedia, saveSession } from '@/api/aria2'
+import { getOption, confirmMedia } from '@/api/aria2'
 import {
   defaultMediaOptions,
   readMediaOptions,
@@ -92,12 +92,7 @@ async function confirm() {
       ...mediaEngineOptions({ ...submittedOptions, pauseAfterProbe: 'false' }),
       out: mediaOutputName(current, submittedOptions.format),
     }
-    if (current.status === 'error') await retryMedia(current.gid, options)
-    else {
-      await changeOption({ gid: current.gid, options })
-      await resumeTask({ gid: current.gid })
-    }
-    await saveSession()
+    await confirmMedia(current.gid, options)
     await tasks.fetchList()
     if (request === generation) emit('close')
   } catch (cause) {

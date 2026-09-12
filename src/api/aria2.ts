@@ -328,6 +328,9 @@ export default api
 export async function finishMedia(gid: string): Promise<string> {
   return invoke<string>('aria2_finish_media', { gid })
 }
+export async function confirmMedia(gid: string, options: Aria2EngineOptions): Promise<string> {
+  return invoke<string>('aria2_confirm_media', { gid, options: formatOptionsForEngine(options) })
+}
 export async function retryMedia(gid: string, options: Aria2EngineOptions = {}): Promise<string> {
   return invoke<string>('aria2_retry_media', { gid, options: formatOptionsForEngine(options) })
 }

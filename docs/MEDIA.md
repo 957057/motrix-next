@@ -94,7 +94,6 @@ share stable dialog bounds; the footer does not move during asynchronous updates
 The task overview renders media-specific rows inside its existing descriptions
 and provides selection beside status, without repeating protocol or diagnostics.
 
-
 ## Browser media API
 
 The desktop implements the extension's `/media/v1` inspection contract in Rust.
@@ -103,17 +102,17 @@ require a nonempty secret and an extension origin (or an authenticated native
 client with no Origin header). Browser-page origins cannot use these endpoints.
 Media operations remain available when the main webview is closed.
 
-Only `hls` and `dash` are advertised, based on the running engine's capabilities.
-Direct-file inspection is not advertised: the existing engine's HEAD/dry-run path
-cannot establish the required media inspection contract without changing the engine.
-Ordinary file downloads through the existing `/add` endpoint remain available.
+The API advertises `hls`, `dash` and `requestContexts: true` only when the running
+engine advertises origin-scoped request contexts, stable track IDs and structured
+media errors. Ordinary files use `/add`; this API has no direct-file inspection
+or original-container branch.
 
-Browser request contexts containing headers are rejected with `unsupported_source`.
-The existing engine cannot enforce exact-origin forwarding for arbitrary custom
-headers at every redirect. The adapter neither flattens these contexts nor silently
-drops them. Public HLS/DASH sources can be inspected with cookie and request-header
-forwarding disabled in the extension. Signed source URLs remain unchanged.
-This limitation does not change the ordinary download dialog's HTTP options.
+The adapter validates browser request contexts and sends them through the native
+`media-request-contexts` option. Every context retains its URL and header set;
+there is no flattening into global headers. The engine selects the context for
+each HTTP hop. Signed source URLs remain unchanged. Browser operations clear
+ambient source credentials and use the supplied contexts. History stores only
+an explicit allowlist of non-sensitive media options.
 
 An inspection uses `media-pause-after-probe=true`, retains its GID through selection,
 and stays outside download lists, history, notifications and bulk resume/pause.
@@ -133,13 +132,22 @@ identity on that response and can reconcile by polling. It does not mean that th
 engine failed to create or start a task. Unsupported sources and selections use the
 contract's terminal error codes. No legacy media endpoints or raw RPC proxy exist.
 
-Run the isolated Windows native boundary test explicitly with:
+## Ownership and verification
 
-```sh
-cargo test --manifest-path src-tauri/Cargo.toml --lib bundled_engine_probes_without_payload_and_submits_the_same_gid -- --ignored
-```
+- `media/contracts.rs` owns browser DTOs and native metadata conversion.
+- `media/probe.rs` owns native inspection and capability negotiation.
+- `media/native.rs` owns confirmation and retry transitions for the desktop UI,
+  automatic selection and browser submissions.
+- `media/task_policy.rs` owns probe visibility and automatic-selection admission.
+- `media/runtime.rs` binds the service to Tauri and publishes confirmed events.
+- `media/journal.rs` persists operation identities and receipts using SQLite.
 
-It uses the unchanged bundled engine, private fixture ports and a temporary output
-folder. It verifies that probing requests no payload and confirmation starts the
-same GID. The fixture intentionally returns a missing segment after confirmation;
-it validates the control boundary, not full-file decoding or browser UI behavior.
+The wire state `submitting` includes the immutable submission ID. Clients keep
+polling the same operation while native confirmation is unresolved. Inspection
+readiness requires both native `awaiting-selection` and ordinary `paused` status.
+
+Static verification uses TypeScript, ESLint, formatting and
+`cargo check --workspace --all-targets` in this repository. Module tests use local
+fixtures. No test starts another repository or imports its test implementation.
+Browser-to-desktop E2E acceptance is performed manually by the maintainer using
+separately built applications. Compiler success does not establish runtime success.

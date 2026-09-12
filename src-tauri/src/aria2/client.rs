@@ -1,14 +1,10 @@
-//! Aria2 JSON-RPC HTTP client.
-//!
-//! Provides a managed `Aria2Client` that communicates with the local Aria2 Next
-//! sidecar over HTTP JSON-RPC.  Designed for internal Rust-side use by
-//! monitors, tray actions, and the exit handler — NOT yet exposed to the
-//! frontend (that happens in Task 8).
+//! Native JSON-RPC transport and application task queries.
+//! Media admission and visibility are owned by the media policy component.
 
 use crate::aria2::types::*;
 use crate::error::AppError;
 use serde::{de::DeserializeOwned, Serialize};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 use tokio::sync::RwLock;
@@ -22,10 +18,8 @@ pub struct Aria2Client {
     port: RwLock<u16>,
     secret: RwLock<String>,
     request_id: AtomicU64,
-    internal_gids: RwLock<std::collections::HashSet<String>>,
-    automatic_gids: RwLock<std::collections::HashSet<String>>,
+    pub tasks: crate::services::media::TaskPolicy,
     generation: AtomicU64,
-    automatic_worker: AtomicBool,
 }
 
 /// Tauri managed state wrapper.
@@ -54,61 +48,18 @@ impl Aria2Client {
             port: RwLock::new(port),
             secret: RwLock::new(secret),
             request_id: AtomicU64::new(1),
-            internal_gids: RwLock::new(std::collections::HashSet::new()),
-            automatic_gids: RwLock::new(std::collections::HashSet::new()),
+            tasks: crate::services::media::TaskPolicy::default(),
             generation: AtomicU64::new(0),
-            automatic_worker: AtomicBool::new(false),
         }
     }
 
     pub fn generation(&self) -> u64 {
         self.generation.load(Ordering::Relaxed)
     }
-    pub fn begin_automatic_worker(&self) -> bool {
-        !self.automatic_worker.swap(true, Ordering::AcqRel)
-    }
-    pub fn end_automatic_worker(&self) {
-        self.automatic_worker.store(false, Ordering::Release);
-    }
-    pub async fn automatic_ids(&self) -> std::collections::HashSet<String> {
-        self.automatic_gids.read().await.clone()
-    }
-    pub async fn set_automatic(&self, gid: &str, enabled: bool) {
-        let mut gids = self.automatic_gids.write().await;
-        if enabled {
-            gids.insert(gid.into());
-        } else {
-            gids.remove(gid);
-        }
-    }
-    pub async fn is_automatic(&self, gid: &str) -> bool {
-        self.automatic_gids.read().await.contains(gid)
-    }
-    pub async fn set_internal(&self, gid: &str, internal: bool) {
-        let mut gids = self.internal_gids.write().await;
-        if internal {
-            gids.insert(gid.to_string());
-        } else {
-            gids.remove(gid);
-        }
-    }
-    pub async fn is_internal(&self, gid: &str) -> bool {
-        self.internal_gids.read().await.contains(gid)
-    }
-    pub async fn visible_tasks(&self, mut tasks: Vec<Aria2Task>) -> Vec<Aria2Task> {
-        let gids = self.internal_gids.read().await;
-        tasks.retain(|task| !gids.contains(&task.gid));
-        let automatic = self.automatic_gids.read().await;
-        for task in &mut tasks {
-            task.selection_managed = automatic.contains(&task.gid);
-        }
-        tasks
-    }
-
     /// Updates connection credentials after engine restart.
     pub async fn update_credentials(&self, port: u16, secret: String) {
         self.generation.fetch_add(1, Ordering::Relaxed);
-        self.automatic_gids.write().await.clear();
+        self.tasks.clear_automatic().await;
         *self.port.write().await = port;
         *self.secret.write().await = secret;
         log::debug!("aria2 client credentials updated: port={}", port);
@@ -226,7 +177,7 @@ impl Aria2Client {
     /// Returns global download/upload statistics.
     pub async fn get_global_stat(&self) -> Result<Aria2GlobalStat, AppError> {
         let mut stat: Aria2GlobalStat = self.call("getGlobalStat", vec![]).await?;
-        if !self.internal_gids.read().await.is_empty() {
+        if self.tasks.has_internal().await {
             let tasks = self.tell_task_snapshot(false).await?;
             stat.num_active = tasks
                 .iter()
@@ -245,6 +196,7 @@ impl Aria2Client {
     /// Returns all active (downloading/seeding) tasks.
     pub async fn tell_active(&self) -> Result<Vec<Aria2Task>, AppError> {
         Ok(self
+            .tasks
             .visible_tasks(self.call("tellActive", vec![]).await?)
             .await)
     }
@@ -256,12 +208,13 @@ impl Aria2Client {
         include_stopped: bool,
     ) -> Result<Vec<Aria2Task>, AppError> {
         Ok(self
+            .tasks
             .visible_tasks(self.raw_task_snapshot(include_stopped).await?)
             .await)
     }
 
     pub async fn tell_internal_tasks(&self) -> Result<Vec<Aria2Task>, AppError> {
-        let gids = self.internal_gids.read().await.clone();
+        let gids = self.tasks.internal_ids().await;
         if gids.is_empty() {
             return Ok(Vec::new());
         }
@@ -331,7 +284,7 @@ impl Aria2Client {
             }
             offset += page_len as i64;
         }
-        Ok(self.visible_tasks(tasks).await)
+        Ok(self.tasks.visible_tasks(tasks).await)
     }
 
     /// Returns the status of a single task by GID.
@@ -341,8 +294,8 @@ impl Aria2Client {
 
     /// Forcefully pauses all active tasks.
     pub async fn force_pause_all(&self) -> Result<String, AppError> {
-        self.automatic_gids.write().await.clear();
-        if self.internal_gids.read().await.is_empty() {
+        self.tasks.clear_automatic().await;
+        if !self.tasks.has_internal().await {
             return self.call("forcePauseAll", vec![]).await;
         }
         let tasks = self.tell_active().await?;
@@ -379,7 +332,7 @@ impl Aria2Client {
         let mut resumable_gids = Vec::new();
         let mut blocked = 0;
         for task in paused_tasks {
-            if self.is_internal(&task.gid).await {
+            if self.tasks.is_internal(&task.gid).await {
                 blocked += 1;
                 continue;
             }
@@ -571,7 +524,7 @@ impl Aria2Client {
 
     /// Forcefully pauses a task immediately.
     pub async fn force_pause(&self, gid: &str) -> Result<String, AppError> {
-        self.set_automatic(gid, false).await;
+        self.tasks.set_automatic(gid, false).await;
         self.call("forcePause", vec![gid.into()]).await
     }
 

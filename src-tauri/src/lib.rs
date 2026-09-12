@@ -764,6 +764,7 @@ pub fn run() {
             commands::aria2_add_bt_peers,
             commands::aria2_get_version,
             commands::aria2_finish_media,
+            commands::aria2_confirm_media,
             commands::aria2_batch_finish_media,
             commands::aria2_retry_media,
             commands::aria2_get_global_stat,

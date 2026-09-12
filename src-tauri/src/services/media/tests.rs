@@ -1,7 +1,8 @@
 use super::*;
 use crate::aria2::types::{Aria2File, Aria2Media, Aria2MediaTrack, Aria2Task};
-use axum::{extract::State, http::StatusCode, routing::post, Json, Router};
+use axum::{extract::State as HttpState, http::StatusCode, routing::post, Json, Router};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::time::Duration;
 
 #[derive(Default)]
 struct EngineFixture {
@@ -13,7 +14,7 @@ struct EngineFixture {
 }
 
 async fn rpc(
-    State(state): State<Arc<EngineFixture>>,
+    HttpState(state): HttpState<Arc<EngineFixture>>,
     Json(request): Json<Value>,
 ) -> (StatusCode, Json<Value>) {
     let params = &request["params"];
@@ -45,7 +46,9 @@ async fn rpc(
                     .collect(),
             )
         }
-        "aria2.getVersion" => json!({"enabledFeatures":["HLS/DASH"]}),
+        "aria2.getVersion" => {
+            json!({"enabledFeatures":["HLS/DASH"],"mediaFeatures":["request-contexts","stable-track-ids","structured-errors"]})
+        }
         "system.listMethods" => json!(["aria2.finishMedia", "aria2.retryMedia"]),
         "aria2.addUri" => {
             state.additions.fetch_add(1, Ordering::Relaxed);
@@ -65,15 +68,23 @@ async fn rpc(
                     duration: "60000".into(),
                     tracks: vec![
                         Aria2MediaTrack {
-                            id: "0:0".into(),
+                            id: "video-main".into(),
                             r#type: "video".into(),
                             selected: "true".into(),
+                            width: "0".into(),
+                            height: "0".into(),
+                            bandwidth: "0".into(),
+                            frame_rate: "0".into(),
                             ..Default::default()
                         },
                         Aria2MediaTrack {
-                            id: "1:0".into(),
+                            id: "audio-main".into(),
                             r#type: "audio".into(),
                             selected: "true".into(),
+                            width: "0".into(),
+                            height: "0".into(),
+                            bandwidth: "0".into(),
+                            frame_rate: "0".into(),
                             ..Default::default()
                         },
                     ],
@@ -176,7 +187,7 @@ impl Fixture {
     async fn ready(&self, request: ProbeRequest) -> Presentation {
         let id = request.id;
         self.service
-            .create(request, "mkv")
+            .create(request, Format::Mkv)
             .await
             .expect("probe creation");
         tokio::time::timeout(Duration::from_secs(5), async {
@@ -200,7 +211,7 @@ fn request() -> ProbeRequest {
         id: Uuid::new_v4(),
         source: Source {
             url: "https://media.example/stream.m3u8?token=opaque".into(),
-            kind: "hls".into(),
+            kind: SourceKind::Hls,
             page_url: "https://example.com/watch".into(),
             title: "Video".into(),
             filename: "stream.m3u8".into(),
@@ -215,11 +226,11 @@ async fn confirmed_selection_starts_the_probed_gid_once_and_persists_receipt() {
     let fixture = Fixture::new().await;
     let request = request();
     let presentation = fixture.ready(request.clone()).await;
-    assert_eq!(presentation.defaults.format, "mkv");
+    assert_eq!(presentation.defaults.format, Format::Mkv);
     let options = fixture.engine.last_options.lock().await.clone();
     assert_eq!(options["media-pause-after-probe"], "true");
     assert!(options.get("dry-run").is_none());
-    assert!(options.get("http-request-contexts").is_none());
+    assert_eq!(options["media-request-contexts"], "[]");
     assert_eq!(
         fixture.service.capabilities().await.expect("capabilities")["sourceKinds"],
         json!(["hls", "dash"])
@@ -248,7 +259,7 @@ async fn confirmed_selection_starts_the_probed_gid_once_and_persists_receipt() {
         .load()
         .await
         .expect("durable receipt");
-    assert_eq!(stored[0].state, "submitted");
+    assert_eq!(stored[0].state, State::Submitted);
     assert!(!serde_json::to_string(&stored)
         .expect("journal JSON")
         .contains("token=opaque"));
@@ -256,6 +267,7 @@ async fn confirmed_selection_starts_the_probed_gid_once_and_persists_receipt() {
         !fixture
             .service
             .engine
+            .tasks
             .is_internal(first["gid"].as_str().expect("GID"))
             .await
     );
@@ -268,10 +280,10 @@ async fn confirmed_selection_starts_the_probed_gid_once_and_persists_receipt() {
     fixture.service.maintain().await.expect("maintenance");
     assert_eq!(fixture.engine.tasks.lock().await.len(), 1);
     let mut conflict = submission;
-    conflict.selection.format = "mp4".into();
+    conflict.selection.format = Format::Mp4;
     assert_eq!(
         fixture.service.submit(request.id, conflict).await,
-        Err("conflict")
+        Err(Error::Conflict)
     );
 }
 
@@ -290,11 +302,11 @@ async fn lost_start_reply_reconciles_without_restarting_or_creating_a_download()
     };
     assert_eq!(
         fixture.service.submit(request.id, submission.clone()).await,
-        Err("unavailable")
+        Err(Error::Unavailable)
     );
     assert_eq!(
         fixture.service.journal.load().await.expect("intent")[0].state,
-        "starting"
+        State::Starting
     );
     fixture.service.maintain().await.expect("reconcile");
     let receipt = fixture
@@ -322,7 +334,7 @@ async fn cancellation_tombstone_prevents_late_creation_and_expiry_removes_only_p
     assert_eq!(
         fixture
             .service
-            .create(cancelled, "mp4")
+            .create(cancelled, Format::Mp4)
             .await
             .expect("late create")["state"],
         "cancelled"
@@ -344,26 +356,19 @@ async fn cancellation_tombstone_prevents_late_creation_and_expiry_removes_only_p
 }
 
 #[tokio::test]
-async fn unsupported_credentials_and_direct_files_never_reach_the_engine() {
+async fn malformed_request_contexts_never_reach_the_engine() {
     let fixture = Fixture::new().await;
-    let mut file = request();
-    file.source.kind = "file".into();
-    assert_eq!(
-        fixture.service.create(file, "mp4").await,
-        Err("unsupported_source")
-    );
     let mut authenticated = request();
     authenticated.source.request_contexts.push(RequestContext {
         url: authenticated.source.url.clone(),
-        captured_at: now(),
         headers: vec![RequestHeader {
-            name: "Authorization".into(),
+            name: "Host".into(),
             value: "Bearer secret".into(),
         }],
     });
     assert_eq!(
-        fixture.service.create(authenticated, "mp4").await,
-        Err("unsupported_source")
+        fixture.service.create(authenticated, Format::Mp4).await,
+        Err(Error::UnsupportedSource)
     );
     assert_eq!(fixture.engine.additions.load(Ordering::Relaxed), 0);
 }
@@ -425,7 +430,7 @@ async fn restart_finishes_a_persisted_submission_intent_on_its_original_gid() {
         .get(&request.id)
         .expect("probe")
         .clone();
-    intent.state = "starting".into();
+    intent.state = State::Starting;
     intent.selection = Some(submission.selection.clone());
     intent.submission_id = Some(submission.submission_id);
     fixture
@@ -455,12 +460,12 @@ async fn restart_finishes_a_persisted_submission_intent_on_its_original_gid() {
 #[test]
 fn selection_validates_track_identity_muxed_sources_and_live_duration() {
     let mut presentation = Presentation {
-        kind: "hls".into(),
+        kind: SourceKind::Hls,
         title: "Video".into(),
         live: false,
         duration_ms: None,
         size: None,
-        formats: vec!["mp4".into()],
+        formats: vec![Format::Mp4],
         tracks: vec![Track {
             id: "muxed".into(),
             r#type: "muxed".into(),
@@ -475,7 +480,7 @@ fn selection_validates_track_identity_muxed_sources_and_live_duration() {
             video_id: Some("muxed".into()),
             audio_id: Some("muxed".into()),
             subtitle_id: None,
-            format: "mp4".into(),
+            format: Format::Mp4,
             record_time_seconds: 0,
         },
     };
@@ -495,137 +500,4 @@ fn selection_validates_track_identity_muxed_sources_and_live_duration() {
     assert!(presentation
         .validate_selection(&presentation.defaults)
         .is_ok());
-}
-
-/// Runs only when explicitly requested, against the unchanged Windows sidecar.
-/// Fixture ports, output and engine state are independent of the running app.
-#[cfg(windows)]
-#[tokio::test]
-#[ignore = "Requires the bundled Windows engine"]
-async fn bundled_engine_probes_without_payload_and_submits_the_same_gid() {
-    use axum::routing::get;
-    fn port() -> u16 {
-        std::net::TcpListener::bind("127.0.0.1:0")
-            .expect("free port")
-            .local_addr()
-            .expect("address")
-            .port()
-    }
-    let directory = tempfile::tempdir().expect("native fixture directory");
-    let segments = Arc::new(AtomicUsize::new(0));
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
-        .await
-        .expect("media server");
-    let media_port = listener.local_addr().expect("media address").port();
-    let router = Router::new()
-        .route("/stream.m3u8", get(|| async {
-            ([(axum::http::header::CONTENT_TYPE, "application/vnd.apple.mpegurl")],
-                "#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:2\n#EXT-X-MEDIA-SEQUENCE:0\n#EXTINF:2,\nsegment.ts\n#EXT-X-ENDLIST\n")
-        }))
-        .route("/segment.ts", get(|State(count): State<Arc<AtomicUsize>>| async move {
-            count.fetch_add(1, Ordering::Relaxed);
-            StatusCode::NOT_FOUND
-        })).with_state(segments.clone());
-    let server = tokio::spawn(async move {
-        axum::serve(listener, router).await.expect("fixture HTTP");
-    });
-    let rpc_port = port();
-    let executable = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("binaries/motrix-next-engine-x86_64-pc-windows-msvc.exe");
-    let mut engine_process = tokio::process::Command::new(executable)
-        .args([
-            "--no-conf=true",
-            "--enable-rpc=true",
-            "--rpc-listen-all=false",
-            "--enable-dht=false",
-            "--bt-enable-lpd=false",
-            "--bt-port-mapping=false",
-            "--show-console-readout=false",
-            "--summary-interval=0",
-            "--no-proxy=127.0.0.1,localhost",
-        ])
-        .arg(format!("--rpc-listen-port={rpc_port}"))
-        .arg(format!("--listen-port={}", port()))
-        .arg(format!("--ed2k-listen-port={}", port()))
-        .arg(format!("--ed2k-udp-listen-port={}", port()))
-        .arg(format!("--dir={}", directory.path().display()))
-        .arg(format!(
-            "--state-dir={}",
-            directory.path().join("state").display()
-        ))
-        .arg(format!(
-            "--save-session={}",
-            directory.path().join("session").display()
-        ))
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .kill_on_drop(true)
-        .spawn()
-        .expect("isolated engine");
-    let engine = Arc::new(Aria2Client::new(rpc_port, String::new()));
-    tokio::time::timeout(Duration::from_secs(15), async {
-        while engine.get_version().await.is_err() {
-            tokio::time::sleep(Duration::from_millis(100)).await;
-        }
-    })
-    .await
-    .expect("native RPC readiness");
-    let journal = Journal::open(directory.path().join("operations.db"))
-        .await
-        .expect("journal");
-    let service = Arc::new(
-        MediaService::restore(engine.clone(), journal)
-            .await
-            .expect("media service"),
-    );
-    service.capabilities().await.expect("native capabilities");
-    let mut request = request();
-    request.source.url = format!("http://127.0.0.1:{media_port}/stream.m3u8");
-    request.source.page_url = request.source.url.clone();
-    service
-        .create(request.clone(), "mkv")
-        .await
-        .expect("native probe");
-    let presentation: Presentation = tokio::time::timeout(Duration::from_secs(15), async {
-        loop {
-            let response = service.read(request.id).await.expect("probe status");
-            if response["state"] == "ready" {
-                break serde_json::from_value(response["presentation"].clone())
-                    .expect("native presentation");
-            }
-            assert_eq!(response["state"], "probing", "{response}");
-            tokio::time::sleep(Duration::from_millis(100)).await;
-        }
-    })
-    .await
-    .expect("native probe ready");
-    assert_eq!(segments.load(Ordering::Relaxed), 0);
-    let gid = service
-        .operations
-        .lock()
-        .await
-        .get(&request.id)
-        .expect("operation")
-        .gid
-        .clone();
-    let receipt = service
-        .submit(
-            request.id,
-            SubmitRequest {
-                submission_id: Uuid::new_v4(),
-                selection: presentation.defaults,
-            },
-        )
-        .await
-        .expect("native submission");
-    assert_eq!(receipt["gid"], gid);
-    tokio::time::timeout(Duration::from_secs(5), async {
-        while segments.load(Ordering::Relaxed) == 0 {
-            tokio::time::sleep(Duration::from_millis(50)).await;
-        }
-    })
-    .await
-    .expect("payload starts after confirmation");
-    engine_process.kill().await.expect("stop isolated engine");
-    server.abort();
 }

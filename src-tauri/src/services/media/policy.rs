@@ -12,17 +12,19 @@ fn should_continue(task: &Aria2Task) -> bool {
 }
 
 pub fn start_automatic_selection(app: tauri::AppHandle, engine: Arc<Aria2Client>) {
-    if !engine.begin_automatic_worker() {
+    if !engine.tasks.begin_automatic_worker() {
         return;
     }
     tokio::spawn(async move {
         let mut missing_since = std::collections::HashMap::new();
         loop {
-            let ids = engine.automatic_ids().await;
+            let ids = engine.tasks.automatic_ids().await;
             if ids.is_empty() {
-                engine.end_automatic_worker();
+                engine.tasks.end_automatic_worker();
                 // Hand off without losing a task added while the worker was exiting.
-                if engine.automatic_ids().await.is_empty() || !engine.begin_automatic_worker() {
+                if engine.tasks.automatic_ids().await.is_empty()
+                    || !engine.tasks.begin_automatic_worker()
+                {
                     return;
                 }
                 continue;
@@ -42,33 +44,23 @@ pub fn start_automatic_selection(app: tauri::AppHandle, engine: Arc<Aria2Client>
                 tasks.iter().map(|task| task.gid.clone()).collect();
             let mut changed = None;
             for task in tasks.iter().filter(|task| ids.contains(&task.gid)) {
-                if !engine.is_automatic(&task.gid).await {
+                if !engine.tasks.is_automatic(&task.gid).await {
                     continue;
                 }
                 if should_continue(task) {
-                    match engine
-                        .change_option(
-                            &task.gid,
-                            serde_json::json!({"media-pause-after-probe":"false"}),
+                    if engine.generation() == generation
+                        && engine.tasks.is_automatic(&task.gid).await
+                    {
+                        if let Err(error) = super::native::start(
+                            &engine,
+                            task,
+                            serde_json::json!({}),
+                            super::native::StartMode::Automatic,
                         )
                         .await
-                    {
-                        Ok(_)
-                            if engine.generation() == generation
-                                && engine.is_automatic(&task.gid).await =>
                         {
-                            if let Err(error) = engine.unpause(&task.gid).await {
-                                log::debug!(
-                                    "media: automatic resume failed code={}",
-                                    super::native_error(&error)
-                                );
-                            }
+                            log::debug!("media: automatic selection failed: {error}");
                         }
-                        Err(error) => log::debug!(
-                            "media: automatic selection failed code={}",
-                            super::native_error(&error)
-                        ),
-                        _ => {}
                     }
                 } else if !matches!(
                     task.status.as_str(),
@@ -78,7 +70,7 @@ pub fn start_automatic_selection(app: tauri::AppHandle, engine: Arc<Aria2Client>
                 {
                     continue;
                 }
-                engine.set_automatic(&task.gid, false).await;
+                engine.tasks.set_automatic(&task.gid, false).await;
                 changed.get_or_insert_with(|| task.gid.clone());
             }
             missing_since.retain(|gid, _| ids.contains(gid) && !seen.contains(gid));
@@ -87,7 +79,7 @@ pub fn start_automatic_selection(app: tauri::AppHandle, engine: Arc<Aria2Client>
                     .entry(gid.clone())
                     .or_insert_with(tokio::time::Instant::now);
                 if since.elapsed() >= Duration::from_secs(30) {
-                    engine.set_automatic(gid, false).await;
+                    engine.tasks.set_automatic(gid, false).await;
                 }
             }
             if let Some(gid) = changed {

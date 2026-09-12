@@ -9,10 +9,7 @@ const mocks = vi.hoisted(() => ({
   fetchTaskStatus: vi.fn(),
   getFiles: vi.fn(),
   getOption: vi.fn(),
-  changeOption: vi.fn(),
-  resumeTask: vi.fn(),
-  retryMedia: vi.fn(),
-  saveSession: vi.fn(),
+  confirmMedia: vi.fn(),
   fetchList: vi.fn(),
   selectFiles: vi.fn(),
   modalShows: vi.fn(),
@@ -114,7 +111,7 @@ describe('shared task selection dialog', () => {
       mediaSubtitles: 'none',
       mediaRecordTime: '0',
     })
-    mocks.changeOption.mockResolvedValue(undefined)
+    mocks.confirmMedia.mockResolvedValue(undefined)
   })
 
   it('waits for the previous modal before loading a selection', async () => {
@@ -147,7 +144,7 @@ describe('shared task selection dialog', () => {
   })
 
   it('keeps failed submissions open and retries the same task', async () => {
-    mocks.changeOption.mockRejectedValueOnce(new Error('Connection lost'))
+    mocks.confirmMedia.mockRejectedValueOnce(new Error('Connection lost'))
     const { wrapper, selection } = setup()
     await flushPromises()
     const start = wrapper
@@ -160,8 +157,8 @@ describe('shared task selection dialog', () => {
     expect(selection.visible).toBe(true)
     await start.trigger('click')
     await flushPromises()
-    expect(mocks.changeOption).toHaveBeenCalledTimes(2)
-    expect(mocks.changeOption.mock.calls[1][0].gid).toBe('a')
+    expect(mocks.confirmMedia).toHaveBeenCalledTimes(2)
+    expect(mocks.confirmMedia.mock.calls[1][0]).toBe('a')
     expect(selection.phase).toBe('closing')
     wrapper.unmount()
   })
@@ -206,7 +203,7 @@ describe('shared task selection dialog', () => {
     await start.trigger('click')
     await flushPromises()
     expect(mocks.selectFiles).toHaveBeenCalledWith(bt, expect.any(Array), [1])
-    expect(mocks.changeOption).not.toHaveBeenCalled()
+    expect(mocks.confirmMedia).not.toHaveBeenCalled()
     wrapper.findComponent(BtSelectionDialog).findComponent({ name: 'ModalTestStub' }).vm.$emit('afterLeave')
     await flushPromises()
     expect(wrapper.find('media-options-stub').exists()).toBe(true)
@@ -214,21 +211,6 @@ describe('shared task selection dialog', () => {
     wrapper.unmount()
   })
 
-  it('uses native retry for failed media without creating another task', async () => {
-    mocks.fetchTaskStatus.mockImplementation(async (gid: string) => ({ ...mediaTask(gid), status: 'error' }))
-    const { wrapper } = setup()
-    await flushPromises()
-    const start = wrapper
-      .findComponent(MediaSelectionDialog)
-      .findAll('button')
-      .find((button) => button.text() === 'task.magnet-start-download')!
-    await start.trigger('click')
-    await flushPromises()
-    expect(mocks.retryMedia).toHaveBeenCalledWith('a', expect.objectContaining({ 'media-pause-after-probe': 'false' }))
-    expect(mocks.changeOption).not.toHaveBeenCalled()
-    expect(mocks.resumeTask).not.toHaveBeenCalled()
-    wrapper.unmount()
-  })
   it('mounts closed modal instances before requesting their native enter transitions', async () => {
     const { wrapper } = setup()
     expect(mocks.modalShows.mock.calls.map(([show]) => show)).toEqual([false, false])

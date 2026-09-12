@@ -97,8 +97,7 @@ export function mediaEngineOptions(value: MediaOptions): Aria2EngineOptions {
   if (value.mode === 'file') return { media: 'file' }
   if (!Number.isInteger(value.recordTime) || value.recordTime < 0 || value.recordTime > 31536000)
     throw new Error('Recording duration must be between 0 and 31536000 seconds')
-  if ([value.video, value.audio, value.subtitles].every((track) => track === 'none'))
-    throw new Error('Select at least one media track')
+  if (value.video === 'none' && value.audio === 'none') throw new Error('Select at least one audio or video track')
   return {
     media: value.mode,
     'media-format': value.format,

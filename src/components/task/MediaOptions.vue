@@ -24,16 +24,30 @@ const contentOptions = computed(() => [
   { value: 'audio', label: t('media.audio-only') },
   { value: 'video', label: t('media.video-only') },
 ])
+const selectedVideo = computed(() =>
+  model.value.video === 'none'
+    ? undefined
+    : (props.tracks.find((track) => track.id === model.value.video) ??
+      props.tracks.find((track) => track.selected === 'true' && ['video', 'muxed'].includes(track.type))),
+)
+watch(selectedVideo, (video) => {
+  if (model.value.audio === 'none' || model.value.audio === 'best') return
+  const audio = props.tracks.find((track) => track.id === model.value.audio)
+  if ((video?.type === 'muxed' && audio?.id !== video.id) || (video?.type === 'video' && audio?.type === 'muxed'))
+    model.value.audio = 'best'
+})
 function choices(type: 'video' | 'audio' | 'subtitle') {
   return [
     ...(type === 'subtitle' ? [{ value: 'none', label: t('media.none') }] : []),
     { value: 'best', label: t('media.best') },
     ...props.tracks
-      .filter(
-        (track) =>
+      .filter((track) => {
+        if (type === 'audio' && selectedVideo.value?.type === 'muxed') return track.id === selectedVideo.value.id
+        return (
           track.type === type ||
-          (track.type === 'muxed' && (type === 'video' || (type === 'audio' && model.value.video === 'none'))),
-      )
+          (track.type === 'muxed' && (type === 'video' || (type === 'audio' && model.value.video === 'none')))
+        )
+      })
       .map((track) => ({ value: track.id, label: mediaTrackLabel(track, locale.value) })),
   ]
 }

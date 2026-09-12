@@ -65,10 +65,16 @@ describe('media presentation contracts', () => {
     expect(mediaPercent({ ...task({ live: 'true' }), status: 'complete' })).toBe(100)
   })
   it('preserves explicit selection and rejects invalid recording bounds', () => {
-    const options = { ...defaultMediaOptions(), video: 'none', audio: '2:1', subtitles: 'en', format: 'mkv' as const }
+    const options = {
+      ...defaultMediaOptions(),
+      video: 'none',
+      audio: 'audio-main',
+      subtitles: 'en',
+      format: 'mkv' as const,
+    }
     expect(mediaEngineOptions(options)).toMatchObject({
       'media-video': 'none',
-      'media-audio': '2:1',
+      'media-audio': 'audio-main',
       'media-subtitles': 'en',
       'media-format': 'mkv',
     })

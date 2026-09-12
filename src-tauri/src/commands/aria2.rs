@@ -31,7 +31,7 @@ pub async fn aria2_fetch_task_list(
         "waiting" => state.0.tell_waiting(0, limit.unwrap_or(1000)).await,
         _ => state.0.tell_stopped(0, limit.unwrap_or(1000)).await,
     }?;
-    Ok(state.0.visible_tasks(tasks).await)
+    Ok(state.0.tasks.visible_tasks(tasks).await)
 }
 
 /// Fetch only active tasks (no waiting).
@@ -319,7 +319,7 @@ pub async fn aria2_add_uri(
         None
     };
     if let Some(gid) = &automatic_gid {
-        state.0.set_automatic(gid, true).await;
+        state.0.tasks.set_automatic(gid, true).await;
     }
     let generation = state.0.generation();
     let result = state.0.add_uri(uris, options).await;
@@ -328,7 +328,7 @@ pub async fn aria2_add_uri(
         if generation == state.0.generation() {
             crate::services::media::start_automatic_selection(app, state.0.clone());
         } else {
-            state.0.set_automatic(&gid, false).await;
+            state.0.tasks.set_automatic(&gid, false).await;
         }
     }
     result
@@ -1117,6 +1117,23 @@ mod tests {
             ..Aria2Task::default()
         }));
     }
+}
+
+/// Confirm media selection or retry a failed media task with the same GID.
+#[tauri::command]
+pub async fn aria2_confirm_media(
+    state: State<'_, Aria2State>,
+    gid: String,
+    options: serde_json::Value,
+) -> Result<String, AppError> {
+    let task = state.0.tell_status(&gid).await?;
+    crate::services::media::native::start(
+        &state.0,
+        &task,
+        options,
+        crate::services::media::native::StartMode::User,
+    )
+    .await
 }
 
 /// Finalize committed live media without deleting its output or recovery state.
