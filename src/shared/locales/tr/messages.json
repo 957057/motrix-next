@@ -582,7 +582,10 @@
     "db-unavailable-description": "Bazı özellikler kullanılamıyor. Şimdi veya daha sonra Ayarlar’dan sıfırlayın",
     "db-reset-restart": "Sıfırla ve Yeniden Başlat",
     "db-reset-later": "Şimdi Değil",
-    "db-reset-failed": "Veritabanı sıfırlanamadı"
+    "db-reset-failed": "Veritabanı sıfırlanamadı",
+    "media-downloads": "Medya indirmeleri",
+    "media-select-before-download": "İndirmeden önce içerik seç",
+    "media-default-format": "Varsayılan biçim"
   },
   "subnav": {
     "task-list": "Görevler",

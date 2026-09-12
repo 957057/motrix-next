@@ -1,0 +1,166 @@
+//! Thin authenticated HTTP adapter; media work never depends on a frontend event.
+use super::{
+    contracts::{ProbeRequest, SubmitRequest},
+    service,
+};
+use crate::services::http_api::{read_api_secret, validate_bearer_token, ApiContext};
+use axum::{
+    extract::{DefaultBodyLimit, Path, State},
+    http::{header, HeaderMap, Method, StatusCode},
+    response::{IntoResponse, Response},
+    routing::{get, post},
+    Json, Router,
+};
+use serde_json::{json, Value};
+use std::sync::Arc;
+use tauri::Manager;
+use tower_http::cors::{AllowOrigin, CorsLayer};
+use uuid::Uuid;
+
+pub struct MediaError(pub &'static str);
+impl From<&'static str> for MediaError {
+    fn from(code: &'static str) -> Self {
+        Self(code)
+    }
+}
+impl IntoResponse for MediaError {
+    fn into_response(self) -> Response {
+        let status = match self.0 {
+            "api_auth_failed" => StatusCode::UNAUTHORIZED,
+            "origin_denied" => StatusCode::FORBIDDEN,
+            "not_found" => StatusCode::NOT_FOUND,
+            "conflict" => StatusCode::CONFLICT,
+            "expired" => StatusCode::GONE,
+            "unavailable" => StatusCode::SERVICE_UNAVAILABLE,
+            _ => StatusCode::UNPROCESSABLE_ENTITY,
+        };
+        (
+            status,
+            [(header::CACHE_CONTROL, "no-store")],
+            Json(json!({"error":self.0})),
+        )
+            .into_response()
+    }
+}
+
+fn extension_origin(value: &str) -> bool {
+    url::Url::parse(value).is_ok_and(|url| {
+        matches!(url.scheme(), "chrome-extension" | "moz-extension")
+            && url.host_str().is_some()
+            && url.username().is_empty()
+            && url.password().is_none()
+            && url.path().is_empty()
+            && url.query().is_none()
+            && url.fragment().is_none()
+    })
+}
+
+fn authorize(ctx: &ApiContext, headers: &HeaderMap) -> Result<(), MediaError> {
+    if let Some(origin) = headers.get(header::ORIGIN) {
+        if !origin.to_str().is_ok_and(extension_origin) {
+            return Err(MediaError("origin_denied"));
+        }
+    }
+    let secret = read_api_secret(&ctx.app);
+    if secret.is_empty() || validate_bearer_token(headers, &secret).is_err() {
+        return Err(MediaError("api_auth_failed"));
+    }
+    Ok(())
+}
+
+pub fn router() -> Router<Arc<ApiContext>> {
+    Router::new()
+        .route("/capabilities", get(capabilities))
+        .route("/probes", post(create))
+        .route("/probes/{id}", get(read))
+        .route("/probes/{id}/submit", post(submit))
+        .route("/probes/{id}/cancel", post(cancel))
+        .layer(DefaultBodyLimit::max(256 * 1024))
+        .layer(
+            CorsLayer::new()
+                .allow_origin(AllowOrigin::predicate(|origin, _| {
+                    origin.to_str().is_ok_and(extension_origin)
+                }))
+                .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+                .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
+                .allow_private_network(true),
+        )
+}
+
+type Reply = Result<([(axum::http::HeaderName, &'static str); 1], Json<Value>), MediaError>;
+fn reply(value: Value) -> Reply {
+    Ok(([(header::CACHE_CONTROL, "no-store")], Json(value)))
+}
+async fn capabilities(State(ctx): State<Arc<ApiContext>>, headers: HeaderMap) -> Reply {
+    authorize(&ctx, &headers)?;
+    reply(service(&ctx.app).await?.capabilities().await?)
+}
+async fn create(
+    State(ctx): State<Arc<ApiContext>>,
+    headers: HeaderMap,
+    body: Result<Json<ProbeRequest>, axum::extract::rejection::JsonRejection>,
+) -> Reply {
+    authorize(&ctx, &headers)?;
+    let Json(request) = body.map_err(|_| MediaError("unsupported_source"))?;
+    let service = service(&ctx.app).await?;
+    service.capabilities().await?;
+    let config = ctx
+        .app
+        .state::<crate::services::config::RuntimeConfigState>()
+        .snapshot()
+        .await;
+    reply(
+        service
+            .create(request, &config.media_default_format)
+            .await?,
+    )
+}
+async fn read(
+    State(ctx): State<Arc<ApiContext>>,
+    headers: HeaderMap,
+    Path(id): Path<Uuid>,
+) -> Reply {
+    authorize(&ctx, &headers)?;
+    reply(service(&ctx.app).await?.read(id).await?)
+}
+async fn submit(
+    State(ctx): State<Arc<ApiContext>>,
+    headers: HeaderMap,
+    Path(id): Path<Uuid>,
+    body: Result<Json<SubmitRequest>, axum::extract::rejection::JsonRejection>,
+) -> Reply {
+    authorize(&ctx, &headers)?;
+    let Json(request) = body.map_err(|_| MediaError("unsupported_selection"))?;
+    reply(service(&ctx.app).await?.submit(id, request).await?)
+}
+async fn cancel(
+    State(ctx): State<Arc<ApiContext>>,
+    headers: HeaderMap,
+    Path(id): Path<Uuid>,
+    body: Result<Json<Value>, axum::extract::rejection::JsonRejection>,
+) -> Reply {
+    authorize(&ctx, &headers)?;
+    if body.map_err(|_| MediaError("unsupported_source"))?.0 != json!({}) {
+        return Err(MediaError("unsupported_source"));
+    }
+    reply(service(&ctx.app).await?.cancel(id).await?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn only_extension_origins_pass() {
+        assert!(extension_origin("chrome-extension://abcdefghijklmnop"));
+        assert!(extension_origin("moz-extension://12345678-abcd"));
+        for value in [
+            "null",
+            "https://example.com",
+            "chrome-extension://",
+            "chrome-extension://id.evil/path",
+            "chrome-extension://user@id",
+        ] {
+            assert!(!extension_origin(value));
+        }
+    }
+}

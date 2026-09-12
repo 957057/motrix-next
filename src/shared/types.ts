@@ -245,6 +245,7 @@ export interface Aria2Media {
 }
 
 export interface Aria2Task {
+  selectionManaged?: boolean
   gid: string
   status: TaskStatus
   totalLength: string
@@ -473,6 +474,8 @@ export interface AppConfig {
   keepSharing: boolean
   keepWindowState: boolean
 
+  mediaSelectBeforeDownload: boolean
+  mediaDefaultFormat: 'mp4' | 'mkv'
   newTaskShowDownloading: boolean
   noConfirmBeforeDeleteTask: boolean
   fileDeletionMode: FileDeletionMode

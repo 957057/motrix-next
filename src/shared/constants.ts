@@ -283,6 +283,8 @@ export const DEFAULT_APP_CONFIG = {
   taskNotification: true, // users expect download-complete notifications
   notifyOnStart: true,
   notifyOnComplete: true, // main value of OS notification: background completion alert
+  mediaSelectBeforeDownload: true,
+  mediaDefaultFormat: 'mp4' as const,
   newTaskShowDownloading: true, // auto-navigate to downloads after adding task
   noConfirmBeforeDeleteTask: false, // require confirmation to prevent accidental deletion
   fileDeletionMode: 'trash' as const,

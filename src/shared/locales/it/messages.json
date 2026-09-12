@@ -582,7 +582,10 @@
     "db-unavailable-description": "Alcune funzioni non sono disponibili. Reimposta ora o più tardi nelle impostazioni",
     "db-reset-restart": "Reimposta e riavvia",
     "db-reset-later": "Non ora",
-    "db-reset-failed": "Impossibile reimpostare il database"
+    "db-reset-failed": "Impossibile reimpostare il database",
+    "media-downloads": "Download multimediali",
+    "media-select-before-download": "Scegli i contenuti prima del download",
+    "media-default-format": "Formato predefinito"
   },
   "subnav": {
     "task-list": "Attività",

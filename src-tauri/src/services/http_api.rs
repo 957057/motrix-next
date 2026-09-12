@@ -164,6 +164,7 @@ pub fn build_router(ctx: Arc<ApiContext>) -> Router {
         .route("/pause-all", post(handle_pause_all))
         .route("/resume-all", post(handle_resume_all))
         .layer(cors)
+        .nest("/media/v1", super::media::routes::router())
         .with_state(ctx)
 }
 
@@ -342,7 +343,7 @@ async fn handle_resume_all(
 /// Reads the `extensionApiSecret` for HTTP API authentication.
 /// This secret is fully independent from `rpcSecret` (used for aria2 RPC).
 /// Returns empty string if not configured (auth disabled).
-fn read_api_secret(app: &AppHandle) -> String {
+pub(crate) fn read_api_secret(app: &AppHandle) -> String {
     app.store("config.json")
         .ok()
         .and_then(|s| s.get("preferences"))

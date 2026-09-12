@@ -582,7 +582,10 @@
     "db-unavailable-description": "일부 기능을 사용할 수 없습니다. 지금 초기화하거나 나중에 설정에서 초기화하세요",
     "db-reset-restart": "초기화 후 다시 시작",
     "db-reset-later": "나중에",
-    "db-reset-failed": "데이터베이스를 초기화하지 못했습니다"
+    "db-reset-failed": "데이터베이스를 초기화하지 못했습니다",
+    "media-downloads": "미디어 다운로드",
+    "media-select-before-download": "다운로드 전 콘텐츠 선택",
+    "media-default-format": "기본 형식"
   },
   "subnav": {
     "task-list": "작업 목록",

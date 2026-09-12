@@ -25,12 +25,13 @@ pub async fn aria2_fetch_task_list(
     r#type: String,
     limit: Option<i64>,
 ) -> Result<Vec<Aria2Task>, AppError> {
-    match r#type.as_str() {
+    let tasks = match r#type.as_str() {
         "all" => state.0.tell_task_snapshot(true).await,
         "active" => state.0.tell_task_snapshot(false).await,
         "waiting" => state.0.tell_waiting(0, limit.unwrap_or(1000)).await,
         _ => state.0.tell_stopped(0, limit.unwrap_or(1000)).await,
-    }
+    }?;
+    Ok(state.0.visible_tasks(tasks).await)
 }
 
 /// Fetch only active tasks (no waiting).
@@ -284,18 +285,53 @@ pub async fn aria2_add_uri(
     }) {
         crate::commands::ed2k::inject_managed_ed2k_bootstrap_options(&app, &mut options)?;
     }
+    let mut automatic = false;
     if uris
         .iter()
         .all(|uri| uri.starts_with("http://") || uri.starts_with("https://"))
     {
         if let Some(options) = options.as_object_mut() {
+            let config = app
+                .state::<crate::services::config::RuntimeConfigState>()
+                .snapshot()
+                .await;
+            automatic = options.get("media").and_then(serde_json::Value::as_str) != Some("file")
+                && !options.contains_key("media-pause-after-probe")
+                && !config.media_select_before_download;
             options
                 .entry("media-pause-after-probe")
                 .or_insert_with(|| "true".into());
+            options
+                .entry("media-format")
+                .or_insert_with(|| config.media_default_format.into());
+            if automatic {
+                options.entry("gid").or_insert_with(|| {
+                    uuid::Uuid::new_v4().simple().to_string()[..16]
+                        .to_string()
+                        .into()
+                });
+            }
         }
     }
-    log::debug!("aria2:add-uri count={}", uris.len());
-    state.0.add_uri(uris, options).await
+    let automatic_gid = if automatic {
+        options["gid"].as_str().map(str::to_owned)
+    } else {
+        None
+    };
+    if let Some(gid) = &automatic_gid {
+        state.0.set_automatic(gid, true).await;
+    }
+    let generation = state.0.generation();
+    let result = state.0.add_uri(uris, options).await;
+    if let Some(gid) = automatic_gid {
+        // Even a lost addUri response can have created the known GID.
+        if generation == state.0.generation() {
+            crate::services::media::start_automatic_selection(app, state.0.clone());
+        } else {
+            state.0.set_automatic(&gid, false).await;
+        }
+    }
+    result
 }
 
 /// Add a torrent download from base64-encoded content.

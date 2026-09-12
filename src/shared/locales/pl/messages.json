@@ -582,7 +582,10 @@
     "db-unavailable-description": "Niektóre funkcje są niedostępne. Zresetuj bazę teraz lub później w ustawieniach",
     "db-reset-restart": "Resetuj i uruchom ponownie",
     "db-reset-later": "Nie teraz",
-    "db-reset-failed": "Nie udało się zresetować bazy danych"
+    "db-reset-failed": "Nie udało się zresetować bazy danych",
+    "media-downloads": "Pobieranie multimediów",
+    "media-select-before-download": "Wybierz zawartość przed pobraniem",
+    "media-default-format": "Domyślny format"
   },
   "subnav": {
     "task-list": "Zadania",

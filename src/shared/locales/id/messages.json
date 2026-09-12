@@ -582,7 +582,10 @@
     "db-unavailable-description": "Beberapa fitur tidak tersedia. Atur ulang sekarang atau nanti melalui Pengaturan",
     "db-reset-restart": "Atur Ulang dan Mulai Ulang",
     "db-reset-later": "Nanti Saja",
-    "db-reset-failed": "Basis data tidak dapat diatur ulang"
+    "db-reset-failed": "Basis data tidak dapat diatur ulang",
+    "media-downloads": "Unduhan media",
+    "media-select-before-download": "Pilih konten sebelum mengunduh",
+    "media-default-format": "Format bawaan"
   },
   "subnav": {
     "task-list": "Tugas",

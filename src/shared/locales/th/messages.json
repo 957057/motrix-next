@@ -582,7 +582,10 @@
     "db-unavailable-description": "บางฟังก์ชันไม่พร้อมใช้งาน รีเซ็ตตอนนี้หรือภายหลังในการตั้งค่าได้",
     "db-reset-restart": "รีเซ็ตและเริ่มใหม่",
     "db-reset-later": "ไว้ภายหลัง",
-    "db-reset-failed": "ไม่สามารถรีเซ็ตฐานข้อมูลได้"
+    "db-reset-failed": "ไม่สามารถรีเซ็ตฐานข้อมูลได้",
+    "media-downloads": "ดาวน์โหลดสื่อ",
+    "media-select-before-download": "เลือกเนื้อหาก่อนดาวน์โหลด",
+    "media-default-format": "รูปแบบเริ่มต้น"
   },
   "subnav": {
     "task-list": "รายการงาน",

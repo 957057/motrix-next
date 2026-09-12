@@ -582,7 +582,10 @@
     "db-unavailable-description": "بعض الميزات غير متاحة، يمكنك إعادة التعيين الآن أو لاحقًا من الإعدادات",
     "db-reset-restart": "إعادة التعيين وإعادة التشغيل",
     "db-reset-later": "ليس الآن",
-    "db-reset-failed": "تعذرت إعادة تعيين قاعدة البيانات"
+    "db-reset-failed": "تعذرت إعادة تعيين قاعدة البيانات",
+    "media-downloads": "تنزيل الوسائط",
+    "media-select-before-download": "اختيار المحتوى قبل التنزيل",
+    "media-default-format": "التنسيق الافتراضي"
   },
   "subnav": {
     "task-list": "المهام",

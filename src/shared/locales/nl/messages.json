@@ -582,7 +582,10 @@
     "db-unavailable-description": "Sommige functies zijn niet beschikbaar. Stel de database nu opnieuw in of later via Instellingen",
     "db-reset-restart": "Opnieuw instellen en herstarten",
     "db-reset-later": "Niet nu",
-    "db-reset-failed": "De database kon niet opnieuw worden ingesteld"
+    "db-reset-failed": "De database kon niet opnieuw worden ingesteld",
+    "media-downloads": "Mediadownloads",
+    "media-select-before-download": "Inhoud kiezen vóór downloaden",
+    "media-default-format": "Standaardformaat"
   },
   "subnav": {
     "task-list": "Taken",

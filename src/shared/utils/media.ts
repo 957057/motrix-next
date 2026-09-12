@@ -1,5 +1,6 @@
 /** @fileoverview Native presentation options and progress semantics. */
-import type { Aria2Task, Aria2EngineOptions, Aria2MediaTrack, MediaState } from '@shared/types'
+import { DEFAULT_APP_CONFIG } from '@shared/constants'
+import type { AppConfig, Aria2Task, Aria2EngineOptions, Aria2MediaTrack, MediaState } from '@shared/types'
 import type { I18nKey } from '@shared/i18nTypes'
 import { logger } from '@shared/logger'
 
@@ -10,18 +11,20 @@ export interface MediaOptions {
   audio: string
   subtitles: string
   recordTime: number
-  selectBeforeDownload: boolean
+  pauseAfterProbe: 'true' | 'false' | 'default'
 }
 
-export function defaultMediaOptions(): MediaOptions {
+export function defaultMediaOptions(
+  config: Pick<AppConfig, 'mediaSelectBeforeDownload' | 'mediaDefaultFormat'> = DEFAULT_APP_CONFIG,
+): MediaOptions {
   return {
     mode: 'auto',
-    format: 'mp4',
+    format: config.mediaDefaultFormat,
     video: 'best',
     audio: 'best',
     subtitles: 'none',
     recordTime: 0,
-    selectBeforeDownload: true,
+    pauseAfterProbe: 'default',
   }
 }
 
@@ -47,7 +50,7 @@ export function readMediaOptions(options: Record<string, string>, tracks: Aria2M
     audio: selected(options.mediaAudio, 'audio'),
     subtitles: selected(options.mediaSubtitles, 'subtitle'),
     recordTime,
-    selectBeforeDownload: false,
+    pauseAfterProbe: 'false',
   }
 }
 
@@ -103,7 +106,7 @@ export function mediaEngineOptions(value: MediaOptions): Aria2EngineOptions {
     'media-audio': value.audio,
     'media-subtitles': value.subtitles,
     'media-record-time': String(value.recordTime),
-    'media-pause-after-probe': String(value.selectBeforeDownload),
+    ...(value.pauseAfterProbe === 'default' ? {} : { 'media-pause-after-probe': value.pauseAfterProbe }),
   }
 }
 
@@ -146,5 +149,10 @@ export function mediaDuration(milliseconds: string): string {
 }
 
 export function canSelectMedia(task: Aria2Task): boolean {
-  return Boolean(task.media && ['paused', 'error'].includes(task.status) && task.media.state !== 'finalizing')
+  return Boolean(
+    !task.selectionManaged &&
+    task.media &&
+    ['paused', 'error'].includes(task.status) &&
+    task.media.state !== 'finalizing',
+  )
 }

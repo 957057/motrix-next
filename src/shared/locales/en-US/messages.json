@@ -582,7 +582,10 @@
     "db-unavailable-description": "Some features are unavailable. Reset now or later in Settings",
     "db-reset-restart": "Reset and Restart",
     "db-reset-later": "Not Now",
-    "db-reset-failed": "Could not reset the database"
+    "db-reset-failed": "Could not reset the database",
+    "media-downloads": "Media downloads",
+    "media-select-before-download": "Choose content before downloading",
+    "media-default-format": "Default format"
   },
   "subnav": {
     "task-list": "Tasks",

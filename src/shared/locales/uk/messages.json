@@ -582,7 +582,10 @@
     "db-unavailable-description": "Деякі функції недоступні. Виконайте скидання зараз або пізніше в налаштуваннях",
     "db-reset-restart": "Скинути й перезапустити",
     "db-reset-later": "Не зараз",
-    "db-reset-failed": "Не вдалося скинути базу даних"
+    "db-reset-failed": "Не вдалося скинути базу даних",
+    "media-downloads": "Завантаження медіа",
+    "media-select-before-download": "Вибирати вміст перед завантаженням",
+    "media-default-format": "Типовий формат"
   },
   "subnav": {
     "task-list": "Завдання",

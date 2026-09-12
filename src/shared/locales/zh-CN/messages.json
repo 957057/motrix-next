@@ -582,7 +582,10 @@
     "db-unavailable-description": "部分功能暂不可用，可立即重置或稍后在设置中重置",
     "db-reset-restart": "重置并重启",
     "db-reset-later": "暂不处理",
-    "db-reset-failed": "数据库重置失败"
+    "db-reset-failed": "数据库重置失败",
+    "media-downloads": "媒体下载",
+    "media-select-before-download": "下载前选择内容",
+    "media-default-format": "默认格式"
   },
   "subnav": {
     "task-list": "任务列表",

@@ -11,8 +11,13 @@ Add an HTTP(S) manifest URL through the normal download dialog or browser
 extension. The engine detects media from URL suffixes and response MIME types.
 The advanced source mode can force HLS/DASH or save the original resource.
 
-New presentations pause after discovery and automatically enter the same
-selection queue used by BitTorrent. The content dialog shows available video,
+The Downloads preferences define the default container and whether new finite
+presentations require content selection. With selection enabled, new presentations
+pause after discovery and enter the selection queue used by BitTorrent. With it
+disabled, the desktop resolves the native probe and continues finite sources with
+`changeOption` and `unpause`, while keeping live recording behind confirmation.
+The engine receives only its existing boolean pause option. Preferences apply to
+new tasks only; restored tasks never enter automatic selection. The content dialog shows available video,
 audio and subtitles, the output container, and a duration limit for live sources.
 Confirming starts the same GID. Choose Later keeps it paused with a direct action
 on its task card; it does not repeatedly reopen. Restored tasks remain accessible
@@ -88,3 +93,53 @@ native enter transition to run on the first opening. Loading, errors and forms
 share stable dialog bounds; the footer does not move during asynchronous updates.
 The task overview renders media-specific rows inside its existing descriptions
 and provides selection beside status, without repeating protocol or diagnostics.
+
+
+## Browser media API
+
+The desktop implements the extension's `/media/v1` inspection contract in Rust.
+The endpoints are authenticated with the Extension API secret; media requests
+require a nonempty secret and an extension origin (or an authenticated native
+client with no Origin header). Browser-page origins cannot use these endpoints.
+Media operations remain available when the main webview is closed.
+
+Only `hls` and `dash` are advertised, based on the running engine's capabilities.
+Direct-file inspection is not advertised: the existing engine's HEAD/dry-run path
+cannot establish the required media inspection contract without changing the engine.
+Ordinary file downloads through the existing `/add` endpoint remain available.
+
+Browser request contexts containing headers are rejected with `unsupported_source`.
+The existing engine cannot enforce exact-origin forwarding for arbitrary custom
+headers at every redirect. The adapter neither flattens these contexts nor silently
+drops them. Public HLS/DASH sources can be inspected with cookie and request-header
+forwarding disabled in the extension. Signed source URLs remain unchanged.
+This limitation does not change the ordinary download dialog's HTTP options.
+
+An inspection uses `media-pause-after-probe=true`, retains its GID through selection,
+and stays outside download lists, history, notifications and bulk resume/pause.
+Confirmation validates native track IDs and starts that GID without another desktop
+selection dialog. Native container/codec validation remains authoritative.
+
+`media-operations.db` stores bounded operation identities and submission receipts
+using SQLite transactions. It contains request fingerprints, not source URLs or
+browser credentials. Inspections expire after five minutes; cancellation tombstones
+and submission receipts remain for at least 24 hours. Repeated submissions return
+the same GID. A lost RPC reply preserves the submission intent for reconciliation.
+Restart invalidates unsubmitted inspections and preserves acknowledged submissions.
+The journal has its own native lifecycle and does not require the history webview.
+
+Transport ambiguity returns HTTP 503; the current extension preserves its operation
+identity on that response and can reconcile by polling. It does not mean that the
+engine failed to create or start a task. Unsupported sources and selections use the
+contract's terminal error codes. No legacy media endpoints or raw RPC proxy exist.
+
+Run the isolated Windows native boundary test explicitly with:
+
+```sh
+cargo test --manifest-path src-tauri/Cargo.toml --lib bundled_engine_probes_without_payload_and_submits_the_same_gid -- --ignored
+```
+
+It uses the unchanged bundled engine, private fixture ports and a temporary output
+folder. It verifies that probing requests no payload and confirmation starts the
+same GID. The fixture intentionally returns a missing segment after confirmation;
+it validates the control boundary, not full-file decoding or browser UI behavior.

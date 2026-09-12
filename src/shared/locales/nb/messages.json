@@ -582,7 +582,10 @@
     "db-unavailable-description": "Enkelte funksjoner er utilgjengelige. Tilbakestill nå eller senere i innstillingene",
     "db-reset-restart": "Tilbakestill og start på nytt",
     "db-reset-later": "Ikke nå",
-    "db-reset-failed": "Kunne ikke tilbakestille databasen"
+    "db-reset-failed": "Kunne ikke tilbakestille databasen",
+    "media-downloads": "Medienedlastinger",
+    "media-select-before-download": "Velg innhold før nedlasting",
+    "media-default-format": "Standardformat"
   },
   "subnav": {
     "task-list": "Oppgaver",

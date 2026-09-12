@@ -673,6 +673,7 @@ pub fn run() {
 
     builder
         .manage(EngineState::new())
+        .manage(services::media::MediaState::new())
         .manage(engine::supervisor::EngineSupervisor::new())
         .manage(UpnpState::new())
         .manage(std::sync::Arc::new(UpdateCancelState::new()))

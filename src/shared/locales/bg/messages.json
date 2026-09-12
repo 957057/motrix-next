@@ -582,7 +582,10 @@
     "db-unavailable-description": "Някои функции са недостъпни. Нулирайте сега или по-късно от настройките",
     "db-reset-restart": "Нулиране и рестартиране",
     "db-reset-later": "Не сега",
-    "db-reset-failed": "Базата данни не можа да бъде нулирана"
+    "db-reset-failed": "Базата данни не можа да бъде нулирана",
+    "media-downloads": "Изтегляне на медия",
+    "media-select-before-download": "Избор на съдържание преди изтегляне",
+    "media-default-format": "Формат по подразбиране"
   },
   "subnav": {
     "task-list": "Задачи",

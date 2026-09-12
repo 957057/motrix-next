@@ -582,7 +582,10 @@
     "db-unavailable-description": "Một số tính năng không khả dụng. Đặt lại ngay hoặc sau trong Cài đặt",
     "db-reset-restart": "Đặt lại và khởi động lại",
     "db-reset-later": "Để sau",
-    "db-reset-failed": "Không thể đặt lại cơ sở dữ liệu"
+    "db-reset-failed": "Không thể đặt lại cơ sở dữ liệu",
+    "media-downloads": "Tải nội dung đa phương tiện",
+    "media-select-before-download": "Chọn nội dung trước khi tải",
+    "media-default-format": "Định dạng mặc định"
   },
   "subnav": {
     "task-list": "Tác vụ",

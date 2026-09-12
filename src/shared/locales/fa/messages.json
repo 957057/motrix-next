@@ -582,7 +582,10 @@
     "db-unavailable-description": "برخی قابلیت‌ها در دسترس نیستند؛ اکنون یا بعداً از تنظیمات بازنشانی کنید",
     "db-reset-restart": "بازنشانی و راه‌اندازی مجدد",
     "db-reset-later": "فعلاً نه",
-    "db-reset-failed": "بازنشانی پایگاه داده انجام نشد"
+    "db-reset-failed": "بازنشانی پایگاه داده انجام نشد",
+    "media-downloads": "بارگیری رسانه",
+    "media-select-before-download": "انتخاب محتوا پیش از بارگیری",
+    "media-default-format": "قالب پیش‌فرض"
   },
   "subnav": {
     "task-list": "وظایف",

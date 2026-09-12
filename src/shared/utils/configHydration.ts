@@ -214,6 +214,11 @@ function normalizeScalarValues(config: Record<string, unknown>, repairs: string[
       repairs.push(key)
     }
   }
+  repairEnum(config, 'mediaDefaultFormat', ['mp4', 'mkv'] as const, DEFAULT_APP_CONFIG.mediaDefaultFormat, repairs)
+  if (typeof config.mediaSelectBeforeDownload !== 'boolean') {
+    config.mediaSelectBeforeDownload = DEFAULT_APP_CONFIG.mediaSelectBeforeDownload
+    repairs.push('mediaSelectBeforeDownload')
+  }
   repairEnum(config, 'theme', ['auto', 'light', 'dark'] as const, DEFAULT_APP_CONFIG.theme, repairs)
   repairEnum(config, 'taskCardMode', ['full', 'compact'] as const, DEFAULT_APP_CONFIG.taskCardMode, repairs)
   repairEnum(config, 'colorScheme', getAllowedColorSchemeIds(), DEFAULT_APP_CONFIG.colorScheme, repairs)

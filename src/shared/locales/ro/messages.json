@@ -582,7 +582,10 @@
     "db-unavailable-description": "Unele funcții nu sunt disponibile. Resetează acum sau mai târziu din setări",
     "db-reset-restart": "Resetează și repornește",
     "db-reset-later": "Nu acum",
-    "db-reset-failed": "Baza de date nu a putut fi resetată"
+    "db-reset-failed": "Baza de date nu a putut fi resetată",
+    "media-downloads": "Descărcări media",
+    "media-select-before-download": "Alege conținutul înainte de descărcare",
+    "media-default-format": "Format implicit"
   },
   "subnav": {
     "task-list": "Sarcini",

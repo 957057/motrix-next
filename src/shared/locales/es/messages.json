@@ -582,7 +582,10 @@
     "db-unavailable-description": "Algunas funciones no están disponibles. Restablécela ahora o más tarde en Ajustes",
     "db-reset-restart": "Restablecer y reiniciar",
     "db-reset-later": "Ahora no",
-    "db-reset-failed": "No se pudo restablecer la base de datos"
+    "db-reset-failed": "No se pudo restablecer la base de datos",
+    "media-downloads": "Descargas multimedia",
+    "media-select-before-download": "Elegir contenido antes de descargar",
+    "media-default-format": "Formato predeterminado"
   },
   "subnav": {
     "task-list": "Tareas",

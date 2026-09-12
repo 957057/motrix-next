@@ -582,7 +582,10 @@
     "db-unavailable-description": "कुछ सुविधाएँ उपलब्ध नहीं हैं। अभी या बाद में सेटिंग्स से रीसेट करें",
     "db-reset-restart": "रीसेट करके पुनः शुरू करें",
     "db-reset-later": "अभी नहीं",
-    "db-reset-failed": "डेटाबेस रीसेट नहीं हो सका"
+    "db-reset-failed": "डेटाबेस रीसेट नहीं हो सका",
+    "media-downloads": "मीडिया डाउनलोड",
+    "media-select-before-download": "डाउनलोड से पहले सामग्री चुनें",
+    "media-default-format": "डिफ़ॉल्ट प्रारूप"
   },
   "subnav": {
     "task-list": "कार्य",

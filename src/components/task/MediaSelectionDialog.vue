@@ -89,7 +89,7 @@ async function confirm() {
       return
     }
     const options = {
-      ...mediaEngineOptions({ ...submittedOptions, selectBeforeDownload: false }),
+      ...mediaEngineOptions({ ...submittedOptions, pauseAfterProbe: 'false' }),
       out: mediaOutputName(current, submittedOptions.format),
     }
     if (current.status === 'error') await retryMedia(current.gid, options)

@@ -582,7 +582,10 @@
     "db-unavailable-description": "一部の機能を利用できません。今すぐ、または後で設定からリセットしてください",
     "db-reset-restart": "リセットして再起動",
     "db-reset-later": "後で",
-    "db-reset-failed": "データベースをリセットできませんでした"
+    "db-reset-failed": "データベースをリセットできませんでした",
+    "media-downloads": "メディアのダウンロード",
+    "media-select-before-download": "ダウンロード前に内容を選択",
+    "media-default-format": "既定の形式"
   },
   "subnav": {
     "task-list": "タスク一覧",

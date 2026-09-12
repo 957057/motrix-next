@@ -192,6 +192,21 @@ async fn handle_native_event(
     aria2: &Aria2Client,
     event: NativeEvent,
 ) -> Result<(), AppError> {
+    if aria2.is_internal(&event.gid).await {
+        if let Some(name) = event.kind.lifecycle_event() {
+            if let Some(state) = app.try_state::<super::media::MediaState>() {
+                if let Some(service) = state.0.get() {
+                    service
+                        .defer_event(name, aria2.tell_status(&event.gid).await?)
+                        .await;
+                }
+            }
+        }
+        return Ok(());
+    }
+    if event.kind == NativeEventKind::DownloadPause && aria2.is_automatic(&event.gid).await {
+        return Ok(());
+    }
     if event.kind == NativeEventKind::DownloadPause {
         if let Err(error) = app.emit(
             DOWNLOAD_PAUSE,

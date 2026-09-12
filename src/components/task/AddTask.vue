@@ -138,7 +138,7 @@ function syncPendingExternalMetadata() {
 }
 
 const form = ref<AddTaskForm>({
-  media: defaultMediaOptions(),
+  media: defaultMediaOptions(preferenceStore.config),
   uris: '',
   out: '',
   dir: preferenceStore.config.dir || '',
@@ -236,7 +236,7 @@ watch(
   () => props.show,
   (visible) => {
     if (visible) {
-      form.value.media = defaultMediaOptions()
+      form.value.media = defaultMediaOptions(preferenceStore.config)
       // When classification is enabled, clear the dir so user sees it's optional;
       // otherwise sync from preferences as usual.
       if (preferenceStore.config.fileCategoryEnabled) {

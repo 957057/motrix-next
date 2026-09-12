@@ -20,6 +20,8 @@ pub const DEFAULT_EXTENSION_API_PORT: u16 = 29110;
 #[serde(default, rename_all = "camelCase")]
 pub struct RuntimeConfig {
     pub locale: String,
+    pub media_select_before_download: bool,
+    pub media_default_format: String,
     pub speed_limit_enabled: bool,
     pub speed_schedule_enabled: bool,
     pub speed_schedule_from: String,
@@ -54,6 +56,8 @@ impl Default for RuntimeConfig {
     fn default() -> Self {
         Self {
             locale: "auto".into(),
+            media_select_before_download: true,
+            media_default_format: "mp4".into(),
             speed_limit_enabled: false,
             speed_schedule_enabled: false,
             speed_schedule_from: "00:00".into(),

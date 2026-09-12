@@ -204,6 +204,8 @@ pub struct Aria2MediaTrack {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Aria2Task {
+    #[serde(default)]
+    pub selection_managed: bool,
     pub gid: String,
     pub status: String,
     pub total_length: String,

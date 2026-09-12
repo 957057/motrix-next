@@ -582,7 +582,10 @@
     "db-unavailable-description": "Einige Funktionen sind nicht verfügbar. Jetzt oder später in den Einstellungen zurücksetzen",
     "db-reset-restart": "Zurücksetzen und neu starten",
     "db-reset-later": "Nicht jetzt",
-    "db-reset-failed": "Datenbank konnte nicht zurückgesetzt werden"
+    "db-reset-failed": "Datenbank konnte nicht zurückgesetzt werden",
+    "media-downloads": "Mediendownloads",
+    "media-select-before-download": "Inhalt vor dem Download auswählen",
+    "media-default-format": "Standardformat"
   },
   "subnav": {
     "task-list": "Aufgaben",

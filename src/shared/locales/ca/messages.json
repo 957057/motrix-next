@@ -582,7 +582,10 @@
     "db-unavailable-description": "Algunes funcions no estan disponibles. Restableix-la ara o més tard a la configuració",
     "db-reset-restart": "Restableix i reinicia",
     "db-reset-later": "Ara no",
-    "db-reset-failed": "No s’ha pogut restablir la base de dades"
+    "db-reset-failed": "No s’ha pogut restablir la base de dades",
+    "media-downloads": "Baixades multimèdia",
+    "media-select-before-download": "Tria el contingut abans de baixar",
+    "media-default-format": "Format predeterminat"
   },
   "subnav": {
     "task-list": "Tasques",

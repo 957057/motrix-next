@@ -582,7 +582,10 @@
     "db-unavailable-description": "Egyes funkciók nem érhetők el. Állítsd alaphelyzetbe most vagy később a beállításokban",
     "db-reset-restart": "Alaphelyzetbe állítás és újraindítás",
     "db-reset-later": "Most nem",
-    "db-reset-failed": "Az adatbázis alaphelyzetbe állítása sikertelen"
+    "db-reset-failed": "Az adatbázis alaphelyzetbe állítása sikertelen",
+    "media-downloads": "Médialetöltések",
+    "media-select-before-download": "Tartalom kiválasztása letöltés előtt",
+    "media-default-format": "Alapértelmezett formátum"
   },
   "subnav": {
     "task-list": "Feladatok",

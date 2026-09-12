@@ -427,7 +427,7 @@ pub async fn process_lifecycle_task(
     task: &Aria2Task,
     notify: bool,
 ) -> Result<(), AppError> {
-    if is_metadata_task(task) {
+    if super::media::owns(app, &task.gid).await || is_metadata_task(task) {
         return Ok(());
     }
 

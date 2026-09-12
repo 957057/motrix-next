@@ -582,7 +582,10 @@
     "db-unavailable-description": "Certaines fonctions sont indisponibles. Réinitialisez maintenant ou plus tard dans les paramètres",
     "db-reset-restart": "Réinitialiser et redémarrer",
     "db-reset-later": "Pas maintenant",
-    "db-reset-failed": "Impossible de réinitialiser la base de données"
+    "db-reset-failed": "Impossible de réinitialiser la base de données",
+    "media-downloads": "Téléchargements multimédias",
+    "media-select-before-download": "Choisir le contenu avant le téléchargement",
+    "media-default-format": "Format par défaut"
   },
   "subnav": {
     "task-list": "Tâches",

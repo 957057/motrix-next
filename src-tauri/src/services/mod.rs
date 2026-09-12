@@ -20,6 +20,7 @@ pub mod deep_link;
 pub mod external_input;
 pub mod frontend_action;
 pub mod http_api;
+pub mod media;
 pub mod monitor;
 pub mod notification;
 pub mod port_guard;
@@ -96,6 +97,10 @@ pub async fn on_engine_ready(app: &tauri::AppHandle) -> Result<(), AppError> {
         if let Some(prefs) = store.get("preferences") {
             let _ = rc_state.refresh_from_json(&prefs).await;
         }
+    }
+
+    if let Err(code) = media::service(app).await {
+        log::warn!("media: initialization unavailable code={code}");
     }
 
     // 3. Sync global options

@@ -582,7 +582,10 @@
     "db-unavailable-description": "Некоторые функции недоступны. Выполните сброс сейчас или позже в настройках",
     "db-reset-restart": "Сбросить и перезапустить",
     "db-reset-later": "Не сейчас",
-    "db-reset-failed": "Не удалось сбросить базу данных"
+    "db-reset-failed": "Не удалось сбросить базу данных",
+    "media-downloads": "Загрузка медиа",
+    "media-select-before-download": "Выбирать содержимое перед загрузкой",
+    "media-default-format": "Формат по умолчанию"
   },
   "subnav": {
     "task-list": "Задачи",

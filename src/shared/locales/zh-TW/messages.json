@@ -582,7 +582,10 @@
     "db-unavailable-description": "部分功能暫時無法使用，可立即重設或稍後在設定中重設",
     "db-reset-restart": "重設並重新啟動",
     "db-reset-later": "暫不處理",
-    "db-reset-failed": "資料庫重設失敗"
+    "db-reset-failed": "資料庫重設失敗",
+    "media-downloads": "媒體下載",
+    "media-select-before-download": "下載前選擇內容",
+    "media-default-format": "預設格式"
   },
   "subnav": {
     "task-list": "任務列表",

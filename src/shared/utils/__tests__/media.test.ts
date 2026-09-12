@@ -71,7 +71,6 @@ describe('media presentation contracts', () => {
       'media-audio': '2:1',
       'media-subtitles': 'en',
       'media-format': 'mkv',
-      'media-pause-after-probe': 'true',
     })
     expect(() => mediaEngineOptions({ ...options, recordTime: -1 })).toThrow()
     expect(() => mediaEngineOptions({ ...options, recordTime: 0.5 })).toThrow()
@@ -91,5 +90,17 @@ describe('media presentation contracts', () => {
     })
     expect(restored.media).toEqual(media)
     expect(restored.mediaOptions).toEqual(options)
+  })
+})
+
+describe('media creation preferences', () => {
+  it('defers creation policy to the desktop without sending unsupported engine values', () => {
+    const options = defaultMediaOptions({ mediaSelectBeforeDownload: false, mediaDefaultFormat: 'mkv' })
+    expect(mediaEngineOptions(options)).toMatchObject({ 'media-format': 'mkv' })
+    expect(mediaEngineOptions(options)).not.toHaveProperty('media-pause-after-probe')
+  })
+  it('keeps an explicit confirmation separate from creation defaults', () => {
+    const options = defaultMediaOptions({ mediaSelectBeforeDownload: true, mediaDefaultFormat: 'mp4' })
+    expect(mediaEngineOptions({ ...options, pauseAfterProbe: 'false' })['media-pause-after-probe']).toBe('false')
   })
 })
