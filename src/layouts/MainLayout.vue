@@ -13,7 +13,7 @@ import { isMetadataTask, updateHistoryFilePath } from '@/composables/useTaskLife
 import { setArchivedPath, resolveTaskFilePath, requestFileRecheck } from '@/composables/useArchivedPaths'
 import { handleTaskComplete, handleP2pDownloadComplete, handleTaskError } from '@/composables/useTaskNotifyHandlers'
 import { shouldDeleteTorrent, trashTorrentFile } from '@/composables/useDownloadCleanup'
-import { getTaskDisplayName, resolveOpenTarget, checkTaskIsSharing, getTaskSharingKind } from '@shared/utils'
+import { getTaskName, resolveOpenTarget, checkTaskIsSharing, getTaskSharingKind } from '@shared/utils'
 import type { TaskSharingKind } from '@shared/utils/task'
 import type { Aria2Task } from '@shared/types'
 import { ARIA2_ERROR_CODES } from '@shared/aria2ErrorCodes'
@@ -256,8 +256,7 @@ watch(
 // ── DB schema migration toast ───────────────────────────────────────
 // Uses the same reactive pattern as config migration toast above.
 // loadPreference() sets dbUpgradeVersion only for saved preferences.
-// Fresh installs use CURRENT_DB_SCHEMA_VERSION from DEFAULT_APP_CONFIG,
-// so their first persisted config does not trigger a false upgrade toast.
+// Zero means this UI has not observed a native schema version yet.
 watch(
   () => preferenceStore.dbUpgradeVersion,
   async (savedDbVersion) => {
@@ -266,7 +265,7 @@ watch(
       const historyStore = useHistoryStore()
       const currentDbVersion = await historyStore.getSchemaVersion()
       if (savedDbVersion < currentDbVersion) {
-        message.info(t('app.db-upgraded', { version: `v${currentDbVersion}` }))
+        if (savedDbVersion > 0) message.info(t('app.db-upgraded', { version: `v${currentDbVersion}` }))
         await preferenceStore.updateAndSave({ dbSchemaVersion: currentDbVersion })
       }
     } catch (e) {
@@ -666,7 +665,7 @@ onMounted(async () => {
     if (sourcePath) {
       const ok = await trashTorrentFile(sourcePath)
       if (ok) {
-        const taskName = getTaskDisplayName(task)
+        const taskName = getTaskName(task)
         message.success(t('task.torrent-trashed', { taskName }))
       }
     }

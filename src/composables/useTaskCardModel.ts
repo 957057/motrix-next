@@ -8,7 +8,7 @@ import {
   calcProgress,
   checkTaskIsSharing,
   getTaskCompletedLength,
-  getTaskDisplayName,
+  getTaskName,
   getSharingStatusLabelKey,
   getTaskSharingState,
   isBtMetadataTask,
@@ -50,9 +50,7 @@ interface TaskCardModel {
 export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
   const { t } = useI18n()
 
-  const taskFullName = computed(() =>
-    getTaskDisplayName(task.value, { defaultName: t('task.get-task-name') || 'Unknown' }),
-  )
+  const taskFullName = computed(() => getTaskName(task.value, { defaultName: t('task.get-task-name') || 'Unknown' }))
   const btLifecycle = computed(() => getBtLifecycleState(task.value))
   const stableProgress = ref({
     gid: task.value.gid,

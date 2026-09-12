@@ -8,11 +8,11 @@ import { getOption, confirmMedia } from '@/api/aria2'
 import {
   defaultMediaOptions,
   readMediaOptions,
-  mediaOutputName,
   mediaDuration,
   mediaEngineOptions,
   canSelectMedia,
 } from '@shared/utils/media'
+import { getTaskName } from '@shared/utils/task'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { logger } from '@shared/logger'
 import type { Aria2Task } from '@shared/types'
@@ -33,7 +33,7 @@ const media = computed(() => task.value?.media)
 const title = computed(() =>
   media.value?.live === 'true' ? t('media.recording-options') : t('media.download-options'),
 )
-const output = computed(() => (task.value ? mediaOutputName(task.value, form.value.format) : ''))
+const output = computed(() => getTaskName(task.value))
 
 async function load(gid: string) {
   const request = ++generation
@@ -90,7 +90,6 @@ async function confirm() {
     }
     const options = {
       ...mediaEngineOptions({ ...submittedOptions, pauseAfterProbe: 'false' }),
-      out: mediaOutputName(current, submittedOptions.format),
     }
     await confirmMedia(current.gid, options)
     await tasks.fetchList()

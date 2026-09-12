@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated:** 2026-05-11
+**Last updated:** 2026-09-12
 
 Motrix Next is an open-source desktop download manager licensed under the [MIT License](https://opensource.org/licenses/MIT). This document describes what data the application handles and what network connections it makes.
 
@@ -56,7 +56,7 @@ The update channel can be Stable, Beta, or Latest Across Channels. If a proxy is
 
 When you add a download task, Motrix Next and its Aria2 Next sidecar connect to the servers or peers needed for that task. This can include HTTP, HTTPS, or SFTP servers, BitTorrent trackers, DHT nodes, peers, and metadata endpoints.
 
-Some task creation flows resolve filenames before download. This may issue HTTP requests to the URL you submit so the app can inspect response headers such as `Content-Disposition`.
+The engine resolves filenames from the actual download response. The desktop does not issue separate requests just to guess filenames. Torrent file inspection and media manifest inspection may fetch metadata before content selection.
 
 If UPnP is enabled, the app may contact your local network gateway to map BitTorrent ports. If system proxy detection is used, the app reads operating-system proxy settings locally.
 
@@ -64,7 +64,7 @@ If UPnP is enabled, the app may contact your local network gateway to map BitTor
 
 Motrix Next includes an embedded Extension API for browser extensions. It defaults to port `16801` and uses an Extension API secret that is independent from the aria2 RPC secret.
 
-The Extension API can receive download URLs, referer values, cookie headers, and filename hints from the browser extension. These requests are routed into the desktop app and processed according to the user's confirmation and auto-submit settings.
+The Extension API can receive download URLs, referer values, cookie headers, and filename hints from the browser extension. Rust processes these according to confirmation and auto-submit settings. Pending ordinary confirmations are stored locally in `history.db` so they survive desktop restart; submission or cancellation clears their request bodies. Request IDs, fingerprints, GIDs and receipt states remain until database reset. Media operation receipts use `media-operations.db` and do not contain browser credentials.
 
 The API is intended for browser-extension integration. Users can change the port or clear the secret in Advanced Settings. Running without a secret disables API authentication and is not recommended.
 

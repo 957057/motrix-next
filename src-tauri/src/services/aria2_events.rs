@@ -1,8 +1,8 @@
 //! Native Aria2 Next WebSocket lifecycle integration.
 
 use super::monitor::{self, events};
-use crate::aria2::client::Aria2Client;
 use crate::error::AppError;
+use crate::services::tasks::TaskService;
 use futures_util::{SinkExt, StreamExt};
 use serde::Deserialize;
 use std::sync::Arc;
@@ -92,7 +92,7 @@ impl Aria2EventState {
 
 pub fn spawn_aria2_event_listener(
     app: tauri::AppHandle,
-    aria2: Arc<Aria2Client>,
+    aria2: Arc<TaskService>,
 ) -> Aria2EventHandle {
     let (stop_tx, stop_rx) = watch::channel(false);
     tokio::spawn(async move {
@@ -103,7 +103,7 @@ pub fn spawn_aria2_event_listener(
 
 async fn event_loop(
     app: tauri::AppHandle,
-    aria2: Arc<Aria2Client>,
+    aria2: Arc<TaskService>,
     mut stop_rx: watch::Receiver<bool>,
 ) {
     loop {
@@ -159,7 +159,7 @@ async fn event_loop(
 
 async fn receive_events(
     app: &tauri::AppHandle,
-    aria2: &Aria2Client,
+    aria2: &TaskService,
     socket: &mut WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>,
     stop_rx: &mut watch::Receiver<bool>,
 ) -> bool {
@@ -189,7 +189,7 @@ async fn receive_events(
 
 async fn handle_native_event(
     app: &tauri::AppHandle,
-    aria2: &Aria2Client,
+    aria2: &TaskService,
     event: NativeEvent,
 ) -> Result<(), AppError> {
     if aria2.tasks.is_internal(&event.gid).await {

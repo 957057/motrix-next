@@ -67,7 +67,7 @@ interface AppEventsDeps {
     showAddTaskDialog: () => void
     enqueueBatch: (items: ReturnType<typeof createBatchItem>[]) => number
     handleDeepLinkUrls: (urls: string[]) => DeepLinkHandlingResult | void
-    handleExternalInputs: (inputs: ExternalDownloadInput[]) => DeepLinkHandlingResult | void
+    handleExternalInputs: (inputs: ExternalDownloadInput[]) => Promise<DeepLinkHandlingResult | void>
     setExternalInputErrorHandler?: (handler: ((error: unknown) => void) | null) => void
     setExternalInputStartHandler?: (handler: ((taskNames: string[]) => void) | null) => void
     addTaskVisible: boolean
@@ -622,7 +622,7 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
     })
     try {
       const tracedInputs = inputs.map((input) => ({ ...input, traceId }))
-      const handlingResult = appStore.handleExternalInputs(tracedInputs)
+      const handlingResult = await appStore.handleExternalInputs(tracedInputs)
       logger.info('ExternalInput', 'download_routing_completed', {
         trace_id: traceId,
         stage: 'route-download',

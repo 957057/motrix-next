@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager, WebviewWindowBuilder,
+    AppHandle, Manager, WebviewWindowBuilder,
 };
 
 /// Embedded tray icon bytes.
@@ -215,7 +215,9 @@ pub fn setup_tray(app: &AppHandle) -> Result<TrayMenuState, Box<dyn std::error::
                     log::info!("tray:pause-all — calling aria2 directly");
                     let app = app.clone();
                     tauri::async_runtime::spawn(async move {
-                        if let Some(aria2) = app.try_state::<crate::aria2::client::Aria2State>() {
+                        if let Some(aria2) =
+                            app.try_state::<crate::services::tasks::TaskServiceState>()
+                        {
                             if let Err(e) = aria2.0.force_pause_all().await {
                                 log::warn!("tray:pause-all failed: {e}");
                             }
@@ -226,7 +228,9 @@ pub fn setup_tray(app: &AppHandle) -> Result<TrayMenuState, Box<dyn std::error::
                     log::info!("tray:resume-all — calling aria2 directly");
                     let app = app.clone();
                     tauri::async_runtime::spawn(async move {
-                        if let Some(aria2) = app.try_state::<crate::aria2::client::Aria2State>() {
+                        if let Some(aria2) =
+                            app.try_state::<crate::services::tasks::TaskServiceState>()
+                        {
                             match aria2.0.resume_eligible().await {
                                 Ok(result) => log::info!(
                                     "tray:resume-all resumed={} blocked={}",
@@ -256,11 +260,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<TrayMenuState, Box<dyn std::error::
                         "tray-new-task",
                     );
                 }
-                _ => {
-                    if let Some(action) = resolve_tray_action(id) {
-                        let _ = app.emit("tray-menu-action", action);
-                    }
-                }
+                _ => {}
             }
         })
         .build(app)?;
@@ -307,66 +307,9 @@ pub fn setup_tray(app: &AppHandle) -> Result<TrayMenuState, Box<dyn std::error::
     })
 }
 
-/// Maps a tray menu event ID to the action string emitted to the frontend.
-///
-/// Returns `None` for actions handled natively in `on_menu_event`
-/// (show, pause-all, resume-all, quit, new-task) and for unknown IDs.
-///
-/// All tray actions are now handled directly in Rust to work correctly
-/// when the WebView is destroyed in lightweight mode (issue #194).
-/// This function remains as a fallback for future extensibility.
-pub fn resolve_tray_action(menu_id: &str) -> Option<&str> {
-    // All known tray actions are handled natively in on_menu_event:
-    //   "show", "tray-pause-all", "tray-resume-all" — direct aria2/window ops
-    //   "tray-quit" — app.exit(0)
-    //   "tray-new-task" — get_or_create_main_window + emit
-    // No action is forwarded to the frontend.
-    let _ = menu_id;
-    None
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn resolve_quit_handled_natively() {
-        // tray-quit is handled directly by app.exit(0) in on_menu_event,
-        // not routed through resolve_tray_action → emit to frontend.
-        // This ensures quit works even when the WebView is destroyed
-        // (lightweight mode). See issue #194.
-        assert_eq!(resolve_tray_action("tray-quit"), None);
-    }
-
-    #[test]
-    fn resolve_new_task_handled_natively() {
-        // tray-new-task is handled directly in on_menu_event:
-        // get_or_create_main_window() + emit. Not routed through
-        // resolve_tray_action. Ensures window is recreated in
-        // lightweight mode before the event is emitted.
-        assert_eq!(resolve_tray_action("tray-new-task"), None);
-    }
-
-    #[test]
-    fn resolve_pause_all_handled_natively() {
-        assert_eq!(resolve_tray_action("tray-pause-all"), None);
-    }
-
-    #[test]
-    fn resolve_resume_all_handled_natively() {
-        assert_eq!(resolve_tray_action("tray-resume-all"), None);
-    }
-
-    #[test]
-    fn resolve_show_returns_none() {
-        // "show" is handled natively, not emitted to frontend
-        assert_eq!(resolve_tray_action("show"), None);
-    }
-
-    #[test]
-    fn resolve_unknown_returns_none() {
-        assert_eq!(resolve_tray_action("nonexistent"), None);
-    }
 
     /// Verify the embedded tray icon bytes are a valid PNG with correct header.
     #[test]

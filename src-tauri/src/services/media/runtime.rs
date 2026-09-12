@@ -1,7 +1,7 @@
 //! Tauri lifecycle wiring and publication of confirmed download events.
 use super::journal::State;
 use super::{error::Error, journal::Journal, MediaService};
-use crate::aria2::client::Aria2State;
+use crate::services::tasks::TaskServiceState;
 use std::{sync::Arc, time::Duration};
 use tauri::{AppHandle, Manager};
 use tokio::sync::OnceCell;
@@ -27,7 +27,7 @@ pub async fn service(app: &AppHandle) -> Result<Arc<MediaService>, Error> {
                 .map_err(|_| Error::Unavailable)?;
             let journal = Journal::open(directory.join("media-operations.db")).await?;
             let service = Arc::new(
-                MediaService::restore(app.state::<Aria2State>().0.clone(), journal).await?,
+                MediaService::restore(app.state::<TaskServiceState>().0.clone(), journal).await?,
             );
             let weak = Arc::downgrade(&service);
             let app = app.clone();
@@ -49,7 +49,7 @@ pub async fn service(app: &AppHandle) -> Result<Arc<MediaService>, Error> {
 }
 
 pub async fn owns(app: &AppHandle, gid: &str) -> bool {
-    match app.try_state::<Aria2State>() {
+    match app.try_state::<TaskServiceState>() {
         Some(state) => state.0.tasks.is_internal(gid).await,
         None => false,
     }

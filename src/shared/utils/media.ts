@@ -54,11 +54,6 @@ export function readMediaOptions(options: Record<string, string>, tracks: Aria2M
   }
 }
 
-export function mediaOutputName(task: Aria2Task, format: MediaOptions['format']): string {
-  const name = task.files[0]?.path.split(/[\\/]/).pop() || 'media'
-  return `${name.replace(/\.[^.]*$/, '')}.${format}`
-}
-
 export function mediaTrackLabel(track: Aria2MediaTrack, locale: string): string {
   let language = track.language
   if (language) {

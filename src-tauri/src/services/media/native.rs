@@ -1,9 +1,5 @@
 //! Native selection and queue transitions shared by every desktop entry point.
-use super::contracts::Format;
-use crate::{
-    aria2::{client::Aria2Client, types::Aria2Task},
-    error::AppError,
-};
+use crate::{aria2::types::Aria2Task, error::AppError, services::tasks::TaskService};
 use serde_json::Value;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -14,7 +10,7 @@ pub enum StartMode {
 }
 
 pub async fn start(
-    engine: &Aria2Client,
+    engine: &TaskService,
     task: &Aria2Task,
     mut options: Value,
     mode: StartMode,
@@ -30,18 +26,6 @@ pub async fn start(
     if media.state == "awaiting-selection" && task.status != "paused" {
         return Err(AppError::Aria2("Media inspection is still pausing".into()));
     }
-    if let Some(format) = options.get("media-format").and_then(Value::as_str) {
-        let format = Format::parse(format).map_err(|error| AppError::Aria2(error.to_string()))?;
-        let path = task
-            .files
-            .first()
-            .ok_or_else(|| AppError::Aria2("Media output is unavailable".into()))?;
-        let stem = std::path::Path::new(&path.path)
-            .file_stem()
-            .and_then(|name| name.to_str())
-            .ok_or_else(|| AppError::Aria2("Media output filename is invalid".into()))?;
-        options["out"] = format!("{stem}.{}", format.extension()).into();
-    }
     options["media-pause-after-probe"] = "false".into();
     if task.status == "error" && mode == StartMode::User {
         engine.retry_media(&task.gid, options).await?;
@@ -55,6 +39,11 @@ pub async fn start(
             return Err(AppError::Aria2("Media selection was interrupted".into()));
         }
         engine.unpause(&task.gid).await?;
+    } else if !matches!(task.status.as_str(), "active" | "waiting" | "complete") {
+        return Err(AppError::Aria2(format!(
+            "Media task cannot start from {} / {}",
+            task.status, media.state
+        )));
     }
     // Reconciliation may observe an already-started or completed task.
     engine.save_session().await?;

@@ -7,14 +7,12 @@ mod runtime;
 pub use runtime::{owns, service, MediaState};
 pub mod native;
 mod policy;
-mod task_policy;
-pub use task_policy::TaskPolicy;
 pub mod routes;
 #[cfg(test)]
 mod tests;
 pub use policy::start_automatic_selection;
 
-use crate::aria2::client::Aria2Client;
+use crate::services::tasks::TaskService;
 use contracts::*;
 use error::Error;
 use journal::{Journal, Operation, State};
@@ -25,7 +23,7 @@ use tokio::sync::Mutex;
 use uuid::Uuid;
 
 pub struct MediaService {
-    engine: Arc<Aria2Client>,
+    engine: Arc<TaskService>,
     journal: Journal,
     submission_gate: Mutex<()>,
     deferred_events: Mutex<HashMap<String, (&'static str, crate::aria2::types::Aria2Task)>>,
@@ -36,7 +34,7 @@ pub fn now() -> i64 {
     chrono::Utc::now().timestamp_millis()
 }
 impl MediaService {
-    async fn restore(engine: Arc<Aria2Client>, journal: Journal) -> Result<Self, Error> {
+    async fn restore(engine: Arc<TaskService>, journal: Journal) -> Result<Self, Error> {
         let mut operations = HashMap::new();
         for mut op in journal.load().await? {
             if op.state.pending() {
@@ -171,7 +169,7 @@ impl MediaService {
     async fn start_native(&self, record: &Operation) -> Result<(), Error> {
         let task = self
             .engine
-            .tell_internal_tasks()
+            .hidden_tasks()
             .await
             .map_err(|_| Error::Unavailable)?
             .into_iter()
@@ -216,7 +214,7 @@ impl MediaService {
     async fn clean_gid(&self, gid: &str) -> Result<(), Error> {
         let tasks = self
             .engine
-            .tell_internal_tasks()
+            .hidden_tasks()
             .await
             .map_err(|_| Error::Unavailable)?;
         let Some(task) = tasks.into_iter().find(|task| task.gid == gid) else {
@@ -239,7 +237,7 @@ impl MediaService {
         let records: Vec<_> = self.operations.lock().await.values().cloned().collect();
         let present: std::collections::HashSet<_> = self
             .engine
-            .tell_internal_tasks()
+            .hidden_tasks()
             .await
             .map_err(|_| Error::Unavailable)?
             .into_iter()

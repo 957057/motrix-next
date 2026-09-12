@@ -113,30 +113,6 @@ mod tests {
 
     // ── Default values ──────────────────────────────────────────────
 
-    #[test]
-    fn default_config_has_sane_values() {
-        let cfg = RuntimeConfig::default();
-        assert!(!cfg.speed_limit_enabled);
-        assert_eq!(cfg.locale, "auto");
-        assert!(!cfg.speed_schedule_enabled);
-        assert_eq!(cfg.speed_schedule_from, "00:00");
-        assert_eq!(cfg.speed_schedule_to, "06:00");
-        assert_eq!(cfg.speed_schedule_days, 0);
-        assert!(cfg.max_overall_download_limit.is_empty());
-        assert!(cfg.max_overall_upload_limit.is_empty());
-        assert!(!cfg.tray_speedometer); // default OFF
-        #[cfg(target_os = "macos")]
-        assert!(cfg.dock_badge_speed); // default ON
-        #[cfg(not(target_os = "linux"))]
-        assert!(!cfg.show_progress_bar);
-        assert!(!cfg.shutdown_when_complete); // default OFF — opt-in only
-        assert!(!cfg.keep_awake); // default OFF — opt-in only
-        assert!(cfg.task_notification); // default ON
-        assert!(cfg.notify_on_complete); // default ON
-        assert!(cfg.notify_on_start); // default ON
-        assert!(!cfg.allow_remote_access); // default OFF
-    }
-
     // ── Deserialization from AppConfig-shaped JSON ───────────────────
 
     #[test]

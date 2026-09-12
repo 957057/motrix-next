@@ -10,7 +10,7 @@ import {
   checkTaskIsSharing,
   getTaskSharingState,
   getTaskSharingTime,
-  getTaskDisplayName,
+  getTaskName,
   bytesToSize,
   localeDateTimeFormat,
   isBtMetadataTask,
@@ -290,7 +290,7 @@ const taskStatus = computed(() => {
   const translated = t(labelKey)
   return translated !== labelKey ? translated : key
 })
-const taskFullName = computed(() => (props.task ? getTaskDisplayName(props.task, { defaultName: 'Unknown' }) : ''))
+const taskFullName = computed(() => (props.task ? getTaskName(props.task, { defaultName: 'Unknown' }) : ''))
 // ── Task date display ────────────────────────────────────────────────
 const taskAddedAt = computed(() => {
   if (!props.task) return ''

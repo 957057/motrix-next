@@ -7,7 +7,7 @@ import { reactive, ref, watch } from 'vue'
 import { EMPTY_STRING } from '@shared/constants'
 import { checkTaskIsEd2kSearch } from '@shared/utils'
 import { logger } from '@shared/logger'
-import type { Aria2Task, Aria2File, Aria2Peer, Aria2EngineOptions, TaskApi } from '@shared/types'
+import type { Aria2Task, Aria2File, Aria2Peer, Aria2EngineOptions, AddUriParams, TaskApi } from '@shared/types'
 
 import { mergeHistoryIntoTasks, isMetadataTask } from '@/composables/useTaskLifecycle'
 import { buildMagnetOptions } from '@/composables/useMagnetFlow'
@@ -31,7 +31,6 @@ import {
 import { DEFAULT_TASK_SORT } from '@/composables/useTaskSort'
 import { useHistoryStore } from '@/stores/history'
 import { useDatabaseStore } from '@/stores/database'
-import { useHttpAuthStore } from '@/stores/httpAuth'
 import { usePreferenceStore } from '@/stores/preference'
 
 import { resubmitTask, type TaskResubmissionMode } from './resubmit'
@@ -375,31 +374,9 @@ export const useTaskStore = defineStore('task', () => {
     }
   }
 
-  async function addUri(data: {
-    uris: string[]
-    outs: string[]
-    options: Aria2EngineOptions
-    fileCategory?: {
-      enabled: boolean
-      categories: import('@shared/types').FileCategory[]
-      contexts?: Record<string, import('@shared/types').ExternalDownloadContext>
-    }
-  }) {
-    const gids: string[] = []
-    const httpAuthStore = useHttpAuthStore()
-
-    for (let index = 0; index < data.uris.length; index++) {
-      const uri = data.uris[index]
-      const options = await applySavedHttpAuth(uri, data.options, httpAuthStore)
-      const added = await api.addUri({
-        uris: [uri],
-        outs: [data.outs[index] ?? ''],
-        options,
-        fileCategory: data.fileCategory,
-      })
-      gids.push(...added)
-      added.forEach((gid) => useTaskSelectionStore().register(gid, true))
-    }
+  async function addUri(data: AddUriParams) {
+    const gids = await api.addUri(data)
+    gids.forEach((gid) => useTaskSelectionStore().register(gid, true))
 
     const now = new Date().toISOString()
     const historyStore = useHistoryStore()
@@ -411,9 +388,7 @@ export const useTaskStore = defineStore('task', () => {
   }
 
   async function addUriAtomic(data: { uris: string[]; options: Aria2EngineOptions }) {
-    const httpAuthStore = useHttpAuthStore()
-    const options = await applySavedHttpAuth(data.uris[0] ?? '', data.options, httpAuthStore)
-    const gid = await api.addUriAtomic({ uris: data.uris, options })
+    const gid = await api.addUriAtomic(data)
     useTaskSelectionStore().register(gid, true)
     const now = new Date().toISOString()
     registerAddedAt(gid, now)
@@ -421,26 +396,6 @@ export const useTaskStore = defineStore('task', () => {
     historyStore.recordTaskBirth(gid, now).catch((e) => logger.debug('taskBirth.write', e))
     await fetchList()
     return gid
-  }
-
-  async function applySavedHttpAuth(
-    uri: string,
-    options: Aria2EngineOptions,
-    httpAuthStore: ReturnType<typeof useHttpAuthStore>,
-  ): Promise<Aria2EngineOptions> {
-    if (options['http-user'] || options.httpUser) return options
-
-    const credential = await httpAuthStore.findByUrl(uri)
-    if (!credential) return options
-
-    if (credential.id) {
-      httpAuthStore.markUsed(credential.id).catch((e) => logger.debug('httpAuth.markUsed', e))
-    }
-    return {
-      ...options,
-      'http-user': credential.username,
-      'http-passwd': credential.password,
-    }
   }
 
   /**
@@ -452,6 +407,7 @@ export const useTaskStore = defineStore('task', () => {
    */
   async function addMagnetUri(data: {
     uri: string
+    requestId?: string
     options: Aria2EngineOptions
     fileCategory?: { enabled: boolean; categories: import('@shared/types').FileCategory[] }
   }): Promise<string> {
@@ -467,6 +423,7 @@ export const useTaskStore = defineStore('task', () => {
       uris: [data.uri],
       outs: [],
       options,
+      ...(data.requestId ? { contexts: { [data.uri]: { requestId: data.requestId } } } : {}),
     })
     const gid = gids[0]
 
@@ -494,7 +451,7 @@ export const useTaskStore = defineStore('task', () => {
     return api.getFiles({ gid })
   }
 
-  async function addTorrent(data: { torrent: string; options: Aria2EngineOptions }) {
+  async function addTorrent(data: { torrent: string; options: Aria2EngineOptions; requestId?: string }) {
     const gid = await api.addTorrent(data)
     const now = new Date().toISOString()
     registerAddedAt(gid, now)

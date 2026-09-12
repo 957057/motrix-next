@@ -10,7 +10,7 @@ import { canFinishMedia } from '@shared/utils/media'
 import { ref, h } from 'vue'
 import {
   getTaskUri,
-  getTaskDisplayName,
+  getTaskName,
   resolveOpenTarget,
   canRestart,
   writeAppClipboardText,
@@ -61,7 +61,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     )
 
   function handlePauseTask(task: Aria2Task) {
-    const taskName = getTaskDisplayName(task, { defaultName: 'Unknown' })
+    const taskName = getTaskName(task, { defaultName: 'Unknown' })
     taskStore
       .pauseTask(task)
       .then(() => message.success(t('task.pause-task-success', { taskName })))
@@ -72,7 +72,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
   }
 
   function handleResumeTask(task: Aria2Task) {
-    const taskName = getTaskDisplayName(task, { defaultName: 'Unknown' })
+    const taskName = getTaskName(task, { defaultName: 'Unknown' })
     taskStore
       .resumeTask(task)
       .then((resumed) => {
@@ -85,7 +85,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
   }
 
   function handleRetryTask(task: Aria2Task) {
-    const taskName = getTaskDisplayName(task, { defaultName: 'Unknown' })
+    const taskName = getTaskName(task, { defaultName: 'Unknown' })
     if (!canRestart(task)) {
       message.warning(t('task.restart-not-available'))
       return
@@ -100,7 +100,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
   }
 
   function handleRedownloadTask(task: Aria2Task) {
-    const taskName = getTaskDisplayName(task, { defaultName: 'Unknown' })
+    const taskName = getTaskName(task, { defaultName: 'Unknown' })
     if (!canRestart(task)) {
       message.warning(t('task.restart-not-available'))
       return
@@ -131,7 +131,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
   }
 
   function handleFinishSharing(task: Aria2Task) {
-    const taskName = getTaskDisplayName(task, { defaultName: 'Unknown' })
+    const taskName = getTaskName(task, { defaultName: 'Unknown' })
     const kind = getTaskSharingKind(task)
     if (!kind) return
     taskStore
@@ -162,12 +162,12 @@ export function useTaskActions(deps: TaskActionsDeps) {
         })
         .catch((error: unknown) => {
           logger.error('TaskView.deleteTask', error)
-          message.error(t('task.delete-task-fail', { taskName: getTaskDisplayName(task, { defaultName: 'Unknown' }) }))
+          message.error(t('task.delete-task-fail', { taskName: getTaskName(task, { defaultName: 'Unknown' }) }))
         })
       return
     }
     const deleteFiles = ref(false)
-    const name = getTaskDisplayName(task, { defaultName: 'Unknown' })
+    const name = getTaskName(task, { defaultName: 'Unknown' })
     const d = dialog.error({
       title: t('task.delete-task'),
       content: () =>
@@ -230,14 +230,14 @@ export function useTaskActions(deps: TaskActionsDeps) {
             }
           }
           message.success(
-            t('task.remove-record-success', { taskName: getTaskDisplayName(taskRef, { defaultName: 'Unknown' }) }),
+            t('task.remove-record-success', { taskName: getTaskName(taskRef, { defaultName: 'Unknown' }) }),
           )
         })
         .catch((e: unknown) => logger.error('TaskView.deleteRecord', e))
       return
     }
     const deleteFiles = ref(false)
-    const name = getTaskDisplayName(task, { defaultName: 'Unknown' })
+    const name = getTaskName(task, { defaultName: 'Unknown' })
     const d = dialog.error({
       title: t('task.delete-task'),
       content: () =>

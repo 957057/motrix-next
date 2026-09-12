@@ -44,7 +44,7 @@ src/
 │       ├── fileCategory.ts     # File type classification by extension
 │       ├── autoArchive.ts      # Auto-archive completed tasks
 │       ├── format.ts           # Number/date/speed formatting (bytesToSize, localeDateTimeFormat)
-│       ├── task.ts             # Task status helpers (checkTaskIsBT, getTaskDisplayName)
+│       ├── task.ts             # Task status helpers (checkTaskIsBT, getTaskName)
 │       ├── peer.ts             # Peer ID parsing and client identification
 │       └── proxy.ts            # Proxy policy, URL building/validation, engine option assembly
 ├── stores/                     # Pinia stores (app.ts, preference.ts, history.ts, task/)
@@ -57,7 +57,7 @@ src-tauri/
 │   ├── main.rs                 # Tauri entry point
 │   ├── aria2/                  # Native Rust aria2 JSON-RPC client
 │   │   ├── mod.rs              # Module re-exports
-│   │   ├── client.rs           # WebSocket JSON-RPC client (connect, call, subscribe)
+│   │   ├── rpc.rs              # HTTP JSON-RPC transport, authentication and structured errors
 │   │   └── types.rs            # Aria2 response types (Aria2Task, Aria2File, Aria2BtInfo, etc.)
 │   ├── commands/
 │   │   ├── mod.rs              # Command module re-exports
@@ -68,7 +68,7 @@ src-tauri/
 │   │   ├── geoip.rs            # GeoIP database loading and peer IP lookup
 │   │   ├── history.rs          # History DB read/write commands
 │   │   ├── http_api.rs         # Local extension HTTP API auth and status commands
-│   │   ├── net.rs              # Network utility commands
+│   │   ├── remote_file.rs      # Remote torrent download and metainfo inspection
 │   │   ├── notification.rs     # Native notification permission and test commands
 │   │   ├── power.rs            # System power action commands
 │   │   ├── protocol.rs         # Default protocol handler detection and registration
@@ -98,17 +98,13 @@ src-tauri/
 │   │   ├── stat.rs             # Global stat polling, Dock badge, Dock progress bar (custom NSProgressIndicator)
 │   │   └── speed.rs            # Speed limit scheduler (time-of-day limits)
 │   ├── gpu_guard.rs            # GPU compatibility detection and WebView renderer fallback
-│   ├── history.rs              # HistoryDbState: Rust-side SQLite history record persistence
+│   ├── database/               # Single native SQLite owner: history, credentials, receipts
 │   ├── i18n.rs                 # Native locale negotiation and rust-i18n message access
 │   ├── error.rs                # AppError enum (Store, Engine, Io, NotFound, Updater, Upnp)
 │   ├── menu.rs                 # Native menu builder (macOS only, cfg-gated)
 │   ├── tray.rs                 # System tray setup + native event handling (lightweight mode safe)
 │   └── upnp.rs                 # UPnP/IGD port mapping with renewal loop
 ├── locales/                    # Compile-time embedded native JSON translations
-├── migrations/
-│   ├── 001_download_history.sql  # Initial history table schema
-│   ├── 002_add_added_at.sql      # Added added_at column + task_birth table
-│   └── 003_http_auth_credentials.sql # HTTP extension API auth credentials
 ├── nsis/
 │   ├── hooks.nsh              # Windows installer hooks (compat shim + icon refresh)
 │   ├── header.bmp             # Installer header image (150×57, 24-bit BMP)
@@ -198,72 +194,20 @@ Follow this exact checklist:
 
 ---
 
-## C″. Database Schema Migration
+## C″. Native Database Ownership
 
-`tauri_plugin_sql` manages versioned SQL migrations for `sqlite:history.db`. Migrations run automatically on app launch when the stored version is behind the latest.
+`src-tauri/src/database/` owns the single `history.db` connection and current schema.
+History, credentials and ordinary submission receipts use named Rust operations.
+Vue stores never execute SQL or own a connection. Startup initializes storage in
+Rust; it does not depend on the main WebView. See [DOWNLOADS.md](docs/DOWNLOADS.md).
 
-> **This is separate from Config Schema Migration (Section C′).** Config migrations handle `config.json` (JSON key-value preferences) in the frontend. DB migrations handle `history.db` (SQLite relational tables) in the backend. They manage different data stores in different runtimes — merging them is not practical.
-
-### How It Works
-
-- SQL migration files live in `src-tauri/migrations/` with `NNN_description.sql` naming
-- Each migration is registered as a `tauri_plugin_sql::Migration` struct in the `.add_migrations()` call in `lib.rs`
-- The plugin tracks executed versions in an internal `_sqlx_migrations` table
-- `src/stores/database.ts` owns deferred initialization after the UI mounts; `Database.load()` applies migrations without blocking window creation
-- `src-tauri/src/commands/database.rs` inspects the database and handles explicit reset; failures leave the UI and live downloads available
-- History and HTTP credentials share this lifecycle; never call `Database.load()` from individual stores
-- Reset closes both connection owners before removing database files and restarting; never delete a database automatically on initialization failure
-- Old users receive new migrations transparently on upgrade — no manual action needed
-
-### Adding a New Migration
-
-1. Create `src-tauri/migrations/NNN_description.sql` with the SQL statements
-2. Append a `Migration` struct to the `vec![]` in `lib.rs`:
-   ```rust
-   tauri_plugin_sql::Migration {
-       version: N,
-       description: "short description",
-       sql: include_str!("../migrations/NNN_description.sql"),
-       kind: tauri_plugin_sql::MigrationKind::Up,
-   },
-   ```
-3. Update `CURRENT_DB_SCHEMA_VERSION` in `src/shared/constants.ts`
-4. If the migration adds/renames columns used by the frontend, update `HistoryRecord` in `src/shared/types.ts`
-5. Update relevant SQL queries in `src/stores/history.ts`
-6. Add a regression test that fresh installs persist the current DB schema version and do not show a false DB upgrade toast on second launch
-7. Run `cargo check` to verify the Rust compiles
-
-### Rules
-
-- Migrations **must be additive** — never DROP columns that old code may still reference
-- Use `ALTER TABLE ... ADD COLUMN` with defaults for backward compatibility
-- Use `COALESCE` in queries to handle NULL values from old rows gracefully
-- Test with both a fresh DB AND an existing DB to verify both paths work
-- Never leave `DEFAULT_APP_CONFIG.dbSchemaVersion` behind the latest registered migration; first saved config on a fresh install must be stamped with the current DB schema version
-
-### Toast Differentiation
-
-Both migration systems show upgrade toasts on the UI, but with distinct messages:
-
-| System      | i18n Key                | Example (en-US)                       | Toast Type        |
-| ----------- | ----------------------- | ------------------------------------- | ----------------- |
-| Config (C′) | `app.migration-success` | "User settings schema upgraded to v2" | `success` (green) |
-| DB (C″)     | `app.db-upgraded`       | "Database schema upgraded to v2"      | `info` (blue)     |
-
-### Windows Installer Hooks (not a migration system)
-
-`src-tauri/nsis/hooks.nsh` contains one-off compatibility shims for the `currentUser` → `both` install mode transition (v3.6.1 → v3.6.2). These are NSIS-level registry fixups that run during installation, not at app launch. They are **not** a versioned migration system — once all users have upgraded past v3.6.2, the shims become safe no-ops.
-
-The hooks file defines three injection points:
-
-| Hook                           | Timing                                     | Purpose                                                                                                                                                    |
-| ------------------------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `MUI_CUSTOMFUNCTION_GUIINIT`   | Before any installer pages                 | Bridges old `MANUPRODUCTKEY` registry path (`Software\motrix\…`) to new (`Software\AnInsomniacy\…`) so `PageLeaveReinstall` can locate the old uninstaller |
-| `!macro NSIS_HOOK_PREINSTALL`  | Inside `Section Install`, before file copy | Redirects `$INSTDIR`/`$OUTDIR` to old install location, deletes stale HKCU uninstall entry, cleans orphaned registry keys and Program Files residuals      |
-| `!macro NSIS_HOOK_POSTINSTALL` | After file copy                            | Refreshes Windows icon cache via `ie4uinit.exe`                                                                                                            |
-
-> [!CAUTION]
-> **Do NOT change `bundle.publisher`, `bundle.identifier`, or `productName` after the first public release.** These values derive the NSIS `MANUFACTURER` variable and `MANUPRODUCTKEY` registry path (`Software\{MANUFACTURER}\{PRODUCTNAME}`). Changing them breaks the Windows upgrade path for all existing users and requires a new NSIS compatibility shim in `hooks.nsh`. The v3.6.2 transition required four separate fixups (issue #159) — avoid repeating this.
+- Define tables in `database/schema.sql` and keep `SCHEMA_VERSION` in Rust.
+- Use native transactions when several queries form one operation.
+- Opening supported existing data must preserve it; unsupported schemas fail explicitly.
+- Initialization failure never deletes data. Only explicit reset closes the owner and removes files.
+- Test real SQLite behavior for schema, paging, persistence and receipts. Do not mock SQL strings.
+- There is no frontend SQL plugin, migration directory or dual-connection reset path.
+- `services/tasks/` owns task policy; `aria2/rpc.rs` remains a transport.
 
 ---
 

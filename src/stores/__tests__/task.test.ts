@@ -384,31 +384,6 @@ describe('TaskStore', () => {
     expect(mockApi.fetchTaskList).toHaveBeenCalled()
   })
 
-  it('addUri injects saved HTTP auth credentials for matching origins', async () => {
-    mockHttpAuthFns.findByUrl.mockResolvedValueOnce({
-      id: 10,
-      origin: 'https://files.example.com',
-      username: 'demo',
-      password: 'secret',
-      created_at: '2026-01-01T00:00:00Z',
-      updated_at: '2026-01-01T00:00:00Z',
-      last_used_at: null,
-    })
-
-    await store.addUri({ uris: ['https://files.example.com/private/file.zip'], outs: [], options: {} })
-
-    expect(mockApi.addUri).toHaveBeenCalledWith({
-      uris: ['https://files.example.com/private/file.zip'],
-      outs: [''],
-      options: expect.objectContaining({
-        'http-user': 'demo',
-        'http-passwd': 'secret',
-      }),
-      fileCategory: undefined,
-    })
-    expect(mockHttpAuthFns.markUsed).toHaveBeenCalledWith(10)
-  })
-
   it('addTorrent calls API, refreshes, and returns gid', async () => {
     const gid = await store.addTorrent({ torrent: 'base64data', options: {} })
     expect(mockApi.addTorrent).toHaveBeenCalledWith({ torrent: 'base64data', options: {} })

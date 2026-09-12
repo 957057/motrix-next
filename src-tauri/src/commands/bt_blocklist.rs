@@ -1,5 +1,5 @@
-use crate::aria2::client::{Aria2Client, Aria2State};
 use crate::error::AppError;
+use crate::services::tasks::{TaskService, TaskServiceState};
 use ipnet::IpNet;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -309,7 +309,7 @@ async fn download_blocklist(url: &str, proxy: Option<String>) -> Result<String, 
         .map_err(|e| AppError::Io(format!("BT peer blocklist is not valid UTF-8: {e}")))
 }
 
-async fn set_engine_blocklist(aria2: &Aria2Client, path: Option<&Path>) -> Result<(), AppError> {
+async fn set_engine_blocklist(aria2: &TaskService, path: Option<&Path>) -> Result<(), AppError> {
     let value = path.map_or_else(String::new, crate::engine::path_to_safe_string);
     let mut options = serde_json::Map::new();
     options.insert(
@@ -347,7 +347,7 @@ fn update_is_due(status: &BtPeerBlocklistStatus, config: &BtPeerBlocklistConfig)
 
 async fn update_cache(
     app: &AppHandle,
-    aria2: &Aria2Client,
+    aria2: &TaskService,
     config: &BtPeerBlocklistConfig,
 ) -> Result<BtPeerBlocklistStatus, AppError> {
     let source = config.url.trim();
@@ -363,7 +363,7 @@ async fn update_cache(
 
 pub(crate) async fn reconcile(
     app: &AppHandle,
-    aria2: &Aria2Client,
+    aria2: &TaskService,
     force_update: bool,
 ) -> Result<BtPeerBlocklistStatus, AppError> {
     let state = app.state::<BtPeerBlocklistUpdateState>();
@@ -421,7 +421,7 @@ pub async fn get_bt_peer_blocklist_status(
 #[tauri::command]
 pub async fn sync_bt_peer_blocklist(
     app: AppHandle,
-    aria2: State<'_, Aria2State>,
+    aria2: State<'_, TaskServiceState>,
 ) -> Result<BtPeerBlocklistStatus, AppError> {
     reconcile(&app, &aria2.0, true).await
 }
@@ -429,7 +429,7 @@ pub async fn sync_bt_peer_blocklist(
 #[tauri::command]
 pub async fn reconcile_bt_peer_blocklist(
     app: AppHandle,
-    aria2: State<'_, Aria2State>,
+    aria2: State<'_, TaskServiceState>,
 ) -> Result<BtPeerBlocklistStatus, AppError> {
     reconcile(&app, &aria2.0, false).await
 }

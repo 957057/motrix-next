@@ -51,6 +51,9 @@ Re-downloading a completed presentation creates a new task. Native automatic
 file renaming protects existing output and persists the chosen destination for
 restart. The application never copies or edits the engine's media SQLite records.
 
+For filename ownership, ordinary submissions and native database boundaries, see
+[Download ownership and handoff](DOWNLOADS.md).
+
 ## Integration boundaries
 
 - `Aria2Task.media` passes through Rust, frontend snapshots and history metadata.
@@ -96,7 +99,8 @@ and provides selection beside status, without repeating protocol or diagnostics.
 
 ## Browser media API
 
-The desktop implements the extension's `/media/v1` inspection contract in Rust.
+The desktop provides the `/media/v1` inspection contract in Rust; the extension
+consumes and validates it independently.
 The endpoints are authenticated with the Extension API secret; media requests
 require a nonempty secret and an extension origin (or an authenticated native
 client with no Origin header). Browser-page origins cannot use these endpoints.
@@ -138,7 +142,7 @@ contract's terminal error codes. No legacy media endpoints or raw RPC proxy exis
 - `media/probe.rs` owns native inspection and capability negotiation.
 - `media/native.rs` owns confirmation and retry transitions for the desktop UI,
   automatic selection and browser submissions.
-- `media/task_policy.rs` owns probe visibility and automatic-selection admission.
+- `services/tasks/policy.rs` owns probe visibility and automatic-selection admission.
 - `media/runtime.rs` binds the service to Tauri and publishes confirmed events.
 - `media/journal.rs` persists operation identities and receipts using SQLite.
 

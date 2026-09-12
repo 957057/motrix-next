@@ -192,10 +192,6 @@ export const MAX_FILE_CATEGORIES = 20
  *  on categories loaded from persisted config (which may lack the field). */
 export const BUILTIN_CATEGORY_LABELS: ReadonlySet<string> = new Set(BUILTIN_CATEGORY_TEMPLATES.map((t) => t.label))
 
-/** Latest registered SQLite migration version for history.db.
- *  Keep this in sync with tauri_plugin_sql migrations in src-tauri/src/lib.rs. */
-export const CURRENT_DB_SCHEMA_VERSION = 3
-
 /** Official, independently hosted tracker-list sources. */
 export const TRACKER_SOURCE_OPTIONS = [
   {
@@ -214,7 +210,7 @@ export const DEFAULT_TRACKER_SOURCE = TRACKER_SOURCE_OPTIONS.map((source) => sou
 
 export const DEFAULT_APP_CONFIG = {
   configVersion: 7,
-  dbSchemaVersion: CURRENT_DB_SCHEMA_VERSION,
+  dbSchemaVersion: 0, // Last schema version observed by the UI; Rust owns the schema.
   // ── Appearance ──────────────────────────────────────────────────
   theme: 'auto' as const,
   colorScheme: 'amber',

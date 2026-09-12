@@ -83,9 +83,13 @@ impl MediaService {
             "media-request-contexts": serde_json::to_string(&source.request_contexts.iter()
                 .map(|context| json!({"url":context.url,"headers":context.headers}))
                 .collect::<Vec<_>>()).map_err(|_| Error::UnsupportedSource)?});
-        if let Some(name) = source.output_name(record.format) {
-            options["out"] = name.into();
+        options["filename-hint"] = source.filename_hint().into();
+        options["filename-hint-source"] = if source.title.trim().is_empty() {
+            "suggested"
+        } else {
+            "title"
         }
+        .into();
         self.engine
             .add_uri(vec![source.url.clone()], options)
             .await

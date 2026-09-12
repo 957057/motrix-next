@@ -1,5 +1,5 @@
 //! Apply creation preferences to new tasks; restored tasks never auto-resume.
-use crate::aria2::{client::Aria2Client, types::Aria2Task};
+use crate::{aria2::types::Aria2Task, services::tasks::TaskService};
 use std::{sync::Arc, time::Duration};
 use tauri::Emitter;
 
@@ -11,7 +11,7 @@ fn should_continue(task: &Aria2Task) -> bool {
             .is_some_and(|media| media.state == "awaiting-selection" && media.live == "false")
 }
 
-pub fn start_automatic_selection(app: tauri::AppHandle, engine: Arc<Aria2Client>) {
+pub fn start_automatic_selection(app: tauri::AppHandle, engine: Arc<TaskService>) {
     if !engine.tasks.begin_automatic_worker() {
         return;
     }

@@ -1,157 +1,54 @@
-//! Native JSON-RPC transport and application task queries.
-//! Media admission and visibility are owned by the media policy component.
-
-use crate::aria2::types::*;
-use crate::error::AppError;
+//! Application task queries, admission and native controls.
+mod policy;
+use crate::{
+    aria2::{rpc::RpcClient, types::*},
+    error::AppError,
+};
+use policy::TaskPolicy;
 use serde::{de::DeserializeOwned, Serialize};
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
-use std::time::Instant;
-use tokio::sync::RwLock;
+use std::sync::{
+    atomic::{AtomicU64, Ordering},
+    Arc,
+};
 
-/// Aria2 JSON-RPC HTTP client.  Thread-safe via interior mutability.
-///
-/// Port and secret are protected by `RwLock` so they can be updated
-/// after engine restart without reconstructing the client.
-pub struct Aria2Client {
-    http: reqwest::Client,
-    port: RwLock<u16>,
-    secret: RwLock<String>,
-    request_id: AtomicU64,
-    pub tasks: crate::services::media::TaskPolicy,
+pub struct TaskService {
+    rpc: RpcClient,
+    pub tasks: TaskPolicy,
     generation: AtomicU64,
 }
-
-/// Tauri managed state wrapper.
-pub struct Aria2State(pub Arc<Aria2Client>);
-
+pub struct TaskServiceState(pub Arc<TaskService>);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ResumeEligibleResult {
     pub resumed: usize,
     pub blocked: usize,
 }
-
-impl Aria2Client {
-    /// Creates a new client with default credentials.
-    ///
-    /// The `reqwest::Client` is reused across all requests for connection
-    /// pooling.  Credentials can be updated later via `update_credentials`.
+impl TaskService {
     pub fn new(port: u16, secret: String) -> Self {
-        let http = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(10))
-            .no_proxy()
-            .build()
-            .expect("local aria2 RPC client");
         Self {
-            http,
-            port: RwLock::new(port),
-            secret: RwLock::new(secret),
-            request_id: AtomicU64::new(1),
-            tasks: crate::services::media::TaskPolicy::default(),
+            rpc: RpcClient::new(port, secret),
+            tasks: TaskPolicy::default(),
             generation: AtomicU64::new(0),
         }
     }
-
     pub fn generation(&self) -> u64 {
         self.generation.load(Ordering::Relaxed)
     }
-    /// Updates connection credentials after engine restart.
     pub async fn update_credentials(&self, port: u16, secret: String) {
         self.generation.fetch_add(1, Ordering::Relaxed);
         self.tasks.clear_automatic().await;
-        *self.port.write().await = port;
-        *self.secret.write().await = secret;
-        log::debug!("aria2 client credentials updated: port={}", port);
+        self.rpc.update_credentials(port, secret).await;
     }
-
-    /// Returns the current local RPC port and secret for companion transports.
     pub async fn credentials(&self) -> (u16, String) {
-        let port = *self.port.read().await;
-        let secret = self.secret.read().await.clone();
-        (port, secret)
+        self.rpc.credentials().await
     }
-
-    /// Builds the JSON-RPC params array with token prepended if secret is set.
-    async fn build_params(&self, extra: Vec<serde_json::Value>) -> Vec<serde_json::Value> {
-        let secret = self.secret.read().await;
-        if secret.is_empty() {
-            extra
-        } else {
-            let mut params = vec![serde_json::Value::String(format!("token:{}", *secret))];
-            params.extend(extra);
-            params
-        }
-    }
-
-    /// Generic JSON-RPC call.  Handles request construction, token injection,
-    /// HTTP transport, and response parsing.
-    async fn call_rpc<T: DeserializeOwned>(
-        &self,
-        method: &str,
-        extra_params: Vec<serde_json::Value>,
-    ) -> Result<T, AppError> {
-        let port = *self.port.read().await;
-        let params = self.build_params(extra_params).await;
-        let id = self.request_id.fetch_add(1, Ordering::Relaxed);
-
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0",
-            id: id.to_string(),
-            method: method.to_string(),
-            params,
-        };
-
-        let started = Instant::now();
-        let result =
-            async {
-                let url = format!("http://127.0.0.1:{port}/jsonrpc");
-                let resp: reqwest::Response =
-                    self.http.post(&url).json(&req).send().await.map_err(|e| {
-                        AppError::Aria2(format!("HTTP request to aria2 failed: {e}"))
-                    })?;
-
-                let bytes = resp
-                    .bytes()
-                    .await
-                    .map_err(|e| AppError::Aria2(format!("Failed to read aria2 response: {e}")))?;
-                let body: JsonRpcResponse<T> = parse_jsonrpc_response(&bytes, "aria2")?;
-
-                if let Some(err) = body.error {
-                    if let Some(kind @ ("invalidBase64" | "torrentTooLarge" | "invalidTorrent")) =
-                        err.data
-                            .as_ref()
-                            .and_then(|data| data.get("kind"))
-                            .and_then(serde_json::Value::as_str)
-                    {
-                        return Err(AppError::TorrentInspection {
-                            kind: kind.to_string(),
-                            message: err.message,
-                        });
-                    }
-                    return Err(AppError::Aria2(format!(
-                        "aria2 RPC error [{}]: {}",
-                        err.code, err.message
-                    )));
-                }
-
-                body.result
-                    .ok_or_else(|| AppError::Aria2("aria2 returned null result".into()))
-            }
-            .await;
-        record_rpc_result(method, id, started, &result);
-        result
-    }
-
     async fn call<T: DeserializeOwned>(
         &self,
         method: &str,
-        extra_params: Vec<serde_json::Value>,
+        params: Vec<serde_json::Value>,
     ) -> Result<T, AppError> {
-        self.call_rpc(&format!("aria2.{method}"), extra_params)
-            .await
+        self.rpc.call(&format!("aria2.{method}"), params).await
     }
-
     // ── Public API ──────────────────────────────────────────────────
 
     pub async fn finish_media(&self, gid: &str) -> Result<String, AppError> {
@@ -213,7 +110,7 @@ impl Aria2Client {
             .await)
     }
 
-    pub async fn tell_internal_tasks(&self) -> Result<Vec<Aria2Task>, AppError> {
+    pub async fn hidden_tasks(&self) -> Result<Vec<Aria2Task>, AppError> {
         let gids = self.tasks.internal_ids().await;
         if gids.is_empty() {
             return Ok(Vec::new());
@@ -480,7 +377,7 @@ impl Aria2Client {
     }
 
     pub async fn list_methods(&self) -> Result<Vec<String>, AppError> {
-        self.call_rpc("system.listMethods", vec![]).await
+        self.rpc.call("system.listMethods", vec![]).await
     }
 
     /// Returns peer information for a BitTorrent task.
@@ -597,117 +494,17 @@ impl Aria2Client {
         &self,
         calls: Vec<(String, Vec<serde_json::Value>)>,
     ) -> Result<Vec<serde_json::Value>, AppError> {
-        let secret = self.secret.read().await;
-        let methods: Vec<serde_json::Value> = calls
+        let calls: Vec<_> = calls
             .into_iter()
-            .map(|(method, extra)| {
-                let mut params = Vec::new();
-                if !secret.is_empty() {
-                    params.push(serde_json::Value::String(format!("token:{}", *secret)));
-                }
-                params.extend(extra);
+            .map(|(method, params)| {
                 serde_json::json!({
-                    "methodName": format!("aria2.{method}"),
-                    "params": params,
+                    "methodName": format!("aria2.{method}"), "params": params,
                 })
             })
             .collect();
-
-        let port = *self.port.read().await;
-        let id = self.request_id.fetch_add(1, Ordering::Relaxed);
-        let req = JsonRpcRequest {
-            jsonrpc: "2.0",
-            id: id.to_string(),
-            method: "system.multicall".to_string(),
-            params: vec![serde_json::Value::Array(methods)],
-        };
-
-        let started = Instant::now();
-        let result =
-            async {
-                let url = format!("http://127.0.0.1:{port}/jsonrpc");
-                let resp =
-                    self.http.post(&url).json(&req).send().await.map_err(|e| {
-                        AppError::Aria2(format!("HTTP request to aria2 failed: {e}"))
-                    })?;
-
-                let bytes = resp.bytes().await.map_err(|e| {
-                    AppError::Aria2(format!("Failed to read multicall response: {e}"))
-                })?;
-                let body: JsonRpcResponse<Vec<serde_json::Value>> =
-                    parse_jsonrpc_response(&bytes, "multicall")?;
-
-                if let Some(err) = body.error {
-                    return Err(AppError::Aria2(format!(
-                        "aria2 multicall error [{}]: {}",
-                        err.code, err.message
-                    )));
-                }
-
-                body.result
-                    .ok_or_else(|| AppError::Aria2("aria2 multicall returned null result".into()))
-            }
-            .await;
-        record_rpc_result("system.multicall", id, started, &result);
-        result
+        self.rpc.call("system.multicall", vec![calls.into()]).await
     }
 }
-
-fn is_polling_method(method: &str) -> bool {
-    matches!(
-        method,
-        "aria2.getVersion"
-            | "aria2.getGlobalStat"
-            | "aria2.tellActive"
-            | "aria2.tellWaiting"
-            | "aria2.tellStopped"
-            | "aria2.tellStatus"
-            | "aria2.getPeers"
-            | "aria2.getFiles"
-    )
-}
-
-fn record_rpc_result<T>(method: &str, id: u64, started: Instant, result: &Result<T, AppError>) {
-    let duration_ms = started.elapsed().as_millis() as u64;
-    match result {
-        Err(error) if is_polling_method(method) => log::debug!(
-            target: "aria2_rpc",
-            event = "rpc_unavailable",
-            rpc_id = id,
-            method,
-            duration_ms,
-            error:% = error;
-            "rpc_unavailable"
-        ),
-        Err(error) => log::error!(
-            target: "aria2_rpc",
-            event = "rpc_failed",
-            rpc_id = id,
-            method,
-            duration_ms,
-            error:% = error;
-            "rpc_failed"
-        ),
-        Ok(_) if duration_ms >= 1_000 => log::warn!(
-            target: "aria2_rpc",
-            event = "rpc_slow",
-            rpc_id = id,
-            method,
-            duration_ms;
-            "rpc_slow"
-        ),
-        Ok(_) if !is_polling_method(method) => log::debug!(
-            target: "aria2_rpc",
-            event = "rpc_completed",
-            rpc_id = id,
-            method,
-            duration_ms;
-            "rpc_completed"
-        ),
-        Ok(_) => {}
-    }
-}
-
 fn validate_multicall_results(
     operation: &str,
     gids: &[String],
@@ -737,169 +534,9 @@ fn validate_multicall_results(
     Ok(())
 }
 
-fn parse_jsonrpc_response<T: DeserializeOwned>(
-    bytes: &[u8],
-    context: &str,
-) -> Result<JsonRpcResponse<T>, AppError> {
-    let body = String::from_utf8_lossy(bytes);
-    serde_json::from_str::<JsonRpcResponse<T>>(&body)
-        .map_err(|e| AppError::Aria2(format!("Failed to parse {context} response: {e}")))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    // ── Token parameter construction ────────────────────────────────
-
-    #[tokio::test]
-    async fn build_params_prepends_token_when_secret_is_set() {
-        let client = Aria2Client::new(29100, "mysecret".to_string());
-        let params = client.build_params(vec![serde_json::json!("arg1")]).await;
-
-        assert_eq!(params.len(), 2);
-        assert_eq!(params[0], serde_json::json!("token:mysecret"));
-        assert_eq!(params[1], serde_json::json!("arg1"));
-    }
-
-    #[tokio::test]
-    async fn build_params_omits_token_when_secret_is_empty() {
-        let client = Aria2Client::new(29100, String::new());
-        let params = client.build_params(vec![serde_json::json!("arg1")]).await;
-
-        assert_eq!(params.len(), 1);
-        assert_eq!(params[0], serde_json::json!("arg1"));
-    }
-
-    #[tokio::test]
-    async fn build_params_empty_extra_with_secret() {
-        let client = Aria2Client::new(29100, "sec".to_string());
-        let params = client.build_params(vec![]).await;
-
-        assert_eq!(params.len(), 1);
-        assert_eq!(params[0], serde_json::json!("token:sec"));
-    }
-
-    #[tokio::test]
-    async fn build_params_empty_extra_without_secret() {
-        let client = Aria2Client::new(29100, String::new());
-        let params = client.build_params(vec![]).await;
-
-        assert!(params.is_empty());
-    }
-
-    #[test]
-    fn parse_jsonrpc_response_tolerates_invalid_utf8_in_string_values() {
-        let bytes =
-            b"{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"result\":{\"results\":[{\"name\":\"bad-\xFF-name\"}]}}";
-        let response: JsonRpcResponse<serde_json::Value> =
-            parse_jsonrpc_response(bytes, "aria2").expect("invalid UTF-8 should be replaced");
-        let result = response.result.expect("result must exist");
-        let name = result["results"][0]["name"]
-            .as_str()
-            .expect("name must stay readable");
-
-        assert_eq!(name, "bad-\u{FFFD}-name");
-    }
-
-    // ── Credential update ───────────────────────────────────────────
-
-    #[tokio::test]
-    async fn update_credentials_changes_port_and_secret() {
-        let client = Aria2Client::new(29100, "old".to_string());
-        assert_eq!(*client.port.read().await, 29100);
-        assert_eq!(*client.secret.read().await, "old");
-
-        client
-            .update_credentials(29120, "new_secret".to_string())
-            .await;
-
-        assert_eq!(*client.port.read().await, 29120);
-        assert_eq!(*client.secret.read().await, "new_secret");
-    }
-
-    // ── Request ID monotonicity ─────────────────────────────────────
-
-    #[test]
-    fn request_id_increments_monotonically() {
-        let client = Aria2Client::new(29100, String::new());
-        let id1 = client.request_id.fetch_add(1, Ordering::Relaxed);
-        let id2 = client.request_id.fetch_add(1, Ordering::Relaxed);
-        let id3 = client.request_id.fetch_add(1, Ordering::Relaxed);
-
-        assert_eq!(id1, 1);
-        assert_eq!(id2, 2);
-        assert_eq!(id3, 3);
-    }
-
-    // ── Aria2State wrapping ─────────────────────────────────────────
-
-    #[test]
-    fn aria2_state_wraps_client_in_arc() {
-        let client = Aria2Client::new(29100, "test".to_string());
-        let state = Aria2State(Arc::new(client));
-        // Arc clone produces a second strong reference
-        let _clone = state.0.clone();
-        assert_eq!(Arc::strong_count(&state.0), 2);
-    }
-
-    // ── call() error handling (network failure) ─────────────────────
-
-    #[tokio::test]
-    async fn call_returns_aria2_error_on_connection_refused() {
-        // Use a port where nothing is listening
-        let client = Aria2Client::new(19999, String::new());
-        let result = client.save_session().await;
-
-        assert!(result.is_err());
-        let err = result.unwrap_err();
-        assert!(
-            matches!(err, AppError::Aria2(_)),
-            "expected Aria2 variant, got: {err:?}"
-        );
-        assert!(
-            err.to_string().contains("HTTP request to aria2 failed"),
-            "unexpected message: {}",
-            err
-        );
-    }
-
-    // ── Token format contract ───────────────────────────────────────
-
-    #[tokio::test]
-    async fn token_format_matches_aria2_protocol() {
-        // aria2 expects exactly "token:{secret}" as the first param
-        let client = Aria2Client::new(29100, "s3cret!@#$".to_string());
-        let params = client.build_params(vec![]).await;
-
-        let token = params[0].as_str().expect("token must be a string");
-        assert!(
-            token.starts_with("token:"),
-            "token must start with 'token:'"
-        );
-        assert_eq!(token, "token:s3cret!@#$");
-    }
-
-    // ── Multiple extra params preserved in order ────────────────────
-
-    #[tokio::test]
-    async fn build_params_preserves_multiple_extra_params_order() {
-        let client = Aria2Client::new(29100, "sec".to_string());
-        let params = client
-            .build_params(vec![
-                serde_json::json!("first"),
-                serde_json::json!(42),
-                serde_json::json!({"key": "val"}),
-            ])
-            .await;
-
-        assert_eq!(params.len(), 4);
-        assert_eq!(params[0], serde_json::json!("token:sec"));
-        assert_eq!(params[1], serde_json::json!("first"));
-        assert_eq!(params[2], serde_json::json!(42));
-        assert_eq!(params[3], serde_json::json!({"key": "val"}));
-    }
-
     #[test]
     fn multicall_validation_accepts_one_result_per_gid() {
         let gids = vec!["a".to_string(), "b".to_string()];

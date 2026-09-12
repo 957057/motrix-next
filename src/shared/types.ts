@@ -597,6 +597,9 @@ export interface BrowserRequestHeader {
 }
 
 export interface ExternalDownloadContext {
+  requestId?: string
+  filename?: string
+  filenameSource?: 'browser' | 'suggested'
   url?: string
   finalUrl?: string
   referer?: string
@@ -632,6 +635,7 @@ export interface HttpAuthInput {
 
 /** Parameters for adding a URI-based download task. */
 export interface AddUriParams {
+  contexts?: Record<string, ExternalDownloadContext>
   uris: string[]
   outs: string[]
   options: Aria2EngineOptions
@@ -641,6 +645,7 @@ export interface AddUriParams {
 
 /** Parameters for adding a torrent-based download task. */
 export interface AddTorrentParams {
+  requestId?: string
   torrent: string
   options: Aria2EngineOptions
 }

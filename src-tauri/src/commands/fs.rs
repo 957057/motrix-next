@@ -132,7 +132,7 @@ pub async fn export_diagnostic_logs(app: AppHandle, save_path: String) -> Result
     };
     log::logger().flush();
     if let (Some(state), Some(level)) = (
-        app.try_state::<crate::aria2::client::Aria2State>(),
+        app.try_state::<crate::services::tasks::TaskServiceState>(),
         raw_config
             .as_ref()
             .and_then(|value| value.get("preferences"))

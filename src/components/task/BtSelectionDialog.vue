@@ -6,7 +6,7 @@ import { NModal, NCard, NSpace, NButton, NAlert, NSpin } from 'naive-ui'
 import { useTaskStore } from '@/stores/task'
 import { useBtSelection } from '@/composables/useBtSelection'
 import { isPendingMagnetSelectionTask, parseFilesForSelection } from '@/composables/useMagnetFlow'
-import { getTaskDisplayName } from '@shared/utils/task'
+import { getTaskName } from '@shared/utils/task'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { logger } from '@shared/logger'
 import type { Aria2Task, BtFileSelectionItem } from '@shared/types'
@@ -24,7 +24,7 @@ const loading = ref(false)
 const submitting = ref(false)
 const ready = ref(false)
 const error = ref('')
-const name = computed(() => (task.value ? getTaskDisplayName(task.value) : ''))
+const name = computed(() => (task.value ? getTaskName(task.value) : ''))
 let generation = 0
 async function load(gid: string) {
   const request = ++generation

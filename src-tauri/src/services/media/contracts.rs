@@ -39,12 +39,6 @@ impl Format {
             _ => Err(Error::UnsupportedSelection),
         }
     }
-    pub fn extension(self) -> &'static str {
-        match self {
-            Self::Mp4 => "mp4",
-            Self::Mkv => "mkv",
-        }
-    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -131,24 +125,12 @@ fn http_url(value: &str) -> Result<Url, Error> {
 }
 
 impl Source {
-    pub fn output_name(&self, format: Format) -> Option<String> {
-        let hint = if self.title.trim().is_empty() {
-            std::path::Path::new(&self.filename).file_stem()?.to_str()?
+    pub fn filename_hint(&self) -> &str {
+        if self.title.trim().is_empty() {
+            &self.filename
         } else {
             self.title.trim()
-        };
-        let mut name = sanitize_filename::sanitize_with_options(
-            hint,
-            sanitize_filename::Options {
-                windows: true,
-                truncate: true,
-                replacement: "_",
-            },
-        );
-        while name.len() > 251 {
-            name.pop();
         }
-        (!name.is_empty()).then(|| format!("{name}.{}", format.extension()))
     }
 
     pub fn validate(&self) -> Result<(), Error> {

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import { invoke } from '@tauri-apps/api/core'
 import { STAT_BASE_INTERVAL, STAT_MAX_INTERVAL, STAT_MIN_INTERVAL } from '@shared/timing'
 
 // ── Mocks ───────────────────────────────────────────────────────────
@@ -98,6 +99,18 @@ describe('useAppStore', () => {
     expect(store.addTaskVisible).toBe(false)
     store.enqueueBatch([createBatchItem('uri', 'https://example.com/file')])
     expect(store.addTaskVisible).toBe(true)
+  })
+
+  it('deduplicates replayed confirmations and cancels only distinct duplicate intents', async () => {
+    const store = useAppStore()
+    const input = { url: 'https://example.com/file.zip', requestId: 'first' }
+    await store.handleExternalInputs([input])
+    vi.mocked(invoke).mockClear()
+    await store.handleExternalInputs([input, { ...input, requestId: 'second' }])
+    expect(store.pendingBatch).toHaveLength(1)
+    expect(store.pendingBatch[0].browserContext?.requestId).toBe('first')
+    expect(invoke).toHaveBeenCalledTimes(1)
+    expect(invoke).toHaveBeenCalledWith('cancel_download_request', { id: 'second' })
   })
 
   // ── Interval Management ─────────────────────────────────────────
@@ -523,14 +536,14 @@ describe('useAppStore', () => {
       expect(store.pendingFilename).toBe('ghost-sample-v0.1.xmgic')
     })
 
-    it('ignores generic browser fallback filename from extension deep link', () => {
+    it('keeps a suggested name without promoting it to an explicit output name', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://mail-attachment.googleusercontent.com/attachment/u/0/')
       store.handleDeepLinkUrls([`motrixnext://new?url=${url}&filename=download`])
 
       expect(store.pendingBatch).toHaveLength(1)
-      expect(store.pendingFilename).toBe('')
-      expect(store.pendingBatch[0].displayName).not.toBe('download')
+      expect(store.pendingFilename).toBe('download')
+      expect(store.pendingBatch[0].browserContext?.filename).toBe('download')
     })
   })
 
@@ -702,7 +715,7 @@ describe('useAppStore', () => {
       prefStore.config.autoSubmitFromExtension = true
       prefStore.config.userAgent = 'ConfiguredUA/1.0'
 
-      store.handleExternalInputs([
+      await store.handleExternalInputs([
         {
           url: 'https://drivers.amd.com/file.exe',
           finalUrl: 'https://drivers.amd.com/file.exe',
@@ -730,7 +743,7 @@ describe('useAppStore', () => {
       prefStore.config.autoSubmitFromExtension = true
       prefStore.config.userAgent = 'ConfiguredUA/1.0'
 
-      store.handleExternalInputs([
+      await store.handleExternalInputs([
         {
           url: 'https://example.com/file.zip',
           source: 'http-api',
@@ -748,7 +761,7 @@ describe('useAppStore', () => {
       const prefStore = usePreferenceStore()
       prefStore.config.autoSubmitFromExtension = false
 
-      store.handleExternalInputs([
+      await store.handleExternalInputs([
         {
           url: 'https://example.com/file.zip',
           userAgent: 'BrowserUA/1.0',

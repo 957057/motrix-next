@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { invoke } from '@tauri-apps/api/core'
 /** @fileoverview Add task dialog: dual-tab layout (URI / Torrent) with AutoAnimate list transitions. */
 import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -131,7 +132,7 @@ function syncDefaultTaskProxy() {
 function syncPendingExternalMetadata() {
   form.value.referer = appStore.pendingReferer
   form.value.cookie = appStore.pendingCookie
-  form.value.out = appStore.pendingFilename
+  form.value.out = ''
   form.value.userAgent = appStore.pendingUserAgent
   form.value.requestHeaders = appStore.pendingRequestHeaders
   applyResolvedUserAgent()
@@ -545,14 +546,33 @@ function selectUserAgentProfile(profile: UserAgentProfile) {
   preferenceStore.recordRecentUserAgentProfile(profile.id)
 }
 
-function removeBatchItem(item: BatchItem) {
+async function removeBatchItem(item: BatchItem) {
+  if (submitting.value) return
+  try {
+    if (item.browserContext?.requestId) await invoke('cancel_download_request', { id: item.browserContext.requestId })
+  } catch (error) {
+    message.error(getErrorMessage(error))
+    return
+  }
   appStore.pendingBatch = batch.value.filter((i) => i !== item)
   selectedBatchIndex.value = Math.min(selectedBatchIndex.value, Math.max(0, fileItems.value.length - 1))
 }
 
 // ── Submit ───────────────────────────────────────────────────────────
 
-function handleClose() {
+async function handleClose(userDismiss = true) {
+  if (submitting.value && userDismiss) return
+  {
+    const ids = new Set(
+      batch.value.flatMap((item) => (item.browserContext?.requestId ? [item.browserContext.requestId] : [])),
+    )
+    try {
+      await Promise.all([...ids].map((id) => invoke('cancel_download_request', { id })))
+    } catch (error) {
+      message.error(getErrorMessage(error))
+      return
+    }
+  }
   emit('close')
   Object.assign(form.value, {
     uris: '',
@@ -610,12 +630,7 @@ async function handleSubmit() {
       await submitBatchItems(batch.value, options, taskStore, fileCategory)
     }
     if (form.value.uris.trim()) {
-      manualResult = await submitManualUris(
-        effectiveForm,
-        taskStore,
-        fileCategory,
-        getDownloadProxy(preferenceStore.config.proxy),
-      )
+      manualResult = await submitManualUris(effectiveForm, taskStore, fileCategory)
     }
 
     const failedCount = batch.value.filter((i) => i.status === 'failed').length + manualResult.magnetFailures.length
@@ -653,7 +668,7 @@ async function handleSubmit() {
         }
       }
 
-      handleClose()
+      await handleClose(false)
 
       // ── Record directory for the recent-folders popover ────────
       const effectiveDir = form.value.dir.trim() || preferenceStore.config.dir
@@ -695,7 +710,7 @@ async function handleSubmit() {
   <NModal
     :show="props.show"
     :mask-closable="false"
-    :close-on-esc="true"
+    :close-on-esc="!submitting"
     :auto-focus="false"
     transform-origin="center"
     @after-leave="emit('afterLeave')"
@@ -720,7 +735,7 @@ async function handleSubmit() {
       }"
       :content-style="{ flex: '1', minHeight: '0', overflowY: 'auto', overflowX: 'hidden' }"
       :segmented="{ footer: true }"
-      @close="handleClose"
+      @close="() => handleClose()"
     >
       <NForm label-placement="left" label-width="110px">
         <NTabs ref="tabsRef" :value="activeTab" type="line" animated @update:value="activateTab">
@@ -879,7 +894,7 @@ async function handleSubmit() {
       </NForm>
       <template #footer>
         <NSpace justify="end">
-          <NButton @click="handleClose">{{ t('app.cancel') }}</NButton>
+          <NButton @click="() => handleClose()">{{ t('app.cancel') }}</NButton>
           <NButton
             data-testid="submit-button"
             type="primary"

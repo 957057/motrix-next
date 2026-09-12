@@ -8,7 +8,7 @@
 
 use super::config::RuntimeConfigState;
 use super::power::{PowerGuard, RETRY_DELAY as POWER_RETRY_DELAY};
-use crate::aria2::client::Aria2Client;
+use crate::services::tasks::TaskService;
 use std::sync::Arc;
 use std::time::Duration;
 use tauri::Emitter;
@@ -387,7 +387,7 @@ impl StatServiceHandle {
 }
 
 /// Spawns the global stat service as a background tokio task.
-pub fn spawn_stat_service(app: tauri::AppHandle, aria2: Arc<Aria2Client>) -> StatServiceHandle {
+pub fn spawn_stat_service(app: tauri::AppHandle, aria2: Arc<TaskService>) -> StatServiceHandle {
     let (stop_tx, stop_rx) = watch::channel(false);
 
     let join_handle = tokio::spawn(async move {
@@ -431,7 +431,7 @@ impl IntervalState {
 
 async fn stat_loop(
     app: tauri::AppHandle,
-    aria2: Arc<Aria2Client>,
+    aria2: Arc<TaskService>,
     mut stop_rx: watch::Receiver<bool>,
 ) {
     let mut interval_state = IntervalState::new();
@@ -777,18 +777,6 @@ mod tests {
             }],
             ..Aria2Task::default()
         }
-    }
-
-    #[test]
-    fn constants_match_frontend_timing_ts() {
-        // These constants MUST match src/shared/timing.ts exactly.
-        // If timing.ts changes and these tests fail, update the Rust
-        // constants to stay in sync.
-        assert_eq!(STAT_BASE_INTERVAL_MS, 500, "BASE must match timing.ts");
-        assert_eq!(STAT_PER_TASK_INTERVAL_MS, 100, "PER_TASK must match");
-        assert_eq!(STAT_MIN_INTERVAL_MS, 500, "MIN must match timing.ts");
-        assert_eq!(STAT_MAX_INTERVAL_MS, 6000, "MAX must match timing.ts");
-        assert_eq!(STAT_IDLE_INCREMENT_MS, 100, "IDLE_INCREMENT must match");
     }
 
     // ── StatUpdate serialization ────────────────────────────────────

@@ -171,7 +171,7 @@ impl Fixture {
             .await
             .expect("journal");
         let service = Arc::new(MediaService {
-            engine: Arc::new(Aria2Client::new(port, String::new())),
+            engine: Arc::new(TaskService::new(port, String::new())),
             journal,
             submission_gate: Mutex::new(()),
             deferred_events: Mutex::new(HashMap::new()),
