@@ -1,333 +1,191 @@
 <div align="center">
-  <img src="src/assets/logo.png" alt="Motrix Next" width="128" height="128" style="border-radius: 24px;" />
-  <h1>Motrix Next</h1>
-  <p>A full-featured download manager — rebuilt from the ground up.</p>
+  <img src="docs/media/rayburst-banner.png" alt="Rayburst — From link to local, in a flash" width="1280" />
 
-[![GitHub release](https://img.shields.io/github/v/release/AnInsomniacy/motrix-next.svg)](https://github.com/AnInsomniacy/motrix-next/releases)
-![Build](https://img.shields.io/github/actions/workflow/status/AnInsomniacy/motrix-next/ci.yml?branch=main&label=Build)
-![Total Downloads](https://img.shields.io/github/downloads/AnInsomniacy/motrix-next/total.svg)
-<br>
-![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue.svg)
-![Bundle Size](https://img.shields.io/badge/bundle%20size-~20MB-brightgreen.svg)
+[![Release](https://img.shields.io/github/v/release/AnInsomniacy/motrix-next?label=release&color=7B3ED1)](https://github.com/AnInsomniacy/motrix-next/releases)
+[![GitHub downloads](https://img.shields.io/github/downloads/AnInsomniacy/motrix-next/total?label=GitHub%20downloads&color=7B3ED1)](https://github.com/AnInsomniacy/motrix-next/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/AnInsomniacy/motrix-next/ci.yml?branch=main&label=build)](https://github.com/AnInsomniacy/motrix-next/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/AnInsomniacy/motrix-next?color=7B3ED1)](LICENSE)
+![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-5F526D)
 
-[![Website](https://img.shields.io/badge/Website-E0A422?style=for-the-badge&logo=safari&logoColor=white)](https://motrix-next.pages.dev)
-[![Browser Extension](https://img.shields.io/badge/Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/AnInsomniacy/motrix-next-extension)
+**[Download](#download)** · **[Browser extension](https://github.com/AnInsomniacy/motrix-next-extension)** · **[Discussions](https://github.com/AnInsomniacy/motrix-next/discussions)** · **[Build from source](#development)**
 
 <a href="https://trendshift.io/repositories/24525">
-  <img src="https://trendshift.io/api/badge/repositories/24525" alt="AnInsomniacy/motrix-next on Trendshift" width="250" height="55" />
+  <img src="https://trendshift.io/api/badge/repositories/24525" alt="Repository activity on Trendshift" width="250" height="55" />
 </a>
 
 </div>
 
----
-
-<div align="center">
-  <table><tr>
-    <td><img src="docs/media/screenshot-light.png" alt="Light Mode" width="400" /></td>
-    <td><img src="docs/media/screenshot-dark.png" alt="Dark Mode" width="400" /></td>
-  </tr><tr>
-    <td align="center"><sub>Light Mode</sub></td>
-    <td align="center"><sub>Dark Mode</sub></td>
-  </tr></table>
-</div>
-
-## Why Motrix Next?
+**Rayburst** is a free, open-source download manager for Windows, macOS and Linux.
+Manage files, torrents and streaming media in one desktop application, with browser
+handoff through **Rayburst Connect**. Built with Tauri, Vue and Rust; powered by
+[Aria2 Next](https://github.com/AnInsomniacy/aria2-next).
 
 > [!NOTE]
-> Motrix Next uses [Aria2 Next](https://github.com/AnInsomniacy/aria2-next) as its download engine, a maintained aria2 fork that preserves the original interfaces while fixing long-standing issues, moving to CMake, adding native ED2K and HLS/DASH support, and updating modern dependencies.
+> The Rayburst rebrand is currently available in source. Public releases still use
+> the Motrix Next name; repository addresses are unchanged. The badges above describe
+> this repository's published releases and download history. [Build locally](#development)
+> to try the current Rayburst interface.
 
-[Motrix](https://github.com/agalwood/Motrix) by [agalwood](https://github.com/agalwood) was one of the best open-source download managers available — clean UI, aria2-powered, cross-platform. It inspired thousands of users and developers alike.
+## Download
 
-However, the original project has been largely inactive since 2023. The Electron + Vue 2 + Vuex + Element UI stack accumulated technical debt, making it increasingly difficult to maintain, extend, or package for modern platforms.
+**[Open GitHub Releases](https://github.com/AnInsomniacy/motrix-next/releases)** for
+published installers, prereleases and release notes. Choose the package for your
+operating system and processor:
 
-### What we rebuilt
+| System                    | Architecture           | Package           | Installation                                            |
+| ------------------------- | ---------------------- | ----------------- | ------------------------------------------------------- |
+| Windows                   | x64 or ARM64           | NSIS `-setup.exe` | Run the installer and choose the installation scope.    |
+| macOS                     | Apple Silicon or Intel | `.dmg`            | Open the disk image and drag the app into Applications. |
+| Debian / Ubuntu           | x64 or ARM64           | `.deb`            | Open with your package manager or install with `apt`.   |
+| Fedora / RHEL             | x64 or ARM64           | `.rpm`            | Open with your package manager or install with `dnf`.   |
+| Other Linux distributions | x64 or ARM64           | `.AppImage`       | Make the file executable, then run it.                  |
 
-Motrix Next is a ground-up rewrite — same download manager spirit, entirely new codebase.
-
-| Layer            | Motrix (Legacy)         | Motrix Next                         |
-| ---------------- | ----------------------- | ----------------------------------- |
-| **Runtime**      | Electron                | **Tauri 2** (Rust)                  |
-| **Frontend**     | Vue 2 + Vuex            | **Vue 3 Composition API + Pinia**   |
-| **UI Framework** | Element UI              | **Naive UI**                        |
-| **Language**     | JavaScript              | **TypeScript + Rust**               |
-| **Styling**      | SCSS + Element theme    | **Vanilla CSS + custom properties** |
-| **Engine Mgmt**  | Node.js `child_process` | **Tauri sidecar**                   |
-| **Build System** | electron-builder        | **Vite + Cargo**                    |
-| **Bundle Size**  | ~80 MB                  | **~20 MB**                          |
-| **Auto-Update**  | electron-updater        | **Tauri updater plugin**            |
-
-### Design & Motion
-
-The overall UI layout stays true to Motrix's original design — the sidebar navigation, task list, and preference panels all follow the familiar structure that made Motrix intuitive from day one.
-
-What changed is everything underneath. Every transition and micro-interaction has been carefully tuned to follow [Material Design 3](https://m3.material.io/styles/motion/overview) motion guidelines:
-
-- **Asymmetric timing** — enter animations are slightly longer than exits, giving new content time to land while dismissed content leaves quickly
-- **Emphasized easing curves** — decelerate on enter (`cubic-bezier(0.2, 0, 0, 1)`), accelerate on exit (`cubic-bezier(0.3, 0, 0.8, 0.15)`), replacing generic `ease` curves throughout the codebase
-- **Spring-based modals** — dialogs use physically-modeled spring animations for a natural, responsive feel
-- **Consistent motion tokens** — all durations and curves are defined as CSS custom properties, ensuring a unified rhythm across 12+ components
-
-## Features
-
-- **Multi-protocol downloads** — HTTP, HTTPS, SFTP, ED2K, BitTorrent, Magnet, and `.torrent` tasks
-- **HLS and DASH** — Native track selection, subtitles, live recording, resumable media downloads and MP4/MKV output. See [media downloads](docs/MEDIA.md).
-- **BitTorrent** — Selective file download, DHT, peer exchange, encryption controls, metadata caching, GeoIP peer flags, and tracker probing
-- **Browser extension integration** — Embedded Extension API with independent authentication, download confirmation, smart auto-submit, filename hints, referer/cookie forwarding, and real-time controls ([Chrome Web Store](https://chromewebstore.google.com/detail/ofeajdebdjajhkmcmamagokecnbephhl) · [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/loojjolhejmakcdlbidigoniobfanjlb) · [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/motrix-next-extension/))
-- **Safe filename handling** — Content-Disposition, RFC 2047, non-UTF-8, percent-encoded, and extensionless URL resolution with path traversal sanitization
-- **Download organization** — Favorite and recent folders, optional file-type categorization, stale-record cleanup, and completed history backed by SQLite
-- **Concurrent downloads** — Independent limits for active tasks, stream connections, and BitTorrent peers
-- **Speed control** — Global and per-task upload/download limits with day-of-week and time-of-day scheduling
-- **System integration** — Tray operation, optional tray speed display, macOS Dock badge/progress, protocol handlers for `magnet://`, `ed2k://`, `thunder://`, and `motrixnext://`
-- **Lightweight mode** — Destroys the WebView on minimize-to-tray while Rust keeps the engine, task monitor, notifications, history, and extension routing alive
-- **Notifications and power options** — Native task start/complete/failure notifications, keep-awake during downloads, and optional shutdown after completion
-- **Network controls** — Scoped proxy support for downloads, app updates, and tracker updates, plus system proxy detection
-- **Auto-update channels** — Stable, Beta, and Latest Across Channels policies with separate download and install phases
-- **Diagnostics** — Structured logs, exportable diagnostic ZIPs, database integrity checks, automatic DB rebuild, and Linux GPU rendering fallback
-- **Personalization** — Light/dark/system theme, 10 color schemes, 26 languages, and first-launch system language detection
-- **Lightweight bundle** — Tauri 2 + Rust backend with a ~20 MB application bundle
-
-## Installation
-
-Download the latest release from [GitHub Releases](https://github.com/AnInsomniacy/motrix-next/releases).
-
-### macOS
-
-**Homebrew (recommended):**
-
-```bash
-brew tap AnInsomniacy/motrix-next
-brew install --cask motrix-next
-xattr -dr com.apple.quarantine /Applications/MotrixNext.app
-```
-
-Or download the `.dmg` installer from [Releases](https://github.com/AnInsomniacy/motrix-next/releases):
-
-| Architecture  | File                           |
-| ------------- | ------------------------------ |
-| Apple Silicon | `MotrixNext_x.x.x_aarch64.dmg` |
-| Intel         | `MotrixNext_x.x.x_x64.dmg`     |
-
-The `.app.tar.gz` macOS artifacts are published for the Tauri updater and Homebrew cask automation.
-
-> [!TIP]
-> If macOS says the app is **"damaged and can't be opened"**, see the [FAQ below](#faq).
-
-### Windows
-
-**Scoop (recommended):**
-
-```bash
-scoop bucket add extras
-scoop install extras/motrix-next
-```
-
-Download the installer from [Releases](https://github.com/AnInsomniacy/motrix-next/releases):
-
-| Architecture   | File                               |
-| -------------- | ---------------------------------- |
-| x64 (most PCs) | `MotrixNext_x.x.x_x64-setup.exe`   |
-| ARM64          | `MotrixNext_x.x.x_arm64-setup.exe` |
-
-Run the installer — it takes about 10 seconds, no reboot required.
-
-### Linux
-
-**Flatpak via FlatPark (x64 only):**
-
-```bash
-flatpak remote-add --user --if-not-exists flatpark https://dl.flatpark.org/flatpark.flatpakrepo
-flatpak install --user flatpark com.motrix.next
-```
-
-FlatPark maintains this community package independently with permission from the Motrix Next developer. It uses official release binaries and receives updates through `flatpak update`. See the [FlatPark app page](https://flatpark.org/apps/com.motrix.next/) for details.
-
-Or download directly from [Releases](https://github.com/AnInsomniacy/motrix-next/releases):
-
-**Debian / Ubuntu:**
-
-```bash
-sudo dpkg -i MotrixNext_x.x.x_amd64.deb
-```
-
-**Fedora / RHEL:**
-
-```bash
-sudo rpm -i MotrixNext-x.x.x-1.x86_64.rpm
-```
-
-**Other distributions** — use the `.AppImage`:
-
-```bash
-chmod +x MotrixNext_x.x.x_amd64.AppImage
-./MotrixNext_x.x.x_amd64.AppImage
-```
-
-All formats are available for both x64 and ARM64.
-
-## FAQ
+The macOS `.app.tar.gz` files are updater packages; use the `.dmg` for a normal
+installation. Local Rayburst builds produce `Rayburst`-named installers.
+Signing status belongs to the specific release; see [Code signing](docs/CODE_SIGNING.md).
 
 <details>
-<summary><strong>macOS says the app is "damaged and can't be opened"</strong></summary>
+<summary>Package manager listings</summary>
 
-<br>
+The existing [Homebrew tap](https://github.com/AnInsomniacy/homebrew-motrix-next),
+[Scoop Extras package](https://github.com/ScoopInstaller/Extras/blob/master/bucket/motrix-next.json)
+and [FlatPark listing](https://flatpark.org/apps/com.motrix.next/) provide additional
+distribution channels for previously published builds. They have not been converted
+to Rayburst. Check each listing's version and maintainer before installing.
 
-This app is not code-signed. Open Terminal and run:
+</details>
 
-```bash
-xattr -dr com.apple.quarantine /Applications/MotrixNext.app
-```
+## What you can do
 
-This removes only Gatekeeper's quarantine attribute. Run it again after each Homebrew upgrade.
+| Area                | Capabilities                                                                                                                      |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Files and links     | HTTP, HTTPS and SFTP downloads; BitTorrent, magnet and ED2K tasks; Thunder link handling; batch submission.                       |
+| Streaming media     | HLS/DASH inspection, video/audio/subtitle selection, live recording and MP4/MKV output.                                           |
+| Task control        | Pause, resume, retry, re-download, choose torrent files, sort tasks and review completed history.                                 |
+| Organization        | Favorite and recent folders, optional file-type categories and persistent local task records.                                     |
+| Transfer settings   | Concurrent-task and connection limits, global and per-task speed limits, scheduled speed rules and scoped proxies.                |
+| BitTorrent          | DHT, peer exchange, encryption controls, tracker management, peer information and sharing controls.                               |
+| Desktop integration | Tray operation, native notifications, protocol handlers, keep-awake and completion actions.                                       |
+| Appearance          | Light, dark and system themes; Electric Purple and additional color presets; compact task cards, reduced motion and 27 languages. |
+
+**Lightweight mode** releases the WebView when the app minimizes to the tray.
+The Rust backend keeps downloads, history, notifications and browser handoff running.
+
+## From the browser to your downloads
+
+[Rayburst Connect](https://github.com/AnInsomniacy/motrix-next-extension) adds download
+interception, right-click actions and page media discovery to Chrome, Edge and Firefox.
+
+1. Open Rayburst and find **Extension API** in Advanced Settings.
+2. Set the same port and secret in Rayburst Connect. The default port is `29110`;
+   use the **Extension API secret**, not the engine RPC secret.
+3. Download a file, send a link from the context menu, or select a media source
+   from the extension's **Media** tab.
+
+The extension finds sources and supplies browser request context. Rayburst handles
+confirmation, task control and history; Aria2 Next performs the transfer. Native
+Messaging can activate the installed desktop app when needed.
+
+### HLS, DASH and live media
+
+Add a manifest URL directly or select a source discovered by Rayburst Connect.
+Choose the available video, audio and subtitle tracks, then select MP4 or MKV.
+Live recordings support a duration limit and **Finish recording and save**.
+
+Media support depends on the source and its codecs. DRM-protected media, arbitrary
+webpage extraction and transcoding are not supported. Containers are not encoding
+presets; MKV can accommodate subtitle formats that MP4 cannot. See
+[Media downloads](docs/MEDIA.md) for selection, recovery and format limits.
+
+## Privacy and diagnostics
+
+No account, advertising or telemetry. Preferences, task history and diagnostic
+files are stored locally. Network activity includes requested downloads and enabled
+services such as tracker updates and application update checks.
+
+Diagnostic export is available in Advanced Settings. It includes application and
+engine logs with sensitive configuration values redacted. Review an archive before
+sharing it in a public issue. Read the [Privacy Policy](docs/PRIVACY.md) for storage,
+browser request context and network details.
+
+## Common questions
+
+<details>
+<summary>Does Rayburst import an existing installation's data?</summary>
+
+No. Rayburst uses its own application identity and data directory. Existing settings,
+history and unfinished tasks stay in their original location. Configure Rayburst
+and reconnect the browser extension separately; older settings backups and the
+previous application protocol are not accepted.
 
 </details>
 
 <details>
-<summary><strong>Why is there no portable version?</strong></summary>
+<summary>Why are update controls missing from a local build?</summary>
 
-<br>
-
-Motrix Next relies on [Aria2 Next](https://github.com/AnInsomniacy/aria2-next) as its download engine and launches it through a bundled `motrix-next-engine` sidecar process at runtime. The sidecar binaries are built and released from the aria2-next repository for all 6 supported desktop targets. This architecture means:
-
-- The **Aria2 Next sidecar binary must exist alongside the main executable** — it cannot be embedded into a single `.exe`.
-- **Deep links** (`magnet://`, `ed2k://`, `thunder://`) and **file associations** (`.torrent`) require Windows registry entries that only an installer can configure.
-- The **auto-updater** needs a known installation path to replace files in place.
-
-These are fundamental constraints of the Tauri sidecar model and the Windows operating system, not limitations we can work around. Notable Tauri projects like [Clash Verge Rev](https://github.com/clash-verge-rev/clash-verge-rev) (80k+ stars) previously shipped portable builds but [discontinued them](https://clash-verge.com/) due to the same set of issues.
-
-We provide **NSIS installers** for Windows — lightweight (~20 MB), fast to install, and fully featured.
+Local builds have no update origin configured by default. Controls appear when a
+release is built with its update origin. The updater supports Stable, Beta and Latest
+Across Channels policies. See [Releasing](docs/RELEASING.md) for configuration.
 
 </details>
 
-## Code Signing
+<details>
+<summary>Is there a single-file portable Windows build?</summary>
 
-Motrix Next is **not code-signed** on macOS or Windows, so your browser or antivirus software may show a security warning when downloading or running the installer.
+No single-file portable package is provided. Rayburst ships with its download engine
+and browser launcher; the installer also registers native browser integration and
+file/protocol associations. Use the Windows installer rather than copying only the
+application executable.
 
-The app is fully open-source and every release binary is built automatically by [GitHub Actions CI](https://github.com/AnInsomniacy/motrix-next/actions). For added peace of mind, you can always [build from source](#development).
-
-Release `.sig` files are Tauri updater signatures, not GPG signatures. They can be verified with minisign using the following two-line public key format required by minisign:
-
-```text
-untrusted comment: minisign public key: 76210453A979C645
-RWRFxnmpUwQhdu1ykhDbEnVZguwQfLA60/oBA3rIlP0Z+L06b3u2NtJN
-```
-
-Save the key as `motrix-next.pub`, then replace `MotrixNext_x.x.x_<file>` with the release file you downloaded:
-
-```bash
-python3 -c 'import base64,sys; sys.stdout.write(base64.b64decode(sys.stdin.read()).decode())' \
-  < MotrixNext_x.x.x_<file>.sig \
-  > MotrixNext_x.x.x_<file>.minisig
-
-minisign -V \
-  -m MotrixNext_x.x.x_<file> \
-  -x MotrixNext_x.x.x_<file>.minisig \
-  -p motrix-next.pub
-```
-
-Expected result:
-
-```text
-Signature and comment signature verified
-```
-
-If the artifact was changed:
-
-```text
-Signature verification failed
-```
-
-> [!NOTE]
-> See our [Code Signing Policy](docs/CODE_SIGNING.md) and [Privacy Policy](docs/PRIVACY.md).
+</details>
 
 ## Development
 
-### Prerequisites
+Install Node.js 24, a current stable Rust toolchain and the pnpm version pinned in
+`package.json`. Follow the [Tauri platform prerequisites](https://v2.tauri.app/start/prerequisites/)
+for your operating system.
 
-- [Rust](https://rustup.rs/) (latest stable)
-- [Node.js](https://nodejs.org/) >= 22
-- [pnpm](https://pnpm.io/) 10.x, managed by the `packageManager` field in `package.json`
-
-### Setup
-
-```bash
-# Clone the repository
+```sh
 git clone https://github.com/AnInsomniacy/motrix-next.git
 cd motrix-next
-
-# Install frontend dependencies
 pnpm install
-
-# Start development server (launches Tauri + Vite)
 pnpm tauri dev
-
-# Build for production
-pnpm tauri build
 ```
 
-### Project Structure
+Build an installer with `pnpm tauri build`. The native launcher is built by Tauri's
+existing build hook. Each target needs its matching bundled Aria2 Next sidecar;
+the engine and extension are maintained in their own repositories.
 
-```
-motrix-next/
-├── src/                        # Frontend (Vue 3 + TypeScript)
-│   ├── api/                    # aria2-compatible JSON-RPC client
-│   ├── components/             # Vue components
-│   │   ├── about/              #   About panel
-│   │   ├── common/             #   Shared UI primitives
-│   │   ├── layout/             #   Sidebar, speedometer, navigation
-│   │   ├── preference/         #   Settings pages, update dialog
-│   │   ├── task/               #   Task list, detail, add task
-│   │   └── tray/               #   Tray action bridge
-│   ├── composables/            # Reusable composition functions
-│   ├── router/                 # Vue Router configuration
-│   ├── shared/                 # Shared utilities & config
-│   │   ├── constants/          #   Split constant modules
-│   │   ├── locales/            #   26 language packs
-│   │   ├── utils/              #   Pure utility functions (with tests)
-│   │   ├── types.ts            #   TypeScript interfaces
-│   │   ├── constants.ts        #   App constants & defaults
-│   │   └── configKeys.ts       #   Persisted config key registry
-│   ├── stores/                 # Pinia state management (with tests)
-│   ├── styles/                 # Global CSS custom properties
-│   └── views/                  # Page-level route views
-├── src-tauri/                  # Backend (Rust + Tauri 2)
-│   ├── src/
-│   │   ├── aria2/              #   Native Rust aria2 JSON-RPC client
-│   │   ├── commands/           #   Tauri invoke handlers (config, engine, fs, etc.)
-│   │   ├── engine/             #   Aria2 Next sidecar lifecycle, runtime config, state, cleanup
-│   │   ├── services/           #   Runtime services (stat, speed, monitor, HTTP API, deep links)
-│   │   ├── db_guard.rs         #   SQLite health checks and rebuild guard
-│   │   ├── error.rs            #   AppError enum
-│   │   ├── gpu_guard.rs        #   Linux GPU compatibility guard
-│   │   ├── history.rs          #   SQLite history persistence
-│   │   ├── menu.rs             #   Native menu builder
-│   │   ├── tray.rs             #   System tray setup
-│   │   ├── upnp.rs             #   UPnP/IGD port mapping
-│   │   └── lib.rs              #   Tauri builder & plugin registration
-│   ├── binaries/               #   Aria2 Next sidecar binaries (6 platforms)
-│   └── migrations/             #   SQLite schema migrations
-├── scripts/                    # bump-version.sh, release.sh
-├── .github/workflows/          # CI (ci.yml) + Release (release.yml)
-└── website/                    # Landing page (static HTML)
-```
+| Command                                                                      | Purpose                                              |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `pnpm build`                                                                 | Type-check and build the frontend.                   |
+| `pnpm lint` / `pnpm format:check`                                            | Check source style and formatting.                   |
+| `pnpm check:repo`                                                            | Check locale structure and placeholders.             |
+| `pnpm test`                                                                  | Run frontend behavior tests.                         |
+| `cargo check --manifest-path src-tauri/Cargo.toml --workspace --all-targets` | Check native targets.                                |
+| `cargo test --manifest-path src-tauri/Cargo.toml --workspace --all-targets`  | Run native tests.                                    |
+| `pnpm brand:assets`                                                          | Generate desktop and tray icons from the SVG source. |
 
-## Contributing
+The desktop logo lives in `src/assets/rayburst.svg`; the README banner is a separate
+asset in `docs/media/`. UI colors use the existing Material Color Utilities theme
+system. The website remains outside this branding change.
 
-PRs and issues are welcome! Please read the [Contributing Guide](docs/CONTRIBUTING.md) and [Code of Conduct](docs/CODE_OF_CONDUCT.md) before getting started.
+Tests and builds belong to this repository. Browser-to-desktop acceptance is performed
+manually with independently built applications. Full checks, contribution rules and
+release procedures are documented below.
 
-## Acknowledgements
+## Documentation and community
 
-- [Motrix](https://github.com/agalwood/Motrix) by [agalwood](https://github.com/agalwood) and all its contributors
-- [Aria2 Next](https://github.com/AnInsomniacy/aria2-next) — the maintained download engine at the core
-- Community translators who contributed 26 locale packs for worldwide accessibility
+- [Contributing](docs/CONTRIBUTING.md) · [Code of Conduct](docs/CODE_OF_CONDUCT.md)
+- [Download ownership](docs/DOWNLOADS.md) · [Media downloads](docs/MEDIA.md)
+- [Versioning and releases](docs/RELEASING.md) · [Code signing](docs/CODE_SIGNING.md)
+- [Report a bug](https://github.com/AnInsomniacy/motrix-next/issues) · [Discuss an idea](https://github.com/AnInsomniacy/motrix-next/discussions)
+- [Support development](https://github.com/AnInsomniacy/AnInsomniacy/blob/main/SPONSOR.md)
 
-## Sponsor
-
-Built in the hours I should've been writing my thesis — I'm a PhD student surviving on instant noodles 🍜
-
-This app is not code-signed on macOS or Windows — Apple charges $99/year, and a Windows Authenticode certificate costs $300–600/year. That's a lot of instant noodles.
-
-[Buy me a coffee ☕](https://github.com/AnInsomniacy/AnInsomniacy/blob/main/SPONSOR.md) — maybe one day I can afford those certificates, so antivirus software stops treating my app like a criminal 🥲
+For bug reports, include your app version, operating system, reproduction steps and
+relevant diagnostics. Keep credentials and private download URLs out of public posts.
 
 ## License
 
-[MIT](https://opensource.org/licenses/MIT) — Copyright (c) 2025-present AnInsomniacy
+[MIT](LICENSE) — Copyright © 2025–present AnInsomniacy.
+Bundled dependencies retain their own licenses and notices.

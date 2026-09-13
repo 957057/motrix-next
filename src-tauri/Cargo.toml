@@ -1,5 +1,5 @@
 [package]
-name = "motrix-next"
+name = "rayburst"
 version = "3.9.9"
 description = "A full-featured download manager"
 authors = ["AnInsomniacy"]
@@ -11,7 +11,7 @@ members = [".", "native-messaging"]
 resolver = "2"
 
 [lib]
-name = "motrix_next_lib"
+name = "rayburst_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -66,7 +66,7 @@ axum = "0.8"
 tower-http = { version = "0.6", features = ["cors"] }
 strip-ansi-escapes = "0.2.1"
 tempfile = "3"
-motrix-next-browser-launcher = { path = "native-messaging" }
+rayburst-browser-launcher = { path = "native-messaging" }
 rust-i18n = "4.2.1"
 fluent-langneg = { version = "0.14.2", features = ["cldr"] }
 

@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_store::StoreExt;
 
-const ED2K_SEARCH_TEMP_PREFIX: &str = "motrix-next-ed2k-search-";
+const ED2K_SEARCH_TEMP_PREFIX: &str = "rayburst-ed2k-search-";
 
 /// Fetch task list by type.
 #[tauri::command]

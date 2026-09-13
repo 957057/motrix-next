@@ -273,7 +273,7 @@ onMounted(async () => {
             <template #trigger>
               <button
                 class="sysinfo-ver-badge"
-                @click="copyVersionToClipboard(`Motrix Next v${sysAppVersion}`, 'Motrix Next')"
+                @click="copyVersionToClipboard(`Rayburst v${sysAppVersion}`, 'Rayburst')"
               >
                 <span class="sysinfo-ver-value">v{{ sysAppVersion || '\u2014' }}</span>
                 <svg class="sysinfo-ver-copy" width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -324,53 +324,55 @@ onMounted(async () => {
           />
         </NFormItem>
 
-        <!-- ③ Auto Update -->
-        <NDivider title-placement="left">{{ t('preferences.auto-update') }}</NDivider>
-        <NFormItem :label="t('preferences.auto-check-update')">
-          <NSwitch v-model:value="form.autoCheckUpdate" />
-        </NFormItem>
-        <NCollapseTransition :show="form.autoCheckUpdate" class="collapse-indent">
-          <NFormItem :label="t('preferences.check-frequency')">
-            <NSelect
-              v-model:value="form.autoCheckUpdateInterval"
-              :options="checkIntervalOptions"
-              class="pref-control-auto"
-            />
+        <template v-if="appStore.updatesAvailable">
+          <!-- Auto Update -->
+          <NDivider title-placement="left">{{ t('preferences.auto-update') }}</NDivider>
+          <NFormItem :label="t('preferences.auto-check-update')">
+            <NSwitch v-model:value="form.autoCheckUpdate" />
           </NFormItem>
-        </NCollapseTransition>
-        <NFormItem :label="t('preferences.update-channel')">
-          <NRadioGroup
-            v-model:value="form.updateChannel"
-            size="small"
-            @update:value="
-              async (v: string) => {
-                const ok = await preferenceStore.updateAndSave({ updateChannel: v as UpdateChannel })
-                if (ok) {
-                  patchSnapshot({ updateChannel: v } as Partial<typeof form.value>)
+          <NCollapseTransition :show="form.autoCheckUpdate" class="collapse-indent">
+            <NFormItem :label="t('preferences.check-frequency')">
+              <NSelect
+                v-model:value="form.autoCheckUpdateInterval"
+                :options="checkIntervalOptions"
+                class="pref-control-auto"
+              />
+            </NFormItem>
+          </NCollapseTransition>
+          <NFormItem :label="t('preferences.update-channel')">
+            <NRadioGroup
+              v-model:value="form.updateChannel"
+              size="small"
+              @update:value="
+                async (v: string) => {
+                  const ok = await preferenceStore.updateAndSave({ updateChannel: v as UpdateChannel })
+                  if (ok) {
+                    patchSnapshot({ updateChannel: v } as Partial<typeof form.value>)
+                  }
                 }
-              }
-            "
-          >
-            <NRadioButton value="stable">{{ t('preferences.update-channel-stable') }}</NRadioButton>
-            <NRadioButton value="beta">{{ t('preferences.update-channel-beta') }}</NRadioButton>
-            <NRadioButton value="latest">{{ t('preferences.update-channel-latest') }}</NRadioButton>
-          </NRadioGroup>
-        </NFormItem>
-        <NFormItem :label="t('preferences.last-check-update-time')">
-          <div class="pref-inline-row">
-            <NButton size="small" @click="handleCheckUpdate">
-              <template #icon>
-                <NIcon :size="14"><CloudDownloadOutline /></NIcon>
-              </template>
-              {{ t('app.check-updates-now') }}
-            </NButton>
-            <NText v-if="preferenceStore.config.lastCheckUpdateTime" depth="3" class="pref-inline-row__meta">
-              {{ new Date(preferenceStore.config.lastCheckUpdateTime).toLocaleString() }}
-            </NText>
-            <NText v-else depth="3" class="pref-inline-row__meta">—</NText>
-          </div>
-        </NFormItem>
-        <!-- ④ Appearance -->
+              "
+            >
+              <NRadioButton value="stable">{{ t('preferences.update-channel-stable') }}</NRadioButton>
+              <NRadioButton value="beta">{{ t('preferences.update-channel-beta') }}</NRadioButton>
+              <NRadioButton value="latest">{{ t('preferences.update-channel-latest') }}</NRadioButton>
+            </NRadioGroup>
+          </NFormItem>
+          <NFormItem :label="t('preferences.last-check-update-time')">
+            <div class="pref-inline-row">
+              <NButton size="small" @click="handleCheckUpdate">
+                <template #icon>
+                  <NIcon :size="14"><CloudDownloadOutline /></NIcon>
+                </template>
+                {{ t('app.check-updates-now') }}
+              </NButton>
+              <NText v-if="preferenceStore.config.lastCheckUpdateTime" depth="3" class="pref-inline-row__meta">
+                {{ new Date(preferenceStore.config.lastCheckUpdateTime).toLocaleString() }}
+              </NText>
+              <NText v-else depth="3" class="pref-inline-row__meta">—</NText>
+            </div>
+          </NFormItem>
+        </template>
+        <!-- Appearance -->
         <NDivider title-placement="left">{{ t('preferences.appearance-section') }}</NDivider>
         <NFormItem :label="t('preferences.appearance')">
           <NSelect v-model:value="form.theme" :options="themeOptions" class="pref-control-auto" />
@@ -426,9 +428,6 @@ onMounted(async () => {
         </NFormItem>
         <NFormItem :label="t('preferences.sidebar-task-counts')">
           <NSwitch v-model:value="form.sidebarTaskCounts" />
-        </NFormItem>
-        <NFormItem :label="t('preferences.task-list-watermark')">
-          <NSwitch v-model:value="form.taskListWatermark" />
         </NFormItem>
         <NFormItem v-if="isMac" :label="t('preferences.dock-badge-speed')">
           <NSwitch v-model:value="form.dockBadgeSpeed" />

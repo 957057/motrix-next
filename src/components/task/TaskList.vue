@@ -306,7 +306,6 @@ function handleCardBeforeLeave(element: Element) {
 .task-list-inner {
   flex: 1;
   position: relative;
-  z-index: 1;
 }
 .task-page-swap-enter-active {
   transition:

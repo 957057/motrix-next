@@ -22,19 +22,9 @@ export interface ColorSchemeDefinition {
   variant?: 'source' | 'content'
 }
 
-/**
- * 10 curated preset color schemes spanning warm, cool, and neutral hues.
- *
- * Each seed is chosen for:
- * - Even HSL hue distribution (~36° apart) to avoid clustering
- * - WCAG AA contrast compliance when MCU-generated
- * - Aesthetic harmony across both light and dark M3 surfaces
- *
- * Sources: Tailwind CSS v4, macOS system colors, Catppuccin/Nord,
- * M3 Material Theme Builder, color psychology research.
- */
+/** Material palette seeds. Electric Purple is the Rayburst default. */
 export const COLOR_SCHEMES: ColorSchemeDefinition[] = [
-  { id: 'amber', labelKey: 'preferences.color-scheme-amber', seed: '#E0A422' },
+  { id: 'electric', labelKey: 'preferences.color-scheme-electric', seed: '#7B3ED1' },
   { id: 'space', labelKey: 'preferences.color-scheme-space', seed: '#4A6CF7' },
   { id: 'mint', labelKey: 'preferences.color-scheme-mint', seed: '#10B981' },
   { id: 'rose', labelKey: 'preferences.color-scheme-rose', seed: '#F43F5E' },
@@ -110,7 +100,7 @@ export const UPDATE_CHANNELS = ['stable', 'beta', 'latest'] as const
  * Each value is justified by industry research:
  * - Aria2 Next native defaults and accepted ranges
  * - BT client conventions (qBittorrent, Transmission, Deluge)
- * - Download manager standards (IDM, FDM, Motrix)
+ * - Download manager standards (IDM, FDM, Rayburst)
  * - Security best practices (UPnP off, rpcSecret generated at runtime)
  *
  * Dynamic values handled at runtime:
@@ -209,15 +199,12 @@ export const TRACKER_SOURCE_OPTIONS = [
 export const DEFAULT_TRACKER_SOURCE = TRACKER_SOURCE_OPTIONS.map((source) => source.value)
 
 export const DEFAULT_APP_CONFIG = {
-  configVersion: 7,
-  dbSchemaVersion: 0, // Last schema version observed by the UI; Rust owns the schema.
   // ── Appearance ──────────────────────────────────────────────────
   theme: 'auto' as const,
-  colorScheme: 'amber',
+  colorScheme: 'electric',
   customColorScheme: DEFAULT_CUSTOM_COLOR_SCHEME,
   taskCardMode: 'full' as const,
   reduceMotion: false,
-  taskListWatermark: true,
   sidebarTaskCounts: true,
   taskPageSize: 20,
   locale: 'auto',
@@ -296,7 +283,7 @@ export const DEFAULT_APP_CONFIG = {
   lastCheckUpdateTime: 0,
 
   // ── Network & Security ────────────────────────────────────────
-  enableUpnp: true, // old Motrix=true; required for BitTorrent behind NAT
+  enableUpnp: true, // old Rayburst=true; required for BitTorrent behind NAT
   rpcListenPort: ENGINE_RPC_PORT,
   extensionApiPort: EXTENSION_API_PORT,
   allowRemoteAccess: false,

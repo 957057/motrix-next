@@ -3,7 +3,7 @@
 use std::io::{stdin, stdout};
 use std::process::ExitCode;
 
-use motrix_next_browser_launcher::{run_session, write_error_response, ACTIVATION_URL};
+use rayburst_browser_launcher::{run_session, write_error_response, ACTIVATION_URL};
 
 fn activate() -> std::io::Result<()> {
     #[cfg(target_os = "linux")]

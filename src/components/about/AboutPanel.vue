@@ -142,18 +142,18 @@ function openUrl(url: string) {
       </button>
 
       <!-- Logo -->
-      <div class="about-logo stagger stagger-1">
-        <img src="@/assets/logo.png" alt="Motrix Next" width="96" height="96" />
+      <div class="stagger stagger-1">
+        <img src="@/assets/rayburst.svg" alt="Rayburst" width="96" height="96" />
       </div>
 
       <!-- Title -->
-      <div class="about-title stagger stagger-2">Motrix <span class="accent">Next</span></div>
+      <div class="about-title stagger stagger-2">Rayburst</div>
 
       <!-- Version Badges (stacked, prominent) -->
       <div class="about-versions stagger stagger-2">
         <MTooltip>
           <template #trigger>
-            <button class="version-badge" @click="copyToClipboard(`Motrix Next v${appVersion}`, 'Motrix Next')">
+            <button class="version-badge" @click="copyToClipboard(`Rayburst v${appVersion}`, 'Rayburst')">
               <span class="version-label">{{ t('about.app-version') }}</span>
               <span class="version-value">v{{ appVersion }}</span>
               <svg class="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -198,12 +198,9 @@ function openUrl(url: string) {
         </Transition>
       </div>
 
-      <!-- Description -->
-      <p class="about-desc stagger stagger-3">{{ t('about.description') }}</p>
-
       <!-- Tech Stack -->
-      <div class="about-section-label stagger stagger-4">Tech Stack</div>
-      <div class="about-tags stagger stagger-4">
+      <div class="about-section-label stagger stagger-3">Tech Stack</div>
+      <div class="about-tags stagger stagger-3">
         <span v-for="tech in techStack" :key="tech.name" class="about-tag" :style="{ '--tag-color': tech.color }">
           <!-- eslint-disable vue/no-v-html -- tech.svg is static local icon markup -->
           <svg
@@ -224,7 +221,7 @@ function openUrl(url: string) {
       </div>
 
       <!-- Links Grid -->
-      <div class="about-links stagger stagger-5">
+      <div class="about-links stagger stagger-4">
         <button v-for="link in links" :key="link.key" class="about-link-card" @click="openUrl(link.url)">
           <NIcon :size="18"><component :is="link.icon" /></NIcon>
           <span>{{ link.i18n ? t(link.i18n) : link.label }}</span>
@@ -232,12 +229,10 @@ function openUrl(url: string) {
       </div>
 
       <!-- Footer -->
-      <div class="about-footer stagger stagger-6">
+      <div class="about-footer stagger stagger-5">
         <span>
           Developed by
           <a class="about-link" @click="openUrl('https://github.com/AnInsomniacy')">AnInsomniacy</a>
-          · Inspired by
-          <a class="about-link" @click="openUrl('https://github.com/agalwood/Motrix')">Motrix</a>
         </span>
         <span>&copy; {{ year }} AnInsomniacy</span>
       </div>
@@ -286,12 +281,6 @@ function openUrl(url: string) {
   color: var(--m3-on-surface);
 }
 
-/* ── Logo ─────────────────────────────────────────────────────────── */
-.about-logo img {
-  border-radius: 22px;
-  box-shadow: 0 4px 20px var(--m3-shadow);
-}
-
 /* ── Title ────────────────────────────────────────────────────────── */
 .about-title {
   margin-top: 16px;
@@ -299,9 +288,6 @@ function openUrl(url: string) {
   font-weight: 700;
   letter-spacing: 0.3px;
   color: var(--m3-on-surface);
-}
-.about-title .accent {
-  color: var(--m3-primary);
 }
 
 /* ── Version Badges (stacked, prominent) ──────────────────────────── */
@@ -353,15 +339,6 @@ function openUrl(url: string) {
   color: var(--m3-outline);
   transition: var(--transition-all);
   flex-shrink: 0;
-}
-
-/* ── Description ──────────────────────────────────────────────────── */
-.about-desc {
-  margin: 16px auto 0;
-  max-width: 320px;
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--m3-on-surface-variant);
 }
 
 /* ── Section Label ────────────────────────────────────────────────── */
@@ -477,9 +454,6 @@ function openUrl(url: string) {
 }
 .about-enter .stagger-5 {
   animation-delay: 0.3s;
-}
-.about-enter .stagger-6 {
-  animation-delay: 0.36s;
 }
 
 @keyframes about-fade-up {

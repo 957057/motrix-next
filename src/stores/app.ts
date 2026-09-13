@@ -17,7 +17,7 @@ import { logger } from '@shared/logger'
 import { STAT_BASE_INTERVAL, STAT_PER_TASK_INTERVAL, STAT_MIN_INTERVAL, STAT_MAX_INTERVAL } from '@shared/timing'
 import { detectExternalInputKind, detectKind, createBatchItem } from '@shared/utils/batchHelpers'
 import { summarizeExternalInput } from '@shared/utils/externalInputDiagnostics'
-import { parseMotrixDeepLink } from '@shared/utils/motrixDeepLink'
+import { parseRayburstDeepLink } from '@shared/utils/rayburstDeepLink'
 import { submitManualUris } from '@/composables/useAddTaskSubmit'
 import { usePreferenceStore } from '@/stores/preference'
 import { useTaskStore } from '@/stores/task'
@@ -81,6 +81,7 @@ export const useAppStore = defineStore('app', () => {
   /** Browser request headers captured by the extension for the most recent external input. */
   const pendingRequestHeaders = ref<BrowserRequestHeader[]>([])
   const progress = ref(0)
+  const updatesAvailable = ref(false)
   const pendingUpdate = ref<TauriUpdate | null>(null)
   const updateCheckRequestId = ref(0)
   const externalInputSubmitting = ref(false)
@@ -219,20 +220,20 @@ export const useAppStore = defineStore('app', () => {
 
     for (const url of urls) {
       const lower = url.toLowerCase()
-      const motrixDeepLink = parseMotrixDeepLink(url)
+      const rayburstDeepLink = parseRayburstDeepLink(url)
 
-      // ── motrixnext:// — extension-to-app communication protocol ───
-      // Bare `motrixnext://` is a wake-up signal (window focus handled
+      // ── rayburst:// — extension-to-app communication protocol ───
+      // Bare `rayburst://` is a wake-up signal (window focus handled
       // by the deep-link-open listener in useAppEvents).
-      // `motrixnext://new?url=X` creates a download task from the URL.
-      if (motrixDeepLink.valid) {
-        if (motrixDeepLink.isNewTask) {
+      // `rayburst://new?url=X` creates a download task from the URL.
+      if (rayburstDeepLink.valid) {
+        if (rayburstDeepLink.isNewTask) {
           const routed = routeExternalDownloadInput(
             {
-              url: motrixDeepLink.downloadUrl,
-              referer: motrixDeepLink.referer,
-              cookie: motrixDeepLink.cookie,
-              filename: motrixDeepLink.filename,
+              url: rayburstDeepLink.downloadUrl,
+              referer: rayburstDeepLink.referer,
+              cookie: rayburstDeepLink.cookie,
+              filename: rayburstDeepLink.filename,
               source: 'deep-link',
             },
             items,
@@ -241,11 +242,11 @@ export const useAppStore = defineStore('app', () => {
         } else {
           result.ignored += 1
           const fields = {
-            action: motrixDeepLink.action,
-            hasUrl: motrixDeepLink.downloadUrl ? 'true' : 'false',
-            reason: motrixDeepLink.downloadUrl ? 'unhandled-action' : 'wake-only',
+            action: rayburstDeepLink.action,
+            hasUrl: rayburstDeepLink.downloadUrl ? 'true' : 'false',
+            reason: rayburstDeepLink.downloadUrl ? 'unhandled-action' : 'wake-only',
           }
-          if (motrixDeepLink.downloadUrl) {
+          if (rayburstDeepLink.downloadUrl) {
             logger.warn('DeepLink.ignored', 'deep_link_ignored', fields)
           } else {
             logger.debug('DeepLink.ignored', 'deep_link_ignored', fields)
@@ -253,7 +254,7 @@ export const useAppStore = defineStore('app', () => {
         }
         continue
       }
-      if (motrixDeepLink.reason === 'malformed') {
+      if (rayburstDeepLink.reason === 'malformed') {
         result.ignored += 1
         logger.warn('DeepLink.ignored', 'deep_link_ignored', {
           action: 'unknown',
@@ -472,6 +473,7 @@ export const useAppStore = defineStore('app', () => {
     pendingUserAgent,
     pendingRequestHeaders,
     progress,
+    updatesAvailable,
     pendingUpdate,
     updateCheckRequestId,
     requestUpdateCheck,

@@ -352,21 +352,21 @@ describe('useAppStore', () => {
       expect(store.pendingBatch).toHaveLength(3)
     })
 
-    it('extracts referer from motrixnext://new deep link', () => {
+    it('extracts referer from rayburst://new deep link', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://cdn.example.com/file.zip')
       const referer = encodeURIComponent('https://example.com/downloads')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${url}&referer=${referer}`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url}&referer=${referer}`])
 
       expect(store.pendingBatch).toHaveLength(1)
       expect(store.pendingBatch[0].source).toBe('https://cdn.example.com/file.zip')
       expect(store.pendingReferer).toBe('https://example.com/downloads')
     })
 
-    it('handles single-slash motrixnext new deep links', () => {
+    it('handles single-slash rayburst new deep links', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://cdn.example.com/file.zip')
-      store.handleDeepLinkUrls([`motrixnext:/new?url=${url}`])
+      store.handleDeepLinkUrls([`rayburst:/new?url=${url}`])
 
       expect(store.pendingBatch).toHaveLength(1)
       expect(store.pendingBatch[0].source).toBe('https://cdn.example.com/file.zip')
@@ -376,7 +376,7 @@ describe('useAppStore', () => {
     it('sets pendingReferer to empty when deep link has no referer param', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://example.com/file.zip')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${url}`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url}`])
 
       expect(store.pendingBatch).toHaveLength(1)
       expect(store.pendingReferer).toBe('')
@@ -389,8 +389,8 @@ describe('useAppStore', () => {
       const url2 = encodeURIComponent('https://cdn.example.com/b.zip')
       const ref2 = encodeURIComponent('https://site-b.com')
       store.handleDeepLinkUrls([
-        `motrixnext://new?url=${url1}&referer=${ref1}`,
-        `motrixnext://new?url=${url2}&referer=${ref2}`,
+        `rayburst://new?url=${url1}&referer=${ref1}`,
+        `rayburst://new?url=${url2}&referer=${ref2}`,
       ])
 
       expect(store.pendingBatch).toHaveLength(2)
@@ -401,7 +401,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://example.com/file.zip')
       const referer = encodeURIComponent('https://example.com')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${url}&referer=${referer}`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url}&referer=${referer}`])
       expect(store.pendingReferer).toBe('https://example.com')
 
       store.hideAddTaskDialog()
@@ -410,11 +410,11 @@ describe('useAppStore', () => {
 
     // ── Cookie extraction (mirrors referer tests above) ────────────
 
-    it('extracts cookie from motrixnext://new deep link', () => {
+    it('extracts cookie from rayburst://new deep link', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://cdn.quark.cn/file.zip')
       const cookie = encodeURIComponent('session=abc123; token=xyz')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${url}&cookie=${cookie}`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url}&cookie=${cookie}`])
 
       expect(store.pendingBatch).toHaveLength(1)
       expect(store.pendingBatch[0].source).toBe('https://cdn.quark.cn/file.zip')
@@ -424,7 +424,7 @@ describe('useAppStore', () => {
     it('sets pendingCookie to empty when deep link has no cookie param', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://example.com/file.zip')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${url}`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url}`])
 
       expect(store.pendingBatch).toHaveLength(1)
       expect(store.pendingCookie).toBe('')
@@ -436,10 +436,7 @@ describe('useAppStore', () => {
       const c1 = encodeURIComponent('sid=aaa')
       const url2 = encodeURIComponent('https://cdn.b.com/file.zip')
       const c2 = encodeURIComponent('sid=bbb')
-      store.handleDeepLinkUrls([
-        `motrixnext://new?url=${url1}&cookie=${c1}`,
-        `motrixnext://new?url=${url2}&cookie=${c2}`,
-      ])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url1}&cookie=${c1}`, `rayburst://new?url=${url2}&cookie=${c2}`])
 
       expect(store.pendingBatch).toHaveLength(2)
       expect(store.pendingCookie).toBe('sid=bbb')
@@ -449,7 +446,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://example.com/file.zip')
       const cookie = encodeURIComponent('auth=secret')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${url}&cookie=${cookie}`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url}&cookie=${cookie}`])
       expect(store.pendingCookie).toBe('auth=secret')
 
       store.hideAddTaskDialog()
@@ -461,7 +458,7 @@ describe('useAppStore', () => {
       const url = encodeURIComponent('https://cdn.quark.cn/file.zip')
       const referer = encodeURIComponent('https://pan.quark.cn')
       const cookie = encodeURIComponent('__puus=abc; __pus=def')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${url}&referer=${referer}&cookie=${cookie}`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url}&referer=${referer}&cookie=${cookie}`])
 
       expect(store.pendingBatch).toHaveLength(1)
       expect(store.pendingReferer).toBe('https://pan.quark.cn')
@@ -470,11 +467,11 @@ describe('useAppStore', () => {
 
     // ── Filename extraction (mirrors referer/cookie tests above) ────
 
-    it('extracts filename from motrixnext://new deep link', () => {
+    it('extracts filename from rayburst://new deep link', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://cdn.quark.cn/hash123')
       const filename = encodeURIComponent('ghost-sample-v0.1.xmgic')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${url}&filename=${filename}`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url}&filename=${filename}`])
 
       expect(store.pendingBatch).toHaveLength(1)
       expect(store.pendingBatch[0].source).toBe('https://cdn.quark.cn/hash123')
@@ -484,7 +481,7 @@ describe('useAppStore', () => {
     it('sets pendingFilename to empty when deep link has no filename param', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://example.com/file.zip')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${url}`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url}`])
 
       expect(store.pendingBatch).toHaveLength(1)
       expect(store.pendingFilename).toBe('')
@@ -497,14 +494,14 @@ describe('useAppStore', () => {
       const firstCookie = encodeURIComponent('__puus=abc')
       const firstFilename = encodeURIComponent('first.zip')
       store.handleDeepLinkUrls([
-        `motrixnext://new?url=${firstUrl}&referer=${firstReferer}&cookie=${firstCookie}&filename=${firstFilename}`,
+        `rayburst://new?url=${firstUrl}&referer=${firstReferer}&cookie=${firstCookie}&filename=${firstFilename}`,
       ])
       expect(store.pendingReferer).toBe('https://pan.quark.cn')
       expect(store.pendingCookie).toBe('__puus=abc')
       expect(store.pendingFilename).toBe('first.zip')
 
       const secondUrl = encodeURIComponent('https://example.com/second.zip')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${secondUrl}`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${secondUrl}`])
 
       expect(store.pendingReferer).toBe('')
       expect(store.pendingCookie).toBe('')
@@ -515,7 +512,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://cdn.quark.cn/hash123')
       const filename = encodeURIComponent('test.zip')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${url}&filename=${filename}`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url}&filename=${filename}`])
       expect(store.pendingFilename).toBe('test.zip')
 
       store.hideAddTaskDialog()
@@ -528,7 +525,7 @@ describe('useAppStore', () => {
       const referer = encodeURIComponent('https://pan.quark.cn')
       const cookie = encodeURIComponent('__puus=abc')
       const filename = encodeURIComponent('ghost-sample-v0.1.xmgic')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${url}&referer=${referer}&cookie=${cookie}&filename=${filename}`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url}&referer=${referer}&cookie=${cookie}&filename=${filename}`])
 
       expect(store.pendingBatch).toHaveLength(1)
       expect(store.pendingReferer).toBe('https://pan.quark.cn')
@@ -539,7 +536,7 @@ describe('useAppStore', () => {
     it('keeps a suggested name without promoting it to an explicit output name', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://mail-attachment.googleusercontent.com/attachment/u/0/')
-      store.handleDeepLinkUrls([`motrixnext://new?url=${url}&filename=download`])
+      store.handleDeepLinkUrls([`rayburst://new?url=${url}&filename=download`])
 
       expect(store.pendingBatch).toHaveLength(1)
       expect(store.pendingFilename).toBe('download')
@@ -555,13 +552,13 @@ describe('useAppStore', () => {
       usePreferenceStore().recordHistoryDirectory = vi.fn()
     })
 
-    // Helper: build a motrixnext://new deep link
+    // Helper: build a rayburst://new deep link
     function buildDeepLink(downloadUrl: string, referer = '', cookie = '', filename = ''): string {
       const u = encodeURIComponent(downloadUrl)
       const r = referer ? `&referer=${encodeURIComponent(referer)}` : ''
       const c = cookie ? `&cookie=${encodeURIComponent(cookie)}` : ''
       const f = filename ? `&filename=${encodeURIComponent(filename)}` : ''
-      return `motrixnext://new?url=${u}${r}${c}${f}`
+      return `rayburst://new?url=${u}${r}${c}${f}`
     }
 
     it('auto-submits HTTP URI when enabled', async () => {
@@ -785,7 +782,7 @@ describe('useAppStore', () => {
       const prefStore = usePreferenceStore()
       prefStore.config.autoSubmitFromExtension = true
 
-      // Regular deep links (not motrixnext://) should always go to dialog
+      // Regular deep links (not rayburst://) should always go to dialog
       store.handleDeepLinkUrls(['https://example.com/file.zip'])
 
       expect(store.pendingBatch).toHaveLength(1)

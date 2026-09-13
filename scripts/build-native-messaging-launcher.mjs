@@ -10,15 +10,15 @@ const tauriDir = join(root, 'src-tauri')
 const targetTriple =
   process.env.TAURI_ENV_TARGET_TRIPLE || execFileSync('rustc', ['--print', 'host-tuple'], { encoding: 'utf8' }).trim()
 const extension = targetTriple.includes('windows') ? '.exe' : ''
-const binaryName = `motrix-next-browser-launcher${extension}`
+const binaryName = `rayburst-browser-launcher${extension}`
 
 const cargoArgs = [
   'build',
   '--locked',
   '--package',
-  'motrix-next-browser-launcher',
+  'rayburst-browser-launcher',
   '--bin',
-  'motrix-next-browser-launcher',
+  'rayburst-browser-launcher',
   '--target',
   targetTriple,
   '--release',
@@ -30,7 +30,7 @@ const source = join(tauriDir, 'target', targetTriple, 'release', binaryName)
 const destination = join(
   tauriDir,
   'generated-binaries',
-  `motrix-next-browser-launcher-${targetTriple}${extension}`,
+  `rayburst-browser-launcher-${targetTriple}${extension}`,
 )
 mkdirSync(dirname(destination), { recursive: true })
 const unchanged = existsSync(destination) && readFileSync(source).equals(readFileSync(destination))

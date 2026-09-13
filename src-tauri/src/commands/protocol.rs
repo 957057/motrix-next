@@ -25,10 +25,10 @@
 ///
 /// The three layers (all under HKCU, no admin required):
 ///
-/// 1. **ProgID** — `HKCU\Software\Classes\MotrixNext.Url.{scheme}`
+/// 1. **ProgID** — `HKCU\Software\Classes\Rayburst.Url.{scheme}`
 ///    Defines how to open the protocol: icon, command line.
 ///
-/// 2. **Capabilities** — `HKCU\Software\MotrixNext\Capabilities`
+/// 2. **Capabilities** — `HKCU\Software\Rayburst\Capabilities`
 ///    Declares which protocols the app supports via `URLAssociations`.
 ///
 /// 3. **RegisteredApplications** — `HKCU\Software\RegisteredApplications`
@@ -115,7 +115,7 @@ pub mod win_registry {
 
     /// Application name as it appears in Windows Default Apps.
     #[cfg(windows)]
-    pub const APP_NAME: &str = "Motrix Next";
+    pub const APP_NAME: &str = "Rayburst";
 
     /// Short description shown in Windows Default Apps tooltip.
     #[cfg(windows)]
@@ -123,25 +123,25 @@ pub mod win_registry {
 
     /// Manufacturer key path prefix under HKCU\Software.
     #[cfg(windows)]
-    pub const CAPABILITIES_PATH: &str = "Software\\MotrixNext\\Capabilities";
+    pub const CAPABILITIES_PATH: &str = "Software\\Rayburst\\Capabilities";
 
     /// The value written to HKCU\Software\RegisteredApplications.
     #[cfg(windows)]
-    pub const REGISTERED_APPS_VALUE: &str = "Software\\MotrixNext\\Capabilities";
+    pub const REGISTERED_APPS_VALUE: &str = "Software\\Rayburst\\Capabilities";
 
     /// Registered application name key in RegisteredApplications.
     #[cfg(windows)]
-    pub const REGISTERED_APP_NAME: &str = "MotrixNext";
+    pub const REGISTERED_APP_NAME: &str = "Rayburst";
 
     // ── Registry paths ─────────────────────────────────────────────
 
     /// Returns the ProgID for a given protocol scheme.
     ///
-    /// Format: `MotrixNext.Url.{scheme}` — follows Microsoft ProgID
+    /// Format: `Rayburst.Url.{scheme}` — follows Microsoft ProgID
     /// naming convention: `{AppName}.{Type}.{Discriminator}`.
     #[cfg(windows)]
     pub fn prog_id_for_scheme(scheme: &str) -> String {
-        format!("MotrixNext.Url.{scheme}")
+        format!("Rayburst.Url.{scheme}")
     }
 
     /// Returns the registry path for the ProgID's `shell\open\command`
@@ -169,9 +169,9 @@ pub mod win_registry {
 
     /// Registers a protocol handler using the three-layer structure.
     ///
-    /// 1. Creates ProgID at `HKCU\Software\Classes\MotrixNext.Url.{scheme}`
-    /// 2. Adds URLAssociation under `HKCU\Software\MotrixNext\Capabilities`
-    /// 3. Ensures `HKCU\Software\RegisteredApplications\MotrixNext` exists
+    /// 1. Creates ProgID at `HKCU\Software\Classes\Rayburst.Url.{scheme}`
+    /// 2. Adds URLAssociation under `HKCU\Software\Rayburst\Capabilities`
+    /// 3. Ensures `HKCU\Software\RegisteredApplications\Rayburst` exists
     /// 4. Calls `SHChangeNotify(SHCNE_ASSOCCHANGED, …)` to flush cache
     #[cfg(windows)]
     pub fn register_protocol(scheme: &str) -> Result<(), AppError> {
@@ -240,7 +240,7 @@ pub mod win_registry {
 
     /// Creates the ProgID key structure:
     /// ```text
-    /// HKCU\Software\Classes\MotrixNext.Url.{scheme}
+    /// HKCU\Software\Classes\Rayburst.Url.{scheme}
     ///     (Default) = "URL:{scheme} Protocol"
     ///     URL Protocol = ""
     ///     DefaultIcon\(Default) = "{exe},0"
@@ -291,7 +291,7 @@ pub mod win_registry {
         Ok(())
     }
 
-    /// Adds a URLAssociation entry: `{scheme}` = `MotrixNext.Url.{scheme}`.
+    /// Adds a URLAssociation entry: `{scheme}` = `Rayburst.Url.{scheme}`.
     #[cfg(windows)]
     fn add_url_association(scheme: &str) -> Result<(), AppError> {
         let path = url_associations_path();
@@ -309,7 +309,7 @@ pub mod win_registry {
         reg_delete_value(&path, scheme)
     }
 
-    /// Ensures `HKCU\Software\RegisteredApplications\MotrixNext` exists
+    /// Ensures `HKCU\Software\RegisteredApplications\Rayburst` exists
     /// and points to the Capabilities key.
     #[cfg(windows)]
     fn ensure_registered_application() -> Result<(), AppError> {

@@ -2,7 +2,7 @@
 import type { LogFields } from '@shared/logger'
 import type { Aria2EngineOptions } from '@shared/types'
 import type { HeaderSanitizeDiagnostics } from './headerSanitize'
-import { isMotrixNewTaskLink, parseMotrixDeepLink } from './motrixDeepLink'
+import { isRayburstNewTaskLink, parseRayburstDeepLink } from './rayburstDeepLink'
 
 let traceSequence = 0
 
@@ -39,13 +39,13 @@ export function summarizeExternalInput(value: string): string {
     const parsed = new URL(value)
     const scheme = parsed.protocol.replace(':', '') || 'unknown'
 
-    if (scheme !== 'motrixnext') {
+    if (scheme !== 'rayburst') {
       return summarizeRemoteUrl(value)
     }
 
-    const deepLink = parseMotrixDeepLink(value)
+    const deepLink = parseRayburstDeepLink(value)
     return [
-      `scheme=motrixnext`,
+      `scheme=rayburst`,
       `action=${deepLink.action}`,
       `target=${deepLink.downloadUrl ? summarizeRemoteUrl(deepLink.downloadUrl) : 'none'}`,
       `hasReferer=${deepLink.referer ? 'true' : 'false'}`,
@@ -61,7 +61,7 @@ export function summarizeExternalInput(value: string): string {
 export function summarizeExternalInputBatch(urls: string[]): LogFields {
   return {
     count: urls.length,
-    hasNewTask: urls.some(isMotrixNewTaskLink),
+    hasNewTask: urls.some(isRayburstNewTaskLink),
     hasCookie: urls.some((url) => {
       try {
         return new URL(url).searchParams.has('cookie')

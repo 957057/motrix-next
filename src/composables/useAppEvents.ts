@@ -17,7 +17,7 @@ import { isEngineReady } from '@/api/aria2'
 import { detectKind, createBatchItem } from '@shared/utils/batchHelpers'
 import { createExternalInputTraceId, summarizeExternalInputBatch } from '@shared/utils/externalInputDiagnostics'
 import { getErrorMessage } from '@shared/utils/errorMessage'
-import { isMotrixNewTaskLink } from '@shared/utils/motrixDeepLink'
+import { isRayburstNewTaskLink } from '@shared/utils/rayburstDeepLink'
 import type { ExternalDownloadInput } from '@shared/types'
 import { handleTaskStart } from '@/composables/useTaskNotifyHandlers'
 import { onUnmounted } from 'vue'
@@ -520,7 +520,7 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
     // Navigate to the "All" downloads tab when receiving new tasks from
     // extension.  Always land on /task/all regardless of current sub-tab
     // (active, stopped, etc.) so the user sees the full task list.
-    const hasNewTask = urls.some(isMotrixNewTaskLink)
+    const hasNewTask = urls.some(isRayburstNewTaskLink)
     if (!silent && hasNewTask && route.path !== '/task/all') {
       try {
         await router.push('/task/all')

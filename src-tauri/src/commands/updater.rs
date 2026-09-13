@@ -9,9 +9,13 @@ use tauri_plugin_updater::UpdaterExt;
 use tokio::sync::{Mutex, Notify};
 use url::Url;
 
-/// Base URL for update JSON files on the fixed `updater` GitHub Release tag.
-const UPDATER_BASE_URL: &str =
-    "https://github.com/AnInsomniacy/motrix-next/releases/download/updater";
+/// Set only when a Rayburst release origin has been configured.
+const UPDATER_BASE_URL: Option<&str> = option_env!("RAYBURST_UPDATE_BASE_URL");
+
+#[tauri::command]
+pub fn updates_available() -> bool {
+    UPDATER_BASE_URL.is_some_and(|value| !value.is_empty())
+}
 
 /// Serializable update metadata returned to the frontend.
 #[derive(Debug, Clone, Serialize)]
@@ -189,9 +193,15 @@ struct SelectedUpdate {
 }
 
 /// Returns the update endpoint URL for the given release channel.
-fn endpoint_for_channel(channel: ReleaseChannel) -> String {
-    let file = channel.endpoint_file();
-    format!("{}/{}", UPDATER_BASE_URL, file)
+fn endpoint_for_channel(channel: ReleaseChannel) -> Result<String, AppError> {
+    let base = UPDATER_BASE_URL
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| AppError::Updater("Updates are not configured for this build".into()))?;
+    Ok(format!(
+        "{}/{}",
+        base.trim_end_matches('/'),
+        channel.endpoint_file()
+    ))
 }
 
 fn candidate_channels_for_policy(policy: UpdatePolicy) -> Vec<ReleaseChannel> {
@@ -285,8 +295,8 @@ fn build_updater(
     channel: ReleaseChannel,
     proxy: &Option<String>,
 ) -> Result<tauri_plugin_updater::Updater, AppError> {
-    let endpoint =
-        Url::parse(&endpoint_for_channel(channel)).map_err(|e| AppError::Updater(e.to_string()))?;
+    let endpoint = Url::parse(&endpoint_for_channel(channel)?)
+        .map_err(|e| AppError::Updater(e.to_string()))?;
 
     let mut builder = app
         .updater_builder()
@@ -669,22 +679,6 @@ mod tests {
         assert!(!state.is_cancelled());
         state.cancel();
         assert!(state.is_cancelled());
-    }
-
-    // ── endpoint_for_channel ────────────────────────────────────────
-
-    #[test]
-    fn endpoint_for_stable_channel_returns_latest_json() {
-        let url = endpoint_for_channel(ReleaseChannel::Stable);
-        assert!(url.ends_with("/latest.json"));
-        assert!(url.starts_with(UPDATER_BASE_URL));
-    }
-
-    #[test]
-    fn endpoint_for_beta_channel_returns_beta_json() {
-        let url = endpoint_for_channel(ReleaseChannel::Beta);
-        assert!(url.ends_with("/beta.json"));
-        assert!(url.starts_with(UPDATER_BASE_URL));
     }
 
     #[test]

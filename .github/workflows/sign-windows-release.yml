@@ -79,7 +79,7 @@ jobs:
 
           foreach ($release in $releases) {
             foreach ($installer in $installers) {
-              $asset = "MotrixNext_$($release.version)_$($installer.Suffix)"
+              $asset = "Rayburst_$($release.version)_$($installer.Suffix)"
               $targetDir = Join-Path "unsigned" "$($release.channel)-$($installer.Arch)"
               New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
 

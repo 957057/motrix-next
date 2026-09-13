@@ -8,9 +8,8 @@ use tauri::{
 
 /// Embedded tray icon bytes.
 ///
-/// On macOS: a white-on-transparent template image (@2x, 88×88 px).
-/// The system auto-inverts for light/dark menu bar — white silhouette
-/// is the standard macOS convention.
+/// On macOS: a monochrome template image (@2x, 88×88 px).
+/// The system uses its alpha mask to adapt to the menu bar appearance.
 ///
 /// On Windows/Linux: the full-colour app icon (64×64 px) for the
 /// system tray.  Must be clearly visible on both light and dark
@@ -153,7 +152,7 @@ pub fn activate_main_window(app: &AppHandle, source: &'static str) -> WindowActi
 pub fn setup_tray(app: &AppHandle) -> Result<TrayMenuState, Box<dyn std::error::Error>> {
     // Create MenuItem references for TrayMenuState (used by update_tray_menu_labels).
     // All three platforms use the same native menu — no platform-specific branching.
-    let show_item = MenuItem::with_id(app, "show", "Show Motrix Next", true, None::<&str>)?;
+    let show_item = MenuItem::with_id(app, "show", "Show Rayburst", true, None::<&str>)?;
     let new_task_item = MenuItem::with_id(app, "tray-new-task", "New Task", true, None::<&str>)?;
     let resume_all_item =
         MenuItem::with_id(app, "tray-resume-all", "Resume All", true, None::<&str>)?;
@@ -183,10 +182,10 @@ pub fn setup_tray(app: &AppHandle) -> Result<TrayMenuState, Box<dyn std::error::
         ],
     )?;
 
-    let _tray = TrayIconBuilder::with_id("motrix-next")
+    let _tray = TrayIconBuilder::with_id("rayburst")
         .menu(&menu)
         .show_menu_on_left_click(false)
-        .tooltip("Motrix Next")
+        .tooltip("Rayburst")
         .icon(tray_icon_image())
         .icon_as_template(TRAY_ICON_IS_TEMPLATE)
         .on_tray_icon_event(|tray, event| {
@@ -293,7 +292,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<TrayMenuState, Box<dyn std::error::
         let app_handle = app.clone();
         tauri::async_runtime::spawn(async move {
             tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-            if let Some(tray) = app_handle.tray_by_id("motrix-next") {
+            if let Some(tray) = app_handle.tray_by_id("rayburst") {
                 let _ = refresh_tray_icon(&tray);
                 log::info!(
                     "tray:linux-deferred-icon-refresh — re-set icon after 3 s startup delay"

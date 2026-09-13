@@ -404,18 +404,11 @@ export interface UserAgentRule {
 
 /** Application user preferences with full type coverage. */
 export interface AppConfig {
-  /** Schema version for config migration. Absent in pre-migration configs (treated as 0). */
-  configVersion: number
-  /** Last known DB schema version for upgrade toast detection.
-   *  Stored in config.json so that existing users (who already have config data)
-   *  can be distinguished from fresh installs (who have empty config). */
-  dbSchemaVersion: number
   theme: 'auto' | 'light' | 'dark'
   colorScheme: string
   customColorScheme: string
   taskCardMode: 'full' | 'compact'
   reduceMotion: boolean
-  taskListWatermark: boolean
   sidebarTaskCounts: boolean
   taskPageSize: number
   locale: string

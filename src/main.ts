@@ -71,7 +71,7 @@ if (import.meta.env.PROD) {
 
   async function autoCheckForUpdate() {
     const config = preferenceStore.config
-    if (config.autoCheckUpdate === false) return
+    if (!appStore.updatesAvailable || config.autoCheckUpdate === false) return
 
     const intervalHours = Number(config.autoCheckUpdateInterval ?? 0)
     if (Number.isFinite(intervalHours) && intervalHours > 0) {
@@ -316,7 +316,6 @@ if (import.meta.env.PROD) {
 
     // Flush deferred migration toasts now that i18n locale is active.
     // loadPreference() buffers these signals to avoid showing English toasts.
-    preferenceStore.flushMigrationSignals()
 
     // Mount only after preference + locale hydration so root-level theme,
     // color-scheme, locale, and layout watchers see stable persisted values
@@ -383,6 +382,7 @@ if (import.meta.env.PROD) {
     }
 
     // ── Phase 4: deferred non-critical tasks ───────────────────────────────
+    appStore.updatesAvailable = await (await import('@tauri-apps/api/core')).invoke<boolean>('updates_available')
     autoCheckForUpdate()
     syncNetworkSourcesIfDue(true)
 

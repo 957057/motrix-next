@@ -267,7 +267,7 @@ async fn authorize_socket(
     };
     let request = serde_json::json!({
         "jsonrpc": "2.0",
-        "id": "motrix-next-events-auth",
+        "id": "rayburst-events-auth",
         "method": "aria2.getVersion",
         "params": params,
     });
@@ -367,7 +367,7 @@ mod tests {
         );
         assert_eq!(
             native_event_from_text(
-                r#"{"jsonrpc":"2.0","id":"motrix-next-events-auth","result":{"version":"2.6.1"}}"#
+                r#"{"jsonrpc":"2.0","id":"rayburst-events-auth","result":{"version":"2.6.1"}}"#
             ),
             None
         );

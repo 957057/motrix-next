@@ -40,7 +40,7 @@ use upnp::UpnpState;
 /// has been persisted yet.
 pub(crate) fn read_log_level() -> log::LevelFilter {
     (|| -> Option<log::LevelFilter> {
-        let data_dir = dirs::data_dir()?.join("com.motrix.next");
+        let data_dir = dirs::data_dir()?.join("dev.aninsomniacy.rayburst");
         let store_path = data_dir.join("config.json");
         let content = std::fs::read_to_string(store_path).ok()?;
         let json: serde_json::Value = serde_json::from_str(&content).ok()?;
@@ -562,12 +562,16 @@ pub fn run() {
     // Tauri's thread pool, the async runtime, or any plugin initialisation.
     gpu_guard::pre_flight();
 
+    // Keep a high-resolution source for native window scaling, including recreated windows.
+    let mut context = tauri::generate_context!();
+    context.set_default_window_icon(Some(tauri::include_image!("icons/icon.png")));
+
     let log_level = read_log_level();
     let log_control = log_policy::LogLevelControl::new(log_level);
     let log_filter = log_control.clone();
     let log_targets = vec![tauri_plugin_log::Target::new(
         tauri_plugin_log::TargetKind::LogDir {
-            file_name: Some("motrix-next".into()),
+            file_name: Some("rayburst".into()),
         },
     )];
     #[cfg(debug_assertions)]
@@ -686,6 +690,7 @@ pub fn run() {
             commands::update_dock_badge,
             commands::send_task_start_notification,
             commands::send_app_system_notification,
+            commands::updates_available,
             commands::check_for_update,
             commands::download_update,
             commands::apply_update,
@@ -848,7 +853,7 @@ pub fn run() {
             _ => {}
         })
         .setup(|app| setup_app(app))
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("error while building tauri application")
         .run(handle_run_event);
 }

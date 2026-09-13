@@ -1,13 +1,13 @@
-/** @fileoverview Tests for Motrix internal deep-link parsing. */
+/** @fileoverview Tests for Rayburst internal deep-link parsing. */
 import { describe, expect, it } from 'vitest'
-import { isMotrixNewTaskLink, parseMotrixDeepLink } from '../motrixDeepLink'
+import { isRayburstNewTaskLink, parseRayburstDeepLink } from '../rayburstDeepLink'
 
-describe('motrixDeepLink', () => {
+describe('rayburstDeepLink', () => {
   it('parses the canonical extension new-task deep link', () => {
     const link =
-      'motrixnext://new?url=https%3A%2F%2Fexample.com%2Ffile.zip&referer=https%3A%2F%2Fexample.com&cookie=session%3Dabc&filename=file.zip'
+      'rayburst://new?url=https%3A%2F%2Fexample.com%2Ffile.zip&referer=https%3A%2F%2Fexample.com&cookie=session%3Dabc&filename=file.zip'
 
-    const parsed = parseMotrixDeepLink(link)
+    const parsed = parseRayburstDeepLink(link)
 
     expect(parsed.valid).toBe(true)
     expect(parsed.action).toBe('new')
@@ -19,19 +19,19 @@ describe('motrixDeepLink', () => {
   })
 
   it('parses single-slash new-task deep links through the same path', () => {
-    const link = 'motrixnext:/new?url=https%3A%2F%2Fexample.com%2Ffile.zip'
+    const link = 'rayburst:/new?url=https%3A%2F%2Fexample.com%2Ffile.zip'
 
-    const parsed = parseMotrixDeepLink(link)
+    const parsed = parseRayburstDeepLink(link)
 
     expect(parsed.valid).toBe(true)
     expect(parsed.action).toBe('new')
     expect(parsed.isNewTask).toBe(true)
     expect(parsed.downloadUrl).toBe('https://example.com/file.zip')
-    expect(isMotrixNewTaskLink(link)).toBe(true)
+    expect(isRayburstNewTaskLink(link)).toBe(true)
   })
 
-  it('treats motrixnext wake links without a download URL as wake-only', () => {
-    const parsed = parseMotrixDeepLink('motrixnext://')
+  it('treats rayburst wake links without a download URL as wake-only', () => {
+    const parsed = parseRayburstDeepLink('rayburst://')
 
     expect(parsed.valid).toBe(true)
     expect(parsed.action).toBe('none')
@@ -39,11 +39,11 @@ describe('motrixDeepLink', () => {
     expect(parsed.downloadUrl).toBe('')
   })
 
-  it('rejects non-Motrix URLs', () => {
-    const parsed = parseMotrixDeepLink('https://example.com/file.zip')
+  it('rejects non-Rayburst URLs', () => {
+    const parsed = parseRayburstDeepLink('https://example.com/file.zip')
 
     expect(parsed.valid).toBe(false)
     expect(parsed.reason).toBe('unsupported-scheme')
-    expect(isMotrixNewTaskLink('https://example.com/file.zip')).toBe(false)
+    expect(isRayburstNewTaskLink('https://example.com/file.zip')).toBe(false)
   })
 })

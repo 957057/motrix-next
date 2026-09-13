@@ -47,11 +47,11 @@ pub(crate) fn clear_engine_runtime_state(app: &tauri::AppHandle) -> Result<(), S
 /// killed when reclaiming the RPC port — never arbitrary processes that
 /// happen to occupy the same port.
 ///
-/// Matches only the current `motrix-next-engine` sidecar process.
+/// Matches only the current `rayburst-engine` sidecar process.
 ///
 #[cfg(unix)]
 fn is_supported_engine_process(comm: &str) -> bool {
-    comm.contains("motrix-next-engine")
+    comm.contains("rayburst-engine")
 }
 
 #[cfg(any(windows, test))]
@@ -189,20 +189,20 @@ mod tests {
 
     #[test]
     #[cfg(unix)]
-    fn is_supported_engine_process_matches_motrix_next_engine() {
-        assert!(is_supported_engine_process("motrix-next-engine"));
+    fn is_supported_engine_process_matches_rayburst_engine() {
+        assert!(is_supported_engine_process("rayburst-engine"));
         assert!(is_supported_engine_process(
-            "/Applications/MotrixNext.app/Contents/Resources/motrix-next-engine"
+            "/Applications/Rayburst.app/Contents/Resources/rayburst-engine"
         ));
         assert!(is_supported_engine_process(
-            "/usr/bin/motrix-next-engine --conf-path=/home/user/.local/share/com.motrix.next/engine/aria2.conf"
+            "/usr/bin/rayburst-engine --conf-path=/home/user/.local/share/dev.aninsomniacy.rayburst/engine/aria2.conf"
         ));
     }
 
     #[test]
     #[cfg(unix)]
     fn is_supported_engine_process_does_not_trust_truncated_comm_names() {
-        assert!(!is_supported_engine_process("motrix-next-eng"));
+        assert!(!is_supported_engine_process("rayburst-eng"));
     }
 
     #[test]

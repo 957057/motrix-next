@@ -1,5 +1,5 @@
 {
-  "name": "motrix-next",
+  "name": "rayburst",
   "private": true,
   "version": "3.9.9",
   "type": "module",
@@ -17,7 +17,8 @@
     "format:check": "prettier --check 'src/**/*.{ts,vue,css,json}'",
     "build:native-launcher": "node scripts/build-native-messaging-launcher.mjs",
     "tauri": "tauri",
-    "prepare": "husky"
+    "prepare": "husky",
+    "brand:assets": "node scripts/generate-brand-assets.mjs"
   },
   "packageManager": "pnpm@11.5.2",
   "dependencies": {
@@ -78,6 +79,7 @@
     "jsonc-eslint-parser": "~3.3.0",
     "lint-staged": "^16.3.2",
     "prettier": "^3.8.3",
+    "sharp": "^0.35.4",
     "typescript": "~5.6.2",
     "unocss": "^66.7.0",
     "vite": "^6.0.3",

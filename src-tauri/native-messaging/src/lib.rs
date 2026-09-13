@@ -3,9 +3,9 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-pub const HOST_NAME: &str = "com.motrix.next.browser";
-pub const LAUNCHER_FILE_STEM: &str = "motrix-next-browser-launcher";
-pub const ACTIVATION_URL: &str = "motrixnext://";
+pub const HOST_NAME: &str = "dev.aninsomniacy.rayburst.browser";
+pub const LAUNCHER_FILE_STEM: &str = "rayburst-browser-launcher";
+pub const ACTIVATION_URL: &str = "rayburst://";
 pub const CHROME_ORIGIN: &str = "chrome-extension://ofeajdebdjajhkmcmamagokecnbephhl/";
 pub const EDGE_ORIGIN: &str = "chrome-extension://loojjolhejmakcdlbidigoniobfanjlb/";
 pub const FIREFOX_EXTENSION_ID: &str = "motrix-next-extension@aninsomniacy.dev";
@@ -21,7 +21,7 @@ pub enum HostError {
     InvalidSize,
     #[error("request is invalid")]
     InvalidRequest,
-    #[error("failed to activate Motrix Next")]
+    #[error("failed to activate Rayburst")]
     ActivationFailed,
     #[error("failed to write response")]
     ResponseFailed,
@@ -84,7 +84,7 @@ struct FirefoxManifest<'a> {
 pub fn chromium_manifest_json(path: &Path) -> Result<Vec<u8>, serde_json::Error> {
     serde_json::to_vec_pretty(&ChromiumManifest {
         name: HOST_NAME,
-        description: "Activate Motrix Next",
+        description: "Activate Rayburst",
         path: &path.to_string_lossy(),
         r#type: "stdio",
         allowed_origins: [CHROME_ORIGIN, EDGE_ORIGIN],
@@ -94,7 +94,7 @@ pub fn chromium_manifest_json(path: &Path) -> Result<Vec<u8>, serde_json::Error>
 pub fn firefox_manifest_json(path: &Path) -> Result<Vec<u8>, serde_json::Error> {
     serde_json::to_vec_pretty(&FirefoxManifest {
         name: HOST_NAME,
-        description: "Activate Motrix Next",
+        description: "Activate Rayburst",
         path: &path.to_string_lossy(),
         r#type: "stdio",
         allowed_extensions: [FIREFOX_EXTENSION_ID],
