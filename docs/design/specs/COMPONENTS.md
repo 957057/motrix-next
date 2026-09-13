@@ -1,6 +1,6 @@
 # Component contracts
 
-All specifications here are proposals for the approved visual direction. Source contracts override generated pixels. The [component sheet](20-components.png) is a visual sample; exact behavior lives here.
+All specifications here are proposals for the approved visual direction. Source contracts override generated pixels. The [component sheet](../screens/20-components.png) is a visual sample; exact behavior lives here.
 
 | Component                  | Anatomy and variants                                         | Interaction and state contract                                                                |
 | -------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |

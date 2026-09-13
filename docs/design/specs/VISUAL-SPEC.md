@@ -1,6 +1,6 @@
 # Visual specification
 
-Status: proposed implementation specification, derived from the user-approved [01 task overview](01-task-overview.png). The baseline image is approved; the remaining screens and the exact values below are design proposals for implementation review. No application code or dependencies have changed.
+Status: proposed implementation specification, derived from the user-approved [01 task overview](../screens/01-task-overview.png). The baseline image is approved; the remaining screens and the exact values below are design proposals for implementation review. No application code or dependencies have changed.
 
 ## Authority
 

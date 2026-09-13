@@ -1,7 +1,7 @@
 {
   "status": "proposed",
   "unit": "CSS logical px",
-  "approvedBaseline": "01-task-overview.png",
+  "approvedBaseline": "../screens/01-task-overview.png",
   "note": "Design reference only. Not imported by application and not a replacement palette generator.",
   "brand": {
     "seed": "#7B3ED1",
@@ -35,7 +35,14 @@
       "smallContent": 480
     }
   },
-  "spacing": [4, 8, 12, 16, 24, 32],
+  "spacing": [
+    4,
+    8,
+    12,
+    16,
+    24,
+    32
+  ],
   "radii": {
     "control": 6,
     "menu": 8,

@@ -1,6 +1,6 @@
 # Motion specification
 
-Primary requirement: no empty exit frame, no task teleportation, no full-window flash. [Storyboard](21-motion-storyboard.png) shows intent; timings below are proposed starting values, not measured performance claims.
+Primary requirement: no empty exit frame, no task teleportation, no full-window flash. [Storyboard](../screens/21-motion-storyboard.png) shows intent; timings below are proposed starting values, not measured performance claims.
 
 ## Ownership
 
