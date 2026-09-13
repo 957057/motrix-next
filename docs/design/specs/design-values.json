@@ -35,14 +35,7 @@
       "smallContent": 480
     }
   },
-  "spacing": [
-    4,
-    8,
-    12,
-    16,
-    24,
-    32
-  ],
+  "spacing": [4, 8, 12, 16, 24, 32],
   "radii": {
     "control": 6,
     "menu": 8,
