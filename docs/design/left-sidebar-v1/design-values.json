@@ -1,0 +1,103 @@
+{
+  "status": "proposed",
+  "unit": "CSS logical px",
+  "approvedBaseline": "01-task-overview.png",
+  "note": "Design reference only. Not imported by application and not a replacement palette generator.",
+  "brand": {
+    "seed": "#7B3ED1",
+    "logo": "src/assets/rayburst.svg",
+    "paletteOwner": "src/shared/utils/colorScheme.ts"
+  },
+  "layout": {
+    "sidebar": 192,
+    "rail": 56,
+    "contentPadding": 24,
+    "headerMin": 56,
+    "footerMin": 32,
+    "navRowMin": 40,
+    "activeRowNormalMin": 80,
+    "simpleRowNormalMin": 64,
+    "compactRowMin": 44,
+    "preferredCompactRow": 48,
+    "control": 36,
+    "iconTargetMin": 32,
+    "dialogPadding": 24,
+    "dialogSmallWidth": 400,
+    "dialogWidth": 560,
+    "filePickerMaxWidth": 760,
+    "nativeCurrentMinimum": {
+      "width": 373,
+      "height": 240
+    },
+    "breakpoints": {
+      "fullNav": 960,
+      "rail": 720,
+      "smallContent": 480
+    }
+  },
+  "spacing": [4, 8, 12, 16, 24, 32],
+  "radii": {
+    "control": 6,
+    "menu": 8,
+    "dialog": 12
+  },
+  "typography": {
+    "page": {
+      "size": 24,
+      "line": 32,
+      "weight": 600
+    },
+    "dialog": {
+      "size": 20,
+      "line": 28,
+      "weight": 600
+    },
+    "task": {
+      "size": 15,
+      "line": 22,
+      "weight": 500
+    },
+    "body": {
+      "size": 14,
+      "line": 20,
+      "weight": 400
+    },
+    "metadata": {
+      "size": 13,
+      "line": 20,
+      "weight": 400
+    },
+    "caption": {
+      "size": 12,
+      "line": 18,
+      "weight": 400
+    }
+  },
+  "motionMs": {
+    "feedback": 120,
+    "rowEnter": 180,
+    "rowRemove": 180,
+    "rowLayout": 220,
+    "disclosure": 220,
+    "dialogEnter": 200,
+    "dialogExit": 160,
+    "viewChange": 160,
+    "progressMax": 300,
+    "toastEnter": 140,
+    "toastExit": 120
+  },
+  "motionEasing": "cubic-bezier(0.2, 0, 0, 1)",
+  "surfaceMapping": {
+    "light": {
+      "mainNeutralTone": 99,
+      "sidebarNeutralTone": 97,
+      "menuNeutralTone": 99
+    },
+    "dark": {
+      "mainNeutralTone": 10,
+      "sidebarNeutralTone": 12,
+      "menuNeutralTone": 17
+    },
+    "note": "Apply these proposed tone selections within existing MCU palette; validate runtime contrast and first paint."
+  }
+}
