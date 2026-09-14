@@ -125,14 +125,14 @@
     "note": "Retry count 0–60 (0 unlimited), wait 0–600s, connection/data timeout 1–600s; show meaning of zero."
   },
   {
-    "category": "Network and connections / Browser handoff",
+    "category": "Connections / Browser extension",
     "screen": "12",
-    "mode": "Grouped native config; simple preferences immediate proposal",
+    "mode": "One draft; explicit save and native apply",
     "keys": ["autoSubmitFromExtension", "silentAutoSubmitFromExtension", "extensionApiPort", "extensionApiSecret"],
     "note": "Local default port 29110. Background auto-submit depends on auto-submit. Local availability does not prove extension connectivity."
   },
   {
-    "category": "Network and connections / Local APIs",
+    "category": "Connections / RPC and access; Network / Port recovery",
     "screen": "12, 14",
     "mode": "Grouped native config/restart policy",
     "keys": ["rpcListenPort", "rpcSecret", "allowRemoteAccess", "autoChangeConflictingPorts", "portConflictRecovery"],

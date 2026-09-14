@@ -253,8 +253,8 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
   function setupNavGuard() {
     return registerCleanup(
       router.beforeEach((to, from) => {
-        const leavingForm =
-          (from.path.startsWith('/preference') || from.path === '/connection') && from.path !== to.path
+        const leavingForm = from.path.startsWith('/preference') && from.path !== to.path
+        if (leavingForm && preferenceStore.savingChanges) return false
         if (leavingForm && preferenceStore.pendingChanges) {
           return new Promise<boolean>((resolve) => {
             navDialog.warning({

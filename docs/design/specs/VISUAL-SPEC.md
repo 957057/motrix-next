@@ -25,7 +25,7 @@ Use CSS logical pixels, not screenshot pixels. Primary composition target is 120
 | Content header       | 56 px minimum; 24 px inline padding                                            |
 | Main content         | 24 px horizontal padding; 16 px below header                                   |
 | Sidebar nav row      | 40 px minimum, 6 px radius, 4 px vertical gap                                  |
-| Sidebar bottom links | Browser connection and Settings; same 40 px minimum target                     |
+| Sidebar bottom links | Settings and About; same 40 px minimum target                                  |
 | Footer               | 32 px minimum; thin separator; global down/up speed and limit control          |
 | Group heading        | 28 px minimum, 13/20 medium text; 16 px before next group                      |
 | Active task, normal  | 80 px minimum; filename, metadata, progress                                    |
@@ -52,7 +52,7 @@ Never shrink all text to make a dense screenshot fit. Long field descriptions wr
 |                |     optional quick details in the same row     |
 |                | Waiting / Needs action / Recent completions    |
 |                |                                                |
-| Browser        |                                                |
+| About          |                                                |
 | Settings       | down / up speed              Limit: unlimited  |
 +----------------+------------------------------------------------+
 ```

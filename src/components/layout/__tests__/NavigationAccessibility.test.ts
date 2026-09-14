@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import AppSidebar from '../AppSidebar.vue'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (key: string) => key }) }))
 describe('Workspace navigation', () => {
-  it('keeps the logo, settings and browser connection reachable through labelled links', async () => {
+  it('keeps the logo and settings reachable without a separate connection entry', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)
     const router = createRouter({
@@ -16,7 +16,7 @@ describe('Workspace navigation', () => {
     const wrapper = mount(AppSidebar, { global: { plugins: [pinia, router] } })
     expect(wrapper.find('a[aria-label="Rayburst"] img').exists()).toBe(true)
     expect(wrapper.find('a[href="/preference/general"]').attributes('title')).toBe('app.preferences')
-    expect(wrapper.find('a[href="/connection"]').attributes('title')).toBe('workspace.browser-connection')
+    expect(wrapper.find('a[href="/connection"]').exists()).toBe(false)
     expect(wrapper.find('a[aria-current="page"]').attributes('href')).toBe('/task/all')
     wrapper.unmount()
   })

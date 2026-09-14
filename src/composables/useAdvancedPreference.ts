@@ -1,13 +1,8 @@
-/** Advanced settings own RPC, extension access, logging, and clipboard behavior. */
-import { PORT_RECOVERY_RANGE_END, PORT_RECOVERY_RANGE_START } from '@shared/constants'
-import { generateRandomInt } from '@shared/utils'
+/** Advanced settings own diagnostics, rendering, and clipboard behavior. */
 import type { AppConfig } from '@shared/types'
 
 export interface AdvancedForm {
   [key: string]: unknown
-  rpcListenPort: number
-  rpcSecret: string
-  allowRemoteAccess: boolean
   logLevel: AppConfig['logLevel']
   aria2LogLevel: AppConfig['aria2LogLevel']
   tempFilesDir: string
@@ -23,9 +18,6 @@ export interface AdvancedForm {
 
 export function buildAdvancedForm(config: AppConfig): AdvancedForm {
   return {
-    rpcListenPort: config.rpcListenPort,
-    rpcSecret: config.rpcSecret,
-    allowRemoteAccess: config.allowRemoteAccess,
     logLevel: config.logLevel,
     aria2LogLevel: config.aria2LogLevel,
     tempFilesDir: config.tempFilesDir,
@@ -37,14 +29,6 @@ export function buildAdvancedForm(config: AppConfig): AdvancedForm {
     clipboardEd2k: config.clipboard.ed2k,
     clipboardThunder: config.clipboard.thunder,
     clipboardBtHash: config.clipboard.btHash,
-  }
-}
-
-export function buildAdvancedSystemConfig(form: AdvancedForm): Record<string, string> {
-  return {
-    'rpc-listen-port': String(form.rpcListenPort),
-    'allow-remote-access': String(form.allowRemoteAccess),
-    'rpc-secret': form.rpcSecret,
   }
 }
 
@@ -71,8 +55,4 @@ export function transformAdvancedForStore(form: AdvancedForm): Partial<AppConfig
       btHash: clipboardBtHash,
     },
   }
-}
-
-export function randomRpcPort(): number {
-  return generateRandomInt(PORT_RECOVERY_RANGE_START, PORT_RECOVERY_RANGE_END + 1)
 }

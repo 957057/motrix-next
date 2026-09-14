@@ -275,7 +275,7 @@ async fn spawn_background_services(app: &tauri::AppHandle) {
         if current_port != Some(desired_port)
             || current_remote_access != Some(desired_remote_access)
         {
-            match http_api::restart_on_port(app, desired_port).await {
+            match http_api::apply_on_port(app, desired_port).await {
                 Ok(active_port) => {
                     log::info!("runtime_services: HTTP API listening on port {active_port}");
                 }

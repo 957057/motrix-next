@@ -8,7 +8,6 @@ import {
   PlayCircleOutline,
   CheckmarkCircleOutline,
   AlertCircleOutline,
-  LinkOutline,
   SettingsOutline,
   InformationCircleOutline,
 } from '@vicons/ionicons5'
@@ -83,16 +82,6 @@ function showAbout() {
           </RouterLink>
         </nav>
         <nav class="secondary-navigation" :aria-label="t('app.preferences')">
-          <RouterLink
-            to="/connection"
-            class="nav-link"
-            :class="{ active: route.path === '/connection' }"
-            :title="t('workspace.browser-connection')"
-            @click="view.navigationOpen = false"
-          >
-            <NIcon :size="20"><LinkOutline /></NIcon
-            ><span class="nav-label">{{ t('workspace.browser-connection') }}</span>
-          </RouterLink>
           <RouterLink
             to="/preference/general"
             class="nav-link"

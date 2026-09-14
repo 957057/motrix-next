@@ -414,24 +414,29 @@ pub async fn spawn_http_api(
     })
 }
 
-/// Stop the current HTTP API server (if running) and respawn on `new_port`.
+/// Apply the requested HTTP binding, retaining an already matching listener.
 ///
 /// Used by:
 /// - `on_engine_ready()` during startup (idempotent — skipped if already
 ///   bound to the correct port by the caller)
-/// - `restart_http_api` command when the user changes the port at runtime
+/// - `apply_http_api` command when the user changes the port at runtime
 ///
-/// The old server is stopped *before* binding the new one because the old
-/// and new port may be identical (user changed and reverted), so the
-/// listener must be released first.
-pub async fn restart_on_port(app: &AppHandle, new_port: u16) -> Result<u16, AppError> {
+/// A changed interface on the same port requires releasing the old listener first.
+pub async fn apply_on_port(app: &AppHandle, new_port: u16) -> Result<u16, AppError> {
     let api_state = app
         .try_state::<HttpApiState>()
         .ok_or_else(|| AppError::Engine("HttpApiState not managed".into()))?;
 
     let mut guard = api_state.0.lock().await;
 
-    // Stop existing server (if any)
+    let allow_remote_access = read_extension_api_allow_remote_access(app).await;
+    if let Some(handle) = guard.as_ref() {
+        if handle.port() == new_port && handle.allow_remote_access() == allow_remote_access {
+            return Ok(handle.port());
+        }
+    }
+
+    // Stop the listener only when its binding must change.
     if let Some(handle) = guard.take() {
         log::info!(
             "http_api: stopping server on port {} for rebind to {new_port}",
@@ -439,8 +444,6 @@ pub async fn restart_on_port(app: &AppHandle, new_port: u16) -> Result<u16, AppE
         );
         handle.stop().await;
     }
-
-    let allow_remote_access = read_extension_api_allow_remote_access(app).await;
 
     // Spawn on the new port, then recover once if the chosen port is busy.
     let handle = match spawn_http_api(app.clone(), new_port, allow_remote_access).await {

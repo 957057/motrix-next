@@ -19,8 +19,8 @@ Reviewed on 2026-09-13. These sources inform this desktop design pack; the chose
 ## Vue, mature primitives and native APIs
 
 - [Vue: Transition](https://vuejs.org/guide/built-ins/transition.html) and [TransitionGroup](https://vuejs.org/guide/built-ins/transition-group.html) provide lifecycle and keyed-list building blocks. Do not clear content before leave completes.
-- [Motion for Vue: Layout animation](https://motion.dev/docs/vue-layout-animations) is a candidate for coordinated layout transitions. Adoption requires Tauri verification and a single animation owner.
-- [Reka UI: Dialog](https://reka-ui.com/docs/components/dialog) is a candidate for accessible unstyled primitives. The pack does not install it or claim every Reka component has the same maturity.
+- [Motion for Vue: Layout animation](https://motion.dev/docs/vue-layout-animations) provides the coordinated layout transitions used by the desktop. Native acceptance and a single animation owner remain required.
+- [Reka UI: Dialog](https://reka-ui.com/docs/components/dialog) was evaluated as an alternative. The desktop retains Naive UI and does not use Reka UI.
 - [Tauri: Dialog plugin](https://v2.tauri.app/plugin/dialog/) and [window API](https://v2.tauri.app/reference/javascript/api/namespacewindow/) support platform-owned file dialogs and window behavior.
 
 These are engineering starting points, not a requirement to use every library. Prefer existing native/maintained capabilities. Choose stable versions that fit the deployed webviews; do not pursue the highest version number or assume an LTS label guarantees suitability.

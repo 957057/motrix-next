@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 const { t } = useI18n()
 const route = useRoute()
-const categories = ['general', 'downloads', 'network', 'bt', 'ed2k', 'advanced']
+const categories = ['general', 'downloads', 'network', 'bt', 'ed2k', 'connections', 'advanced']
 </script>
 <template>
   <section class="preference-view">

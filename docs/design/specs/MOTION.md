@@ -6,7 +6,7 @@ Primary requirement: no empty exit frame, no task teleportation, no full-window 
 
 Use a single animation owner for each property. Vue Transition handles simple enter/leave, mature layout/presence primitives handle coordinated task movement where needed, and the existing native engine owns download state. Do not stack AutoAnimate, TransitionGroup and Motion layout animation on the same node.
 
-Motion for Vue is a candidate for interruptible layout/presence. Reka UI is a candidate for accessible unstyled dialog/menu primitives. Neither is installed or approved by this document. Stable supported versions are preferred; LTS branding is not a requirement. Prove the chosen combination in Tauri's actual webviews before replacing the existing components. CSS transitions and native platform APIs remain the default for simple changes. Do not write a custom spring solver, FLIP engine, modal focus trap or animation scheduler.
+Motion for Vue 2.4.2 owns coordinated list layout, presence and reordering. Naive UI owns form controls, disclosures, dialogs and menus; Reka UI is not used. CSS transitions and Vue lifecycle primitives handle simple view changes. Do not write a custom spring solver, FLIP engine, modal focus trap or animation scheduler. Native WebView acceptance remains separate from unit tests.
 
 ## Timing tokens
 
@@ -18,8 +18,8 @@ Motion for Vue is a candidate for interruptible layout/presence. Reka UI is a ca
 | Row removal            | 180 ms total          | opacity and surviving-row layout | Exiting content survives until leave completion       |
 | Row layout / reorder   | 180–220 ms            | transform via library            | No data-order simulation in animation layer           |
 | Inline detail          | 220 ms                | measured layout, opacity         | Reverse from current interpolated state               |
-| Dialog open            | 200 ms                | opacity, scale 0.985 to 1        | Body populated before appearance                      |
-| Dialog close           | 160 ms                | opacity, scale 1 to 0.985        | Clear draft only after leave                          |
+| Dialog open            | 200 ms                | opacity, translateY 6 px to 0    | Body populated before appearance                      |
+| Dialog close           | 160 ms                | opacity, translateY 0 to 6 px    | Clear draft only after leave                          |
 | Content view change    | 140–180 ms            | modest crossfade                 | Preserve shell; avoid empty out-in gap                |
 | Progress               | 200–300 ms maximum    | bounded transform                | Only tween values for same GID, phase and denominator |
 | State-label transition | 120–160 ms            | opacity                          | Stable text area; no rolling-number gimmick           |
@@ -61,7 +61,7 @@ Stable sort tie-breaks prevent jitter. A speed-sorted list moves only because th
 
 ## Reduced motion and hidden windows
 
-Honor the application preference and, as a proposed accessibility improvement, the OS prefers-reduced-motion signal. Existing code currently exposes the application flag; OS integration is a planned change, not already implemented behavior.
+Honor the application preference together with the OS prefers-reduced-motion signal through VueUse. Either preference enables reduced motion.
 
 Reduced motion removes spatial translation and scale; use immediate state changes or a short opacity change where appropriate. Run the same cleanup, queue and focus completion logic even at zero duration. Never depend solely on transitionend firing.
 

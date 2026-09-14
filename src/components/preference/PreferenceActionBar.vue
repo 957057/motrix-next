@@ -3,8 +3,9 @@
 import { useI18n } from 'vue-i18n'
 import { NButton, NSpace } from 'naive-ui'
 
-withDefaults(defineProps<{ isDirty: boolean; isValid?: boolean }>(), {
+withDefaults(defineProps<{ isDirty: boolean; isValid?: boolean; isSaving?: boolean }>(), {
   isValid: true,
+  isSaving: false,
 })
 defineEmits<{ save: []; discard: [] }>()
 
@@ -16,12 +17,13 @@ const { t } = useI18n()
     <NSpace :size="12" align="center">
       <NButton
         :type="isDirty && isValid ? 'primary' : 'default'"
-        :disabled="!isDirty || !isValid"
+        :disabled="!isDirty || !isValid || isSaving"
+        :loading="isSaving"
         @click="$emit('save')"
       >
         {{ t('preferences.save') }}
       </NButton>
-      <NButton quaternary :disabled="!isDirty" @click="$emit('discard')">
+      <NButton quaternary :disabled="!isDirty || isSaving" @click="$emit('discard')">
         {{ t('preferences.discard') }}
       </NButton>
     </NSpace>

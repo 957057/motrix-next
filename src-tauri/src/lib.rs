@@ -727,7 +727,7 @@ pub fn run() {
             commands::get_system_proxy,
             commands::lookup_peer_ips,
             commands::refresh_runtime_config,
-            commands::restart_http_api,
+            commands::apply_http_api,
             commands::peek_pending_deep_links_silent,
             commands::peek_pending_external_inputs_silent,
             commands::take_pending_deep_links,

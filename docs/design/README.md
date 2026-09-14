@@ -1,6 +1,6 @@
 # Rayburst design reference
 
-The approved baseline is [01 task overview](screens/01-task-overview.png): light left navigation, a lightweight task list, Electric Purple and continuous transitions. Other screens extend this direction.
+The approved baseline is [01 task overview](screens/01-task-overview.png): light left navigation, a lightweight task list, Electric Purple and continuous transitions. Other screens extend this direction. Settings now include a Connections tab; sidebar connection links in raster references are superseded by the written specification.
 
 ## Contents
 

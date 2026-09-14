@@ -41,6 +41,9 @@ export interface UsePreferenceFormOptions<T extends Record<string, unknown>> {
    */
   afterSave?: (form: T, prevConfig: Partial<AppConfig>) => void | Promise<void>
 
+  /** Restore runtime services after persisted configuration has been rolled back. */
+  afterRollback?: (previous: Partial<AppConfig>, attempted: T) => Promise<void>
+
   /** Persistent progress and rollback messages for saves with visible latency. */
   saveFeedback?:
     | {
@@ -80,6 +83,8 @@ export function usePreferenceForm<T extends Record<string, unknown>>(options: Us
 
   const form: Ref<T> = ref(options.buildForm()) as Ref<T>
   const savedSnapshot: Ref<T> = ref(JSON.parse(JSON.stringify(options.buildForm()))) as Ref<T>
+  const isSaving = ref(false)
+  let pendingSave: Promise<void> | null = null
 
   const isDirty = computed(() => !isEqual(JSON.parse(JSON.stringify(form.value)), savedSnapshot.value))
 
@@ -91,7 +96,19 @@ export function usePreferenceForm<T extends Record<string, unknown>>(options: Us
 
   // ── Save & Reset ────────────────────────────────────────────────────
 
-  async function handleSave(): Promise<void> {
+  function handleSave(): Promise<void> {
+    if (pendingSave) return pendingSave
+    isSaving.value = true
+    preferenceStore.savingChanges = true
+    pendingSave = save().finally(() => {
+      isSaving.value = false
+      preferenceStore.savingChanges = false
+      pendingSave = null
+    })
+    return pendingSave
+  }
+
+  async function save(): Promise<void> {
     const initialStoreData: Partial<AppConfig> = options.transformForStore
       ? options.transformForStore(form.value as T)
       : { ...(form.value as T) }
@@ -135,6 +152,7 @@ export function usePreferenceForm<T extends Record<string, unknown>>(options: Us
     let hotReloadAttempted = false
     let preferencesPersisted = false
     let systemConfigWriteAttempted = false
+    let runtimeApplyAttempted = false
     const saveFeedback =
       typeof options.saveFeedback === 'function'
         ? options.saveFeedback(form.value as T, prevConfig)
@@ -158,6 +176,7 @@ export function usePreferenceForm<T extends Record<string, unknown>>(options: Us
         })
       }
 
+      runtimeApplyAttempted = true
       await options.afterSave?.(savedForm, prevConfig)
     } catch (error) {
       let rollbackFailed = false
@@ -188,6 +207,14 @@ export function usePreferenceForm<T extends Record<string, unknown>>(options: Us
           logger.error('PreferenceForm.rollback', rollbackError)
         }
       }
+      if (!rollbackFailed && runtimeApplyAttempted && options.afterRollback) {
+        try {
+          await options.afterRollback(prevConfig, savedForm)
+        } catch (rollbackError) {
+          rollbackFailed = true
+          logger.error('PreferenceForm.rollbackRuntime', rollbackError)
+        }
+      }
       if (!rollbackFailed) {
         savedSnapshot.value = JSON.parse(JSON.stringify(options.buildForm())) as T
       }
@@ -211,6 +238,7 @@ export function usePreferenceForm<T extends Record<string, unknown>>(options: Us
   }
 
   function handleReset(): void {
+    if (isSaving.value) return
     const hadChanges = isDirty.value
     Object.assign(form.value as Record<string, unknown>, options.buildForm())
     savedSnapshot.value = JSON.parse(JSON.stringify(form.value)) as T
@@ -250,6 +278,7 @@ export function usePreferenceForm<T extends Record<string, unknown>>(options: Us
   return {
     form,
     isDirty,
+    isSaving,
     handleSave,
     handleReset,
     resetSnapshot,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/** @fileoverview Advanced preference tab: RPC, extension, clipboard, default programs, engine, log, history, diagnostics. */
+/** @fileoverview Advanced preferences: clipboard, system integration, engine maintenance, and diagnostics. */
 import { ref, computed, onMounted } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import { invoke } from '@tauri-apps/api/core'
@@ -8,7 +8,6 @@ import { usePlatform } from '@/composables/usePlatform'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
-import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
 import { useEngineStore } from '@/stores/engine'
 import { useHistoryStore } from '@/stores/history'
 import { useAdvancedActions } from '@/composables/useAdvancedActions'
@@ -17,18 +16,11 @@ import { useProtocolHandlers, type ProtocolKey } from '@/composables/useProtocol
 import { relaunch } from '@tauri-apps/plugin-process'
 import { appDataDir, appLogDir, join, tempDir } from '@tauri-apps/api/path'
 import { APP_LOG_LEVELS, ARIA2_LOG_LEVELS } from '@shared/constants'
-import {
-  buildAdvancedForm,
-  buildAdvancedSystemConfig,
-  transformAdvancedForStore,
-  randomRpcPort,
-} from '@/composables/useAdvancedPreference'
-import { generateConfigSecret } from '@shared/utils/configHydration'
+import { buildAdvancedForm, transformAdvancedForStore } from '@/composables/useAdvancedPreference'
 import {
   NForm,
   NFormItem,
   NInput,
-  NInputNumber,
   NInputGroup,
   NSwitch,
   NSelect,
@@ -47,7 +39,6 @@ import { useAppMessage } from '@/composables/useAppMessage'
 import {
   CloudDownloadOutline,
   CloudUploadOutline,
-  DiceOutline,
   DownloadOutline,
   FolderOpenOutline,
   TrashOutline,
@@ -59,13 +50,12 @@ import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 
 const engineStore = useEngineStore()
-const { restartEngine, confirmManualRestart } = useEngineRestart()
+const { confirmManualRestart } = useEngineRestart()
 
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
 const historyStore = useHistoryStore()
 const message = useAppMessage()
-const { constraint, configFieldProps, areConfigFieldsValid } = usePreferenceNumericValidation()
 const dialog = useDialog()
 const protocolHandlers = useProtocolHandlers()
 const protocolStatus = protocolHandlers.status
@@ -82,7 +72,7 @@ useEventListener(window, 'focus', () => protocolHandlers.refreshAll())
 
 const { isLinux } = usePlatform()
 
-import { diffConfig, checkIsNeedRestart } from '@shared/utils/config'
+import { diffConfig } from '@shared/utils/config'
 import { writeAppClipboardText } from '@shared/utils'
 
 const appLogLevelOptions = APP_LOG_LEVELS.map((level) => ({ label: level, value: level }))
@@ -123,63 +113,9 @@ const defaultTempPath = ref('')
 
 const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceForm({
   buildForm,
-  buildSystemConfig: buildAdvancedSystemConfig,
   transformForStore: transformAdvancedForStore,
-  beforeSave: async (f) => {
-    // Only warn when user actively clears the secret (non-empty → empty).
-    // If it was already empty before this edit session, no need to re-warn.
-    const prevSecret = preferenceStore.config.rpcSecret
-    if (!f.rpcSecret && !!prevSecret) {
-      const ok = await new Promise<boolean>((resolve) => {
-        dialog.info({
-          title: t('preferences.rpc-secret-empty-title'),
-          content: t('preferences.rpc-secret-empty-confirm'),
-          positiveText: t('preferences.rpc-secret-empty-continue'),
-          negativeText: t('app.cancel'),
-          maskClosable: false,
-          onPositiveClick: () => resolve(true),
-          onNegativeClick: () => resolve(false),
-          onClose: () => resolve(false),
-        })
-      })
-      if (!ok) return false
-    }
-
-    // Gate: engine restart confirmation (RPC port / secret change).
-    // Must confirm BEFORE saving — declining cancels the entire save so
-    // config.json never contains values the running engine doesn't match.
-    const changed = diffConfig(preferenceStore.config, f)
-    if (checkIsNeedRestart(changed)) {
-      const ok = await new Promise<boolean>((resolve) => {
-        let accepted = false
-        dialog.info({
-          title: t('preferences.engine-restart-title'),
-          content: t('preferences.engine-restart-confirm'),
-          positiveText: t('preferences.engine-restart-now'),
-          negativeText: t('app.cancel'),
-          maskClosable: false,
-          onPositiveClick: () => {
-            accepted = true
-          },
-          onNegativeClick: () => resolve(false),
-          onClose: () => resolve(false),
-          onAfterLeave: () => {
-            if (accepted) resolve(true)
-          },
-        })
-      })
-      if (!ok) return false
-    }
-
-    return true
-  },
   afterSave: async (f, prevConfig) => {
     const changed = diffConfig(prevConfig, f)
-
-    // Engine restart — user already confirmed in beforeSave, execute immediately.
-    if (checkIsNeedRestart(changed)) {
-      restartEngine('settingsChange')
-    }
 
     if (changed.logLevel !== undefined && changed.logLevel !== prevConfig.logLevel) {
       await invoke('set_app_log_level', { level: f.logLevel })
@@ -211,11 +147,6 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
     }
   },
 })
-const numericFieldsValid = computed(() =>
-  areConfigFieldsValid({
-    rpcListenPort: form.value.rpcListenPort,
-  }),
-)
 
 function buildForm() {
   return buildAdvancedForm(preferenceStore.config)
@@ -278,14 +209,6 @@ async function loadPaths() {
   } catch (e) {
     logger.debug('Advanced.loadTempPath', e)
   }
-}
-
-function onRpcPortDice() {
-  form.value.rpcListenPort = randomRpcPort()
-}
-
-function onRpcSecretDice() {
-  form.value.rpcSecret = generateConfigSecret()
 }
 
 async function copyToClipboard(text: string, label: string) {
@@ -354,63 +277,10 @@ onMounted(async () => {
   <div class="preference-form-wrapper">
     <div class="preference-form-scroll">
       <NForm label-placement="left" label-align="left" label-width="260px" size="small" class="form-preference">
-        <NDivider title-placement="left">{{ t('preferences.rpc') }}</NDivider>
-        <NFormItem
-          :label="t('preferences.rpc-listen-port')"
-          v-bind="configFieldProps('rpcListenPort', form.rpcListenPort)"
-        >
-          <NInputGroup>
-            <NInputNumber
-              v-model:value="form.rpcListenPort"
-              :min="constraint('rpcListenPort').min"
-              :max="constraint('rpcListenPort').max"
-              class="pref-port"
-            />
-            <NButton
-              class="pref-icon-button"
-              @click="copyToClipboard(String(form.rpcListenPort), t('preferences.rpc-listen-port'))"
-            >
-              <template #icon>
-                <NIcon :size="14"><CopyOutline /></NIcon>
-              </template>
-            </NButton>
-            <NButton class="pref-icon-button" @click="onRpcPortDice">
-              <template #icon>
-                <NIcon :size="14"><DiceOutline /></NIcon>
-              </template>
-            </NButton>
-          </NInputGroup>
-        </NFormItem>
-        <NFormItem :label="t('preferences.rpc-secret')" :validation-status="form.rpcSecret ? undefined : 'warning'">
-          <NInputGroup>
-            <NInput
-              v-model:value="form.rpcSecret"
-              type="password"
-              show-password-on="click"
-              :placeholder="t('preferences.rpc-secret')"
-              class="pref-control-full"
-              :status="form.rpcSecret ? undefined : 'warning'"
-            />
-            <NButton class="pref-icon-button" @click="copyToClipboard(form.rpcSecret, t('preferences.rpc-secret'))">
-              <template #icon>
-                <NIcon :size="14"><CopyOutline /></NIcon>
-              </template>
-            </NButton>
-            <NButton class="pref-icon-button" @click="onRpcSecretDice">
-              <template #icon>
-                <NIcon :size="14"><DiceOutline /></NIcon>
-              </template>
-            </NButton>
-          </NInputGroup>
-        </NFormItem>
-
         <NDivider title-placement="left">{{ t('preferences.engine-section') }}</NDivider>
         <NFormItem :label="t('preferences.engine-restart-btn')"
           ><NButton @click="confirmManualRestart">{{ t('preferences.engine-restart-now') }}</NButton></NFormItem
         >
-        <NFormItem :label="t('preferences.allow-remote-access')">
-          <NSwitch v-model:value="form.allowRemoteAccess" />
-        </NFormItem>
         <NFormItem :label="t('preferences.temp-files-dir')">
           <NInputGroup>
             <NInput
@@ -653,28 +523,11 @@ onMounted(async () => {
         </NDataTable>
       </NCard>
     </NModal>
-    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 
 <style scoped>
-.info-link {
-  color: var(--m3-primary);
-  text-decoration: none;
-  font-size: 12px;
-}
-.info-link:hover {
-  text-decoration: underline;
-}
-.action-link {
-  color: var(--m3-primary);
-  cursor: pointer;
-  margin-left: 8px;
-  font-size: 12px;
-}
-.action-link:hover {
-  text-decoration: underline;
-}
 .log-level-row {
   display: flex;
   flex-wrap: wrap;
@@ -719,65 +572,5 @@ onMounted(async () => {
   justify-content: flex-start;
   gap: 12px;
   width: 100%;
-}
-
-/* ── UA preset row — button group + standalone reset ─────────────── */
-.ua-preset-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-/* ── UA field wrapper — stacks textarea + warning within same NFormItem ── */
-.ua-field-wrapper {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-/* ── UA warning — CSS Grid 0fr→1fr slide-in, matches proxy-collapse ── */
-.ua-warn-collapse {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.35s cubic-bezier(0.2, 0, 0, 1);
-}
-.ua-warn-collapse--open {
-  grid-template-rows: 1fr;
-}
-.ua-warn-collapse__inner {
-  overflow: hidden;
-}
-.ua-warn-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  margin-top: 6px;
-  border-radius: var(--border-radius);
-  background: var(--m3-error-container);
-  opacity: 0;
-  transition: opacity 0.25s cubic-bezier(0.2, 0, 0, 1);
-}
-.ua-warn-collapse--open .ua-warn-bar {
-  opacity: 1;
-}
-.ua-warn-text {
-  font-size: var(--font-size-sm);
-  color: var(--m3-on-error-container);
-  flex: 1;
-}
-
-/* ── Proxy collapse — CSS Grid 0fr→1fr for glitch-free height:auto ── */
-.proxy-collapse {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.35s cubic-bezier(0.2, 0, 0, 1);
-}
-.proxy-collapse--open {
-  grid-template-rows: 1fr;
-}
-.proxy-collapse__inner {
-  overflow: hidden;
 }
 </style>

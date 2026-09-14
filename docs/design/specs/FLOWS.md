@@ -8,8 +8,7 @@ The diagrams are design contracts, not new backend algorithms. Existing Rust rec
 - In progress: active, queued, paused, verifying, metadata and sharing phases. Resolved native policy determines membership; needs-action presentation must not create a duplicate underlying task.
 - Completed: native completion/history, with date groups and missing-file state.
 - Needs action: failed tasks and unresolved selection surfaced through a native projection in the proposed architecture. The current failed route alone is not assumed to provide this aggregate.
-- Browser connection: local service/configuration plus extension guidance. A listening local server is not proof that a browser is connected.
-- Settings: four top-level local categories, with contextual subpages/search instead of a permanent second sidebar.
+- Settings: General, Downloads, Network, BitTorrent, eD2k, Connections and Advanced use one horizontal category row. Connections groups browser extension behavior, independent API/RPC credentials and their shared access scope. A listening local service does not prove that an extension is connected.
 
 Navigation preserves query, sort, scroll and selected task per scope. Newly arriving tasks do not steal focus or change the expanded task. Header counts use defined scope semantics, not the number of rows currently loaded.
 

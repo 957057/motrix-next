@@ -19,6 +19,7 @@ const STORE_KEY = 'preferences'
 export const usePreferenceStore = defineStore('preference', () => {
   const engineMode = ref('MAX')
   const pendingChanges = ref(false)
+  const savingChanges = ref(false)
   /** Callback registered by the active preference page to save before navigation. */
   const saveBeforeLeave = ref<(() => Promise<void>) | null>(null)
   const config = ref<AppConfig>(createDefaultAppConfig())
@@ -244,6 +245,7 @@ export const usePreferenceStore = defineStore('preference', () => {
   return {
     engineMode,
     pendingChanges,
+    savingChanges,
     saveBeforeLeave,
     config,
     theme,

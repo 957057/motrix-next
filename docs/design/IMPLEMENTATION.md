@@ -16,7 +16,7 @@ ownership. There is one interface, without a legacy layout switch.
 | Normal and compact task rows          | `src/components/task/TaskRow.vue`                            |
 | Contextual task capabilities          | `src/components/task/TaskItemActions.vue`                    |
 | Full task details                     | `src/components/task/TaskDetail.vue`                         |
-| Browser connection settings           | `src/views/ConnectionView.vue`                               |
+| Connections settings                  | `src/components/preference/Connections.vue`                  |
 | Shared settings layout                | `src/views/PreferenceView.vue`, `src/styles/preferences.css` |
 
 Navigation is 192 px wide, becomes a 56 px rail below 960 px, and uses the
@@ -30,8 +30,22 @@ scroll position and becomes inert while details are open. Returning restores
 keyboard focus where the initiating element still exists. Query, expansion,
 density and native task identity are independent of the detail component.
 
-The six settings categories retain their functional forms. Browser access,
-automatic submission, API port and secret now have a dedicated navigation entry.
+Settings contain General, Downloads, Network, BitTorrent, eD2k, Connections,
+and Advanced. Connections owns browser behavior, extension API credentials,
+RPC credentials and their shared access scope. It has one draft and save bar;
+there is no separate connection route or sidebar entry. Low-frequency extension
+credentials use Naive UI disclosure. Secrets have bounded-width fields and
+labelled reveal, copy and regenerate buttons.
+
+Connection saves confirm changes once, await the native runtime cache refresh,
+and await engine restart when RPC or access scope changes. The HTTP binding
+operation is idempotent, so combined changes keep an already matching listener.
+Native port recovery remains authoritative and its applied values replace the
+successful draft. Failed saves restore persisted configuration before restoring
+runtime services; failed restoration is reported separately. While saving,
+duplicate saves share one promise, discard is disabled and route changes are
+blocked. No service command waits for an animation to complete.
+
 All 127 configuration fields remain supported. Appearance changes retain their
 existing immediate behavior; engine settings use explicit save/discard. Failed
 saves restore the native configuration and keep the editable proposal dirty.
