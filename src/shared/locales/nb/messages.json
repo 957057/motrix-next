@@ -852,7 +852,7 @@
     "file-load-failed": "Filen kunne ikke lastes",
     "magnet-select-fail": "Kunne ikke konfigurere nedlasting",
     "magnet-task": "Magnetoppgave",
-    "magnet-start-download": "Start nedlasting",
+    "magnet-start-download": "Last ned",
     "magnet-choose-later": "Velg senere",
     "select-files": "Velg filer",
     "task-type": "Type",
@@ -924,7 +924,7 @@
     "more-actions": "Flere handlinger",
     "search-tasks": "Søk i oppgaver",
     "no-results": "Ingen samsvarende oppgaver",
-    "empty-tasks": "Nedlastingene dine vises her",
+    "empty-tasks": "Ingen oppgaver",
     "select-tasks": "Velg",
     "comfortable": "Standard",
     "compact": "Kompakt",
@@ -939,6 +939,7 @@
     "descending": "Synkende",
     "queue": "Kø",
     "done": "Ferdig",
-    "selected-count": "{count} valgt"
+    "selected-count": "{count} valgt",
+    "empty-tasks-hint": "Velg «{action}» i verktøylinjen for å legge til en nedlasting."
   }
 }

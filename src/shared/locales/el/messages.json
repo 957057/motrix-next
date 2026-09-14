@@ -852,7 +852,7 @@
     "file-load-failed": "Αποτυχία φόρτωσης αρχείου",
     "magnet-select-fail": "Αποτυχία διαμόρφωσης λήψης",
     "magnet-task": "Εργασία Magnet",
-    "magnet-start-download": "Έναρξη λήψης",
+    "magnet-start-download": "Λήψη",
     "magnet-choose-later": "Επιλογή αργότερα",
     "select-files": "Επιλογή αρχείων",
     "task-type": "Τύπος",
@@ -924,7 +924,7 @@
     "more-actions": "Περισσότερες ενέργειες",
     "search-tasks": "Αναζήτηση εργασιών",
     "no-results": "Δεν βρέθηκαν εργασίες",
-    "empty-tasks": "Οι λήψεις σας θα εμφανιστούν εδώ",
+    "empty-tasks": "Δεν υπάρχουν εργασίες",
     "select-tasks": "Επιλογή",
     "comfortable": "Κανονική",
     "compact": "Συμπαγής",
@@ -939,6 +939,7 @@
     "descending": "Φθίνουσα",
     "queue": "Ουρά",
     "done": "Τέλος",
-    "selected-count": "Επιλεγμένα: {count}"
+    "selected-count": "Επιλεγμένα: {count}",
+    "empty-tasks-hint": "Επιλέξτε «{action}» στη γραμμή εργαλείων για να προσθέσετε μια λήψη."
   }
 }

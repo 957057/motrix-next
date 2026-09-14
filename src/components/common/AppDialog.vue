@@ -6,11 +6,12 @@ withDefaults(
     show: boolean
     title: string
     size?: 'small' | 'regular' | 'wide'
+    height?: string
     busy?: boolean
     maskClosable?: boolean
     autoFocus?: boolean
   }>(),
-  { size: 'regular', busy: false, maskClosable: false, autoFocus: true },
+  { size: 'regular', height: undefined, busy: false, maskClosable: false, autoFocus: true },
 )
 const emit = defineEmits<{ close: []; afterLeave: [] }>()
 </script>
@@ -27,7 +28,8 @@ const emit = defineEmits<{ close: []; afterLeave: [] }>()
     <NCard
       class="app-dialog"
       content-class="app-dialog-content"
-      :class="`app-dialog--${size}`"
+      :class="[`app-dialog--${size}`, { 'app-dialog--fixed': height }]"
+      :style="{ height }"
       :title="title"
       :bordered="false"
       :closable="!busy"
@@ -67,6 +69,10 @@ const emit = defineEmits<{ close: []; afterLeave: [] }>()
   padding: 0 24px 24px;
   min-height: 0;
   overflow: auto;
+}
+.app-dialog--fixed.n-card > .app-dialog-content {
+  scrollbar-gutter: stable;
+  overflow-anchor: none;
 }
 .app-dialog.n-card > .n-card__footer {
   padding: 16px 24px 20px;

@@ -736,6 +736,8 @@ pub fn run() {
             commands::history_get_record,
             commands::history_get_page,
             commands::query_tasks,
+            commands::subscribe_transfer_updates,
+            commands::unsubscribe_transfer_updates,
             commands::history_remove_births,
             commands::database_schema_version,
             commands::http_auth_save,

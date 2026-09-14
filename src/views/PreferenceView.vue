@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
-import { computed } from 'vue'
+import {
+  isNavigationFailure,
+  NavigationFailureType,
+  useRoute,
+  useRouter,
+  type RouteLocationNormalized,
+} from 'vue-router'
+import { computed, onScopeDispose, shallowRef } from 'vue'
 import { NSelect, NIcon } from 'naive-ui'
 import { SearchOutline } from '@vicons/ionicons5'
 import { settingsCatalog } from '@shared/settingsCatalog'
@@ -24,6 +30,28 @@ function goToSetting(key: string | null) {
   if (item) void router.push({ path: `/preference/${item.category}`, hash: `#setting-${item.key}` })
 }
 const categories = ['general', 'downloads', 'network', 'bt', 'ed2k', 'connections', 'advanced']
+const pendingNavigation = shallowRef<RouteLocationNormalized | null>(null)
+const activePath = computed(() => pendingNavigation.value?.path ?? route.path)
+
+const removeBeforeGuard = router.beforeEach(async (to, from) => {
+  if (to.path === from.path || !to.path.startsWith('/preference/')) return
+  pendingNavigation.value = to
+  // Paint navigation feedback before loading and mounting the next form.
+  await new Promise<void>((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)))
+})
+const removeAfterGuard = router.afterEach((to, _from, failure) => {
+  if (pendingNavigation.value === to || isNavigationFailure(failure, NavigationFailureType.duplicated)) {
+    pendingNavigation.value = null
+  }
+})
+const removeErrorHandler = router.onError((_error, to) => {
+  if (pendingNavigation.value === to) pendingNavigation.value = null
+})
+onScopeDispose(() => {
+  removeBeforeGuard()
+  removeAfterGuard()
+  removeErrorHandler()
+})
 </script>
 <template>
   <section class="preference-view">
@@ -47,11 +75,14 @@ const categories = ['general', 'downloads', 'network', 'bt', 'ed2k', 'connection
         v-for="category in categories"
         :key="category"
         :to="`/preference/${category}`"
+        :class="{
+          'is-active': activePath.endsWith(category) || (category === 'general' && activePath === '/preference'),
+        }"
         :aria-current="route.path.endsWith(category) ? 'page' : undefined"
         >{{ t(`preferences.${category}`) }}</RouterLink
       >
     </nav>
-    <div class="panel-body">
+    <div class="panel-body" :aria-busy="!!pendingNavigation" :inert="!!pendingNavigation">
       <router-view v-slot="{ Component }"
         ><Transition
           name="view"
@@ -100,7 +131,7 @@ h1 {
   color: var(--m3-on-surface-variant);
   border-bottom: 2px solid transparent;
 }
-.settings-tabs a[aria-current] {
+.settings-tabs a.is-active {
   color: var(--m3-primary);
   border-bottom-color: var(--m3-primary);
 }

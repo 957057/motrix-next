@@ -1,7 +1,7 @@
 //! Task lifecycle persistence and active-state monitoring.
 //!
 //! Aria2 Next WebSocket events drive terminal task processing. A lightweight
-//! poll remains for aggregate active state and ED2K sharing transitions.
+//! transfer subscription supplies aggregate state and ED2K sharing transitions.
 //!
 //! Persists history records to the Rust-side `Database` directly,
 //! ensuring task completion data survives even when the WebView is
@@ -24,9 +24,6 @@ use std::time::Duration;
 use tauri::Emitter;
 use tauri::Manager;
 use tokio::sync::watch;
-
-/// Default polling interval in milliseconds.
-const DEFAULT_INTERVAL_MS: u64 = 2000;
 
 static COMPLETION_GENERATION: AtomicU64 = AtomicU64::new(0);
 
@@ -639,8 +636,9 @@ async fn monitor_loop(
     mut stop_rx: watch::Receiver<bool>,
 ) {
     let mut sharing_notifier = Ed2kSharingNotifier::new();
+    let mut primed = false;
     let mut completion_generation = COMPLETION_GENERATION.load(Ordering::Relaxed);
-    let interval = Duration::from_millis(DEFAULT_INTERVAL_MS);
+    let mut updates = aria2.transfers.latest.subscribe();
 
     // ── Auto-shutdown state ─────────────────────────────────────────
     // Tracks whether active downloads existed during this engine cycle,
@@ -648,19 +646,9 @@ async fn monitor_loop(
     let mut had_active_downloads = false;
     let mut shutdown_triggered = false;
 
-    match aria2.tell_active().await {
-        Ok(tasks) => {
-            sharing_notifier.scan(&tasks);
-        }
-        Err(error) => {
-            log::debug!("task_monitor: initial tell_active failed: {error}");
-            sharing_notifier.scan(&[]);
-        }
-    }
-
     loop {
         tokio::select! {
-            _ = tokio::time::sleep(interval) => {},
+            result = updates.changed() => if result.is_err() { return; },
             _ = stop_rx.changed() => {
                 if *stop_rx.borrow() {
                     log::info!("task_monitor: stopped");
@@ -669,23 +657,21 @@ async fn monitor_loop(
             }
         }
 
-        // Active-task polling remains necessary for aggregate state, ED2K
-        // sharing detection, and auto-shutdown. Terminal task events arrive
-        // through Aria2 Next's native WebSocket notifications.
-        let active = match aria2.tell_active().await {
-            Ok(tasks) => tasks,
-            Err(e) => {
-                log::debug!("task_monitor: tell_active failed: {e}");
-                continue;
-            }
+        let snapshot = updates.borrow_and_update().clone();
+        let Some(snapshot) = snapshot else {
+            continue;
         };
-
-        let sharing_events = sharing_notifier.scan(&active);
+        let active = &snapshot.tasks;
+        let mut sharing_events = sharing_notifier.scan(active);
+        if !primed {
+            sharing_events.clear();
+            primed = true;
+        }
         for payload in sharing_events {
-            let task = active.iter().find(|task| task.gid == payload.gid);
-            if let Some(task) = task {
+            // Persistence needs file paths omitted from the transfer sample.
+            if let Ok(task) = aria2.tell_status(&payload.gid).await {
                 if let Err(error) =
-                    process_lifecycle_task(&app, events::P2P_DOWNLOAD_COMPLETE, task, true).await
+                    process_lifecycle_task(&app, events::P2P_DOWNLOAD_COMPLETE, &task, true).await
                 {
                     log::warn!(
                         "task_monitor: ED2K sharing lifecycle failed gid={}: {error}",
@@ -703,8 +689,8 @@ async fn monitor_loop(
         // `shutdown_triggered` can reset when new downloads appear
         // after a previous trigger (cancelled or completed).
         {
-            let active_dl = count_active_downloads(&active);
-            let waiting: usize = aria2.tell_waiting(0, 1).await.map(|w| w.len()).unwrap_or(0);
+            let active_dl = count_active_downloads(active);
+            let waiting = snapshot.stat.num_waiting;
 
             if active_dl > 0 || waiting > 0 {
                 had_active_downloads = true;
@@ -714,7 +700,7 @@ async fn monitor_loop(
 
             // A new completion event means a task went through its full lifecycle
             // (waiting → active → complete) even if we never observed it as active
-            // in the 2s poll window (instant download). Treat this as equivalent to
+            // between transfer samples (instant download). Treat this as equivalent to
             // "had active downloads" and allow re-triggering.
             if shutdown_triggered && has_new_completion {
                 shutdown_triggered = false;

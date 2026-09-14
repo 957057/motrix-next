@@ -188,13 +188,16 @@ async function cleanupAndRetry() {
           >
             <template v-if="panelState === 'recovering' || panelState === 'complete'">
               <div class="engine-heading-row">
-                <span class="engine-heading-icon" aria-hidden="true">
-                  <NSpin size="small" class="engine-heading-spinner" :class="{ 'is-hidden': completed }" />
-                </span>
                 <div class="engine-heading-copy">
                   <h2><TransitionText :text="statusTitle" /></h2>
                   <p class="engine-attempt"><TransitionText :text="statusDescription" /></p>
                 </div>
+                <span class="engine-heading-icon" aria-hidden="true">
+                  <Transition name="engine-status">
+                    <NIcon v-if="completed" key="complete" :size="28"><CheckmarkCircleOutline /></NIcon>
+                    <NSpin v-else key="loading" :size="28" />
+                  </Transition>
+                </span>
               </div>
 
               <div class="engine-recovery-body">
@@ -234,20 +237,22 @@ async function cleanupAndRetry() {
 
             <template v-else-if="panelState === 'cleaning'">
               <div class="engine-heading-row">
-                <NSpin size="small" />
-                <h2>{{ t('app.engine-cleaning') }}</h2>
+                <h2 class="engine-heading-copy">{{ t('app.engine-cleaning') }}</h2>
+                <span class="engine-heading-icon" aria-hidden="true"><NSpin :size="28" /></span>
               </div>
               <p class="engine-description">{{ t('app.engine-cleaning-description') }}</p>
             </template>
 
             <template v-else-if="panelState === 'failed'">
               <div class="engine-heading-row engine-heading-row--error">
-                <NIcon :size="24"><CloseCircleOutline /></NIcon>
-                <div>
+                <div class="engine-heading-copy">
                   <h2>{{ title }}</h2>
                   <p>{{ t('app.engine-unrecoverable') }}</p>
                   <p class="engine-attempt">{{ t('app.engine-attempt') }} {{ attemptText }}</p>
                 </div>
+                <span class="engine-heading-icon" aria-hidden="true">
+                  <NIcon :size="28"><CloseCircleOutline /></NIcon>
+                </span>
               </div>
 
               <div v-if="failureDetail" class="engine-error-block">
@@ -433,22 +438,30 @@ h2 {
   justify-content: space-between;
 }
 .engine-heading-icon {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   flex: none;
   display: grid;
   place-items: center;
   color: var(--m3-primary);
 }
-.engine-heading-spinner {
+.engine-heading-icon > * {
   grid-area: 1 / 1;
-  transition: opacity 160ms ease;
 }
-.is-hidden {
+.engine-status-enter-active,
+.engine-status-leave-active {
+  transition: opacity 180ms ease;
+}
+.engine-status-enter-from,
+.engine-status-leave-to {
   opacity: 0;
 }
 .engine-heading-copy {
+  flex: 1;
   min-width: 0;
+}
+.engine-heading-row--error .engine-heading-icon {
+  color: inherit;
 }
 .engine-stage-connector {
   transition: background-color 160ms ease;

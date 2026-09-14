@@ -2,31 +2,23 @@
 //!
 //! Runs as a background tokio task, updating tray title, dock badge,
 //! and progress bar directly from Rust without WebView round-trips.
-//! Also emits `stat:update` events to the frontend for UI display.
+//! Publishes ordered transfer snapshots independently of native presentation.
 //!
-//! Port of the frontend `fetchGlobalStat` in `stores/app.ts`.
+//! Native presentation consumes the sampler without delaying frontend delivery.
 
 use super::config::RuntimeConfigState;
 use super::power::{PowerGuard, RETRY_DELAY as POWER_RETRY_DELAY};
 use crate::services::tasks::TaskService;
 use std::sync::Arc;
 use std::time::Duration;
-use tauri::Emitter;
 use tauri::Manager;
 use tokio::sync::watch;
 
-/// Adaptive polling interval constants — aligned with `src/shared/timing.ts`.
-///
-/// These MUST stay in sync with the frontend `STAT_*` constants.
-/// Mismatched values cause noticeable UI update rate differences
-/// between normal and lightweight mode.
-const STAT_BASE_INTERVAL_MS: u64 = 500;
-const STAT_PER_TASK_INTERVAL_MS: u64 = 100;
-const STAT_MIN_INTERVAL_MS: u64 = 500;
-const STAT_MAX_INTERVAL_MS: u64 = 6000;
-const STAT_IDLE_INCREMENT_MS: u64 = 100;
+const ACTIVE_INTERVAL: Duration = Duration::from_millis(500);
+const IDLE_INTERVAL: Duration = Duration::from_secs(2);
+const RECONCILE_INTERVAL: Duration = Duration::from_secs(5);
 
-/// Payload emitted to the frontend via `stat:update`.
+/// Aggregate counters sampled alongside active task progress.
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatUpdate {
@@ -391,7 +383,10 @@ pub fn spawn_stat_service(app: tauri::AppHandle, aria2: Arc<TaskService>) -> Sta
     let (stop_tx, stop_rx) = watch::channel(false);
 
     let join_handle = tokio::spawn(async move {
-        stat_loop(app, aria2, stop_rx).await;
+        tokio::join!(
+            sample_loop(app.clone(), aria2.clone(), stop_rx.clone()),
+            stat_loop(app, aria2, stop_rx),
+        );
     });
 
     StatServiceHandle {
@@ -400,32 +395,60 @@ pub fn spawn_stat_service(app: tauri::AppHandle, aria2: Arc<TaskService>) -> Sta
     }
 }
 
-/// Adaptive interval state.
-struct IntervalState {
-    current_ms: u64,
-}
-
-impl IntervalState {
-    fn new() -> Self {
-        Self {
-            current_ms: STAT_BASE_INTERVAL_MS,
+async fn sample_loop(
+    app: tauri::AppHandle,
+    aria2: Arc<TaskService>,
+    mut stop: watch::Receiver<bool>,
+) {
+    let mut period = ACTIVE_INTERVAL;
+    let mut timer = tokio::time::interval(period);
+    timer.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    let mut reconcile = tokio::time::Instant::now();
+    let mut failures = 0;
+    loop {
+        tokio::select! {
+            _ = stop.changed() => break,
+            _ = timer.tick() => {},
+            _ = aria2.transfers.wake.notified() => {},
         }
-    }
-
-    /// When tasks are active: interval = base - per_task * num_active (clamped).
-    fn update_for_active(&mut self, num_active: u64) {
-        let computed = STAT_BASE_INTERVAL_MS
-            .saturating_sub(STAT_PER_TASK_INTERVAL_MS.saturating_mul(num_active));
-        self.current_ms = computed.max(STAT_MIN_INTERVAL_MS);
-    }
-
-    /// When idle: increment interval toward max.
-    fn increase_idle(&mut self) {
-        self.current_ms = (self.current_ms + STAT_IDLE_INCREMENT_MS).min(STAT_MAX_INTERVAL_MS);
-    }
-
-    fn duration(&self) -> Duration {
-        Duration::from_millis(self.current_ms)
+        if *stop.borrow() {
+            break;
+        }
+        if reconcile.elapsed() >= RECONCILE_INTERVAL {
+            aria2.transfers.mark_changed();
+            reconcile = tokio::time::Instant::now();
+        }
+        let started = std::time::Instant::now();
+        let result = tokio::select! {
+            _ = stop.changed() => break,
+            result = aria2.sample_transfers() => result,
+        };
+        match result {
+            Ok(snapshot) => {
+                failures = 0;
+                let next = if snapshot.stat.num_active > 0 {
+                    ACTIVE_INTERVAL
+                } else {
+                    IDLE_INTERVAL
+                };
+                if next != period {
+                    period = next;
+                    timer = tokio::time::interval_at(tokio::time::Instant::now() + period, period);
+                    timer.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+                }
+                let duration_ms = started.elapsed().as_millis() as u64;
+                if duration_ms >= 500 {
+                    log::warn!(target: "transfer", duration_ms, sequence = snapshot.sequence; "transfer_sample_slow");
+                }
+            }
+            Err(error) => {
+                failures += 1;
+                log::debug!("transfer sample unavailable: {error}");
+                if failures == 5 {
+                    crate::engine::supervisor::report_rpc_unhealthy(app.clone(), error.to_string());
+                }
+            }
+        }
     }
 }
 
@@ -434,8 +457,7 @@ async fn stat_loop(
     aria2: Arc<TaskService>,
     mut stop_rx: watch::Receiver<bool>,
 ) {
-    let mut interval_state = IntervalState::new();
-    let mut consecutive_rpc_failures = 0_u32;
+    let mut updates = aria2.transfers.latest.subscribe();
 
     // Keep-awake guard: held while downloads are active and released when idle.
     // Linux acquisition can fail when the desktop portal is temporarily
@@ -446,7 +468,7 @@ async fn stat_loop(
 
     loop {
         tokio::select! {
-            _ = tokio::time::sleep(interval_state.duration()) => {},
+            result = updates.changed() => if result.is_err() { return; },
             _ = stop_rx.changed() => {
                 if *stop_rx.borrow() {
                     if let Some(guard) = awake_guard.take() {
@@ -460,49 +482,20 @@ async fn stat_loop(
             }
         }
 
-        let stat = match aria2.get_global_stat().await {
-            Ok(s) => s,
-            Err(e) => {
-                consecutive_rpc_failures += 1;
-                log::debug!("stat_service: get_global_stat failed: {e}");
-                if consecutive_rpc_failures == 5 {
-                    crate::engine::supervisor::report_rpc_unhealthy(app.clone(), e.to_string());
-                }
-                interval_state.increase_idle();
-                continue;
-            }
+        let snapshot = updates.borrow_and_update().clone();
+        let Some(snapshot) = snapshot else {
+            continue;
         };
-        consecutive_rpc_failures = 0;
-
-        // Parse string values to u64
-        let download_speed = stat.download_speed.parse::<u64>().unwrap_or(0);
-        let upload_speed = stat.upload_speed.parse::<u64>().unwrap_or(0);
-        let num_active = stat.num_active.parse::<u64>().unwrap_or(0);
-        let num_waiting = stat.num_waiting.parse::<u64>().unwrap_or(0);
-        let num_stopped = stat.num_stopped.parse::<u64>().unwrap_or(0);
-        let num_stopped_total = stat.num_stopped_total.parse::<u64>().unwrap_or(0);
-
-        // Adaptive interval
-        if num_active > 0 {
-            interval_state.update_for_active(num_active);
-        } else {
-            interval_state.increase_idle();
-        }
-
-        // Emit to frontend
-        let update = StatUpdate {
+        let StatUpdate {
             download_speed,
             upload_speed,
             num_active,
-            num_waiting,
-            num_stopped,
-            num_stopped_total,
-        };
-        let _ = app.emit("stat:update", &update);
+            ..
+        } = snapshot.stat;
 
         // Update tray/dock/progress directly from Rust — no frontend dependency.
-        // In lightweight mode the WebView is destroyed, so app.emit() would
-        // silently fail. Direct API calls ensure tray speed, dock badge, and
+        // In lightweight mode the WebView is destroyed. Direct API calls
+        // ensure tray speed, dock badge, and
         // progress bar keep updating. See issue #194 follow-up.
         if let Some(rc_state) = app.try_state::<RuntimeConfigState>() {
             let cfg = rc_state.snapshot().await;
@@ -587,17 +580,10 @@ async fn stat_loop(
             #[cfg(target_os = "macos")]
             {
                 if cfg.show_progress_bar && num_active > 0 {
-                    match aria2.tell_active().await {
-                        Ok(tasks) => {
-                            let pct = task_progress(&tasks);
-                            let _ = app.run_on_main_thread(move || {
-                                set_dock_progress(pct);
-                            });
-                        }
-                        Err(e) => {
-                            log::debug!("stat_service: tell_active for progress failed: {e}");
-                        }
-                    }
+                    let pct = task_progress(&snapshot.tasks);
+                    let _ = app.run_on_main_thread(move || {
+                        set_dock_progress(pct);
+                    });
                 } else {
                     let _ = app.run_on_main_thread(move || {
                         set_dock_progress(None);
@@ -609,22 +595,15 @@ async fn stat_loop(
             #[cfg(target_os = "windows")]
             if let Some(window) = app.get_webview_window("main") {
                 if cfg.show_progress_bar && num_active > 0 {
-                    match aria2.tell_active().await {
-                        Ok(tasks) => {
-                            let progress = task_progress(&tasks);
-                            let _ = window.set_progress_bar(tauri::window::ProgressBarState {
-                                status: Some(if progress.is_some() {
-                                    tauri::window::ProgressBarStatus::Normal
-                                } else {
-                                    tauri::window::ProgressBarStatus::Indeterminate
-                                }),
-                                progress,
-                            });
-                        }
-                        Err(e) => {
-                            log::debug!("stat_service: tell_active for progress failed: {e}");
-                        }
-                    }
+                    let progress = task_progress(&snapshot.tasks);
+                    let _ = window.set_progress_bar(tauri::window::ProgressBarState {
+                        status: Some(if progress.is_some() {
+                            tauri::window::ProgressBarStatus::Normal
+                        } else {
+                            tauri::window::ProgressBarStatus::Indeterminate
+                        }),
+                        progress,
+                    });
                 } else {
                     let _ = window.set_progress_bar(tauri::window::ProgressBarState {
                         status: Some(tauri::window::ProgressBarStatus::None),
@@ -692,72 +671,6 @@ mod tests {
         assert!(!tray_title_needs_update(&last_title, ""));
         assert!(tray_title_needs_update(&last_title, "↓1.0M"));
     }
-
-    // ── IntervalState ───────────────────────────────────────────────
-
-    #[test]
-    fn interval_default_is_base() {
-        let state = IntervalState::new();
-        assert_eq!(state.current_ms, STAT_BASE_INTERVAL_MS);
-    }
-
-    #[test]
-    fn interval_active_reduces() {
-        let mut state = IntervalState::new();
-        state.update_for_active(5);
-        // 500 - (100 * 5) = 0 → clamped to MIN (500)
-        assert_eq!(state.current_ms, STAT_MIN_INTERVAL_MS);
-    }
-
-    #[test]
-    fn interval_active_single_task() {
-        let mut state = IntervalState::new();
-        state.update_for_active(1);
-        // 500 - (100 * 1) = 400 → clamped to MIN (500)
-        assert_eq!(state.current_ms, STAT_MIN_INTERVAL_MS);
-    }
-
-    #[test]
-    fn interval_active_clamps_to_min() {
-        let mut state = IntervalState::new();
-        state.update_for_active(100);
-        assert_eq!(state.current_ms, STAT_MIN_INTERVAL_MS);
-    }
-
-    #[test]
-    fn interval_idle_increments() {
-        let mut state = IntervalState::new();
-        state.increase_idle();
-        assert_eq!(
-            state.current_ms,
-            STAT_BASE_INTERVAL_MS + STAT_IDLE_INCREMENT_MS
-        );
-    }
-
-    #[test]
-    fn interval_idle_clamps_to_max() {
-        let mut state = IntervalState::new();
-        for _ in 0..200 {
-            state.increase_idle();
-        }
-        assert_eq!(state.current_ms, STAT_MAX_INTERVAL_MS);
-    }
-
-    #[test]
-    fn interval_transitions_between_states() {
-        let mut state = IntervalState::new();
-        // Go idle
-        state.increase_idle();
-        assert_eq!(state.current_ms, 600); // 500 + 100
-        state.increase_idle();
-        assert_eq!(state.current_ms, 700); // 600 + 100
-                                           // Go active — snaps to MIN
-        state.update_for_active(3);
-        // 500 - (100 * 3) = 200 → clamped to 500
-        assert_eq!(state.current_ms, STAT_MIN_INTERVAL_MS);
-    }
-
-    // ── Constant alignment with timing.ts ────────────────────────────
 
     fn make_task(gid: &str, status: &str) -> Aria2Task {
         Aria2Task {

@@ -2,7 +2,8 @@
 import { defineStore } from 'pinia'
 import { useTaskViewStore } from '@/stores/taskView'
 import { useTaskSelectionStore } from '@/stores/taskSelection'
-import { reactive, ref, watch } from 'vue'
+import { reactive, ref, shallowRef, watch } from 'vue'
+import type { TransferSnapshot, TransferTask, TaskQueryInput } from '@shared/types'
 import { EMPTY_STRING } from '@shared/constants'
 import { logger } from '@shared/logger'
 import type { Aria2Task, Aria2File, Aria2Peer, Aria2EngineOptions, AddUriParams, TaskApi } from '@shared/types'
@@ -72,6 +73,115 @@ export const useTaskStore = defineStore('task', () => {
   let api: TaskApi
   let apiReady = false
   let listRequestId = 0
+  let engineGeneration = -1
+  let activeQuery: { key: string; promise: Promise<void>; again: boolean } | null = null
+  const transferSnapshot = shallowRef<TransferSnapshot | null>(null)
+  let detailRequestId = 0
+  let detailRequest: { key: string; promise: Promise<void> } | null = null
+  let detailSampledAt = 0
+
+  function mergeTransfer(task: Aria2Task, update: TransferTask): Aria2Task {
+    return {
+      ...task,
+      status: update.status,
+      totalLength: update.totalLength,
+      completedLength: update.completedLength,
+      uploadLength: update.uploadLength,
+      downloadSpeed: update.downloadSpeed,
+      uploadSpeed: update.uploadSpeed,
+      connections: update.connections,
+      seeder: update.seeder,
+      bittorrent: update.bittorrent,
+      ed2k: update.ed2k,
+      media: update.media,
+      verifiedLength: update.verifiedLength,
+      verifyIntegrityPending: update.verifyIntegrityPending,
+      selectionManaged: update.selectionManaged,
+    }
+  }
+  function applyLatestTransfer(task: Aria2Task, generation: number, sequence: number): Aria2Task {
+    const latest = transferSnapshot.value
+    if (!latest || latest.generation !== generation || latest.sequence <= sequence) return task
+    if (pendingGids.value.includes(task.gid) || removingGids.value.includes(task.gid)) return task
+    const update = latest.tasks.find((entry) => entry.gid === task.gid)
+    return update ? mergeTransfer(task, update) : task
+  }
+  function applyTransferSnapshot(snapshot: TransferSnapshot): boolean {
+    const previous = transferSnapshot.value
+    if (snapshot.generation < engineGeneration) return false
+    if (
+      previous &&
+      (snapshot.generation < previous.generation ||
+        (snapshot.generation === previous.generation && snapshot.sequence <= previous.sequence))
+    )
+      return false
+    engineGeneration = snapshot.generation
+    transferSnapshot.value = snapshot
+    const updates = new Map(snapshot.tasks.map((task) => [task.gid, task]))
+    taskList.value = taskList.value.map((task) => {
+      const update = updates.get(task.gid)
+      return update && !pendingGids.value.includes(task.gid) && !removingGids.value.includes(task.gid)
+        ? mergeTransfer(task, update)
+        : task
+    })
+    if (currentTaskItem.value) {
+      const update = updates.get(currentTaskItem.value.gid)
+      if (update) currentTaskItem.value = mergeTransfer(currentTaskItem.value, update)
+    }
+    const sort = preferenceStore.config.taskSort[currentTaskTab()]
+    if (
+      !previous ||
+      previous.generation !== snapshot.generation ||
+      previous.revision !== snapshot.revision ||
+      (snapshot.tasks.length > 0 && (sort.field === 'speed' || sort.field === 'progress'))
+    ) {
+      void fetchList()
+    }
+    if (snapshot.sampledAt - detailSampledAt >= 1000) {
+      detailSampledAt = snapshot.sampledAt
+      void refreshTaskDetail()
+    }
+    return true
+  }
+
+  function refreshTaskDetail(): Promise<void> {
+    if (!apiReady || !taskDetailVisible.value || !currentTaskGid.value) return Promise.resolve()
+    const gid = currentTaskGid.value
+    const peers = enabledFetchPeers.value
+    const generation = engineGeneration
+    const key = `${generation}:${gid}:${peers}`
+    if (detailRequest?.key === key) return detailRequest.promise
+    const requestId = ++detailRequestId
+    const marker = transferSnapshot.value
+    const promise = (async () => {
+      try {
+        const task = peers ? await api.fetchTaskItemWithPeers({ gid }) : await api.fetchTaskItem({ gid })
+        if (
+          requestId === detailRequestId &&
+          taskDetailVisible.value &&
+          currentTaskGid.value === gid &&
+          peers === enabledFetchPeers.value &&
+          generation === engineGeneration
+        ) {
+          updateCurrentTaskItem(
+            applyLatestTransfer(task, generation, marker?.generation === generation ? marker.sequence : 0),
+          )
+        }
+      } catch (error) {
+        logger.debug('TaskStore.detail', error)
+      } finally {
+        if (requestId === detailRequestId) detailRequest = null
+      }
+    })()
+    detailRequest = { key, promise }
+    return promise
+  }
+  watch([taskDetailVisible, currentTaskGid, enabledFetchPeers], () => {
+    if (!taskDetailVisible.value) {
+      detailRequestId += 1
+      detailRequest = null
+    } else void refreshTaskDetail()
+  })
   const resubmissionPromises = new Map<string, Promise<void>>()
   /** In-memory map: GID → original .torrent file path for post-download cleanup. */
   const torrentSourcePaths = new Map<string, string>()
@@ -179,25 +289,49 @@ export const useTaskStore = defineStore('task', () => {
     },
   )
 
-  async function fetchList() {
-    if (!apiReady) return
+  function fetchList(): Promise<void> {
+    if (!apiReady) return Promise.resolve()
+    const scope = currentTaskTab()
+    const sort = preferenceStore.config.taskSort[scope] ?? DEFAULT_TASK_SORT[scope]
+    const input: TaskQueryInput = {
+      scope,
+      query: useTaskViewStore().query.trim(),
+      page: taskPagination[scope].page,
+      pageSize: taskPagination.pageSize,
+      sortField: sort.field,
+      direction: sort.direction,
+      manualOrder: [...preferenceStore.config.taskManualOrder[scope]],
+    }
+    const key = JSON.stringify([engineGeneration, input])
+    if (activeQuery?.key === key) {
+      activeQuery.again = true
+      return activeQuery.promise
+    }
     const requestId = ++listRequestId
     listPending.value = true
-    const scope = currentTaskTab()
+    const request = { key, promise: Promise.resolve(), again: false }
+    request.promise = queryPage(input, requestId).finally(() => {
+      if (activeQuery !== request) return
+      activeQuery = null
+      listPending.value = false
+      if (request.again) void fetchList()
+    })
+    activeQuery = request
+    return request.promise
+  }
+
+  async function queryPage(input: TaskQueryInput, requestId: number) {
+    const scope = input.scope as TaskScope
     const view = useTaskViewStore()
-    const query = view.query.trim()
+    const started = performance.now()
     try {
-      const sort = preferenceStore.config.taskSort[scope] ?? DEFAULT_TASK_SORT[scope]
-      const result = await api.queryTasks({
-        scope,
-        query,
-        page: taskPagination[scope].page,
-        pageSize: taskPagination.pageSize,
-        sortField: sort.field,
-        direction: sort.direction,
-        manualOrder: preferenceStore.config.taskManualOrder[scope],
-      })
-      if (requestId !== listRequestId || currentTaskTab() !== scope || query !== view.query.trim()) return
+      const result = await api.queryTasks(input)
+      if (requestId !== listRequestId || currentTaskTab() !== scope || input.query !== view.query.trim()) return
+      if (result.generation < engineGeneration) {
+        if (activeQuery) activeQuery.again = true
+        return
+      }
+      engineGeneration = result.generation
       const selection = useTaskSelectionStore()
       selection.reconcile(
         result.selections.filter((item) => item.waiting),
@@ -206,32 +340,23 @@ export const useTaskStore = defineStore('task', () => {
       const merged = mergeHistoryIntoTasks(result.tasks, result.history)
       const byGid = new Map(merged.map((task) => [task.gid, task]))
       displayedList.value = scope
-      taskList.value = result.gids.map((gid) => byGid.get(gid)).filter((task): task is Aria2Task => !!task)
+      taskList.value = result.gids
+        .map((gid) => byGid.get(gid))
+        .filter((task): task is Aria2Task => !!task)
+        .map((task) => applyLatestTransfer(task, result.generation, result.sequence))
       Object.assign(taskCounts, result.counts)
       loadAddedAtFromRecords(result.history)
       updateCurrentTaskTotal(result.total)
       taskPagination[scope].page = result.page
       refreshCurrentTaskPageCount()
       queryError.value = ''
-      if (taskDetailVisible.value && currentTaskGid.value) {
-        const gid = currentTaskGid.value
-        try {
-          const fresh = enabledFetchPeers.value
-            ? await api.fetchTaskItemWithPeers({ gid })
-            : await api.fetchTaskItem({ gid })
-          if (gid === currentTaskGid.value && taskDetailVisible.value) updateCurrentTaskItem(fresh)
-        } catch (error) {
-          logger.debug('TaskStore.detail', error)
-          const fresh = byGid.get(gid)
-          if (fresh && gid === currentTaskGid.value) updateCurrentTaskItem(fresh)
-        }
-      }
     } catch (error) {
       if (requestId !== listRequestId) return
       queryError.value = error instanceof Error ? error.message : String(error)
       logger.warn('TaskStore.query', queryError.value)
     } finally {
-      if (requestId === listRequestId) listPending.value = false
+      const durationMs = Math.round(performance.now() - started)
+      if (durationMs >= 500) logger.debug('TaskStore.queryDuration', { requestId, durationMs, scope })
     }
   }
 
@@ -489,6 +614,8 @@ export const useTaskStore = defineStore('task', () => {
   }
 
   return {
+    applyTransferSnapshot,
+    refreshTaskDetail,
     queryError,
     pendingGids,
     currentList,

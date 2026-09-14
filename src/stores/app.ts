@@ -1,26 +1,15 @@
-/**
- * @fileoverview Pinia store for global application state: engine, tasks, stats, and polling.
- *
- * Global stat (speed / task counts) follows a Backend-as-Source-of-Truth architecture:
- *   Rust stat_service  ──500ms──▶  aria2 getGlobalStat
- *                      ├──▶  tray / dock / progress (direct native API)
- *                      └──▶  emit("stat:update")  ──▶  this store
- *
- * The frontend does NOT poll aria2 for global stats — it passively listens
- * to the Rust event stream. This eliminates double RPC and redundant IPC.
- */
+/** Global application state and the native transfer subscription. */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { listen } from '@tauri-apps/api/event'
-import { invoke } from '@tauri-apps/api/core'
+import { Channel, invoke } from '@tauri-apps/api/core'
+import { useTaskStore } from '@/stores/task'
+import type { TransferSnapshot } from '@shared/types'
 import { logger } from '@shared/logger'
-import { STAT_BASE_INTERVAL, STAT_PER_TASK_INTERVAL, STAT_MIN_INTERVAL, STAT_MAX_INTERVAL } from '@shared/timing'
 import { detectExternalInputKind, detectKind, createBatchItem } from '@shared/utils/batchHelpers'
 import { summarizeExternalInput } from '@shared/utils/externalInputDiagnostics'
 import { parseRayburstDeepLink } from '@shared/utils/rayburstDeepLink'
 import { submitManualUris } from '@/composables/useAddTaskSubmit'
 import { usePreferenceStore } from '@/stores/preference'
-import { useTaskStore } from '@/stores/task'
 import type {
   Aria2EngineOptions,
   BrowserRequestHeader,
@@ -31,16 +20,6 @@ import type {
 } from '@shared/types'
 import type { AddTaskForm } from '@/composables/useAddTaskSubmit'
 import { getDefaultTaskProxyMode } from '@shared/utils/proxy'
-
-/** Payload shape emitted by Rust stat_service via `stat:update`. */
-interface StatPayload {
-  downloadSpeed: number
-  uploadSpeed: number
-  numActive: number
-  numWaiting: number
-  numStopped: number
-  numStoppedTotal: number
-}
 
 export interface DeepLinkHandlingResult {
   received: number
@@ -58,7 +37,6 @@ export const useAppStore = defineStore('app', () => {
   const systemTheme = ref('light')
   const trayFocused = ref(false)
   const aboutPanelVisible = ref(false)
-  const interval = ref(STAT_BASE_INTERVAL)
   const stat = ref({
     downloadSpeed: 0,
     uploadSpeed: 0,
@@ -117,18 +95,6 @@ export const useAppStore = defineStore('app', () => {
     externalInputStartHandler = handler
   }
 
-  function updateInterval(millisecond: number) {
-    let val = millisecond
-    if (val > STAT_MAX_INTERVAL) val = STAT_MAX_INTERVAL
-    if (val < STAT_MIN_INTERVAL) val = STAT_MIN_INTERVAL
-    if (interval.value === val) return
-    interval.value = val
-  }
-
-  function increaseInterval(millisecond = 100) {
-    if (interval.value < STAT_MAX_INTERVAL) interval.value += millisecond
-  }
-
   /**
    * Unified entry point for all external inputs.
    * Accepts pre-built BatchItems (already resolved) and appends them to
@@ -174,36 +140,22 @@ export const useAppStore = defineStore('app', () => {
     addTaskOptions.value = { ...options }
   }
 
-  /**
-   * Processes a single stat:update event payload from the Rust backend.
-   * Updates reactive stat values AND the adaptive polling interval that
-   * TaskView's list refresh depends on.
-   */
-  function handleStatEvent(payload: StatPayload) {
-    const { numActive } = payload
-    stat.value = {
-      downloadSpeed: payload.downloadSpeed,
-      uploadSpeed: payload.uploadSpeed,
-      numActive,
-      numWaiting: payload.numWaiting,
-      numStopped: payload.numStopped,
-      numStoppedTotal: payload.numStoppedTotal,
-    }
-    if (numActive > 0) {
-      updateInterval(STAT_BASE_INTERVAL - STAT_PER_TASK_INTERVAL * numActive)
-    } else {
-      increaseInterval()
-    }
+  function applyTransferSnapshot(snapshot: TransferSnapshot) {
+    if (!useTaskStore().applyTransferSnapshot(snapshot)) return
+    stat.value = snapshot.stat
   }
 
-  /**
-   * Subscribes to the Rust stat_service's `stat:update` event stream.
-   * Returns an unlisten function for cleanup.
-   */
-  function setupStatListener(): Promise<() => void> {
-    return listen<StatPayload>('stat:update', (event) => {
-      handleStatEvent(event.payload)
-    })
+  async function subscribeTransfers(): Promise<() => void> {
+    let active = true
+    const channel = new Channel<TransferSnapshot>()
+    channel.onmessage = (snapshot) => {
+      if (active) applyTransferSnapshot(snapshot)
+    }
+    const id = await invoke<number>('subscribe_transfer_updates', { onUpdate: channel })
+    return () => {
+      active = false
+      void invoke('unsubscribe_transfer_updates', { id }).catch((error) => logger.debug('Transfer.unsubscribe', error))
+    }
   }
 
   /**
@@ -467,7 +419,6 @@ export const useAppStore = defineStore('app', () => {
     systemTheme,
     trayFocused,
     aboutPanelVisible,
-    interval,
     stat,
     addTaskVisible,
     pendingBatch,
@@ -481,15 +432,13 @@ export const useAppStore = defineStore('app', () => {
     pendingUpdate,
     updateCheckRequestId,
     requestUpdateCheck,
-    updateInterval,
-    increaseInterval,
     enqueueBatch,
     showAddTaskDialog,
     hideAddTaskDialog,
     finishAddTaskClose,
     updateAddTaskOptions,
-    handleStatEvent,
-    setupStatListener,
+    applyTransferSnapshot,
+    subscribeTransfers,
     handleDeepLinkUrls,
     handleExternalInputs,
     setExternalInputErrorHandler,

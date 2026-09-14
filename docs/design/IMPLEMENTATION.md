@@ -32,9 +32,21 @@ These are code and component-test guarantees, not native visual acceptance.
 
 ## Toolbar organization
 
+The workspace displays directly without a central or title loading indicator.
+Pending queries retain existing content and expose accessible busy state without
+a visual placeholder. Engine failure dialogs and recovery remain independent;
+query failures keep their inline retry action.
+
+Only a successfully loaded empty page displays the centered text state: a 16 px
+title and a 13 px hint with an 8 px gap. The hint points to the existing New action
+in the toolbar. The decorative file icon and duplicate creation button are removed.
+Filtered views omit the creation hint; empty searches retain Clear. Empty content
+uses a short opacity transition and remains mounted during background updates.
+All 27 locales share the current copy and action placeholder.
+
 The task header keeps search, View, Select and New in one row. View groups density,
 sort field and explicit direction using Naive UI controls. Queue-wide pause/resume
-is restricted to the progress page's Queue menu. Normal refresh follows polling;
+is restricted to the progress page's Queue menu. Normal refresh follows native transfer revisions;
 failed queries expose Retry beside the retained error.
 
 Selection replaces the header title with its selected count. Only applicable
@@ -201,8 +213,8 @@ Typical timing is 120 ms for feedback, 160–200 ms for views and dialogs, 200 m
 for layout, and 240 ms for progress. Naive UI has no public modal-motion override;
 one documented CSS adapter replaces its large scale transition with a 6 px
 translation. The system and application reduced-motion preferences are combined;
-zero duration still completes lifecycle cleanup. Hidden documents pause visual
-polling while Rust continues downloads and persistence.
+zero duration still completes lifecycle cleanup. Hidden documents unsubscribe from transfer delivery while Rust continues
+sampling, downloads and persistence.
 
 The add dialog retains its form and batch through exit. Clipboard and inspection
 callbacks check the current draft generation. BT and media dialogs retain their
@@ -260,3 +272,79 @@ Success dismissal is tied to the native operation ID and never delays native
 readiness. The action area keeps its height when Cancel changes to Close.
 Tests cover retained leave content, superseded operations and repeated snapshots;
 real WebView animation acceptance remains the maintainer's responsibility.
+
+Creation uses a 640 px dialog bounded by the viewport, with a fixed header and
+footer and native body scrolling. A stable scrollbar gutter avoids width shifts.
+Naive UI keeps both source panes mounted with `display-directive="show"`; the
+library owns concurrent enter/leave transitions, pane height and completion.
+Its 200 ms horizontal motion and opacity replace the separate enter-only keyframe.
+Public pane classes and a CSS direction variable make clicks and external inputs
+follow the same source order, including RTL, without writing private tab state.
+The advanced form stays mounted in a CSS grid disclosure, so source changes keep
+its nested state and do not recreate its controls. Inactive panes are inert.
+Incoming batches select their source before asynchronous work; completing an
+inspection never overrides a later user selection. External batches also suppress
+late clipboard input, including batches containing only torrents.
+
+The BT status view places Recheck data directly below its status summary, aligned
+with the text column. It remains a secondary action with the existing loading,
+eligibility and native command behavior.
+
+Settings navigation paints the requested destination before lazy route loading
+and form mounting. A native animation frame followed by a queued task gives the
+browser a paint opportunity. Vue Router still owns cancellation and unsaved-form
+guards; only the matching navigation clears pending feedback. The current page
+remains available visually but inert while navigation is pending. Hash-only
+setting links do not yield or remount the form. No cached forms compete for the
+shared save callback or dirty state.
+
+References:
+- https://carbondesignsystem.com/components/modal/usage/#overflow-content
+- https://web.dev/articles/optimize-inp#yield_to_allow_rendering_work_to_occur_sooner
+- https://github.com/tusen-ai/naive-ui/blob/main/src/tabs/demos/enUS/index.demo-entry.md
+
+## Transfer delivery and compact controls
+
+A single native sampler reads aggregate statistics and active transfer fields in
+one aria2 `system.multicall`. Native `keys` filtering excludes file lists and
+bitfields. Tokio intervals use `MissedTickBehavior::Skip`: 500 ms while active,
+2 seconds while idle, with immediate wake-up on commands and lifecycle events.
+The native `watch` channel retains the latest snapshot. Tauri `Channel` delivers
+ordered snapshots to the main WebView; subscription replacement and disposal are
+explicit. Tray, taskbar and lifecycle monitoring consume the same sample.
+
+Every snapshot carries the engine generation, sequence and structural revision.
+The frontend updates counters without awaiting SQLite or details. A late page or
+detail response cannot overwrite a newer transfer sample. Equal page requests
+share the current request and at most one follow-up; only changed query intent
+invalidates a response. Details and peers have independent request ownership.
+
+Pages query the existing SQLite model on structural changes, user queries and
+five-second reconciliation. Speed/progress ordering also refreshes from current
+samples. Full engine metadata is cached by generation and revision, so counter
+sorting does not repeatedly fetch file lists. Page SQL runs on Tokio's blocking
+pool while the database retains its single connection and transaction ownership.
+Slow samples and queries log durations without transfer URLs or credentials.
+
+Torrent rows use separate native buttons for selection and removal, one quiet
+selected background and inset keyboard focus. File labels omit a shared torrent
+root but retain subdirectories; the native title contains the complete path.
+Reading and inspection use a 16 px spinner in each row's reserved trailing slot.
+Failures show beneath that file's name with an adjacent retry action. The shared
+inspection area contains only the selected torrent's file list. Local file
+selection adds rows before reading, so it uses the same immediate feedback.
+Opening, batch updates and retries share one pending read/inspection by batch
+object identity, including Vue's raw/proxy views. Completed operations are removed
+from the native WeakMap; explicit retries can start again. Different entries keep
+independent browser credentials even when their source URLs match.
+Switching inspection results uses overlapping grid cells, with leaving content
+inert. Selection-toolbar actions use Vue TransitionGroup with 180 ms position
+and 140 ms opacity transitions. Native state changes never wait for animation;
+reduced motion disables transitions through the shared application rule.
+
+References:
+- https://aria2.github.io/manual/en/html/aria2c.html#aria2.tellStatus
+- https://docs.rs/tokio/latest/tokio/sync/watch/index.html
+- https://docs.rs/tokio/latest/tokio/time/enum.MissedTickBehavior.html
+- https://v2.tauri.app/develop/calling-frontend/#channels
+- https://vuejs.org/guide/built-ins/transition-group.html

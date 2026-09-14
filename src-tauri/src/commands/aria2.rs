@@ -860,3 +860,38 @@ pub async fn query_tasks(
 ) -> Result<TaskQueryPage, AppError> {
     state.0.query_tasks(&database.0, input).await
 }
+
+/// One ordered stream for the main WebView. A replacement retires the old sender.
+#[tauri::command]
+pub fn subscribe_transfer_updates(
+    state: State<'_, TaskServiceState>,
+    on_update: tauri::ipc::Channel<crate::services::tasks::transfer::TransferSnapshot>,
+) -> u64 {
+    let service = state.0.clone();
+    let id = service.transfers.subscribe();
+    let mut latest = service.transfers.latest.subscribe();
+    let mut subscription = service.transfers.subscriptions.subscribe();
+    service.transfers.wake.notify_one();
+    tauri::async_runtime::spawn(async move {
+        loop {
+            if *subscription.borrow() != id {
+                break;
+            }
+            let snapshot = latest.borrow_and_update().clone();
+            if let Some(snapshot) = snapshot {
+                if on_update.send((*snapshot).clone()).is_err() {
+                    break;
+                }
+            }
+            tokio::select! {
+                result = latest.changed() => if result.is_err() { break; },
+                _ = subscription.changed() => break,
+            }
+        }
+    });
+    id
+}
+#[tauri::command]
+pub fn unsubscribe_transfer_updates(state: State<'_, TaskServiceState>, id: u64) {
+    state.0.transfers.unsubscribe(id);
+}

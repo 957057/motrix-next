@@ -852,7 +852,7 @@
     "file-load-failed": "Dosya yüklenemedi",
     "magnet-select-fail": "İndirme yapılandırılamadı",
     "magnet-task": "Magnet görevi",
-    "magnet-start-download": "İndirmeyi Başlat",
+    "magnet-start-download": "İndir",
     "magnet-choose-later": "Daha sonra seç",
     "select-files": "Dosyaları seç",
     "task-type": "Tür",
@@ -924,7 +924,7 @@
     "more-actions": "Diğer işlemler",
     "search-tasks": "Görev ara",
     "no-results": "Eşleşen görev yok",
-    "empty-tasks": "İndirmeleriniz burada görünecek",
+    "empty-tasks": "Görev yok",
     "select-tasks": "Seç",
     "comfortable": "Standart",
     "compact": "Sıkışık",
@@ -939,6 +939,7 @@
     "descending": "Azalan",
     "queue": "Kuyruk",
     "done": "Bitti",
-    "selected-count": "{count} seçildi"
+    "selected-count": "{count} seçildi",
+    "empty-tasks-hint": "İndirme eklemek için araç çubuğundan “{action}” seçeneğini seçin."
   }
 }

@@ -852,7 +852,7 @@
     "file-load-failed": "Error en carregar el fitxer",
     "magnet-select-fail": "No s'ha pogut configurar la descàrrega",
     "magnet-task": "Tasca magnet",
-    "magnet-start-download": "Iniciar descàrrega",
+    "magnet-start-download": "Baixa",
     "magnet-choose-later": "Tria més tard",
     "select-files": "Seleccionar fitxers",
     "task-type": "Tipus",
@@ -924,7 +924,7 @@
     "more-actions": "Més accions",
     "search-tasks": "Cerca tasques",
     "no-results": "No hi ha tasques coincidents",
-    "empty-tasks": "Les baixades apareixeran aquí",
+    "empty-tasks": "No hi ha tasques",
     "select-tasks": "Selecciona",
     "comfortable": "Estàndard",
     "compact": "Compacta",
@@ -939,6 +939,7 @@
     "descending": "Descendent",
     "queue": "Cua",
     "done": "Fet",
-    "selected-count": "{count} seleccionades"
+    "selected-count": "{count} seleccionades",
+    "empty-tasks-hint": "Tria «{action}» a la barra d’eines per afegir una baixada."
   }
 }

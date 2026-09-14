@@ -113,6 +113,7 @@ const { detecting: detectingProxy, detect: detectProxy } = useSystemProxyDetect(
       <NCollapse
         :default-expanded-names="['request', ...(authorization || httpAuthUsername ? ['auth'] : [])]"
         class="advanced-groups"
+        arrow-placement="right"
       >
         <NCollapseItem name="request" :title="t('task.request-options')">
           <NFormItem :label="t('task.task-user-agent')">
@@ -261,6 +262,7 @@ const { detecting: detectingProxy, detect: detectProxy } = useSystemProxyDetect(
   margin-block-end: 24px;
 }
 .advanced-groups :deep(.n-collapse-item) {
+  margin-inline: 0;
   border-top: 0;
 }
 .proxy-radio-group {

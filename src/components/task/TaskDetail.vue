@@ -466,11 +466,6 @@ function handleClose() {
 
         <div v-else-if="activeTab === 'status' && isBT" key="bt-status" class="tab-content">
           <template v-if="task && isBT">
-            <div class="status-actions">
-              <NButton size="small" :loading="rechecking" :disabled="!optCanModify" @click="recheckTask">
-                {{ t('task.bt-recheck') }}
-              </NButton>
-            </div>
             <NDescriptions
               :column="1"
               label-placement="left"
@@ -508,6 +503,11 @@ function handleClose() {
                 {{ btHealth.peerChokingCount }}
               </NDescriptionsItem>
             </NDescriptions>
+            <div class="status-actions">
+              <NButton size="small" :loading="rechecking" :disabled="!optCanModify" @click="recheckTask">
+                {{ t('task.bt-recheck') }}
+              </NButton>
+            </div>
           </template>
         </div>
 
@@ -881,8 +881,8 @@ function handleClose() {
 
 .status-actions {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 12px;
+  justify-content: flex-start;
+  margin-top: 16px;
 }
 
 /* ── Options tab ─────────────────────────────────────────────────── */

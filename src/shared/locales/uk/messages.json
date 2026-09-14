@@ -852,7 +852,7 @@
     "file-load-failed": "Не вдалося завантажити файл",
     "magnet-select-fail": "Не вдалося налаштувати завантаження",
     "magnet-task": "Магнет-завдання",
-    "magnet-start-download": "Почати завантаження",
+    "magnet-start-download": "Завантажити",
     "magnet-choose-later": "Вибрати пізніше",
     "select-files": "Вибір файлів",
     "task-type": "Тип",
@@ -924,7 +924,7 @@
     "more-actions": "Інші дії",
     "search-tasks": "Пошук завдань",
     "no-results": "Немає відповідних завдань",
-    "empty-tasks": "Завантаження з’являться тут",
+    "empty-tasks": "Немає завдань",
     "select-tasks": "Вибрати",
     "comfortable": "Стандартна",
     "compact": "Компактна",
@@ -939,6 +939,7 @@
     "descending": "За спаданням",
     "queue": "Черга",
     "done": "Готово",
-    "selected-count": "Вибрано: {count}"
+    "selected-count": "Вибрано: {count}",
+    "empty-tasks-hint": "Виберіть «{action}» на панелі інструментів, щоб додати завантаження."
   }
 }

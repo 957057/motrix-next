@@ -13,11 +13,10 @@ const taskStore = {
   taskDetailVisible: false,
   currentTaskItem: null,
   currentTaskFiles: [],
+  currentList: 'all',
+  displayedList: 'all',
+  listPending: false,
   hideTaskDetail: () => hideTaskDetailMock(),
-}
-
-const appStore = {
-  interval: 1000,
 }
 
 const preferenceStore = {
@@ -32,17 +31,10 @@ vi.mock('vue-i18n', () => ({
 
 vi.mock('naive-ui', () => ({
   useDialog: () => ({}),
-  NInput: { template: '<input />' },
-  NSpin: { template: '<span />' },
-  NIcon: { template: '<span><slot /></span>' },
 }))
 
 vi.mock('@/stores/task', () => ({
   useTaskStore: () => taskStore,
-}))
-
-vi.mock('@/stores/app', () => ({
-  useAppStore: () => appStore,
 }))
 
 vi.mock('@/stores/preference', () => ({
@@ -106,7 +98,6 @@ describe('TaskView', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     vi.useFakeTimers()
-    appStore.interval = 1000
     isEngineReadyMock.mockReturnValue(true)
   })
 
@@ -114,7 +105,7 @@ describe('TaskView', () => {
     vi.useRealTimers()
   })
 
-  it('does not restart polling if changeCurrentList resolves after unmount', async () => {
+  it('does not schedule page queries after unmount', async () => {
     const pendingChange = deferredPromise()
     changeCurrentListMock.mockReturnValueOnce(pendingChange.promise)
     fetchListMock.mockResolvedValue(undefined)

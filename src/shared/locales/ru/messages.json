@@ -852,7 +852,7 @@
     "file-load-failed": "Не удалось загрузить файл",
     "magnet-select-fail": "Не удалось настроить загрузку",
     "magnet-task": "Магнет-задача",
-    "magnet-start-download": "Начать загрузку",
+    "magnet-start-download": "Скачать",
     "magnet-choose-later": "Выбрать позже",
     "select-files": "Выбор файлов",
     "task-type": "Тип",
@@ -924,7 +924,7 @@
     "more-actions": "Другие действия",
     "search-tasks": "Поиск задач",
     "no-results": "Нет подходящих задач",
-    "empty-tasks": "Загрузки появятся здесь",
+    "empty-tasks": "Нет задач",
     "select-tasks": "Выбрать",
     "comfortable": "Обычная",
     "compact": "Компактная",
@@ -939,6 +939,7 @@
     "descending": "По убыванию",
     "queue": "Очередь",
     "done": "Готово",
-    "selected-count": "Выбрано: {count}"
+    "selected-count": "Выбрано: {count}",
+    "empty-tasks-hint": "Выберите «{action}» на панели инструментов, чтобы добавить загрузку."
   }
 }

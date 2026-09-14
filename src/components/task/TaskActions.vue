@@ -342,6 +342,12 @@ async function runSelected(action: 'pause' | 'resume') {
     batchPending.value = false
   }
 }
+function retireSelectionAction(element: Element) {
+  if (element.contains(document.activeElement)) {
+    element.parentElement?.querySelector<HTMLElement>('[data-selection-done]')?.focus({ preventScroll: true })
+  }
+  element.setAttribute('inert', '')
+}
 </script>
 
 <template>
@@ -352,8 +358,18 @@ async function runSelected(action: 'pause' | 'resume') {
       @before-enter="(element) => element.removeAttribute('inert')"
       @leave-cancelled="(element) => element.removeAttribute('inert')"
     >
-      <div v-if="view.selecting" key="selection" class="toolbar-content selection-actions">
+      <TransitionGroup
+        v-if="view.selecting"
+        key="selection"
+        tag="div"
+        name="selection-item"
+        class="toolbar-content selection-actions"
+        @before-leave="retireSelectionAction"
+        @before-enter="(element) => element.removeAttribute('inert')"
+        @leave-cancelled="(element) => element.removeAttribute('inert')"
+      >
         <NCheckbox
+          key="select-page"
           :checked="taskStore.taskList.length > 0 && view.selected.length === taskStore.taskList.length"
           :indeterminate="view.selected.length > 0 && view.selected.length < taskStore.taskList.length"
           :disabled="batchPending"
@@ -365,6 +381,7 @@ async function runSelected(action: 'pause' | 'resume') {
 
         <NButton
           v-if="resumableTasks.length"
+          key="resume"
           class="selection-secondary"
           quaternary
           :disabled="batchPending"
@@ -376,6 +393,7 @@ async function runSelected(action: 'pause' | 'resume') {
         </NButton>
         <NButton
           v-if="pausableTasks.length"
+          key="pause"
           class="selection-secondary"
           quaternary
           :disabled="batchPending"
@@ -387,6 +405,7 @@ async function runSelected(action: 'pause' | 'resume') {
         </NButton>
         <NButton
           v-if="sharingGids.length"
+          key="sharing"
           class="selection-primary"
           :title="sharingLabel"
           quaternary
@@ -399,6 +418,7 @@ async function runSelected(action: 'pause' | 'resume') {
         </NButton>
         <NButton
           v-if="recordingGids.length"
+          key="recording"
           class="selection-secondary"
           quaternary
           :disabled="batchPending"
@@ -408,6 +428,7 @@ async function runSelected(action: 'pause' | 'resume') {
         >
         <NButton
           v-if="availableTasks.length"
+          key="delete"
           class="selection-secondary"
           quaternary
           :disabled="batchPending"
@@ -415,19 +436,27 @@ async function runSelected(action: 'pause' | 'resume') {
           @click="removeSelectedTasks"
           >{{ t('task.delete-task') }}</NButton
         >
-        <NDropdown v-if="overflowOptions.length" trigger="click" :options="overflowOptions" @select="handleOverflow">
-          <NButton
-            class="selection-overflow"
-            quaternary
-            :disabled="batchPending"
-            :aria-label="t('workspace.more-actions')"
-            >{{ t('workspace.more-actions') }}<NIcon :size="14"><ChevronDownOutline /></NIcon
-          ></NButton>
-        </NDropdown>
-        <NButton quaternary :disabled="batchPending" :aria-label="t('workspace.done')" @click="view.clearSelection()">{{
-          t('workspace.done')
-        }}</NButton>
-      </div>
+        <div v-if="overflowOptions.length" key="overflow" class="selection-overflow-control">
+          <NDropdown trigger="click" :options="overflowOptions" @select="handleOverflow">
+            <NButton
+              class="selection-overflow"
+              quaternary
+              :disabled="batchPending"
+              :aria-label="t('workspace.more-actions')"
+              >{{ t('workspace.more-actions') }}<NIcon :size="14"><ChevronDownOutline /></NIcon
+            ></NButton>
+          </NDropdown>
+        </div>
+        <NButton
+          key="done"
+          data-selection-done
+          quaternary
+          :disabled="batchPending"
+          :aria-label="t('workspace.done')"
+          @click="view.clearSelection()"
+          >{{ t('workspace.done') }}</NButton
+        >
+      </TransitionGroup>
       <div v-else key="default" class="toolbar-content">
         <NInput
           v-model:value="view.query"
@@ -486,6 +515,7 @@ async function runSelected(action: 'pause' | 'resume') {
   container-type: inline-size;
 }
 .toolbar-content {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -498,13 +528,28 @@ async function runSelected(action: 'pause' | 'resume') {
 .toolbar-content > .n-button {
   flex-shrink: 0;
 }
+.selection-item-move,
+.selection-item-enter-active,
+.selection-item-leave-active {
+  transition:
+    transform 180ms ease,
+    opacity 140ms ease;
+}
+.selection-item-enter-from,
+.selection-item-leave-to {
+  opacity: 0;
+}
+.selection-item-leave-active {
+  position: absolute;
+  pointer-events: none;
+}
 .toolbar-search {
   flex: 1;
   min-width: 80px;
   max-width: 200px;
 }
 .search-popover-trigger.n-button,
-.selection-overflow.n-button {
+.selection-overflow-control {
   display: none;
 }
 .selection-primary.n-button {
@@ -542,7 +587,7 @@ async function runSelected(action: 'pause' | 'resume') {
   .selection-secondary.n-button {
     display: none;
   }
-  .selection-overflow.n-button {
+  .selection-overflow-control {
     display: inline-flex;
   }
 }

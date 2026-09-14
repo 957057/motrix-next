@@ -1,6 +1,7 @@
 /** Owns desktop listeners, native window lifecycle and system action dialogs. */
 import { ref, nextTick, watch } from 'vue'
 import { onMounted, onUnmounted } from 'vue'
+import { useDocumentVisibility } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useEngineStore } from '@/stores/engine'
@@ -76,7 +77,7 @@ export function useDesktopRuntime() {
   let unlistenTrayMenu: (() => void) | null = null
   let unlistenResize: (() => void) | null = null
   let unlistenExitDialog: (() => void) | null = null
-  let unlistenStat: (() => void) | null = null
+  let unlistenTransfers: (() => void) | null = null
   let unlistenTaskMonitor: Array<() => void> = []
   let unlistenAria2DownloadPause: (() => void) | null = null
   let unlistenFocusRecheck: (() => void) | null = null
@@ -194,19 +195,29 @@ export function useDesktopRuntime() {
     unlistenAppToast = null
   }
 
-  // ── Stat listener — passive subscription to Rust stat_service events ──
-  // Replaces the old frontend polling loop. Rust is the sole poller of aria2;
-  // the frontend simply listens for `stat:update` and updates reactive state.
-
-  async function startStatListener() {
-    stopStatListener()
-    unlistenStat = await appStore.setupStatListener()
+  // Native sampling continues independently of the WebView subscription.
+  const documentVisibility = useDocumentVisibility()
+  let runtimeMounted = false
+  let transferSubscriptionGeneration = 0
+  async function startTransferSubscription() {
+    stopTransferSubscription()
+    if (!runtimeMounted || documentVisibility.value === 'hidden') return
+    const generation = transferSubscriptionGeneration
+    const stop = await appStore.subscribeTransfers()
+    if (generation !== transferSubscriptionGeneration) stop()
+    else unlistenTransfers = stop
+  }
+  function stopTransferSubscription() {
+    transferSubscriptionGeneration += 1
+    unlistenTransfers?.()
+    unlistenTransfers = null
   }
 
-  function stopStatListener() {
-    unlistenStat?.()
-    unlistenStat = null
-  }
+  watch(documentVisibility, (visibility) => {
+    if (!runtimeMounted) return
+    if (visibility === 'hidden') stopTransferSubscription()
+    else void startTransferSubscription().catch((error) => logger.warn('Transfer.subscribe', error))
+  })
 
   // Native pause events refresh the same snapshot used by the selection queue.
   async function startAria2DownloadPauseListener() {
@@ -399,6 +410,7 @@ export function useDesktopRuntime() {
   }
 
   onMounted(async () => {
+    runtimeMounted = true
     startAppToastListener()
     // Platform is initialised by usePlatform() singleton — no per-component call needed.
 
@@ -463,7 +475,7 @@ export function useDesktopRuntime() {
       }
     }
 
-    startStatListener()
+    void startTransferSubscription().catch((error) => logger.warn('Transfer.subscribe', error))
     await startAria2DownloadPauseListener()
 
     // ── Auto-shutdown event from Rust monitor (lightweight mode fallback) ──
@@ -723,7 +735,8 @@ export function useDesktopRuntime() {
   })
 
   onUnmounted(() => {
-    stopStatListener()
+    runtimeMounted = false
+    stopTransferSubscription()
     stopAria2DownloadPauseListener()
     unlistenTaskMonitor.forEach((fn) => fn())
     unlistenTaskMonitor = []

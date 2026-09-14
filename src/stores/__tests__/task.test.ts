@@ -1,3 +1,5 @@
+import { flushPromises } from '@vue/test-utils'
+import type { TransferSnapshot } from '@shared/types'
 /** @fileoverview Unit tests for TaskStore with mocked TaskApi. */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
@@ -67,6 +69,8 @@ function createMockApi() {
       counts: { all: 2, progress: 2, failed: 0, completed: 0 },
       total: 2,
       page: 1,
+      generation: 0,
+      sequence: 0,
       selections: [],
     }),
     fetchTaskList: vi.fn().mockResolvedValue([makeMockTask('gid1'), makeMockTask('gid2')]),
@@ -118,6 +122,113 @@ describe('TaskStore', () => {
     mockHttpAuthFns.markUsed.mockResolvedValue(undefined)
   })
 
+  function frame(sequence: number, completedLength: string): TransferSnapshot {
+    return {
+      generation: 0,
+      sequence,
+      revision: 1,
+      sampledAt: sequence * 500,
+      tasks: [{ ...makeMockTask('gid1'), completedLength, downloadSpeed: completedLength }],
+      stat: {
+        downloadSpeed: Number(completedLength),
+        uploadSpeed: 0,
+        numActive: 1,
+        numWaiting: 0,
+        numStopped: 0,
+        numStoppedTotal: 0,
+      },
+    }
+  }
+  function page(completedLength: string, sequence = 0) {
+    return {
+      generation: 0,
+      sequence,
+      tasks: [{ ...makeMockTask('gid1'), completedLength }],
+      history: [],
+      gids: ['gid1'],
+      counts: { all: 1, progress: 1, failed: 0, completed: 0 },
+      total: 1,
+      page: 1,
+      selections: [],
+    }
+  }
+  it('updates progress during a slow page query and cannot roll it back when the page arrives', async () => {
+    store.taskList = [makeMockTask('gid1')]
+    store.applyTransferSnapshot(frame(1, '100'))
+    await flushPromises()
+    let resolve!: (value: ReturnType<typeof page>) => void
+    mockApi.queryTasks.mockImplementationOnce(
+      () =>
+        new Promise((done) => {
+          resolve = done
+        }),
+    )
+    const request = store.fetchList()
+    const files = store.taskList[0].files
+    store.applyTransferSnapshot(frame(2, '500'))
+    expect(store.taskList[0].completedLength).toBe('500')
+    expect(store.taskList[0].files).toBe(files)
+    store.applyTransferSnapshot(frame(3, '900'))
+    resolve(page('200', 1))
+    await request
+    expect(store.taskList[0].completedLength).toBe('900')
+    expect(store.taskList[0].downloadSpeed).toBe('900')
+  })
+  it('coalesces repeated refreshes into one request and one follow-up without discarding useful results', async () => {
+    let resolve!: (value: ReturnType<typeof page>) => void
+    mockApi.queryTasks.mockImplementationOnce(
+      () =>
+        new Promise((done) => {
+          resolve = done
+        }),
+    )
+    const request = store.fetchList()
+    for (let index = 0; index < 20; index++) void store.fetchList()
+    expect(mockApi.queryTasks).toHaveBeenCalledOnce()
+    resolve(page('300'))
+    await request
+    await flushPromises()
+    expect(mockApi.queryTasks).toHaveBeenCalledTimes(2)
+    expect(store.listPending).toBe(false)
+  })
+  it('keeps slow details independent and overlays newer progress on the late detail result', async () => {
+    store.taskList = [makeMockTask('gid1')]
+    store.applyTransferSnapshot(frame(1, '100'))
+    await flushPromises()
+    let resolve!: (value: Aria2Task) => void
+    mockApi.fetchTaskItem.mockImplementationOnce(
+      () =>
+        new Promise((done) => {
+          resolve = done
+        }),
+    )
+    store.showTaskDetail(store.taskList[0])
+    await flushPromises()
+    await store.fetchList()
+    expect(store.listPending).toBe(false)
+    store.applyTransferSnapshot(frame(2, '500'))
+    expect(store.currentTaskItem?.completedLength).toBe('500')
+    resolve({ ...makeMockTask('gid1'), completedLength: '200' })
+    await flushPromises()
+    expect(store.currentTaskItem?.completedLength).toBe('500')
+  })
+  it('does not let queued samples from the old engine overwrite a new engine page', async () => {
+    mockApi.queryTasks.mockResolvedValueOnce({ ...page('800'), generation: 2 })
+    await store.fetchList()
+    expect(store.applyTransferSnapshot(frame(99, '100'))).toBe(false)
+    expect(store.taskList[0].completedLength).toBe('800')
+  })
+  it('rejects older samples and preserves a pending task operation', async () => {
+    store.taskList = [makeMockTask('gid1')]
+    store.applyTransferSnapshot(frame(2, '500'))
+    await flushPromises()
+    expect(store.applyTransferSnapshot(frame(1, '100'))).toBe(false)
+    expect(store.taskList[0].completedLength).toBe('500')
+    store.pendingGids = ['gid1']
+    store.applyTransferSnapshot(frame(3, '900'))
+    expect(store.taskList[0].completedLength).toBe('500')
+  })
+
   it('uses native page order and counts without loading all history', async () => {
     mockApi.queryTasks.mockResolvedValueOnce({
       tasks: [makeMockTask('b'), makeMockTask('a')],
@@ -126,6 +237,8 @@ describe('TaskStore', () => {
       counts: { all: 1002, progress: 2, completed: 1000, failed: 0 },
       total: 1002,
       page: 1,
+      generation: 0,
+      sequence: 0,
       selections: [],
     })
     await store.fetchList()
@@ -334,6 +447,8 @@ describe('TaskStore', () => {
       total: 1,
       page: 1,
       counts: { all: 1, progress: 1, failed: 0, completed: 0 },
+      generation: 0,
+      sequence: 0,
       selections: [],
     })
     await old

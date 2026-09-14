@@ -852,7 +852,7 @@
     "file-load-failed": "File load failed",
     "magnet-select-fail": "Download configure नहीं हुआ",
     "magnet-task": "Magnet task",
-    "magnet-start-download": "Download शुरू करें",
+    "magnet-start-download": "डाउनलोड करें",
     "magnet-choose-later": "बाद में चुनें",
     "select-files": "Files चुनें",
     "task-type": "प्रकार",
@@ -924,7 +924,7 @@
     "more-actions": "अन्य कार्रवाइयाँ",
     "search-tasks": "कार्य खोजें",
     "no-results": "कोई मेल खाता कार्य नहीं",
-    "empty-tasks": "आपके डाउनलोड यहाँ दिखाई देंगे",
+    "empty-tasks": "कोई कार्य नहीं है",
     "select-tasks": "चुनें",
     "comfortable": "मानक",
     "compact": "सघन",
@@ -939,6 +939,7 @@
     "descending": "अवरोही",
     "queue": "कतार",
     "done": "पूर्ण",
-    "selected-count": "{count} चुने गए"
+    "selected-count": "{count} चुने गए",
+    "empty-tasks-hint": "डाउनलोड जोड़ने के लिए टूलबार में “{action}” चुनें।"
   }
 }

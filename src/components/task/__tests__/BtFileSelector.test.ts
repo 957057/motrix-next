@@ -15,6 +15,22 @@ const files = [
 ]
 
 describe('Torrent selection with the application theme', () => {
+  it('keeps relative folders distinguishable while exposing complete native paths', () => {
+    const wrapper = mount(BtFileSelector, {
+      props: {
+        files: [
+          { index: 1, name: 'readme.txt', path: 'Release/docs/readme.txt', length: 10 },
+          { index: 2, name: 'readme.txt', path: 'Release/source/readme.txt', length: 20 },
+        ],
+        selectedIndices: [1, 2],
+      },
+    })
+    expect(wrapper.text()).toContain('docs/readme.txt')
+    expect(wrapper.text()).toContain('source/readme.txt')
+    expect(wrapper.find('[title="Release/docs/readme.txt"]').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('Release/docs/readme.txt')
+    wrapper.unmount()
+  })
   for (const dark of [false, true]) {
     it(`renders actual table rows and preserves hidden selections (${dark ? 'dark' : 'light'})`, async () => {
       const selected = ref([1, 2])

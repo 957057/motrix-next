@@ -852,7 +852,7 @@
     "file-load-failed": "Gagal memuat file",
     "magnet-select-fail": "Gagal mengonfigurasi unduhan",
     "magnet-task": "Tugas Magnet",
-    "magnet-start-download": "Mulai Unduhan",
+    "magnet-start-download": "Unduh",
     "magnet-choose-later": "Pilih nanti",
     "select-files": "Pilih File",
     "task-type": "Jenis",
@@ -924,7 +924,7 @@
     "more-actions": "Tindakan lainnya",
     "search-tasks": "Cari tugas",
     "no-results": "Tidak ada tugas yang cocok",
-    "empty-tasks": "Unduhan Anda akan muncul di sini",
+    "empty-tasks": "Tidak ada tugas",
     "select-tasks": "Pilih",
     "comfortable": "Standar",
     "compact": "Ringkas",
@@ -939,6 +939,7 @@
     "descending": "Menurun",
     "queue": "Antrean",
     "done": "Selesai",
-    "selected-count": "{count} dipilih"
+    "selected-count": "{count} dipilih",
+    "empty-tasks-hint": "Pilih “{action}” di bilah alat untuk menambahkan unduhan."
   }
 }

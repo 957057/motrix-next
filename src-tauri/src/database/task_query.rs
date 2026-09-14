@@ -32,6 +32,8 @@ pub struct TaskCounts {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TaskQueryPage {
+    pub generation: u64,
+    pub sequence: u64,
     pub tasks: Vec<Aria2Task>,
     pub history: Vec<HistoryRecord>,
     pub gids: Vec<String>,
@@ -75,6 +77,14 @@ fn name(task: &Aria2Task) -> String {
 impl Database {
     pub async fn query_tasks(
         &self,
+        tasks: Vec<Aria2Task>,
+        input: TaskQueryInput,
+    ) -> Result<TaskQueryPage, AppError> {
+        self.with_connection(move |conn| Self::query_task_page(conn, tasks, input))
+            .await
+    }
+    fn query_task_page(
+        conn: &mut rusqlite::Connection,
         mut tasks: Vec<Aria2Task>,
         input: TaskQueryInput,
     ) -> Result<TaskQueryPage, AppError> {
@@ -141,7 +151,6 @@ impl Database {
         }).collect::<Vec<_>>();
         let engine = serde_json::to_string(&rows)?;
         let order = serde_json::to_string(&input.manual_order)?;
-        let mut conn = self.connection().await?;
         let tx = conn.transaction()?;
         let counts = tx.query_row(&format!("{QUERY} SELECT COUNT(*), COALESCE(SUM(live), 0), COALESCE(SUM(attention), 0), COALESCE(SUM(status='complete'), 0) FROM combined"), [&engine], |row| Ok(TaskCounts { all: row.get(0)?, progress: row.get(1)?, failed: row.get(2)?, completed: row.get(3)? }))?;
         let filter = format!("WHERE ({scope}) AND instr(lower(name), lower(?2)) > 0");
@@ -169,6 +178,8 @@ impl Database {
         let selected: HashSet<_> = gids.iter().collect();
         tasks.retain(|task| selected.contains(&task.gid));
         Ok(TaskQueryPage {
+            generation: 0,
+            sequence: 0,
             tasks,
             history,
             gids,
@@ -224,6 +235,30 @@ mod tests {
             completed_at: Some("2026-09-13T00:01:00Z".into()),
             meta: None,
         }
+    }
+    #[tokio::test]
+    async fn large_history_remains_page_bounded_with_live_tasks() {
+        let db = Database::open_in_memory().unwrap();
+        {
+            let mut conn = db.connection().await.unwrap();
+            let tx = conn.transaction().unwrap();
+            for index in 0..5000 {
+                tx.execute("INSERT INTO download_history (gid, name, status, completed_at) VALUES (?1, ?1, 'complete', '2026-01-01')", [format!("history-{index}")]).unwrap();
+            }
+            tx.commit().unwrap();
+        }
+        let started = std::time::Instant::now();
+        let page = db
+            .query_tasks(
+                (0..20).map(|i| task(&format!("live-{i}"))).collect(),
+                input("all"),
+            )
+            .await
+            .unwrap();
+        assert_eq!(page.total, 5020);
+        assert_eq!(page.gids.len(), 20);
+        assert!(page.history.len() <= 20);
+        eprintln!("large history query: {:?}", started.elapsed());
     }
     #[tokio::test]
     async fn pagination_materializes_only_one_page_and_counts_every_record() {

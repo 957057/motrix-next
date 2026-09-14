@@ -816,6 +816,8 @@ export interface TaskQueryInput {
   manualOrder: string[]
 }
 export interface TaskQueryPage {
+  generation: number
+  sequence: number
   tasks: Aria2Task[]
   history: HistoryRecord[]
   gids: string[]
@@ -850,4 +852,39 @@ export interface TaskApi {
   removeTaskRecord: (params: { gid: string }) => Promise<string>
   purgeTaskRecords: () => Promise<void>
   saveSession: () => Promise<string>
+}
+
+/** Lightweight counters sampled together by the native task service. */
+export type TransferTask = Pick<
+  Aria2Task,
+  | 'gid'
+  | 'status'
+  | 'totalLength'
+  | 'completedLength'
+  | 'uploadLength'
+  | 'downloadSpeed'
+  | 'uploadSpeed'
+  | 'connections'
+  | 'seeder'
+  | 'bittorrent'
+  | 'ed2k'
+  | 'media'
+  | 'verifiedLength'
+  | 'verifyIntegrityPending'
+  | 'selectionManaged'
+>
+export interface TransferSnapshot {
+  generation: number
+  sequence: number
+  revision: number
+  sampledAt: number
+  stat: {
+    downloadSpeed: number
+    uploadSpeed: number
+    numActive: number
+    numWaiting: number
+    numStopped: number
+    numStoppedTotal: number
+  }
+  tasks: TransferTask[]
 }

@@ -852,7 +852,7 @@
     "file-load-failed": "Зареждането на файла не успя",
     "magnet-select-fail": "Неуспешно конфигуриране на изтеглянето",
     "magnet-task": "Магнитна задача",
-    "magnet-start-download": "Започни изтеглянето",
+    "magnet-start-download": "Изтегляне",
     "magnet-choose-later": "Избери по-късно",
     "select-files": "Избор на файлове",
     "task-type": "Тип",
@@ -924,7 +924,7 @@
     "more-actions": "Още действия",
     "search-tasks": "Търсене на задачи",
     "no-results": "Няма съвпадащи задачи",
-    "empty-tasks": "Изтеглянията ви ще се покажат тук",
+    "empty-tasks": "Няма задачи",
     "select-tasks": "Избор",
     "comfortable": "Стандартна",
     "compact": "Компактна",
@@ -939,6 +939,7 @@
     "descending": "Низходящ",
     "queue": "Опашка",
     "done": "Готово",
-    "selected-count": "Избрани: {count}"
+    "selected-count": "Избрани: {count}",
+    "empty-tasks-hint": "Изберете „{action}“ от лентата с инструменти, за да добавите изтегляне."
   }
 }

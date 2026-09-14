@@ -852,7 +852,7 @@
     "file-load-failed": "文件加载失败",
     "magnet-select-fail": "下载配置失败",
     "magnet-task": "磁力链接任务",
-    "magnet-start-download": "开始下载",
+    "magnet-start-download": "下载",
     "magnet-choose-later": "稍后选择",
     "select-files": "选择文件",
     "task-type": "类型",
@@ -924,7 +924,7 @@
     "more-actions": "更多",
     "search-tasks": "搜索任务",
     "no-results": "未找到匹配任务",
-    "empty-tasks": "下载任务将在这里显示",
+    "empty-tasks": "暂无任务",
     "select-tasks": "多选",
     "comfortable": "标准",
     "compact": "紧凑",
@@ -939,6 +939,7 @@
     "descending": "降序",
     "queue": "队列",
     "done": "完成",
-    "selected-count": "已选 {count} 项"
+    "selected-count": "已选 {count} 项",
+    "empty-tasks-hint": "点击工具栏中的“{action}”添加下载。"
   }
 }

@@ -852,7 +852,7 @@
     "file-load-failed": "Bestand laden mislukt",
     "magnet-select-fail": "Configuratie van download mislukt",
     "magnet-task": "Magnettaak",
-    "magnet-start-download": "Download starten",
+    "magnet-start-download": "Downloaden",
     "magnet-choose-later": "Later kiezen",
     "select-files": "Bestanden selecteren",
     "task-type": "Type",
@@ -924,7 +924,7 @@
     "more-actions": "Meer acties",
     "search-tasks": "Taken zoeken",
     "no-results": "Geen overeenkomende taken",
-    "empty-tasks": "Je downloads verschijnen hier",
+    "empty-tasks": "Geen taken",
     "select-tasks": "Selecteren",
     "comfortable": "Standaard",
     "compact": "Compact",
@@ -939,6 +939,7 @@
     "descending": "Aflopend",
     "queue": "Wachtrij",
     "done": "Gereed",
-    "selected-count": "{count} geselecteerd"
+    "selected-count": "{count} geselecteerd",
+    "empty-tasks-hint": "Kies ‘{action}’ in de werkbalk om een download toe te voegen."
   }
 }

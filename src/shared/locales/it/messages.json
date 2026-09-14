@@ -852,7 +852,7 @@
     "file-load-failed": "Caricamento file non riuscito",
     "magnet-select-fail": "Impossibile configurare il download",
     "magnet-task": "Attività magnet",
-    "magnet-start-download": "Avvia download",
+    "magnet-start-download": "Scarica",
     "magnet-choose-later": "Scegli più tardi",
     "select-files": "Seleziona file",
     "task-type": "Tipo",
@@ -924,7 +924,7 @@
     "more-actions": "Altre azioni",
     "search-tasks": "Cerca attività",
     "no-results": "Nessuna attività corrispondente",
-    "empty-tasks": "I download appariranno qui",
+    "empty-tasks": "Nessuna attività",
     "select-tasks": "Seleziona",
     "comfortable": "Standard",
     "compact": "Compatta",
@@ -939,6 +939,7 @@
     "descending": "Decrescente",
     "queue": "Coda",
     "done": "Fine",
-    "selected-count": "{count} selezionate"
+    "selected-count": "{count} selezionate",
+    "empty-tasks-hint": "Scegli «{action}» nella barra degli strumenti per aggiungere un download."
   }
 }

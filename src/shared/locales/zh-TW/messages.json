@@ -852,7 +852,7 @@
     "file-load-failed": "檔案載入失敗",
     "magnet-select-fail": "下載設定失敗",
     "magnet-task": "磁力連結任務",
-    "magnet-start-download": "開始下載",
+    "magnet-start-download": "下載",
     "magnet-choose-later": "稍後選擇",
     "select-files": "選擇檔案",
     "task-type": "類型",
@@ -924,7 +924,7 @@
     "more-actions": "更多操作",
     "search-tasks": "搜尋任務",
     "no-results": "沒有符合的任務",
-    "empty-tasks": "下載任務將在這裡顯示",
+    "empty-tasks": "暫無任務",
     "select-tasks": "多選",
     "comfortable": "標準",
     "compact": "緊湊",
@@ -939,6 +939,7 @@
     "descending": "降冪",
     "queue": "佇列",
     "done": "完成",
-    "selected-count": "已選 {count} 項"
+    "selected-count": "已選 {count} 項",
+    "empty-tasks-hint": "點擊工具列中的「{action}」新增下載。"
   }
 }

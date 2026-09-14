@@ -852,7 +852,7 @@
     "file-load-failed": "โหลดไฟล์ล้มเหลว",
     "magnet-select-fail": "ไม่สามารถกำหนดค่าการดาวน์โหลด",
     "magnet-task": "งาน Magnet",
-    "magnet-start-download": "เริ่มดาวน์โหลด",
+    "magnet-start-download": "ดาวน์โหลด",
     "magnet-choose-later": "เลือกภายหลัง",
     "select-files": "เลือกไฟล์",
     "task-type": "ประเภท",
@@ -924,7 +924,7 @@
     "more-actions": "การดำเนินการเพิ่มเติม",
     "search-tasks": "ค้นหางาน",
     "no-results": "ไม่พบงานที่ตรงกัน",
-    "empty-tasks": "รายการดาวน์โหลดจะแสดงที่นี่",
+    "empty-tasks": "ไม่มีงาน",
     "select-tasks": "เลือก",
     "comfortable": "มาตรฐาน",
     "compact": "กะทัดรัด",
@@ -939,6 +939,7 @@
     "descending": "มากไปน้อย",
     "queue": "คิว",
     "done": "เสร็จสิ้น",
-    "selected-count": "เลือก {count} รายการ"
+    "selected-count": "เลือก {count} รายการ",
+    "empty-tasks-hint": "เลือก “{action}” ในแถบเครื่องมือเพื่อเพิ่มการดาวน์โหลด"
   }
 }

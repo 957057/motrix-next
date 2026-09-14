@@ -1,5 +1,6 @@
 //! Application task queries, admission and native controls.
 mod policy;
+pub mod transfer;
 use crate::{
     aria2::{rpc::RpcClient, types::*},
     error::AppError,
@@ -15,6 +16,8 @@ pub struct TaskService {
     rpc: RpcClient,
     pub tasks: TaskPolicy,
     generation: AtomicU64,
+    pub transfers: transfer::TransferState,
+    query_snapshot: tokio::sync::Mutex<Option<(u64, u64, Vec<Aria2Task>)>>,
 }
 pub struct TaskServiceState(pub Arc<TaskService>);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -29,6 +32,8 @@ impl TaskService {
             rpc: RpcClient::new(port, secret),
             tasks: TaskPolicy::default(),
             generation: AtomicU64::new(0),
+            transfers: transfer::TransferState::default(),
+            query_snapshot: tokio::sync::Mutex::new(None),
         }
     }
     pub fn generation(&self) -> u64 {
@@ -36,6 +41,7 @@ impl TaskService {
     }
     pub async fn update_credentials(&self, port: u16, secret: String) {
         self.generation.fetch_add(1, Ordering::Relaxed);
+        self.transfers.reset();
         self.tasks.clear_automatic().await;
         self.rpc.update_credentials(port, secret).await;
     }
@@ -47,17 +53,78 @@ impl TaskService {
         method: &str,
         params: Vec<serde_json::Value>,
     ) -> Result<T, AppError> {
-        self.rpc.call(&format!("aria2.{method}"), params).await
+        let result = self.rpc.call(&format!("aria2.{method}"), params).await;
+        if !method.starts_with("get") && !method.starts_with("tell") {
+            self.transfers.invalidate();
+        }
+        result
     }
     pub async fn query_tasks(
         &self,
         database: &crate::database::Database,
         input: crate::database::TaskQueryInput,
     ) -> Result<crate::database::TaskQueryPage, AppError> {
-        let tasks = self.tell_task_snapshot(true).await?;
-        database
-            .query_tasks(self.tasks.visible_tasks(tasks).await, input)
+        let generation = self.generation();
+        let sequence = self.transfers.sequence();
+        let started = std::time::Instant::now();
+        let revision = self.transfers.revision();
+        let cached = self
+            .query_snapshot
+            .lock()
             .await
+            .as_ref()
+            .filter(|(gen, rev, _)| *gen == generation && *rev == revision)
+            .map(|(_, _, tasks)| tasks.clone());
+        let mut tasks = if let Some(tasks) = cached {
+            tasks
+        } else {
+            // Never hold the metadata lock across RPC; a new engine must not wait for an old request.
+            let tasks = self.raw_task_snapshot(true).await?;
+            let mut cache = self.query_snapshot.lock().await;
+            if generation != self.generation() {
+                return Err(AppError::Aria2("Engine changed during task query".into()));
+            }
+            if self.transfers.revision() == revision {
+                *cache = Some((generation, revision, tasks.clone()));
+            }
+            tasks
+        };
+        let latest = self.transfers.latest.borrow().clone();
+        if let Some(latest) = latest.filter(|latest| latest.generation == generation) {
+            let updates: std::collections::HashMap<_, _> =
+                latest.tasks.iter().map(|task| (&task.gid, task)).collect();
+            for task in &mut tasks {
+                if let Some(update) = updates.get(&task.gid) {
+                    task.status.clone_from(&update.status);
+                    task.total_length.clone_from(&update.total_length);
+                    task.completed_length.clone_from(&update.completed_length);
+                    task.download_speed.clone_from(&update.download_speed);
+                    task.upload_speed.clone_from(&update.upload_speed);
+                    task.upload_length.clone_from(&update.upload_length);
+                    task.connections.clone_from(&update.connections);
+                    task.seeder.clone_from(&update.seeder);
+                    task.bittorrent.clone_from(&update.bittorrent);
+                    task.ed2k.clone_from(&update.ed2k);
+                    task.media.clone_from(&update.media);
+                    task.verified_length.clone_from(&update.verified_length);
+                    task.verify_integrity_pending
+                        .clone_from(&update.verify_integrity_pending);
+                    task.selection_managed = update.selection_managed;
+                }
+            }
+        }
+        let tasks = self.tasks.visible_tasks(tasks).await;
+        let mut page = database.query_tasks(tasks, input).await?;
+        if generation != self.generation() {
+            return Err(AppError::Aria2("Engine changed during task query".into()));
+        }
+        page.generation = generation;
+        page.sequence = sequence;
+        let duration_ms = started.elapsed().as_millis() as u64;
+        if duration_ms >= 500 {
+            log::warn!(target: "task_query", duration_ms; "task_query_slow");
+        }
+        Ok(page)
     }
     // ── Public API ──────────────────────────────────────────────────
 
@@ -504,6 +571,9 @@ impl TaskService {
         &self,
         calls: Vec<(String, Vec<serde_json::Value>)>,
     ) -> Result<Vec<serde_json::Value>, AppError> {
+        let mutating = calls
+            .iter()
+            .any(|(method, _)| !method.starts_with("get") && !method.starts_with("tell"));
         let calls: Vec<_> = calls
             .into_iter()
             .map(|(method, params)| {
@@ -512,7 +582,11 @@ impl TaskService {
                 })
             })
             .collect();
-        self.rpc.call("system.multicall", vec![calls.into()]).await
+        let result = self.rpc.call("system.multicall", vec![calls.into()]).await;
+        if mutating {
+            self.transfers.invalidate();
+        }
+        result
     }
 }
 fn validate_multicall_results(

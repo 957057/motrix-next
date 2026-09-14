@@ -1,15 +1,3 @@
-/** Base interval for global stat refresh (ms). */
-export const STAT_BASE_INTERVAL = 500
-
-/** Additional per-active-task stat interval increment (ms). */
-export const STAT_PER_TASK_INTERVAL = 100
-
-/** Minimum stat refresh interval cap (ms). */
-export const STAT_MIN_INTERVAL = 500
-
-/** Maximum stat refresh interval cap (ms). */
-export const STAT_MAX_INTERVAL = 6000
-
 /** Time the successful engine recovery state remains visible (ms). */
 export const ENGINE_RECOVERY_SUCCESS_DURATION = 1200
 

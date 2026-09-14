@@ -32,6 +32,60 @@ beforeEach(() => {
   usePreferenceStore().config.reduceMotion = true
 })
 describe('Task workspace', () => {
+  it('waits for a successful first page before showing an empty state', async () => {
+    const tasks = useTaskStore()
+    tasks.taskPagination.all.loaded = false
+    tasks.listPending = true
+    const wrapper = mount(TaskList)
+    expect(wrapper.find('.list-empty').exists()).toBe(false)
+    expect(wrapper.find('.n-spin').exists()).toBe(false)
+
+    tasks.taskPagination.all.loaded = true
+    tasks.listPending = false
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('.empty-title').text()).toBe('workspace.empty-tasks')
+    expect(wrapper.get('.empty-hint').text()).toBe('workspace.empty-tasks-hint')
+    expect(wrapper.find('button').exists()).toBe(false)
+    wrapper.unmount()
+  })
+  it('keeps the confirmed empty state mounted during background updates', async () => {
+    const tasks = useTaskStore()
+    const wrapper = mount(TaskList)
+    const empty = wrapper.get('.list-empty').element
+    tasks.listPending = true
+    await wrapper.vm.$nextTick()
+    expect(wrapper.get('.list-empty').element).toBe(empty)
+    expect(wrapper.find('.n-spin').exists()).toBe(false)
+    wrapper.unmount()
+  })
+  it('keeps search clearing available without duplicating creation in a filtered view', async () => {
+    const tasks = useTaskStore()
+    const view = useTaskViewStore()
+    tasks.currentList = 'completed'
+    tasks.displayedList = 'completed'
+    tasks.taskPagination.completed.loaded = true
+    view.query = 'missing'
+    const wrapper = mount(TaskList)
+    expect(wrapper.get('.empty-title').text()).toBe('workspace.no-results')
+    await wrapper.get('.list-empty button').trigger('click')
+    expect(view.query).toBe('')
+    expect(wrapper.get('.empty-title').text()).toBe('workspace.empty-tasks')
+    expect(wrapper.find('.empty-hint').exists()).toBe(false)
+    expect(wrapper.find('.list-empty button').exists()).toBe(false)
+    wrapper.unmount()
+  })
+  it('shows a failed initial query with retry instead of an empty result', async () => {
+    const tasks = useTaskStore()
+    tasks.taskPagination.all.loaded = false
+    tasks.queryError = 'Database unavailable'
+    tasks.fetchList = vi.fn().mockResolvedValue(undefined)
+    const wrapper = mount(TaskList)
+    expect(wrapper.find('.list-empty').exists()).toBe(false)
+    expect(wrapper.get('[role="alert"]').text()).toContain('Database unavailable')
+    await wrapper.get('[role="alert"] button').trigger('click')
+    expect(tasks.fetchList).toHaveBeenCalledOnce()
+    wrapper.unmount()
+  })
   it('keeps the same row and expanded content across density and lifecycle changes', async () => {
     const tasks = useTaskStore()
     tasks.taskList = [task()]

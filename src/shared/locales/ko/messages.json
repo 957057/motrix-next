@@ -852,7 +852,7 @@
     "file-load-failed": "파일 로드 실패",
     "magnet-select-fail": "다운로드 구성에 실패했습니다",
     "magnet-task": "마그넷 작업",
-    "magnet-start-download": "다운로드 시작",
+    "magnet-start-download": "다운로드",
     "magnet-choose-later": "나중에 선택",
     "select-files": "파일 선택",
     "task-type": "유형",
@@ -924,7 +924,7 @@
     "more-actions": "추가 작업",
     "search-tasks": "작업 검색",
     "no-results": "일치하는 작업 없음",
-    "empty-tasks": "다운로드가 여기에 표시됩니다",
+    "empty-tasks": "작업이 없습니다",
     "select-tasks": "선택",
     "comfortable": "표준",
     "compact": "좁게",
@@ -939,6 +939,7 @@
     "descending": "내림차순",
     "queue": "대기열",
     "done": "완료",
-    "selected-count": "{count}개 선택됨"
+    "selected-count": "{count}개 선택됨",
+    "empty-tasks-hint": "도구 모음에서 “{action}”을 선택해 다운로드를 추가하세요."
   }
 }

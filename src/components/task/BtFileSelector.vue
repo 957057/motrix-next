@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** @fileoverview Shared BitTorrent file selector for local torrents and magnets. */
-import { computed, ref } from 'vue'
+import { computed, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NDataTable, NInput } from 'naive-ui'
 import type { DataTableColumns, DataTableRowKey } from 'naive-ui'
@@ -27,16 +27,27 @@ const visibleFiles = computed(() =>
   props.files.filter((file) => file.path.toLocaleLowerCase().includes(query.value.trim().toLocaleLowerCase())),
 )
 
+const commonRoot = computed(() => {
+  const paths = props.files.map((file) => file.path.replace(/\\/g, '/'))
+  const root = paths[0]?.split('/')[0]
+  return root && paths.every((path) => path.startsWith(`${root}/`)) ? `${root}/` : ''
+})
+function displayPath(path: string) {
+  return path.replace(/\\/g, '/').slice(commonRoot.value.length)
+}
+
 const columns = computed<DataTableColumns<BtFileSelectionItem>>(() => [
   { type: 'selection' },
   {
     title: t('task.file-name'),
     key: 'path',
-    ellipsis: { tooltip: true },
+    ellipsis: true,
+    render: (row) => h('span', { title: row.path }, displayPath(row.path)),
   },
   {
     title: t('task.file-size'),
     key: 'length',
+    align: 'right',
     width: calcColumnWidth({
       title: t('task.file-size'),
       values: props.files.map((file) => bytesToSize(file.length)),
@@ -72,6 +83,7 @@ function updateSelection(keys: DataTableRowKey[]) {
       :columns="columns"
       :bordered="false"
       :single-line="true"
+      :theme-overrides="{ borderColor: 'transparent', tdPaddingSmall: '10px 12px', thPaddingSmall: '8px 12px' }"
       :pagination="false"
       :data="visibleFiles"
       :row-key="(row: BtFileSelectionItem) => row.index"

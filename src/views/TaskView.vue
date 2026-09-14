@@ -1,20 +1,17 @@
 <script setup lang="ts">
-/** @fileoverview Task list view with polling, task actions, and file delete confirmation. */
+/** @fileoverview Task list view with native updates, task actions, and file delete confirmation. */
 import { motion } from 'motion-v'
 import { watchDebounced, useDocumentVisibility } from '@vueuse/core'
 import { computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTaskStore } from '@/stores/task'
 import { useTaskSelectionStore } from '@/stores/taskSelection'
-import { useAppStore } from '@/stores/app'
 import { usePreferenceStore } from '@/stores/preference'
 
-import { isEngineReady } from '@/api/aria2'
 import { useTaskActions } from '@/composables/useTaskActions'
 
-import { logger } from '@shared/logger'
 import { useTaskViewStore } from '@/stores/taskView'
-import { NSpin, useDialog } from 'naive-ui'
+import { useDialog } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
 import TransitionText from '@/components/common/TransitionText.vue'
 import TaskList from '@/components/task/TaskList.vue'
@@ -28,7 +25,6 @@ const visibility = useDocumentVisibility()
 let returnFocus: HTMLElement | null = null
 const { t } = useI18n()
 const taskStore = useTaskStore()
-const appStore = useAppStore()
 const preferenceStore = usePreferenceStore()
 const dialog = useDialog()
 const message = useAppMessage()
@@ -67,7 +63,6 @@ const title = computed(() => {
   const sub = subnavs.value.find((s) => s.key === taskStore.displayedList)
   return sub?.title ?? props.status
 })
-
 watchDebounced(
   () => view.query,
   () => {
@@ -76,40 +71,9 @@ watchDebounced(
   { debounce: 180, maxWait: 400 },
 )
 
-let refreshTimer: ReturnType<typeof setTimeout> | null = null
-let pollStopped = true
 let isUnmounted = false
-let changeRequestId = 0
-
-function startPolling() {
-  if (isUnmounted || visibility.value === 'hidden') return
-  stopPolling()
-  pollStopped = false
-  async function tick() {
-    if (pollStopped) return
-    if (isEngineReady()) {
-      await taskStore.fetchList().catch((e) => logger.debug('TaskView.fetchList', e))
-    }
-    if (pollStopped) return
-    refreshTimer = setTimeout(tick, appStore.interval)
-  }
-  refreshTimer = setTimeout(tick, appStore.interval)
-}
-
-function stopPolling() {
-  pollStopped = true
-  if (refreshTimer) {
-    clearTimeout(refreshTimer)
-    refreshTimer = null
-  }
-}
-
 async function changeCurrentList() {
-  stopPolling()
-  const requestId = ++changeRequestId
   await taskStore.changeCurrentList(props.status)
-  if (isUnmounted || requestId !== changeRequestId) return
-  startPolling()
 }
 
 watch(
@@ -119,8 +83,7 @@ watch(
   },
 )
 watch(visibility, (state) => {
-  if (state === 'hidden') stopPolling()
-  else if (!isUnmounted) void changeCurrentList()
+  if (state === 'visible' && !isUnmounted) void changeCurrentList()
 })
 watch(
   () => taskStore.taskDetailVisible,
@@ -142,8 +105,6 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   isUnmounted = true
-  changeRequestId += 1
-  stopPolling()
   taskStore.hideTaskDetail()
 })
 // Task action handlers are now provided by useTaskActions composable above.
@@ -161,10 +122,6 @@ onBeforeUnmount(() => {
         <h1 class="task-title">
           <TransitionText
             :text="view.selecting ? t('workspace.selected-count', { count: view.selected.length }) : title"
-          /><NSpin
-            v-if="taskStore.listPending && taskStore.currentList !== taskStore.displayedList"
-            :size="16"
-            :aria-label="t('about.loading')"
           />
         </h1>
         <div class="toolbar-region" :inert="taskStore.currentList !== taskStore.displayedList || undefined">
@@ -236,7 +193,6 @@ onBeforeUnmount(() => {
   max-width: 30%;
   display: flex;
   align-items: center;
-  gap: 10px;
   font-size: 24px;
   font-weight: 600;
   line-height: 32px;
@@ -256,6 +212,8 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
 }
 .panel-content {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0;
   overflow-y: auto;

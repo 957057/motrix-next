@@ -852,7 +852,7 @@
     "file-load-failed": "A fájl betöltése sikertelen",
     "magnet-select-fail": "A letöltés konfigurálása sikertelen",
     "magnet-task": "Magnet feladat",
-    "magnet-start-download": "Letöltés indítása",
+    "magnet-start-download": "Letöltés",
     "magnet-choose-later": "Kiválasztás később",
     "select-files": "Fájlok kiválasztása",
     "task-type": "Típus",
@@ -924,7 +924,7 @@
     "more-actions": "További műveletek",
     "search-tasks": "Feladatok keresése",
     "no-results": "Nincs megfelelő feladat",
-    "empty-tasks": "A letöltések itt jelennek meg",
+    "empty-tasks": "Nincsenek feladatok",
     "select-tasks": "Kijelölés",
     "comfortable": "Normál",
     "compact": "Kompakt",
@@ -939,6 +939,7 @@
     "descending": "Csökkenő",
     "queue": "Sor",
     "done": "Kész",
-    "selected-count": "{count} kijelölve"
+    "selected-count": "{count} kijelölve",
+    "empty-tasks-hint": "Letöltés hozzáadásához válassza az eszköztár „{action}” elemét."
   }
 }

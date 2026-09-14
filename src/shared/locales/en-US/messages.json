@@ -852,7 +852,7 @@
     "file-load-failed": "File load failed",
     "magnet-select-fail": "Failed to configure download",
     "magnet-task": "Magnet Task",
-    "magnet-start-download": "Start Download",
+    "magnet-start-download": "Download",
     "magnet-choose-later": "Choose Later",
     "select-files": "Select Files",
     "task-type": "Type",
@@ -924,7 +924,7 @@
     "more-actions": "More actions",
     "search-tasks": "Search tasks",
     "no-results": "No matching tasks",
-    "empty-tasks": "Your downloads will appear here",
+    "empty-tasks": "No tasks",
     "select-tasks": "Select",
     "comfortable": "Standard",
     "compact": "Compact",
@@ -939,6 +939,7 @@
     "descending": "Descending",
     "queue": "Queue",
     "done": "Done",
-    "selected-count": "{count} selected"
+    "selected-count": "{count} selected",
+    "empty-tasks-hint": "Choose “{action}” in the toolbar to add a download."
   }
 }

@@ -852,7 +852,7 @@
     "file-load-failed": "Nie udało się załadować pliku",
     "magnet-select-fail": "Nie udało się skonfigurować pobierania",
     "magnet-task": "Zadanie magnet",
-    "magnet-start-download": "Rozpocznij pobieranie",
+    "magnet-start-download": "Pobierz",
     "magnet-choose-later": "Wybierz później",
     "select-files": "Wybierz pliki",
     "task-type": "Typ",
@@ -924,7 +924,7 @@
     "more-actions": "Więcej działań",
     "search-tasks": "Szukaj zadań",
     "no-results": "Brak pasujących zadań",
-    "empty-tasks": "Pobrane pliki pojawią się tutaj",
+    "empty-tasks": "Brak zadań",
     "select-tasks": "Zaznacz",
     "comfortable": "Standardowa",
     "compact": "Zwarta",
@@ -939,6 +939,7 @@
     "descending": "Malejąco",
     "queue": "Kolejka",
     "done": "Gotowe",
-    "selected-count": "Zaznaczono: {count}"
+    "selected-count": "Zaznaczono: {count}",
+    "empty-tasks-hint": "Wybierz „{action}” na pasku narzędzi, aby dodać pobieranie."
   }
 }

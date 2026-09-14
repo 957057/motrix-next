@@ -852,7 +852,7 @@
     "file-load-failed": "Tải tệp thất bại",
     "magnet-select-fail": "Không thể cấu hình tải xuống",
     "magnet-task": "Tác vụ magnet",
-    "magnet-start-download": "Bắt đầu tải xuống",
+    "magnet-start-download": "Tải xuống",
     "magnet-choose-later": "Chọn sau",
     "select-files": "Chọn tệp",
     "task-type": "Loại",
@@ -924,7 +924,7 @@
     "more-actions": "Thao tác khác",
     "search-tasks": "Tìm tác vụ",
     "no-results": "Không có tác vụ phù hợp",
-    "empty-tasks": "Các bản tải xuống sẽ xuất hiện ở đây",
+    "empty-tasks": "Không có tác vụ",
     "select-tasks": "Chọn",
     "comfortable": "Tiêu chuẩn",
     "compact": "Gọn",
@@ -939,6 +939,7 @@
     "descending": "Giảm dần",
     "queue": "Hàng đợi",
     "done": "Xong",
-    "selected-count": "Đã chọn {count}"
+    "selected-count": "Đã chọn {count}",
+    "empty-tasks-hint": "Chọn “{action}” trên thanh công cụ để thêm lượt tải xuống."
   }
 }

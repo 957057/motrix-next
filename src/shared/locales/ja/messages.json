@@ -852,7 +852,7 @@
     "file-load-failed": "ファイルの読み込みに失敗しました",
     "magnet-select-fail": "ダウンロードの設定に失敗しました",
     "magnet-task": "マグネットタスク",
-    "magnet-start-download": "ダウンロード開始",
+    "magnet-start-download": "ダウンロード",
     "magnet-choose-later": "後で選択",
     "select-files": "ファイルを選択",
     "task-type": "種類",
@@ -924,7 +924,7 @@
     "more-actions": "その他の操作",
     "search-tasks": "タスクを検索",
     "no-results": "一致するタスクはありません",
-    "empty-tasks": "ダウンロードがここに表示されます",
+    "empty-tasks": "タスクはありません",
     "select-tasks": "選択",
     "comfortable": "標準",
     "compact": "コンパクト",
@@ -939,6 +939,7 @@
     "descending": "降順",
     "queue": "キュー",
     "done": "完了",
-    "selected-count": "{count} 件選択中"
+    "selected-count": "{count} 件選択中",
+    "empty-tasks-hint": "ツールバーの「{action}」からダウンロードを追加できます。"
   }
 }

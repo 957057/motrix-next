@@ -2,12 +2,10 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AnimatePresence, motion, Reorder } from 'motion-v'
-import { NEmpty, NButton, NSpin, NIcon } from 'naive-ui'
-import { DocumentOutline, SearchOutline } from '@vicons/ionicons5'
+import { NButton } from 'naive-ui'
 import { useTaskStore } from '@/stores/task'
 import { useTaskViewStore } from '@/stores/taskView'
 import { usePreferenceStore } from '@/stores/preference'
-import { useAppStore } from '@/stores/app'
 import { getBtLifecycleState } from '@/composables/useBtLifecycle'
 import { isPendingMagnetSelectionTask } from '@/composables/useMagnetFlow'
 import { logger } from '@shared/logger'
@@ -33,7 +31,6 @@ const { t, locale } = useI18n()
 const tasks = useTaskStore()
 const view = useTaskViewStore()
 const preference = usePreferenceStore()
-const app = useAppStore()
 const dragging = ref(false)
 const order = ref<string[]>([])
 const manual = computed(
@@ -63,6 +60,10 @@ const rows = computed(() => {
   if (tasks.displayedList !== 'all') return page.value
   return ['progress', 'attention', 'completed'].flatMap((key) => page.value.filter((task) => group(task) === key))
 })
+const hasSearch = computed(() => !!view.query.trim())
+const showEmpty = computed(
+  () => !tasks.queryError && tasks.taskPagination[tasks.displayedList].loaded && !rows.value.length,
+)
 const layoutRevision = computed(() =>
   [
     tasks.displayedList,
@@ -107,27 +108,22 @@ function move(gid: string, direction: -1 | 1) {
   <div class="task-list">
     <div v-if="tasks.queryError" class="list-error" role="alert">
       <span>{{ tasks.queryError }}</span
-      ><NButton @click="tasks.fetchList()">{{ t('app.retry') }}</NButton>
+      ><NButton :loading="tasks.listPending" @click="tasks.fetchList()">{{ t('app.retry') }}</NButton>
     </div>
-    <div
-      v-if="!tasks.queryError && !tasks.taskPagination[tasks.displayedList].loaded && !rows.length"
-      class="list-empty"
+    <Transition
+      name="empty"
+      @before-leave="(element) => element.setAttribute('inert', '')"
+      @before-enter="(element) => element.removeAttribute('inert')"
+      @leave-cancelled="(element) => element.removeAttribute('inert')"
     >
-      <NSpin :description="t('about.loading')" />
-    </div>
-    <NEmpty
-      v-else-if="!tasks.queryError && !rows.length"
-      class="list-empty"
-      :description="view.query ? t('workspace.no-results') : t('workspace.empty-tasks')"
-    >
-      <template #icon
-        ><NIcon :size="40"><SearchOutline v-if="view.query" /><DocumentOutline v-else /></NIcon
-      ></template>
-      <template #extra
-        ><NButton v-if="!view.query" type="primary" @click="app.showAddTaskDialog()">{{ t('task.new-task') }}</NButton
-        ><NButton v-else @click="view.query = ''">{{ t('workspace.clear') }}</NButton></template
-      >
-    </NEmpty>
+      <div v-if="showEmpty" class="list-empty" role="status">
+        <h2 class="empty-title">{{ hasSearch ? t('workspace.no-results') : t('workspace.empty-tasks') }}</h2>
+        <p v-if="!hasSearch && tasks.displayedList === 'all'" class="empty-hint">
+          {{ t('workspace.empty-tasks-hint', { action: t('task.new-task') }) }}
+        </p>
+        <NButton v-if="hasSearch" quaternary @click="view.query = ''">{{ t('workspace.clear') }}</NButton>
+      </div>
+    </Transition>
     <component
       :is="manual ? Reorder.Group : motion.ul"
       v-model:values="order"
@@ -185,7 +181,8 @@ function move(gid: string, direction: -1 | 1) {
 .task-list {
   padding: 0 24px 24px;
   position: relative;
-  min-height: min(320px, 50dvh);
+  flex: 1 0 auto;
+  min-height: 180px;
 }
 .task-rows {
   margin: 0;
@@ -199,16 +196,37 @@ function move(gid: string, direction: -1 | 1) {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: min(320px, 50vh);
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+  padding: 24px;
+}
+.empty-title {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--m3-on-surface);
+}
+.empty-hint {
+  max-inline-size: 360px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--m3-on-surface-variant);
+}
+.empty-enter-active {
+  transition: opacity 120ms ease;
+}
+.empty-leave-active {
+  transition: opacity 90ms ease;
+  pointer-events: none;
+}
+.empty-enter-from,
+.empty-leave-to {
+  opacity: 0;
 }
 @media (max-width: 719px) {
-  .list-error {
-    padding-block: 16px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    overflow-wrap: anywhere;
-  }
   .task-list {
     padding-inline: 16px;
   }

@@ -852,7 +852,7 @@
     "file-load-failed": "Échec du chargement du fichier",
     "magnet-select-fail": "Échec de la configuration du téléchargement",
     "magnet-task": "Tâche magnet",
-    "magnet-start-download": "Démarrer le téléchargement",
+    "magnet-start-download": "Télécharger",
     "magnet-choose-later": "Choisir plus tard",
     "select-files": "Sélectionner les fichiers",
     "task-type": "Type",
@@ -924,7 +924,7 @@
     "more-actions": "Autres actions",
     "search-tasks": "Rechercher des tâches",
     "no-results": "Aucune tâche correspondante",
-    "empty-tasks": "Vos téléchargements apparaîtront ici",
+    "empty-tasks": "Aucune tâche",
     "select-tasks": "Sélectionner",
     "comfortable": "Standard",
     "compact": "Compacte",
@@ -939,6 +939,7 @@
     "descending": "Décroissant",
     "queue": "File",
     "done": "Terminé",
-    "selected-count": "{count} sélectionnées"
+    "selected-count": "{count} sélectionnées",
+    "empty-tasks-hint": "Choisissez « {action} » dans la barre d’outils pour ajouter un téléchargement."
   }
 }

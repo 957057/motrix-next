@@ -62,6 +62,22 @@ describe('Workspace actions', () => {
     expect(wrapper.find('[aria-label="workspace.done"]').exists()).toBe(true)
     wrapper.unmount()
   })
+  it('retains the select-page and done controls as eligible actions change', async () => {
+    const view = useTaskViewStore()
+    view.selecting = true
+    const wrapper = mount(TaskActions)
+    const select = wrapper.find('[aria-label="workspace.select-page"]').element
+    const done = wrapper.find('[aria-label="workspace.done"]').element
+    view.selected = ['a', 'b']
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[aria-label="task.pause-task"]').exists()).toBe(true)
+    view.selected = []
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[aria-label="task.pause-task"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label="workspace.select-page"]').element).toBe(select)
+    expect(wrapper.find('[aria-label="workspace.done"]').element).toBe(done)
+    wrapper.unmount()
+  })
   it('confirms only selected downloads and keeps failed items selected', async () => {
     const tasks = useTaskStore()
     const view = useTaskViewStore()

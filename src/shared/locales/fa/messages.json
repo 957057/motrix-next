@@ -852,7 +852,7 @@
     "file-load-failed": "بارگذاری فایل ناموفق بود",
     "magnet-select-fail": "پیکربندی دانلود ناموفق بود",
     "magnet-task": "وظیفه مگنت",
-    "magnet-start-download": "شروع دانلود",
+    "magnet-start-download": "دانلود",
     "magnet-choose-later": "انتخاب در آینده",
     "select-files": "انتخاب فایل‌ها",
     "task-type": "نوع",
@@ -924,7 +924,7 @@
     "more-actions": "اقدامات بیشتر",
     "search-tasks": "جستجوی کارها",
     "no-results": "کاری مطابق جستجو یافت نشد",
-    "empty-tasks": "بارگیری‌ها اینجا نمایش داده می‌شوند",
+    "empty-tasks": "هیچ کاری وجود ندارد",
     "select-tasks": "انتخاب",
     "comfortable": "استاندارد",
     "compact": "فشرده",
@@ -939,6 +939,7 @@
     "descending": "نزولی",
     "queue": "صف",
     "done": "تمام",
-    "selected-count": "{count} انتخاب‌شده"
+    "selected-count": "{count} انتخاب‌شده",
+    "empty-tasks-hint": "برای افزودن دانلود، «{action}» را در نوار ابزار انتخاب کنید."
   }
 }

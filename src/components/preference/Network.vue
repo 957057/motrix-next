@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
 import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
+import { useAppColorTokens } from '@/composables/useColorScheme'
 import { usePlatform } from '@/composables/usePlatform'
 import { useSystemProxyDetect } from '@/composables/useSystemProxyDetect'
 import { logger } from '@shared/logger'
@@ -26,6 +27,7 @@ import userAgentMap from '@shared/ua'
 import { hasUnsafeHeaderChars, sanitizeHeaderValue } from '@shared/utils/headerSanitize'
 import {
   NForm,
+  NConfigProvider,
   NCollapseTransition,
   NInput,
   NInputNumber,
@@ -52,10 +54,46 @@ const { constraint, configFieldProps, fieldProps, areConfigFieldsValid, portReco
   usePreferenceNumericValidation()
 const { isWindows } = usePlatform()
 
-const proxyScopeOptions = PROXY_SCOPE_OPTIONS.map((s: string) => ({
-  label: t(`preferences.proxy-scope-${s}`),
-  value: s,
-}))
+const proxyScopeOptions = computed(() =>
+  PROXY_SCOPE_OPTIONS.map((value: string) => ({
+    label: t(`preferences.proxy-scope-${value}`),
+    value,
+  })),
+)
+const colorTokens = useAppColorTokens()
+const proxyScopeTheme = computed(() => {
+  const tokens = colorTokens.value
+  return {
+    Tag: {
+      border: 'none',
+      borderRadius: '4px',
+      color: tokens.surfaceContainer,
+      colorBordered: tokens.surfaceContainer,
+      textColor: tokens.onSurface,
+    },
+    Select: {
+      peers: {
+        InternalSelection: {
+          paddingMultiple: '6px 28px 6px 8px',
+          color: tokens.surfaceContainerLow,
+          colorActive: tokens.surfaceContainerLow,
+          boxShadowHover: 'none',
+          boxShadowActive: 'none',
+          boxShadowFocus: 'none',
+          borderFocus: `2px solid ${tokens.primary.color}`,
+        },
+        InternalSelectMenu: {
+          color: tokens.surfaceContainerLow,
+          optionColorActive: 'transparent',
+          optionColorPending: tokens.surfaceContainer,
+          optionColorActivePending: tokens.surfaceContainer,
+          optionHeightMedium: '36px',
+          paddingMedium: '6px',
+        },
+      },
+    },
+  }
+})
 const fileAllocationOptions = computed(() =>
   FILE_ALLOCATION_OPTIONS.filter((value) => !(isWindows.value && value === 'falloc')).map((value) => ({
     label: value,
@@ -280,13 +318,15 @@ onMounted(() => {
               />
             </SettingsRow>
             <SettingsRow setting-key="preferences.proxy-scope" :label="t('preferences.proxy-scope')">
-              <NSelect
-                v-model:value="form.proxy.scope"
-                :aria-label="t('preferences.proxy-scope')"
-                :options="proxyScopeOptions"
-                multiple
-                class="pref-control-full"
-              />
+              <NConfigProvider :theme-overrides="proxyScopeTheme" class="pref-control-full">
+                <NSelect
+                  v-model:value="form.proxy.scope"
+                  :aria-label="t('preferences.proxy-scope')"
+                  :options="proxyScopeOptions"
+                  multiple
+                  class="proxy-scope-select"
+                />
+              </NConfigProvider>
             </SettingsRow>
           </div>
         </NCollapseTransition>
@@ -454,6 +494,11 @@ onMounted(() => {
   </div>
 </template>
 <style scoped>
+/* Naive UI owns the visible focus border; do not add a second global outline. */
+.proxy-scope-select :deep(.n-base-selection-tags:focus-visible) {
+  outline: none;
+}
+
 .proxy-collapse__inner {
   overflow: hidden;
 }

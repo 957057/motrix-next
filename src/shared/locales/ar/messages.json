@@ -852,7 +852,7 @@
     "file-load-failed": "فشل تحميل الملف",
     "magnet-select-fail": "فشل في تكوين التنزيل",
     "magnet-task": "مهمة مغناطيسية",
-    "magnet-start-download": "بدء التنزيل",
+    "magnet-start-download": "تنزيل",
     "magnet-choose-later": "اختر لاحقًا",
     "select-files": "اختيار الملفات",
     "task-type": "النوع",
@@ -924,7 +924,7 @@
     "more-actions": "إجراءات أخرى",
     "search-tasks": "البحث عن مهام",
     "no-results": "لا توجد مهام مطابقة",
-    "empty-tasks": "ستظهر التنزيلات هنا",
+    "empty-tasks": "لا توجد مهام",
     "select-tasks": "تحديد",
     "comfortable": "قياسية",
     "compact": "مضغوطة",
@@ -939,6 +939,7 @@
     "descending": "تنازلي",
     "queue": "قائمة الانتظار",
     "done": "تم",
-    "selected-count": "تم تحديد {count}"
+    "selected-count": "تم تحديد {count}",
+    "empty-tasks-hint": "اختر «{action}» من شريط الأدوات لإضافة تنزيل."
   }
 }

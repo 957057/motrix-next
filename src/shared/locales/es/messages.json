@@ -852,7 +852,7 @@
     "file-load-failed": "Error al cargar el archivo",
     "magnet-select-fail": "Error al configurar la descarga",
     "magnet-task": "Tarea magnet",
-    "magnet-start-download": "Iniciar descarga",
+    "magnet-start-download": "Descargar",
     "magnet-choose-later": "Elegir más tarde",
     "select-files": "Seleccionar archivos",
     "task-type": "Tipo",
@@ -924,7 +924,7 @@
     "more-actions": "Más acciones",
     "search-tasks": "Buscar tareas",
     "no-results": "No hay tareas coincidentes",
-    "empty-tasks": "Tus descargas aparecerán aquí",
+    "empty-tasks": "No hay tareas",
     "select-tasks": "Seleccionar",
     "comfortable": "Estándar",
     "compact": "Compacta",
@@ -939,6 +939,7 @@
     "descending": "Descendente",
     "queue": "Cola",
     "done": "Listo",
-    "selected-count": "{count} seleccionadas"
+    "selected-count": "{count} seleccionadas",
+    "empty-tasks-hint": "Selecciona «{action}» en la barra de herramientas para añadir una descarga."
   }
 }
