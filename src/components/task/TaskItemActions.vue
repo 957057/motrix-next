@@ -1,12 +1,12 @@
 <script setup lang="ts">
 /** @fileoverview Action buttons for individual task items. */
-import { computed } from 'vue'
+import { computed, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { canFinishMedia } from '@shared/utils/media'
 import { TASK_STATUS } from '@shared/constants'
-import { NIcon } from 'naive-ui'
-import MTooltip from '@/components/common/MTooltip.vue'
+import { NIcon, NDropdown } from 'naive-ui'
 import {
+  EllipsisHorizontalOutline,
   PauseOutline,
   PlayOutline,
   StopCircleOutline,
@@ -122,8 +122,6 @@ const actions = computed(() => {
         { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
       ],
       [TASK_STATUS.ERROR]: [
-        { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
-        { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
         { key: 'retry', icon: RefreshOutline, label: t('task.retry-task'), event: 'retry' },
         { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
       ],
@@ -159,14 +157,25 @@ const actions = computed(() => {
     { key: 'info', icon: InformationCircleOutline, label: t('task.task-detail-title'), event: 'show-info' },
   ].filter((a) => !primaryKeys.has(a.key))
 
-  return [...leading, ...common, ...trailing]
-    .map((action) =>
-      action.key === 'retry' || action.key === 'redownload' ? { ...action, disabled: props.pending } : action,
-    )
-    .reverse()
+  return [...leading, ...common, ...trailing].map((action) => ({
+    ...action,
+    disabled: props.pending || (action.key === 'open' && props.fileMissing),
+  }))
 })
 
+const primary = computed(() => actions.value.find((action) => !['delete', 'trash'].includes(action.key)))
+const menuOptions = computed(() =>
+  actions.value
+    .filter((action) => action !== primary.value)
+    .map((action) => ({
+      key: action.event,
+      label: action.label,
+      disabled: action.disabled,
+      icon: () => h(NIcon, null, { default: () => h(action.icon) }),
+    })),
+)
 function onAction(event: string) {
+  if (props.pending) return
   switch (event) {
     case 'pause':
       emit('pause')
@@ -212,186 +221,63 @@ function onAction(event: string) {
 </script>
 
 <template>
-  <TransitionGroup
-    tag="ul"
-    name="action-item"
-    class="task-item-actions"
-    :class="{ 'task-item-actions--compact': props.density === 'compact' }"
-  >
-    <li v-for="action in actions" :key="action.key" class="task-item-action-slot">
-      <MTooltip>
-        <template #trigger>
-          <button
-            type="button"
-            class="task-item-action"
-            :class="{ 'task-item-action--emphasis': action.emphasis }"
-            :aria-label="action.label"
-            :disabled="action.disabled"
-            @click="onAction(action.event)"
-          >
-            <span class="task-action-visual" aria-hidden="true">
-              <Transition name="icon-swap">
-                <NIcon :key="action.event" class="task-action-icon"><component :is="action.icon" /></NIcon>
-              </Transition>
-            </span>
-          </button>
-        </template>
-        {{ action.label }}
-      </MTooltip>
-    </li>
-  </TransitionGroup>
+  <div class="row-actions" @click.stop @dblclick.stop>
+    <button
+      v-if="primary"
+      type="button"
+      class="primary-action"
+      :class="{ emphasized: primary.emphasis }"
+      :aria-label="primary.label"
+      :title="primary.label"
+      :disabled="primary.disabled"
+      @click="onAction(primary.event)"
+    >
+      <NIcon :size="18"><component :is="primary.icon" /></NIcon
+      ><span v-if="primary.emphasis || primary.key === 'open'">{{ primary.label }}</span>
+    </button>
+    <NDropdown trigger="click" :options="menuOptions" @select="onAction">
+      <button type="button" class="icon-button" :aria-label="t('workspace.more-actions')" :disabled="pending">
+        <NIcon :size="18"><EllipsisHorizontalOutline /></NIcon>
+      </button>
+    </NDropdown>
+  </div>
 </template>
-
 <style scoped>
-.task-item-actions {
-  --task-action-height: 32px;
-  --task-action-padding-x: 12px;
-  --task-action-item-margin: 3px;
-  --task-action-icon-size: 20px;
-  --task-action-item-max-width: 38px;
-  --task-action-button-size: 32px;
+.row-actions {
   display: flex;
   align-items: center;
-  height: var(--task-action-height);
-  padding: 0 var(--task-action-padding-x);
-  margin: 0;
-  overflow: hidden;
-  user-select: none;
-  cursor: default;
-  direction: rtl;
-  border: 1px solid var(--m3-surface-container-highest);
-  color: var(--m3-outline);
-  background-color: var(--task-action-bg);
-  border-radius: 18px;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-  list-style: none;
+  gap: 4px;
 }
-.task-item-actions:hover {
-  border-color: var(--m3-outline);
-  background-color: var(--m3-surface-container-high);
-}
-.task-item-action-slot {
+.primary-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 var(--task-action-button-size);
-  width: var(--task-action-button-size);
-  height: var(--task-action-button-size);
-  margin: 0 var(--task-action-item-margin);
-  max-width: var(--task-action-item-max-width);
-  direction: ltr;
-  transition:
-    max-width 0.2s ease-out,
-    margin 0.2s ease-out,
-    opacity 0.2s ease-out;
-}
-.task-item-action {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--task-action-button-size);
-  height: var(--task-action-button-size);
-  min-width: var(--task-action-button-size);
-  margin: 0;
-  padding: 0;
+  gap: 6px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 4px 8px;
   border: 0;
-  color: inherit;
+  border-radius: 6px;
+  color: var(--m3-on-surface-variant);
   background: transparent;
   font: inherit;
-  font-size: 0;
-  line-height: var(--task-action-icon-size);
+  font-size: 13px;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: background-color 120ms ease;
 }
-.task-item-actions--compact {
-  --task-action-height: 24px;
-  --task-action-padding-x: 10px;
-  --task-action-item-margin: 3px;
-  --task-action-icon-size: 16px;
-  --task-action-item-max-width: 28px;
-  --task-action-button-size: 22px;
-  border-radius: 13px;
+.primary-action:hover {
+  background: var(--interaction-hover);
 }
-.task-item-action:hover,
-.task-item-action:active,
-.task-item-action:focus-visible {
+.primary-action.emphasized {
   color: var(--m3-primary);
 }
-.task-item-action--emphasis {
-  color: var(--m3-primary);
-}
-.task-item-action:disabled {
+.primary-action:disabled {
+  opacity: 0.45;
   cursor: default;
-  opacity: 0.56;
 }
-.task-action-visual {
-  display: inline-grid;
-  align-items: center;
-  justify-content: center;
-  width: var(--task-action-icon-size);
-  height: var(--task-action-icon-size);
-  transform: scale(1);
-  transform-origin: center;
-  transition: transform 0.18s cubic-bezier(0.05, 0.7, 0.1, 1);
-}
-.task-item-action:active .task-action-visual {
-  transform: scale(0.9);
-  transition: transform 0.09s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.task-action-icon {
-  grid-area: 1 / 1;
-  font-size: var(--task-action-icon-size);
-}
-
-/* M3 icon crossfade for play ↔ pause toggle */
-.icon-swap-enter-active {
-  transition: opacity var(--task-motion-enter) var(--task-motion-ease);
-}
-.icon-swap-leave-active {
-  transition: opacity var(--task-motion-leave) var(--task-motion-ease);
-}
-.icon-swap-enter-from {
-  opacity: 0;
-}
-.icon-swap-leave-to {
-  opacity: 0;
-}
-/* ── TransitionGroup: directional toolbar grow/shrink ────────── */
-
-/* Enter: button slides in horizontally (width 0 → full) */
-.action-item-enter-active {
-  transition:
-    opacity 0.2s ease-out,
-    max-width 0.2s ease-out,
-    margin 0.2s ease-out;
-}
-
-/* Leave: button collapses out horizontally (width full → 0) */
-.action-item-leave-active {
-  transition:
-    opacity 0.15s ease-in,
-    max-width 0.15s ease-in,
-    margin 0.15s ease-in;
-}
-
-.action-item-enter-from {
-  opacity: 0;
-  max-width: 0 !important;
-  margin: 0 !important;
-  overflow: hidden;
-}
-
-.action-item-leave-to {
-  opacity: 0;
-  max-width: 0 !important;
-  margin: 0 !important;
-  overflow: hidden;
-}
-
-/* Move transition: remaining items slide smoothly to fill gaps */
-.action-item-move {
-  transition: transform 0.2s ease-out;
+@media (max-width: 479px) {
+  .primary-action span {
+    display: none;
+  }
 }
 </style>

@@ -386,7 +386,7 @@ defineExpose({ open, present })
         </NButton>
         <NButton class="action-btn" :type="actionType" :disabled="actionDisabled" @click="handleActionClick">
           <span class="action-label">
-            <Transition name="action-label-swap" mode="out-in">
+            <Transition name="action-label-swap">
               <span :key="actionLabel">{{ t(actionLabel) }}</span>
             </Transition>
           </span>

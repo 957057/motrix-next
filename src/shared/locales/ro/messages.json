@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Sarcini",
-    "add-task": "Adaugă sarcină",
     "about": "Despre Rayburst",
     "preferences": "Preferințe...",
     "check-updates-now": "Verifică acum",
@@ -582,14 +581,9 @@
     "media-default-format": "Format implicit",
     "color-scheme-electric": "Violet electric"
   },
-  "subnav": {
-    "task-list": "Sarcini",
-    "preferences": "Preferințe"
-  },
   "task": {
     "scope-all": "Toate",
     "scope-progress": "În desfășurare",
-    "scope-failed": "Eșuate",
     "scope-completed": "Finalizate",
     "new-task": "Sarcină nouă",
     "open-file": "Deschide fișierul",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Eroare",
-    "file-missing": "Fișierul lipsește",
     "duplicate-task": "Această sarcină există deja",
     "error-aria2-next": "Eroare Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Toate sarcinile suspendate",
     "pause-all-task-fail": "Suspendarea tuturor sarcinilor a eșuat",
     "resume-all-task": "Reia tot",
-    "delete-all-task": "Golește coada de descărcări",
     "resume-all-task-success": "Toate sarcinile reluate",
     "resume-all-task-fail": "Reluarea tuturor sarcinilor a eșuat",
     "resume-all-task-confirm": "Reluați toate sarcinile?",
     "pause-all-task-confirm": "Suspendați toate sarcinile?",
-    "purge-record-confirm": "Aceasta va elimina toate înregistrările sarcinilor finalizate, eșuate sau eliminate.",
-    "purge-record": "Golește istoricul",
     "purge-record-success": "Istoricul a fost golit",
-    "purge-record-fail": "Curățarea înregistrărilor a eșuat",
     "batch-delete-task-success": "Coada de descărcări a fost golită",
     "batch-delete-task-fail": "Ștergerea a eșuat",
     "batch-delete-task-partial": "Au fost eliminate {removed} sarcini; {failed} au eșuat",
@@ -918,5 +907,19 @@
     "recording-options": "Opțiuni de înregistrare",
     "unlimited": "Nelimitată",
     "custom": "Personalizată"
+  },
+  "workspace": {
+    "needs-action": "Necesită atenție",
+    "browser-connection": "Conexiune cu browserul",
+    "more-actions": "Alte acțiuni",
+    "search-tasks": "Caută sarcini",
+    "no-results": "Nicio sarcină corespunzătoare",
+    "empty-tasks": "Descărcările vor apărea aici",
+    "select-tasks": "Selectează sarcini",
+    "comfortable": "Vizualizare aerisită",
+    "compact": "Vizualizare compactă",
+    "partial-failure": "Unele acțiuni au eșuat. Verifică sarcinile rămase.",
+    "back": "Înapoi",
+    "clear": "Șterge"
   }
 }

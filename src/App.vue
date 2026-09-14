@@ -48,8 +48,10 @@ import {
   dateNlNL,
   dateNbNO,
 } from 'naive-ui'
+import { useInterfaceDirection } from './composables/useInterfaceDirection'
 import { useTheme } from './composables/useTheme'
-import { useReducedMotionClass } from './composables/useReducedMotion'
+import { MotionConfig } from 'motion-v'
+import { useReducedMotion, useReducedMotionClass } from './composables/useReducedMotion'
 import { useVisibilityPause } from './composables/useVisibilityPause'
 import { isSupportedLocale, type SupportedLocale } from '@shared/localeCatalog'
 
@@ -61,6 +63,9 @@ const { colorTokens, themeOverrides } = useColorScheme()
 provide(APP_COLOR_TOKENS_KEY, colorTokens)
 useVisibilityPause()
 useReducedMotionClass()
+const reduceMotion = useReducedMotion()
+
+const rtl = useInterfaceDirection()
 
 const theme = computed(() => (isDark.value ? darkTheme : null))
 
@@ -118,13 +123,18 @@ const naiveDateLocale = computed(() =>
 <template>
   <NConfigProvider
     :theme="theme"
+    :rtl="rtl"
     :theme-overrides="themeOverrides"
     :locale="naiveLocale"
     :date-locale="naiveDateLocale"
   >
     <NMessageProvider>
       <NDialogProvider>
-        <router-view />
+        <MotionConfig
+          :reduced-motion="reduceMotion ? 'always' : 'user'"
+          :transition="{ duration: reduceMotion ? 0 : 0.2, ease: [0.2, 0, 0, 1] }"
+          ><router-view
+        /></MotionConfig>
       </NDialogProvider>
     </NMessageProvider>
   </NConfigProvider>

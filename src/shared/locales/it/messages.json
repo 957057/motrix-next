@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Attività",
-    "add-task": "Aggiungi attività",
     "about": "Informazioni su Rayburst",
     "preferences": "Preferenze...",
     "check-updates-now": "Controlla ora",
@@ -582,14 +581,9 @@
     "media-default-format": "Formato predefinito",
     "color-scheme-electric": "Viola elettrico"
   },
-  "subnav": {
-    "task-list": "Attività",
-    "preferences": "Preferenze"
-  },
   "task": {
     "scope-all": "Tutte",
     "scope-progress": "In corso",
-    "scope-failed": "Non riuscite",
     "scope-completed": "Completate",
     "new-task": "Nuova attività",
     "open-file": "Apri file",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Errore",
-    "file-missing": "File mancante",
     "duplicate-task": "Questa attività esiste già",
     "error-aria2-next": "Errore Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Tutte le attività in pausa",
     "pause-all-task-fail": "Impossibile mettere in pausa tutte le attività",
     "resume-all-task": "Riprendi tutto",
-    "delete-all-task": "Svuota coda download",
     "resume-all-task-success": "Tutte le attività riprese",
     "resume-all-task-fail": "Impossibile riprendere tutte le attività",
     "resume-all-task-confirm": "Riprendere tutte le attività?",
     "pause-all-task-confirm": "Mettere in pausa tutte le attività?",
-    "purge-record-confirm": "Verranno rimossi tutti i record delle attività completate, non riuscite o rimosse.",
-    "purge-record": "Svuota cronologia",
     "purge-record-success": "Cronologia svuotata",
-    "purge-record-fail": "Impossibile cancellare i record",
     "batch-delete-task-success": "Coda download svuotata",
     "batch-delete-task-fail": "Eliminazione non riuscita",
     "batch-delete-task-partial": "Rimosse {removed} attività; {failed} non riuscite",
@@ -918,5 +907,19 @@
     "recording-options": "Opzioni di registrazione",
     "unlimited": "Illimitata",
     "custom": "Personalizzata"
+  },
+  "workspace": {
+    "needs-action": "Da gestire",
+    "browser-connection": "Connessione al browser",
+    "more-actions": "Altre azioni",
+    "search-tasks": "Cerca attività",
+    "no-results": "Nessuna attività corrispondente",
+    "empty-tasks": "I download appariranno qui",
+    "select-tasks": "Seleziona attività",
+    "comfortable": "Vista comoda",
+    "compact": "Vista compatta",
+    "partial-failure": "Alcune azioni non sono riuscite. Controlla le attività rimanenti.",
+    "back": "Indietro",
+    "clear": "Cancella"
   }
 }

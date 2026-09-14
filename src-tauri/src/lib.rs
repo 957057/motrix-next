@@ -735,6 +735,7 @@ pub fn run() {
             commands::take_pending_frontend_actions,
             commands::history_get_record,
             commands::history_get_page,
+            commands::query_tasks,
             commands::history_remove_births,
             commands::database_schema_version,
             commands::http_auth_save,

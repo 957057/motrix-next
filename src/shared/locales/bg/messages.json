@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Задачи",
-    "add-task": "Добави задача",
     "about": "За Rayburst",
     "preferences": "Настройки...",
     "check-updates-now": "Провери сега",
@@ -582,14 +581,9 @@
     "media-default-format": "Формат по подразбиране",
     "color-scheme-electric": "Електриково лилаво"
   },
-  "subnav": {
-    "task-list": "Задачи",
-    "preferences": "Настройки"
-  },
   "task": {
     "scope-all": "Всички",
     "scope-progress": "В процес",
-    "scope-failed": "Неуспешни",
     "scope-completed": "Завършени",
     "new-task": "Нова задача",
     "open-file": "Отвори файл",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Грешка",
-    "file-missing": "Файлът липсва",
     "duplicate-task": "Тази задача вече съществува",
     "error-aria2-next": "Грешка в Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Всички задачи са на пауза",
     "pause-all-task-fail": "Неуспешна пауза на всички задачи",
     "resume-all-task": "Продължи всички",
-    "delete-all-task": "Изчисти опашката за изтегляне",
     "resume-all-task-success": "Всички задачи продължават",
     "resume-all-task-fail": "Неуспешно продължаване на всички задачи",
     "resume-all-task-confirm": "Продължи всички задачи?",
     "pause-all-task-confirm": "Пауза на всички задачи?",
-    "purge-record-confirm": "Това ще премахне всички завършени, неуспешни или премахнати записи на задачи.",
-    "purge-record": "Изчисти историята",
     "purge-record-success": "Историята е изчистена",
-    "purge-record-fail": "Неуспешно изчистване на записите",
     "batch-delete-task-success": "Опашката за изтегляне е изчистена",
     "batch-delete-task-fail": "Неуспешно изтриване",
     "batch-delete-task-partial": "Премахнати: {removed}; неуспешни: {failed}",
@@ -918,5 +907,19 @@
     "recording-options": "Опции за запис",
     "unlimited": "Без ограничение",
     "custom": "По избор"
+  },
+  "workspace": {
+    "needs-action": "Изисква действие",
+    "browser-connection": "Връзка с браузъра",
+    "more-actions": "Още действия",
+    "search-tasks": "Търсене на задачи",
+    "no-results": "Няма съвпадащи задачи",
+    "empty-tasks": "Изтеглянията ви ще се покажат тук",
+    "select-tasks": "Избор на задачи",
+    "comfortable": "Просторен изглед",
+    "compact": "Компактен изглед",
+    "partial-failure": "Някои действия са неуспешни. Проверете останалите задачи.",
+    "back": "Назад",
+    "clear": "Изчистване"
   }
 }

@@ -1,7 +1,7 @@
 /* Stable geometry across asynchronous loading, selection and error states. */
 .selection-dialog {
-  width: min(640px, calc(100vw - 32px));
-  height: min(520px, calc(100vh - 48px));
+  width: min(760px, calc(100vw - 48px));
+  height: min(520px, calc(100dvh - 48px));
   display: flex;
   flex-direction: column;
 }
@@ -26,7 +26,7 @@
   color: var(--m3-on-surface-variant);
 }
 .selection-loading {
-  min-height: 240px;
+  min-height: min(240px, 30dvh);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,4 +45,10 @@
 .selection-content-enter-from,
 .selection-content-leave-to {
   opacity: 0;
+}
+
+.selection-content-leave-active {
+  position: absolute;
+  inset-inline: 24px;
+  pointer-events: none;
 }

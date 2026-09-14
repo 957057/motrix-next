@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Aufgaben",
-    "add-task": "Aufgabe hinzufügen",
     "about": "Über Rayburst",
     "preferences": "Einstellungen...",
     "check-updates-now": "Jetzt prüfen",
@@ -582,14 +581,9 @@
     "media-default-format": "Standardformat",
     "color-scheme-electric": "Elektrisches Violett"
   },
-  "subnav": {
-    "task-list": "Aufgaben",
-    "preferences": "Einstellungen"
-  },
   "task": {
     "scope-all": "Alle",
     "scope-progress": "In Bearbeitung",
-    "scope-failed": "Fehlgeschlagen",
     "scope-completed": "Abgeschlossen",
     "new-task": "Neue Aufgabe",
     "open-file": "Datei öffnen",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Fehler",
-    "file-missing": "Datei fehlt",
     "duplicate-task": "Diese Aufgabe existiert bereits",
     "error-aria2-next": "Aria2 Next-Fehler",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Alle Aufgaben pausiert",
     "pause-all-task-fail": "Pausieren aller Aufgaben fehlgeschlagen",
     "resume-all-task": "Alle fortsetzen",
-    "delete-all-task": "Download-Warteschlange leeren",
     "resume-all-task-success": "Alle Aufgaben fortgesetzt",
     "resume-all-task-fail": "Fortsetzen aller Aufgaben fehlgeschlagen",
     "resume-all-task-confirm": "Alle Aufgaben fortsetzen?",
     "pause-all-task-confirm": "Alle Aufgaben pausieren?",
-    "purge-record-confirm": "Dadurch werden alle abgeschlossenen, fehlgeschlagenen oder entfernten Aufgabeneinträge entfernt.",
-    "purge-record": "Verlaufseinträge leeren",
     "purge-record-success": "Verlaufseinträge geleert",
-    "purge-record-fail": "Einträge konnten nicht gelöscht werden",
     "batch-delete-task-success": "Download-Warteschlange geleert",
     "batch-delete-task-fail": "Löschen fehlgeschlagen",
     "batch-delete-task-partial": "{removed} Aufgaben entfernt; {failed} fehlgeschlagen",
@@ -918,5 +907,19 @@
     "recording-options": "Aufnahmeoptionen",
     "unlimited": "Unbegrenzt",
     "custom": "Benutzerdefiniert"
+  },
+  "workspace": {
+    "needs-action": "Aktion erforderlich",
+    "browser-connection": "Browserverbindung",
+    "more-actions": "Weitere Aktionen",
+    "search-tasks": "Aufgaben suchen",
+    "no-results": "Keine passenden Aufgaben",
+    "empty-tasks": "Ihre Downloads erscheinen hier",
+    "select-tasks": "Aufgaben auswählen",
+    "comfortable": "Lockere Ansicht",
+    "compact": "Kompakte Ansicht",
+    "partial-failure": "Einige Aktionen sind fehlgeschlagen. Prüfen Sie die übrigen Aufgaben.",
+    "back": "Zurück",
+    "clear": "Leeren"
   }
 }

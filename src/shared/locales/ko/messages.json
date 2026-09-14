@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "작업 목록",
-    "add-task": "작업 추가",
     "about": "Rayburst 정보",
     "preferences": "환경설정...",
     "check-updates-now": "지금 확인",
@@ -582,14 +581,9 @@
     "media-default-format": "기본 형식",
     "color-scheme-electric": "일렉트릭 퍼플"
   },
-  "subnav": {
-    "task-list": "작업 목록",
-    "preferences": "환경설정"
-  },
   "task": {
     "scope-all": "전체",
     "scope-progress": "진행 중",
-    "scope-failed": "실패",
     "scope-completed": "완료",
     "new-task": "새 작업",
     "open-file": "파일 열기",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "오류 정보",
-    "file-missing": "파일 없음",
     "duplicate-task": "이미 존재하는 작업입니다",
     "error-aria2-next": "Aria2 Next 오류",
     "error-unknown": "알 수 없는 오류",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "모든 작업 일시 중지됨",
     "pause-all-task-fail": "모든 작업 일시 중지 실패",
     "resume-all-task": "모두 재개",
-    "delete-all-task": "다운로드 대기열 비우기",
     "resume-all-task-success": "모든 작업 재개됨",
     "resume-all-task-fail": "모든 작업 재개 실패",
     "resume-all-task-confirm": "모든 작업을 재개하시겠습니까?",
     "pause-all-task-confirm": "모든 작업을 일시 중지하시겠습니까?",
-    "purge-record-confirm": "완료, 실패 또는 제거된 작업 기록을 모두 제거합니다.",
-    "purge-record": "기록 비우기",
     "purge-record-success": "기록을 비웠습니다",
-    "purge-record-fail": "기록 삭제 실패",
     "batch-delete-task-success": "다운로드 대기열을 비웠습니다",
     "batch-delete-task-fail": "일괄 삭제 실패",
     "batch-delete-task-partial": "{removed}개 삭제, {failed}개 실패",
@@ -918,5 +907,19 @@
     "recording-options": "녹화 옵션",
     "unlimited": "무제한",
     "custom": "사용자 지정"
+  },
+  "workspace": {
+    "needs-action": "조치 필요",
+    "browser-connection": "브라우저 연결",
+    "more-actions": "추가 작업",
+    "search-tasks": "작업 검색",
+    "no-results": "일치하는 작업 없음",
+    "empty-tasks": "다운로드가 여기에 표시됩니다",
+    "select-tasks": "작업 선택",
+    "comfortable": "여유로운 간격",
+    "compact": "좁은 간격",
+    "partial-failure": "일부 작업에 실패했습니다. 남은 작업을 확인하세요.",
+    "back": "뒤로",
+    "clear": "지우기"
   }
 }

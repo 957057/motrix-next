@@ -18,6 +18,7 @@ const router = createRouter({
           component: () => import('@/views/TaskView.vue'),
           props: true,
         },
+        { path: '/connection', name: 'connection', component: () => import('@/views/ConnectionView.vue') },
         {
           path: '/preference',
           name: 'preference',

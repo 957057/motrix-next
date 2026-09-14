@@ -164,7 +164,7 @@ function openUrl(url: string) {
           </template>
           {{ t('about.click-to-copy') }}
         </MTooltip>
-        <Transition name="version-swap" mode="out-in">
+        <Transition name="version-swap">
           <!-- Loading -->
           <div v-if="aria2Loading" key="loading" class="version-badge version-badge--loading">
             <span class="version-label">{{ t('about.aria2-version') }}</span>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** @fileoverview Detailed task view with file list, peers, and BT info. */
-import { ref, computed, watch, defineComponent, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, defineComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { I18nKey } from '@shared/i18nTypes'
 import { logger } from '@shared/logger'
@@ -16,8 +16,6 @@ import {
   isBtMetadataTask,
 } from '@shared/utils'
 import {
-  NDrawer,
-  NDrawerContent,
   NDescriptions,
   NDescriptionsItem,
   NIcon,
@@ -31,6 +29,7 @@ import {
   NCollapseTransition,
 } from 'naive-ui'
 import {
+  ArrowBackOutline,
   InformationCircleOutline,
   PulseOutline,
   DocumentOutline,
@@ -79,10 +78,6 @@ const emit = defineEmits<{ close: [] }>()
 const { t, locale } = useI18n()
 const preferenceStore = usePreferenceStore()
 const taskStore = useTaskStore()
-onBeforeUnmount(() => {
-  taskStore.taskDetailClosing = false
-  taskStore.taskDetailVisible = false
-})
 const historyStore = useHistoryStore()
 const message = useAppMessage()
 const taskRef = computed(() => props.task)
@@ -183,7 +178,6 @@ const CopyableValue = defineComponent({
 })
 
 const activeTab = ref('general')
-const slideDirection = ref<'left' | 'right'>('left')
 const prevTabIndex = ref(0)
 
 interface TabDef {
@@ -219,10 +213,13 @@ const visibleTabs = computed(() =>
   ),
 )
 
+watch(activeTab, (tab) => {
+  if (taskStore.currentTaskGid !== props.task?.gid) return
+  taskStore.enabledFetchPeers = tab === 'peers'
+  if (tab === 'peers') void taskStore.fetchList()
+})
 function switchTab(key: string) {
-  const oldIdx = visibleTabs.value.findIndex((t) => t.key === activeTab.value)
   const newIdx = visibleTabs.value.findIndex((t) => t.key === key)
-  slideDirection.value = newIdx > oldIdx ? 'left' : 'right'
   prevTabIndex.value = newIdx
   activeTab.value = key
 }
@@ -394,328 +391,87 @@ function handleClose() {
 </script>
 
 <template>
-  <NDrawer
-    :show="show"
-    :width="'61.8%'"
-    placement="right"
-    :trap-focus="false"
-    :block-scroll="false"
-    @after-leave="taskStore.taskDetailClosing = false"
-    @update:show="
-      (v: boolean) => {
-        if (!v) handleClose()
-      }
-    "
-  >
-    <NDrawerContent :title="t('task.task-detail-title') || 'Task Details'" closable @close="handleClose">
-      <div class="detail-tabs">
-        <button
-          v-for="tab in visibleTabs"
-          :key="tab.key"
-          :class="['detail-tab', { active: activeTab === tab.key }]"
-          @click="switchTab(tab.key)"
-        >
-          <NIcon :size="16"><component :is="tab.icon" /></NIcon>
-          <span class="detail-tab-label">{{ t(tab.labelKey) }}</span>
-        </button>
-      </div>
+  <section class="task-detail-pane">
+    <header class="detail-header">
+      <NButton quaternary @click="handleClose"
+        ><template #icon
+          ><NIcon><ArrowBackOutline /></NIcon></template
+        >{{ t('workspace.back') }}</NButton
+      >
+      <h1>{{ taskFullName }}</h1>
+    </header>
+    <div class="detail-tabs">
+      <button
+        v-for="tab in visibleTabs"
+        :key="tab.key"
+        :class="['detail-tab', { active: activeTab === tab.key }]"
+        @click="switchTab(tab.key)"
+      >
+        <NIcon :size="16"><component :is="tab.icon" /></NIcon>
+        <span class="detail-tab-label">{{ t(tab.labelKey) }}</span>
+      </button>
+    </div>
 
-      <div class="tab-content-wrapper">
-        <Transition :name="`tab-slide-${slideDirection}`" mode="out-in">
-          <div v-if="activeTab === 'general'" key="general" class="tab-content">
-            <template v-if="task">
-              <NDescriptions
-                :column="1"
-                label-placement="left"
-                bordered
-                size="small"
-                :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
-              >
-                <NDescriptionsItem :label="t('task.task-name') || 'Name'">
-                  <CopyableValue :value="taskFullName" :label="copyLabel(t('task.task-name'), 'Name')" />
-                </NDescriptionsItem>
-                <NDescriptionsItem v-if="task.dir" :label="t('task.task-dir') || 'Directory'">
-                  <CopyableValue :value="task.dir" :label="copyLabel(t('task.task-dir'), 'Directory')" />
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-status') || 'Status'">
-                  <div class="detail-status-value">
-                    <NTag :type="statusTagType" size="small">{{ taskStatus }}</NTag>
-                    <NButton v-if="canSelectMedia(task)" text type="primary" size="small" @click="editMedia">{{
-                      t('media.select-tracks')
-                    }}</NButton>
-                  </div>
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-type') || 'Type'">
-                  {{
-                    task.media
-                      ? [
-                          task.media.protocol.toUpperCase() || t('media.auto'),
-                          task.media.live === 'true' ? t('media.live') : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')
-                      : t(`task.task-type-${detailKind}`)
-                  }}
-                </NDescriptionsItem>
-                <NDescriptionsItem v-for="row in mediaRows" :key="row.key" :label="t(row.label)">
-                  <span class="technical-text-wrap">{{ row.value }}</span>
-                </NDescriptionsItem>
-                <NDescriptionsItem v-if="taskErrorMessage" :label="t('task.task-error-info') || 'Error'">
-                  {{ taskErrorCode && taskErrorCode !== '0' ? `${taskErrorCode} ` : '' }}{{ taskErrorMessage }}
-                </NDescriptionsItem>
-                <NDescriptionsItem v-if="taskAddedAt" :label="t('task.task-added-at') || 'Added At'">
-                  {{ taskAddedAt }}
-                </NDescriptionsItem>
-                <NDescriptionsItem v-if="taskCompletedAt" :label="t('task.task-completed-at') || 'Completed At'">
-                  {{ taskCompletedAt }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-gid') || 'GID'">
-                  <CopyableValue :value="task.gid" :label="copyLabel(t('task.task-gid'), 'GID')" />
-                </NDescriptionsItem>
-              </NDescriptions>
-              <template v-if="isBT && btInfo && hasBtOverviewDetails">
-                <div class="section-divider">BitTorrent</div>
-                <NDescriptions
-                  :column="1"
-                  label-placement="left"
-                  bordered
-                  size="small"
-                  :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
-                >
-                  <NDescriptionsItem v-if="task.infoHash" :label="t('task.task-info-hash') || 'Hash'">
-                    <CopyableValue :value="task.infoHash" :label="copyLabel(t('task.task-info-hash'), 'Hash')" />
-                  </NDescriptionsItem>
-                  <NDescriptionsItem v-if="hasPieceLength" :label="t('task.task-piece-length') || 'Piece Size'">
-                    {{ bytesToSize(String(task.pieceLength)) }}
-                  </NDescriptionsItem>
-                  <NDescriptionsItem v-if="hasPieceCount" :label="t('task.task-num-pieces') || 'Pieces'">
-                    {{ task.numPieces }}
-                  </NDescriptionsItem>
-                  <NDescriptionsItem v-if="sharingDuration" :label="sharingDurationLabel">
-                    {{ sharingDuration }}
-                  </NDescriptionsItem>
-                  <NDescriptionsItem
-                    v-if="btInfo?.creationDate"
-                    :label="t('task.task-bittorrent-creation-date') || 'Created'"
-                  >
-                    {{ localeDateTimeFormat(Number(btInfo.creationDate), locale) }}
-                  </NDescriptionsItem>
-                  <NDescriptionsItem v-if="btInfo?.comment" :label="t('task.task-bittorrent-comment') || 'Comment'">
-                    {{ btInfo.comment }}
-                  </NDescriptionsItem>
-                </NDescriptions>
-              </template>
-              <template v-if="isED2K && ed2kInfo?.hash">
-                <div class="section-divider">ED2K</div>
-                <NDescriptions
-                  :column="1"
-                  label-placement="left"
-                  bordered
-                  size="small"
-                  :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
-                >
-                  <NDescriptionsItem v-if="ed2kInfo.hash" :label="t('task.task-ed2k-hash')">
-                    <CopyableValue :value="ed2kInfo.hash" :label="t('task.task-ed2k-hash')" />
-                  </NDescriptionsItem>
-                  <NDescriptionsItem v-if="sharingDuration" :label="sharingDurationLabel">
-                    {{ sharingDuration }}
-                  </NDescriptionsItem>
-                </NDescriptions>
-              </template>
-            </template>
-          </div>
-
-          <div v-else-if="activeTab === 'activity'" key="activity" class="tab-content">
-            <TaskDetailActivity :task="task" :transfer-summary="transferSummary" />
-          </div>
-
-          <div v-else-if="activeTab === 'status' && isBT" key="bt-status" class="tab-content">
-            <template v-if="task && isBT">
-              <div class="status-actions">
-                <NButton size="small" :loading="rechecking" :disabled="!optCanModify" @click="recheckTask">
-                  {{ t('task.bt-recheck') }}
-                </NButton>
-              </div>
-              <NDescriptions
-                :column="1"
-                label-placement="left"
-                bordered
-                size="small"
-                :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
-              >
-                <NDescriptionsItem :label="t('task.task-bt-metadata-state')">
-                  {{ t(`task.task-bt-metadata-${btHealth.metadataState}`) }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-bt-has-metadata')">
-                  {{ yesNo(btHealth.hasMetadata) }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-bt-selected-files')">
-                  {{ btHealth.selectedFileCount }} / {{ btHealth.totalFileCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-bt-selected-size')">
-                  {{ bytesToSize(btHealth.selectedLength) }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-bt-trackers')">
-                  {{ btHealth.trackerCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-bt-peers')">
-                  {{ btHealth.peerCount }}
-                  <span v-if="btHealth.seederPeerCount > 0" class="muted-inline">
-                    · {{ btHealth.seederPeerCount }} {{ t('task.task-peer-seeder') }}
-                  </span>
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-bt-active-peers')">
-                  {{ t('task.task-peer-download-speed') }} {{ btHealth.activeDownloadPeerCount }} /
-                  {{ t('task.task-peer-upload-speed') }} {{ btHealth.activeUploadPeerCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-bt-choking')">
-                  {{ t('task.task-bt-am-choking') }} {{ btHealth.amChokingCount }} /
-                  {{ t('task.task-bt-peer-choking') }} {{ btHealth.peerChokingCount }}
-                </NDescriptionsItem>
-              </NDescriptions>
-            </template>
-          </div>
-
-          <div v-else-if="activeTab === 'files'" key="files" class="tab-content">
-            <TaskDetailFiles
-              :files="files"
-              :gid="task?.gid"
-              :editable="optCanModify && isBT"
-              :terminal="isTerminal"
-              :tooltip="t('about.click-to-copy')"
-              :on-copy="copyDetailValue"
-            />
-          </div>
-
-          <div v-else-if="activeTab === 'sources'" key="sources" class="tab-content">
-            <TaskDetailSources
-              v-if="task && isURI"
-              :task="task"
-              :summary="uriSummary"
-              :terminal="isTerminal"
-              :tooltip="t('about.click-to-copy')"
-              :on-copy="copyDetailValue"
-            />
-          </div>
-
-          <div v-else-if="activeTab === 'options'" key="options" class="tab-content">
-            <NForm label-placement="left" label-width="110px" class="options-form">
-              <NFormItem :label="t('task.task-user-agent') + ':'">
-                <NInputGroup class="detail-ua-row">
-                  <NInput
-                    v-model:value="optForm.userAgent"
-                    type="textarea"
-                    :autosize="{ minRows: 1, maxRows: 3 }"
-                    :readonly="!optCanModify"
-                    :placeholder="t('task.task-user-agent-placeholder') || ''"
-                  />
-                  <UserAgentPopover
-                    :url="taskPrimaryUrl"
-                    :profiles="preferenceStore.config.userAgentProfiles"
-                    :rules="preferenceStore.config.userAgentRules"
-                    :recent-profile-ids="preferenceStore.config.recentUserAgentProfileIds"
-                    :disabled="!optCanModify"
-                    @select="selectTaskUserAgentProfile"
-                  />
-                </NInputGroup>
-              </NFormItem>
-              <NFormItem :label="t('task.task-authorization') + ':'">
-                <NInput
-                  v-model:value="optForm.authorization"
-                  type="textarea"
-                  :autosize="{ minRows: 1, maxRows: 3 }"
-                  :readonly="!optCanModify"
-                  :placeholder="t('task.task-authorization-placeholder') || ''"
-                />
-              </NFormItem>
-              <NFormItem :label="t('task.task-http-auth') + ':'">
-                <div class="http-auth-fields">
-                  <NInput
-                    v-model:value="optForm.httpAuthUsername"
-                    :readonly="!optCanModify"
-                    :placeholder="t('task.task-http-auth-username-placeholder') || ''"
-                  />
-                  <NInput
-                    v-model:value="optForm.httpAuthPassword"
-                    type="password"
-                    show-password-on="click"
-                    :readonly="!optCanModify"
-                    :placeholder="t('task.task-http-auth-password-placeholder') || ''"
-                  />
+    <div class="tab-content-wrapper">
+      <Transition
+        name="view"
+        @before-leave="(el) => el.setAttribute('inert', '')"
+        @before-enter="(el) => el.removeAttribute('inert')"
+        @leave-cancelled="(el) => el.removeAttribute('inert')"
+      >
+        <div v-if="activeTab === 'general'" key="general" class="tab-content">
+          <template v-if="task">
+            <NDescriptions
+              :column="1"
+              label-placement="left"
+              bordered
+              size="small"
+              :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
+            >
+              <NDescriptionsItem :label="t('task.task-name') || 'Name'">
+                <CopyableValue :value="taskFullName" :label="copyLabel(t('task.task-name'), 'Name')" />
+              </NDescriptionsItem>
+              <NDescriptionsItem v-if="task.dir" :label="t('task.task-dir') || 'Directory'">
+                <CopyableValue :value="task.dir" :label="copyLabel(t('task.task-dir'), 'Directory')" />
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-status') || 'Status'">
+                <div class="detail-status-value">
+                  <NTag :type="statusTagType" size="small">{{ taskStatus }}</NTag>
+                  <NButton v-if="canSelectMedia(task)" text type="primary" size="small" @click="editMedia">{{
+                    t('media.select-tracks')
+                  }}</NButton>
                 </div>
-              </NFormItem>
-              <NFormItem :label="t('task.task-referer') + ':'">
-                <NInput
-                  v-model:value="optForm.referer"
-                  type="textarea"
-                  :autosize="{ minRows: 1, maxRows: 3 }"
-                  :readonly="!optCanModify"
-                  :placeholder="t('task.task-referer-placeholder') || ''"
-                />
-              </NFormItem>
-              <NFormItem :label="t('task.task-cookie') + ':'">
-                <NInput
-                  v-model:value="optForm.cookie"
-                  type="textarea"
-                  :autosize="{ minRows: 1, maxRows: 3 }"
-                  :readonly="!optCanModify"
-                  :placeholder="t('task.task-cookie-placeholder') || ''"
-                />
-              </NFormItem>
-              <NFormItem :label="t('task.use-proxy') + ':'">
-                <NSwitch
-                  :value="optForm.proxyMode === 'manual'"
-                  :disabled="!optCanModify"
-                  @update:value="optForm.proxyMode = $event ? 'manual' : 'direct'"
-                />
-              </NFormItem>
-              <NFormItem label=" " :show-feedback="false" class="proxy-options-item">
-                <NCollapseTransition :show="optForm.proxyMode === 'manual'">
-                  <div class="proxy-radio-group">
-                    <div class="custom-proxy-input">
-                      <NInput
-                        v-model:value="optForm.customProxy"
-                        :readonly="!optCanModify"
-                        :placeholder="'http://host:port'"
-                      />
-                      <NInput
-                        v-model:value="optForm.customProxyUsername"
-                        :readonly="!optCanModify"
-                        :placeholder="t('preferences.proxy-username') || ''"
-                      />
-                      <NInput
-                        v-model:value="optForm.customProxyPassword"
-                        type="password"
-                        show-password-on="click"
-                        :readonly="!optCanModify"
-                        :placeholder="t('preferences.proxy-password') || ''"
-                      />
-                      <NButton :loading="detectingProxy" :disabled="!optCanModify" size="small" @click="detectProxy">
-                        <template #icon>
-                          <NIcon><SearchOutline /></NIcon>
-                        </template>
-                        {{ t('preferences.detect-system-proxy') }}
-                      </NButton>
-                    </div>
-                  </div>
-                </NCollapseTransition>
-              </NFormItem>
-              <div v-if="optCanModify" class="options-apply-bar">
-                <NButton
-                  :type="optDirty ? 'primary' : 'default'"
-                  :disabled="!optDirty"
-                  :loading="optApplying"
-                  class="apply-btn"
-                  @click="optApplyFn"
-                >
-                  {{ optDirty ? t('task.apply-changes') : t('task.no-changes') }}
-                </NButton>
-              </div>
-            </NForm>
-          </div>
-
-          <div v-else-if="activeTab === 'status' && isED2K" key="ed2k-status" class="tab-content">
-            <template v-if="ed2kInfo">
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-type') || 'Type'">
+                {{
+                  task.media
+                    ? [
+                        task.media.protocol.toUpperCase() || t('media.auto'),
+                        task.media.live === 'true' ? t('media.live') : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')
+                    : t(`task.task-type-${detailKind}`)
+                }}
+              </NDescriptionsItem>
+              <NDescriptionsItem v-for="row in mediaRows" :key="row.key" :label="t(row.label)">
+                <span class="technical-text-wrap">{{ row.value }}</span>
+              </NDescriptionsItem>
+              <NDescriptionsItem v-if="taskErrorMessage" :label="t('task.task-error-info') || 'Error'">
+                {{ taskErrorCode && taskErrorCode !== '0' ? `${taskErrorCode} ` : '' }}{{ taskErrorMessage }}
+              </NDescriptionsItem>
+              <NDescriptionsItem v-if="taskAddedAt" :label="t('task.task-added-at') || 'Added At'">
+                {{ taskAddedAt }}
+              </NDescriptionsItem>
+              <NDescriptionsItem v-if="taskCompletedAt" :label="t('task.task-completed-at') || 'Completed At'">
+                {{ taskCompletedAt }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-gid') || 'GID'">
+                <CopyableValue :value="task.gid" :label="copyLabel(t('task.task-gid'), 'GID')" />
+              </NDescriptionsItem>
+            </NDescriptions>
+            <template v-if="isBT && btInfo && hasBtOverviewDetails">
+              <div class="section-divider">BitTorrent</div>
               <NDescriptions
                 :column="1"
                 label-placement="left"
@@ -723,103 +479,370 @@ function handleClose() {
                 size="small"
                 :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
               >
-                <NDescriptionsItem :label="t('task.task-ed2k-hash')">
-                  <CopyableValue :value="ed2kInfo.hash || '-'" :label="t('task.task-ed2k-hash')" />
+                <NDescriptionsItem v-if="task.infoHash" :label="t('task.task-info-hash') || 'Hash'">
+                  <CopyableValue :value="task.infoHash" :label="copyLabel(t('task.task-info-hash'), 'Hash')" />
                 </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-name')">
-                  <CopyableValue :value="ed2kInfo.name || taskFullName" :label="t('task.task-name')" />
+                <NDescriptionsItem v-if="hasPieceLength" :label="t('task.task-piece-length') || 'Piece Size'">
+                  {{ bytesToSize(String(task.pieceLength)) }}
                 </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-file-size')">
-                  {{ ed2kInfo.length ? bytesToSize(ed2kInfo.length) : bytesToSize(task?.totalLength || '0') }}
+                <NDescriptionsItem v-if="hasPieceCount" :label="t('task.task-num-pieces') || 'Pieces'">
+                  {{ task.numPieces }}
                 </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-part-hash-count')">
-                  {{ ed2kInfo.partHashCount || 0 }}
+                <NDescriptionsItem v-if="sharingDuration" :label="sharingDurationLabel">
+                  {{ sharingDuration }}
                 </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-aich-root')">
-                  <CopyableValue :value="ed2kInfo.aichRoot || '-'" :label="t('task.task-ed2k-aich-root')" />
+                <NDescriptionsItem
+                  v-if="btInfo?.creationDate"
+                  :label="t('task.task-bittorrent-creation-date') || 'Created'"
+                >
+                  {{ localeDateTimeFormat(Number(btInfo.creationDate), locale) }}
                 </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-server-count')">
-                  {{ ed2kSummary.connectedServerCount }} / {{ ed2kSummary.serverCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-peer-count')">
-                  {{ ed2kSummary.peerCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-queued-peer-count')">
-                  {{ ed2kSummary.queuedPeerCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-accepted-peer-count')">
-                  {{ ed2kSummary.acceptedPeerCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-dead-peer-count')">
-                  {{ ed2kSummary.deadPeerCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-low-id-peer-count')">
-                  {{ ed2kSummary.lowIdPeerCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-callback-waiting-peer-count')">
-                  {{ ed2kSummary.callbackWaitingPeerCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-kad-node-count')">
-                  {{ ed2kSummary.kadNodeCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-kad-router-count')">
-                  {{ ed2kSummary.kadRouterCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-kad-firewalled')">
-                  {{ yesNo(ed2kSummary.kadFirewalled) }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-kad-observed-address-count')">
-                  {{ ed2kInfo.kadObservedAddressCount || 0 }}
-                </NDescriptionsItem>
-                <NDescriptionsItem v-if="ed2kSummary.hasSearchState" :label="t('task.task-ed2k-search-active')">
-                  {{ yesNo(ed2kInfo.searchActive) }}
-                </NDescriptionsItem>
-                <NDescriptionsItem v-if="ed2kSummary.hasSearchState" :label="t('task.task-ed2k-search-more-results')">
-                  {{ yesNo(ed2kInfo.searchMoreResults) }}
-                </NDescriptionsItem>
-                <NDescriptionsItem v-if="ed2kSummary.hasSearchState" :label="t('task.task-ed2k-search-result-count')">
-                  {{ ed2kInfo.searchResultCount || 0 }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-uploading-peer-count')">
-                  {{ ed2kSummary.uploadingPeerCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-waiting-upload-peer-count')">
-                  {{ ed2kSummary.waitingUploadPeerCount }}
-                </NDescriptionsItem>
-                <NDescriptionsItem :label="t('task.task-ed2k-peer-credit-count')">
-                  {{ ed2kInfo.peerCreditCount || 0 }}
+                <NDescriptionsItem v-if="btInfo?.comment" :label="t('task.task-bittorrent-comment') || 'Comment'">
+                  {{ btInfo.comment }}
                 </NDescriptionsItem>
               </NDescriptions>
             </template>
-          </div>
+            <template v-if="isED2K && ed2kInfo?.hash">
+              <div class="section-divider">ED2K</div>
+              <NDescriptions
+                :column="1"
+                label-placement="left"
+                bordered
+                size="small"
+                :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
+              >
+                <NDescriptionsItem v-if="ed2kInfo.hash" :label="t('task.task-ed2k-hash')">
+                  <CopyableValue :value="ed2kInfo.hash" :label="t('task.task-ed2k-hash')" />
+                </NDescriptionsItem>
+                <NDescriptionsItem v-if="sharingDuration" :label="sharingDurationLabel">
+                  {{ sharingDuration }}
+                </NDescriptionsItem>
+              </NDescriptions>
+            </template>
+          </template>
+        </div>
 
-          <div v-else-if="activeTab === 'peers'" key="peers" class="tab-content">
-            <TaskDetailPeers
-              :gid="task?.gid ?? ''"
-              :editable="optCanModify"
-              :peers="task?.peers"
-              :locale="locale"
-              :tooltip="t('about.click-to-copy')"
-              :on-copy="copyDetailValue"
-            />
-          </div>
+        <div v-else-if="activeTab === 'activity'" key="activity" class="tab-content">
+          <TaskDetailActivity :task="task" :transfer-summary="transferSummary" />
+        </div>
 
-          <div v-else-if="activeTab === 'trackers'" key="trackers" class="tab-content">
-            <TaskDetailTrackers
-              :gid="task?.gid ?? ''"
-              :web-seeds="task?.bittorrent?.webSeeds"
-              :editable="optCanModify"
-              :tooltip="t('about.click-to-copy')"
-              :on-copy="copyDetailValue"
-            />
-          </div>
-        </Transition>
-      </div>
-    </NDrawerContent>
-  </NDrawer>
+        <div v-else-if="activeTab === 'status' && isBT" key="bt-status" class="tab-content">
+          <template v-if="task && isBT">
+            <div class="status-actions">
+              <NButton size="small" :loading="rechecking" :disabled="!optCanModify" @click="recheckTask">
+                {{ t('task.bt-recheck') }}
+              </NButton>
+            </div>
+            <NDescriptions
+              :column="1"
+              label-placement="left"
+              bordered
+              size="small"
+              :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
+            >
+              <NDescriptionsItem :label="t('task.task-bt-metadata-state')">
+                {{ t(`task.task-bt-metadata-${btHealth.metadataState}`) }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-bt-has-metadata')">
+                {{ yesNo(btHealth.hasMetadata) }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-bt-selected-files')">
+                {{ btHealth.selectedFileCount }} / {{ btHealth.totalFileCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-bt-selected-size')">
+                {{ bytesToSize(btHealth.selectedLength) }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-bt-trackers')">
+                {{ btHealth.trackerCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-bt-peers')">
+                {{ btHealth.peerCount }}
+                <span v-if="btHealth.seederPeerCount > 0" class="muted-inline">
+                  · {{ btHealth.seederPeerCount }} {{ t('task.task-peer-seeder') }}
+                </span>
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-bt-active-peers')">
+                {{ t('task.task-peer-download-speed') }} {{ btHealth.activeDownloadPeerCount }} /
+                {{ t('task.task-peer-upload-speed') }} {{ btHealth.activeUploadPeerCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-bt-choking')">
+                {{ t('task.task-bt-am-choking') }} {{ btHealth.amChokingCount }} / {{ t('task.task-bt-peer-choking') }}
+                {{ btHealth.peerChokingCount }}
+              </NDescriptionsItem>
+            </NDescriptions>
+          </template>
+        </div>
+
+        <div v-else-if="activeTab === 'files'" key="files" class="tab-content">
+          <TaskDetailFiles
+            :files="files"
+            :gid="task?.gid"
+            :editable="optCanModify && isBT"
+            :terminal="isTerminal"
+            :tooltip="t('about.click-to-copy')"
+            :on-copy="copyDetailValue"
+          />
+        </div>
+
+        <div v-else-if="activeTab === 'sources'" key="sources" class="tab-content">
+          <TaskDetailSources
+            v-if="task && isURI"
+            :task="task"
+            :summary="uriSummary"
+            :terminal="isTerminal"
+            :tooltip="t('about.click-to-copy')"
+            :on-copy="copyDetailValue"
+          />
+        </div>
+
+        <div v-else-if="activeTab === 'options'" key="options" class="tab-content">
+          <NForm label-placement="left" label-width="110px" class="options-form">
+            <NFormItem :label="t('task.task-user-agent') + ':'">
+              <NInputGroup class="detail-ua-row">
+                <NInput
+                  v-model:value="optForm.userAgent"
+                  type="textarea"
+                  :autosize="{ minRows: 1, maxRows: 3 }"
+                  :readonly="!optCanModify"
+                  :placeholder="t('task.task-user-agent-placeholder') || ''"
+                />
+                <UserAgentPopover
+                  :url="taskPrimaryUrl"
+                  :profiles="preferenceStore.config.userAgentProfiles"
+                  :rules="preferenceStore.config.userAgentRules"
+                  :recent-profile-ids="preferenceStore.config.recentUserAgentProfileIds"
+                  :disabled="!optCanModify"
+                  @select="selectTaskUserAgentProfile"
+                />
+              </NInputGroup>
+            </NFormItem>
+            <NFormItem :label="t('task.task-authorization') + ':'">
+              <NInput
+                v-model:value="optForm.authorization"
+                type="textarea"
+                :autosize="{ minRows: 1, maxRows: 3 }"
+                :readonly="!optCanModify"
+                :placeholder="t('task.task-authorization-placeholder') || ''"
+              />
+            </NFormItem>
+            <NFormItem :label="t('task.task-http-auth') + ':'">
+              <div class="http-auth-fields">
+                <NInput
+                  v-model:value="optForm.httpAuthUsername"
+                  :readonly="!optCanModify"
+                  :placeholder="t('task.task-http-auth-username-placeholder') || ''"
+                />
+                <NInput
+                  v-model:value="optForm.httpAuthPassword"
+                  type="password"
+                  show-password-on="click"
+                  :readonly="!optCanModify"
+                  :placeholder="t('task.task-http-auth-password-placeholder') || ''"
+                />
+              </div>
+            </NFormItem>
+            <NFormItem :label="t('task.task-referer') + ':'">
+              <NInput
+                v-model:value="optForm.referer"
+                type="textarea"
+                :autosize="{ minRows: 1, maxRows: 3 }"
+                :readonly="!optCanModify"
+                :placeholder="t('task.task-referer-placeholder') || ''"
+              />
+            </NFormItem>
+            <NFormItem :label="t('task.task-cookie') + ':'">
+              <NInput
+                v-model:value="optForm.cookie"
+                type="textarea"
+                :autosize="{ minRows: 1, maxRows: 3 }"
+                :readonly="!optCanModify"
+                :placeholder="t('task.task-cookie-placeholder') || ''"
+              />
+            </NFormItem>
+            <NFormItem :label="t('task.use-proxy') + ':'">
+              <NSwitch
+                :value="optForm.proxyMode === 'manual'"
+                :disabled="!optCanModify"
+                @update:value="optForm.proxyMode = $event ? 'manual' : 'direct'"
+              />
+            </NFormItem>
+            <NFormItem label=" " :show-feedback="false" class="proxy-options-item">
+              <NCollapseTransition :show="optForm.proxyMode === 'manual'">
+                <div class="proxy-radio-group">
+                  <div class="custom-proxy-input">
+                    <NInput
+                      v-model:value="optForm.customProxy"
+                      :readonly="!optCanModify"
+                      :placeholder="'http://host:port'"
+                    />
+                    <NInput
+                      v-model:value="optForm.customProxyUsername"
+                      :readonly="!optCanModify"
+                      :placeholder="t('preferences.proxy-username') || ''"
+                    />
+                    <NInput
+                      v-model:value="optForm.customProxyPassword"
+                      type="password"
+                      show-password-on="click"
+                      :readonly="!optCanModify"
+                      :placeholder="t('preferences.proxy-password') || ''"
+                    />
+                    <NButton :loading="detectingProxy" :disabled="!optCanModify" size="small" @click="detectProxy">
+                      <template #icon>
+                        <NIcon><SearchOutline /></NIcon>
+                      </template>
+                      {{ t('preferences.detect-system-proxy') }}
+                    </NButton>
+                  </div>
+                </div>
+              </NCollapseTransition>
+            </NFormItem>
+            <div v-if="optCanModify" class="options-apply-bar">
+              <NButton
+                :type="optDirty ? 'primary' : 'default'"
+                :disabled="!optDirty"
+                :loading="optApplying"
+                class="apply-btn"
+                @click="optApplyFn"
+              >
+                {{ optDirty ? t('task.apply-changes') : t('task.no-changes') }}
+              </NButton>
+            </div>
+          </NForm>
+        </div>
+
+        <div v-else-if="activeTab === 'status' && isED2K" key="ed2k-status" class="tab-content">
+          <template v-if="ed2kInfo">
+            <NDescriptions
+              :column="1"
+              label-placement="left"
+              bordered
+              size="small"
+              :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
+            >
+              <NDescriptionsItem :label="t('task.task-ed2k-hash')">
+                <CopyableValue :value="ed2kInfo.hash || '-'" :label="t('task.task-ed2k-hash')" />
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-name')">
+                <CopyableValue :value="ed2kInfo.name || taskFullName" :label="t('task.task-name')" />
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-file-size')">
+                {{ ed2kInfo.length ? bytesToSize(ed2kInfo.length) : bytesToSize(task?.totalLength || '0') }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-part-hash-count')">
+                {{ ed2kInfo.partHashCount || 0 }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-aich-root')">
+                <CopyableValue :value="ed2kInfo.aichRoot || '-'" :label="t('task.task-ed2k-aich-root')" />
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-server-count')">
+                {{ ed2kSummary.connectedServerCount }} / {{ ed2kSummary.serverCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-peer-count')">
+                {{ ed2kSummary.peerCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-queued-peer-count')">
+                {{ ed2kSummary.queuedPeerCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-accepted-peer-count')">
+                {{ ed2kSummary.acceptedPeerCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-dead-peer-count')">
+                {{ ed2kSummary.deadPeerCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-low-id-peer-count')">
+                {{ ed2kSummary.lowIdPeerCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-callback-waiting-peer-count')">
+                {{ ed2kSummary.callbackWaitingPeerCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-kad-node-count')">
+                {{ ed2kSummary.kadNodeCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-kad-router-count')">
+                {{ ed2kSummary.kadRouterCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-kad-firewalled')">
+                {{ yesNo(ed2kSummary.kadFirewalled) }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-kad-observed-address-count')">
+                {{ ed2kInfo.kadObservedAddressCount || 0 }}
+              </NDescriptionsItem>
+              <NDescriptionsItem v-if="ed2kSummary.hasSearchState" :label="t('task.task-ed2k-search-active')">
+                {{ yesNo(ed2kInfo.searchActive) }}
+              </NDescriptionsItem>
+              <NDescriptionsItem v-if="ed2kSummary.hasSearchState" :label="t('task.task-ed2k-search-more-results')">
+                {{ yesNo(ed2kInfo.searchMoreResults) }}
+              </NDescriptionsItem>
+              <NDescriptionsItem v-if="ed2kSummary.hasSearchState" :label="t('task.task-ed2k-search-result-count')">
+                {{ ed2kInfo.searchResultCount || 0 }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-uploading-peer-count')">
+                {{ ed2kSummary.uploadingPeerCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-waiting-upload-peer-count')">
+                {{ ed2kSummary.waitingUploadPeerCount }}
+              </NDescriptionsItem>
+              <NDescriptionsItem :label="t('task.task-ed2k-peer-credit-count')">
+                {{ ed2kInfo.peerCreditCount || 0 }}
+              </NDescriptionsItem>
+            </NDescriptions>
+          </template>
+        </div>
+
+        <div v-else-if="activeTab === 'peers'" key="peers" class="tab-content">
+          <TaskDetailPeers
+            :gid="task?.gid ?? ''"
+            :editable="optCanModify"
+            :peers="task?.peers"
+            :locale="locale"
+            :tooltip="t('about.click-to-copy')"
+            :on-copy="copyDetailValue"
+          />
+        </div>
+
+        <div v-else-if="activeTab === 'trackers'" key="trackers" class="tab-content">
+          <TaskDetailTrackers
+            :gid="task?.gid ?? ''"
+            :web-seeds="task?.bittorrent?.webSeeds"
+            :editable="optCanModify"
+            :tooltip="t('about.click-to-copy')"
+            :on-copy="copyDetailValue"
+          />
+        </div>
+      </Transition>
+    </div>
+  </section>
 </template>
 
 <style scoped>
+.task-detail-pane {
+  position: absolute;
+  inset: 0;
+  background: var(--main-bg);
+  display: flex;
+  flex-direction: column;
+  padding: 16px 24px 0;
+  box-sizing: border-box;
+}
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.detail-header h1 {
+  font-size: 20px;
+  line-height: 28px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+}
+.tab-content-wrapper {
+  position: relative;
+}
+
 .detail-status-value {
   display: flex;
   align-items: center;
@@ -828,6 +851,8 @@ function handleClose() {
   flex-wrap: wrap;
 }
 .detail-tabs {
+  overflow-x: auto;
+  flex-shrink: 0;
   display: flex;
   gap: 2px;
   border-bottom: 1px solid var(--panel-border);
@@ -862,7 +887,9 @@ function handleClose() {
 }
 
 .tab-content-wrapper {
-  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   position: relative;
 }
 
@@ -951,31 +978,6 @@ function handleClose() {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 12px;
-}
-
-.tab-slide-left-enter-active,
-.tab-slide-left-leave-active,
-.tab-slide-right-enter-active,
-.tab-slide-right-leave-active {
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.tab-slide-left-enter-from {
-  opacity: 0;
-  transform: translateX(40px);
-}
-.tab-slide-left-leave-to {
-  opacity: 0;
-  transform: translateX(-40px);
-}
-
-.tab-slide-right-enter-from {
-  opacity: 0;
-  transform: translateX(-40px);
-}
-.tab-slide-right-leave-to {
-  opacity: 0;
-  transform: translateX(40px);
 }
 
 /* Probe button M3 transition */

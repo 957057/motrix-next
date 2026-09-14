@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Tarefas",
-    "add-task": "Adicionar tarefa",
     "about": "Sobre o Rayburst",
     "preferences": "Preferências...",
     "check-updates-now": "Verificar agora",
@@ -582,14 +581,9 @@
     "media-default-format": "Formato padrão",
     "color-scheme-electric": "Roxo elétrico"
   },
-  "subnav": {
-    "task-list": "Tarefas",
-    "preferences": "Preferências"
-  },
   "task": {
     "scope-all": "Todas",
     "scope-progress": "Em andamento",
-    "scope-failed": "Falhas",
     "scope-completed": "Concluídas",
     "new-task": "Nova tarefa",
     "open-file": "Abrir arquivo",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Erro",
-    "file-missing": "Arquivo não encontrado",
     "duplicate-task": "Esta tarefa já existe",
     "error-aria2-next": "Erro do Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Todas as tarefas pausadas",
     "pause-all-task-fail": "Falha ao pausar todas as tarefas",
     "resume-all-task": "Retomar tudo",
-    "delete-all-task": "Limpar fila de downloads",
     "resume-all-task-success": "Todas as tarefas retomadas",
     "resume-all-task-fail": "Falha ao retomar todas as tarefas",
     "resume-all-task-confirm": "Retomar todas as tarefas?",
     "pause-all-task-confirm": "Pausar todas as tarefas?",
-    "purge-record-confirm": "Isso removerá todos os registros de tarefas concluídas, com falha ou removidas.",
-    "purge-record": "Limpar histórico",
     "purge-record-success": "Histórico limpo",
-    "purge-record-fail": "Falha ao limpar registros",
     "batch-delete-task-success": "Fila de downloads limpa",
     "batch-delete-task-fail": "Falha na exclusão em lote",
     "batch-delete-task-partial": "{removed} tarefas foram removidas; {failed} falharam",
@@ -918,5 +907,19 @@
     "recording-options": "Opções de gravação",
     "unlimited": "Sem limite",
     "custom": "Personalizada"
+  },
+  "workspace": {
+    "needs-action": "Requer atenção",
+    "browser-connection": "Conexão com o navegador",
+    "more-actions": "Mais ações",
+    "search-tasks": "Buscar tarefas",
+    "no-results": "Nenhuma tarefa correspondente",
+    "empty-tasks": "Seus downloads aparecerão aqui",
+    "select-tasks": "Selecionar tarefas",
+    "comfortable": "Visualização espaçada",
+    "compact": "Visualização compacta",
+    "partial-failure": "Algumas ações falharam. Confira as tarefas restantes.",
+    "back": "Voltar",
+    "clear": "Limpar"
   }
 }

@@ -1,15 +1,13 @@
 <script setup lang="ts">
 /** @fileoverview Single-layer file category manager modal. */
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
-import Sortable from 'sortablejs'
 import { buildDefaultCategories, MAX_FILE_CATEGORIES } from '@shared/constants'
 import { normalizeFileCategory, validateCategoryUrlPatterns } from '@shared/utils/fileCategory'
-import { useReducedMotion } from '@/composables/useReducedMotion'
+import { Reorder, AnimatePresence } from 'motion-v'
+import ReorderItem from '@/components/common/ReorderItem.vue'
 import type { FileCategory } from '@shared/types'
-import type { ComponentPublicInstance } from 'vue'
-import type { SortableEvent, SortableOptions } from 'sortablejs'
 import {
   NButton,
   NCard,
@@ -37,19 +35,12 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const reduceMotion = useReducedMotion()
 const draft = ref<FileCategory[]>([])
 const selectedKey = ref('')
 const urlPatternText = ref('')
 const urlRuleError = ref('')
 const resetConfirming = ref(false)
-type ListRefTarget = HTMLElement | ComponentPublicInstance | null
-const listRef = ref<ListRefTarget>(null)
-const sorting = ref(false)
 let resetConfirmTimer: ReturnType<typeof setTimeout> | undefined
-let sortable: Sortable | null = null
-let lastFloatingRect: DOMRect | null = null
-let floatingRectFrame = 0
 let categoryUid = 0
 const categoryKeys = new WeakMap<FileCategory, string>()
 
@@ -100,7 +91,6 @@ function categoryMeta(category: FileCategory): string {
 
 function closeModal() {
   stopResetConfirm()
-  destroySortable()
   emit('update:show', false)
 }
 
@@ -250,146 +240,10 @@ function syncUrlPatternText() {
   urlPatternText.value = (selectedCategory.value?.urlPatterns ?? []).join('\n')
 }
 
-function handleListItemBeforeLeave(element: Element) {
-  if (!(element instanceof HTMLElement)) return
-  const height = Math.ceil(element.getBoundingClientRect().height || element.offsetHeight)
-  element.classList.add('category-manager-list-item--collapsing')
-  element.style.setProperty('--category-list-item-leave-height', `${height}px`)
-}
-
-function trackFloatingRect() {
-  const floating = document.querySelector<HTMLElement>('.category-manager-list-item--floating')
-  if (floating?.isConnected) {
-    lastFloatingRect = floating.getBoundingClientRect()
-  }
-
-  if (sorting.value) {
-    floatingRectFrame = requestAnimationFrame(trackFloatingRect)
-  }
-}
-
-function startFloatingRectTracking() {
-  stopFloatingRectTracking()
-  lastFloatingRect = null
-  floatingRectFrame = requestAnimationFrame(trackFloatingRect)
-}
-
-function stopFloatingRectTracking() {
-  if (!floatingRectFrame) return
-  cancelAnimationFrame(floatingRectFrame)
-  floatingRectFrame = 0
-}
-
-function animateDropSettle(event: SortableEvent | undefined): Promise<void> {
-  const item = event?.item
-  if (!lastFloatingRect || !item?.isConnected) return Promise.resolve()
-
-  if (reduceMotion.value) {
-    lastFloatingRect = null
-    return Promise.resolve()
-  }
-
-  const targetRect = item.getBoundingClientRect()
-  const deltaX = lastFloatingRect.left - targetRect.left
-  const deltaY = lastFloatingRect.top - targetRect.top
-  lastFloatingRect = null
-
-  if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) return Promise.resolve()
-
-  item.classList.add('category-manager-list-item--settling')
-  item.style.setProperty('--category-drop-x', `${deltaX}px`)
-  item.style.setProperty('--category-drop-y', `${deltaY}px`)
-
-  return new Promise((resolve) => {
-    requestAnimationFrame(() => {
-      item.classList.add('category-manager-list-item--settled')
-    })
-
-    window.setTimeout(() => {
-      item.classList.remove('category-manager-list-item--settling', 'category-manager-list-item--settled')
-      item.style.removeProperty('--category-drop-x')
-      item.style.removeProperty('--category-drop-y')
-      resolve()
-    }, 260)
-  })
-}
-
-const sortableOptions: SortableOptions = {
-  animation: reduceMotion.value ? 0 : 240,
-  handle: '.category-manager-drag-handle',
-  draggable: '.category-manager-list-item',
-  filter: 'button:not(.category-manager-drag-handle), a, input, textarea, select, [data-no-drag]',
-  ghostClass: 'category-manager-list-item--ghost',
-  chosenClass: 'category-manager-list-item--chosen',
-  fallbackClass: 'category-manager-list-item--floating',
-  dragClass: 'category-manager-list-item--dragging',
-  direction: 'vertical',
-  swapThreshold: 0.72,
-  invertedSwapThreshold: 0.28,
-  invertSwap: false,
-  forceFallback: true,
-  fallbackOnBody: true,
-  fallbackTolerance: 3,
-  preventOnFilter: false,
-  onStart: () => {
-    sorting.value = true
-    if (!reduceMotion.value) startFloatingRectTracking()
-  },
-  onUpdate: (event) => {
-    if (event.oldIndex === undefined || event.newIndex === undefined) return
-    moveCategory(event.oldIndex, event.newIndex)
-  },
-  onEnd: async (event) => {
-    stopFloatingRectTracking()
-    await nextTick()
-    await animateDropSettle(event)
-    window.setTimeout(() => {
-      sorting.value = false
-    }, 0)
-  },
-}
-
-watch(reduceMotion, (enabled) => {
-  const duration = enabled ? 0 : 240
-  sortableOptions.animation = duration
-  sortable?.option('animation', duration)
-})
-
-function destroySortable() {
-  stopFloatingRectTracking()
-  sortable?.destroy()
-  sortable = null
-  sorting.value = false
-  lastFloatingRect = null
-  removeCategoryDragArtifacts()
-}
-
-function removeCategoryDragArtifacts() {
-  document.querySelectorAll<HTMLElement>('.category-manager-list-item--floating').forEach((element) => element.remove())
-}
-
-function resolveListElement() {
-  const target = listRef.value
-  if (target instanceof HTMLElement) return target
-  const element = target?.$el
-  return element instanceof HTMLElement ? element : null
-}
-
-function mountSortable() {
-  destroySortable()
-  const element = resolveListElement()
-  if (!element) return
-  sortable = Sortable.create(element, sortableOptions)
-}
-
 watch(
   () => props.show,
-  async (show) => {
-    if (!show) {
-      destroySortable()
-      return
-    }
-    removeCategoryDragArtifacts()
+  (show) => {
+    if (!show) return
     draft.value = cloneCategories(
       props.categories.length > 0 ? props.categories : buildDefaultCategories(props.baseDir),
     )
@@ -397,21 +251,10 @@ watch(
     stopResetConfirm()
     syncUrlPatternText()
     urlRuleError.value = ''
-    await nextTick()
-    mountSortable()
   },
+  { immediate: true },
 )
-
-onMounted(() => {
-  removeCategoryDragArtifacts()
-  if (props.show) void nextTick(mountSortable)
-})
-
-onUnmounted(() => {
-  stopResetConfirm()
-  stopFloatingRectTracking()
-  destroySortable()
-})
+onUnmounted(stopResetConfirm)
 </script>
 
 <template>
@@ -419,7 +262,6 @@ onUnmounted(() => {
     :show="show"
     :mask-closable="false"
     transform-origin="center"
-    :transition="{ name: 'fade-scale' }"
     @update:show="(value: boolean) => emit('update:show', value)"
   >
     <NCard
@@ -434,41 +276,45 @@ onUnmounted(() => {
           <div class="category-manager-priority-hint">
             {{ t('preferences.file-category-priority-hint') }}
           </div>
-          <TransitionGroup
-            ref="listRef"
-            tag="div"
-            name="category-manager-list-item"
-            class="category-manager-list-items"
-            :css="!sorting"
-            @before-leave="handleListItemBeforeLeave"
-          >
-            <div
-              v-for="(category, index) in draft"
-              :key="categoryKey(category)"
-              role="button"
-              tabindex="0"
-              class="category-manager-list-item"
-              :class="{ 'category-manager-list-item--active': index === selectedIndex }"
-              @click="handleSelectCategory(index)"
-              @keydown.enter.prevent="handleSelectCategory(index)"
-              @keydown.space.prevent="handleSelectCategory(index)"
-            >
-              <span
-                class="category-manager-drag-handle"
+          <Reorder.Group v-model:values="draft" as="div" axis="y" class="category-manager-list-items" layout-scroll>
+            <AnimatePresence :initial="false" mode="popLayout">
+              <ReorderItem
+                v-for="(category, index) in draft"
+                v-slot="{ start }"
+                :key="categoryKey(category)"
+                :value="category"
                 role="button"
                 tabindex="0"
-                :aria-label="t('preferences.file-category-priority-hint')"
-                @click.stop
-                @pointerdown="handleDragHandlePointerDown(index)"
+                class="category-manager-list-item"
+                :class="{ 'category-manager-list-item--active': index === selectedIndex }"
+                @click="handleSelectCategory(index)"
+                @keydown.enter.prevent="handleSelectCategory(index)"
+                @keydown.space.prevent="handleSelectCategory(index)"
               >
-                <span aria-hidden="true">⋮⋮</span>
-              </span>
-              <span class="category-manager-list-copy">
-                <span class="category-manager-list-title">{{ categoryTitle(category) }}</span>
-                <span class="category-manager-list-meta">{{ categoryMeta(category) }}</span>
-              </span>
-            </div>
-          </TransitionGroup>
+                <span
+                  class="category-manager-drag-handle"
+                  role="button"
+                  tabindex="0"
+                  :aria-label="t('preferences.file-category-priority-hint')"
+                  @click.stop
+                  @pointerdown="
+                    (event) => {
+                      handleDragHandlePointerDown(index)
+                      start(event)
+                    }
+                  "
+                  @keydown.up.stop.prevent="moveCategory(index, Math.max(0, index - 1))"
+                  @keydown.down.stop.prevent="moveCategory(index, Math.min(draft.length - 1, index + 1))"
+                >
+                  <span aria-hidden="true">⋮⋮</span>
+                </span>
+                <span class="category-manager-list-copy">
+                  <span class="category-manager-list-title">{{ categoryTitle(category) }}</span>
+                  <span class="category-manager-list-meta">{{ categoryMeta(category) }}</span>
+                </span>
+              </ReorderItem>
+            </AnimatePresence>
+          </Reorder.Group>
           <div class="category-manager-list-actions">
             <NButton size="small" block :disabled="draft.length >= MAX_FILE_CATEGORIES" @click="handleAddCategory">
               {{ t('preferences.file-category-add') }}
@@ -482,7 +328,7 @@ onUnmounted(() => {
               @click="handleResetCategories"
             >
               <span class="category-manager-reset-content">
-                <Transition name="reset-label" mode="out-in">
+                <Transition name="reset-label">
                   <span :key="resetConfirming ? 'confirm' : 'idle'">
                     {{
                       resetConfirming
@@ -497,7 +343,7 @@ onUnmounted(() => {
         </aside>
 
         <section v-if="selectedCategory" class="category-manager-editor">
-          <Transition name="content-fade" mode="out-in">
+          <Transition name="content-fade">
             <div :key="selectedKey" class="category-manager-editor-content">
               <div class="category-manager-field">
                 <span>{{ t('preferences.file-category-custom-label') }}</span>
@@ -578,7 +424,7 @@ onUnmounted(() => {
       <template #footer>
         <NSpace justify="space-between" align="center">
           <div class="category-manager-footer-left">
-            <Transition name="footer-delete" mode="out-in">
+            <Transition name="footer-delete">
               <NButton
                 v-if="selectedCategory"
                 key="delete-category"
@@ -605,7 +451,7 @@ onUnmounted(() => {
 <style scoped>
 .category-manager-card {
   width: min(840px, calc(100vw - 32px));
-  max-height: min(720px, calc(100vh - 48px));
+  max-height: min(720px, calc(100dvh - 48px));
 }
 
 .category-manager-card :deep(.n-card__content) {
@@ -617,7 +463,7 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
   gap: 16px;
-  height: clamp(360px, 58vh, 520px);
+  height: min(520px, calc(100dvh - 208px));
   min-height: 0;
 }
 
@@ -704,79 +550,6 @@ onUnmounted(() => {
   border-color: var(--m3-primary);
   background: var(--m3-surface-container-high);
 }
-
-.category-manager-list-item--ghost {
-  overflow: hidden;
-  opacity: 0;
-}
-
-.category-manager-list-item--floating {
-  opacity: 1 !important;
-  filter: none !important;
-  pointer-events: none;
-  transition: none !important;
-}
-
-.category-manager-list-item--dragging {
-  opacity: 1 !important;
-}
-
-.category-manager-list-item--settling {
-  z-index: 3;
-  transform: translate3d(var(--category-drop-x), var(--category-drop-y), 0);
-  will-change: transform;
-}
-
-.category-manager-list-item--settling.category-manager-list-item--settled {
-  transform: translate3d(0, 0, 0);
-  transition: transform 300ms ease;
-}
-
-.category-manager-list-item-move,
-.category-manager-list-item-enter-active {
-  transition:
-    transform 260ms ease,
-    opacity 180ms ease;
-}
-
-.category-manager-list-item-enter-from {
-  opacity: 0;
-  transform: translateY(8px) scale(0.99);
-}
-
-.category-manager-list-item-leave-active {
-  pointer-events: none;
-  transition:
-    transform 260ms ease,
-    opacity 180ms ease;
-}
-
-.category-manager-list-item-leave-to {
-  opacity: 0;
-  transform: scale(0.995);
-}
-
-.category-manager-list-item-leave-active.category-manager-list-item--collapsing {
-  height: var(--category-list-item-leave-height);
-  min-height: 0;
-  overflow: hidden;
-  transition:
-    height 260ms ease,
-    margin-bottom 260ms ease,
-    padding-top 260ms ease,
-    padding-bottom 260ms ease,
-    opacity 180ms ease;
-  transform: none;
-}
-
-.category-manager-list-item-leave-to.category-manager-list-item--collapsing {
-  height: 0;
-  margin-bottom: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  transform: none;
-}
-
 .category-manager-list-title {
   overflow: hidden;
   font-size: 13px;

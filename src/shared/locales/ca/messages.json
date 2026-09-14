@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Tasques",
-    "add-task": "Afegir tasca",
     "about": "Quant a Rayburst",
     "preferences": "Preferències...",
     "check-updates-now": "Comprova ara",
@@ -582,14 +581,9 @@
     "media-default-format": "Format predeterminat",
     "color-scheme-electric": "Violeta elèctric"
   },
-  "subnav": {
-    "task-list": "Tasques",
-    "preferences": "Preferències"
-  },
   "task": {
     "scope-all": "Totes",
     "scope-progress": "En curs",
-    "scope-failed": "Fallides",
     "scope-completed": "Completades",
     "new-task": "Nova tasca",
     "open-file": "Obrir fitxer",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Error",
-    "file-missing": "Fitxer no trobat",
     "duplicate-task": "Aquesta tasca ja existeix",
     "error-aria2-next": "Error de l'Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Totes les tasques en pausa",
     "pause-all-task-fail": "Error en pausar totes les tasques",
     "resume-all-task": "Reprendre tot",
-    "delete-all-task": "Buida la cua de baixades",
     "resume-all-task-success": "Totes les tasques represes",
     "resume-all-task-fail": "Error en reprendre totes les tasques",
     "resume-all-task-confirm": "Reprendre totes les tasques?",
     "pause-all-task-confirm": "Pausar totes les tasques?",
-    "purge-record-confirm": "Això eliminarà tots els registres de tasques completades, fallides o eliminades.",
-    "purge-record": "Buida l'historial",
     "purge-record-success": "Historial buidat",
-    "purge-record-fail": "Error en esborrar registres",
     "batch-delete-task-success": "Cua de baixades buidada",
     "batch-delete-task-fail": "Error en l'eliminació",
     "batch-delete-task-partial": "S’han eliminat {removed} tasques; {failed} han fallat",
@@ -918,5 +907,19 @@
     "recording-options": "Opcions de gravació",
     "unlimited": "Sense límit",
     "custom": "Personalitzat"
+  },
+  "workspace": {
+    "needs-action": "Requereix atenció",
+    "browser-connection": "Connexió amb el navegador",
+    "more-actions": "Més accions",
+    "search-tasks": "Cerca tasques",
+    "no-results": "No hi ha tasques coincidents",
+    "empty-tasks": "Les baixades apareixeran aquí",
+    "select-tasks": "Selecciona tasques",
+    "comfortable": "Vista espaiosa",
+    "compact": "Vista compacta",
+    "partial-failure": "Algunes accions han fallat. Revisa les tasques restants.",
+    "back": "Enrere",
+    "clear": "Esborra"
   }
 }

@@ -806,7 +806,26 @@ export interface ResumeEligibleResult {
 }
 
 /** Aria2 JSON-RPC client API surface consumed by the task store. */
+export interface TaskQueryInput {
+  scope: string
+  query: string
+  page: number
+  pageSize: number
+  sortField: string
+  direction: string
+  manualOrder: string[]
+}
+export interface TaskQueryPage {
+  tasks: Aria2Task[]
+  history: HistoryRecord[]
+  gids: string[]
+  counts: { all: number; progress: number; failed: number; completed: number }
+  total: number
+  page: number
+  selections: { gid: string; kind: 'bt' | 'media'; waiting: boolean }[]
+}
 export interface TaskApi {
+  queryTasks: (input: TaskQueryInput) => Promise<TaskQueryPage>
   retryMedia: (gid: string) => Promise<string>
   fetchTaskList: (params: { type: string; limit?: number }) => Promise<Aria2Task[]>
   fetchTaskItem: (params: { gid: string }) => Promise<Aria2Task>

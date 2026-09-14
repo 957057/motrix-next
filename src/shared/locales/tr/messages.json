@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Görevler",
-    "add-task": "Görev ekle",
     "about": "Rayburst Hakkında",
     "preferences": "Tercihler...",
     "check-updates-now": "Şimdi kontrol et",
@@ -582,14 +581,9 @@
     "media-default-format": "Varsayılan biçim",
     "color-scheme-electric": "Elektrik moru"
   },
-  "subnav": {
-    "task-list": "Görevler",
-    "preferences": "Ayarlar"
-  },
   "task": {
     "scope-all": "Tümü",
     "scope-progress": "Devam ediyor",
-    "scope-failed": "Başarısız",
     "scope-completed": "Tamamlandı",
     "new-task": "Yeni görev",
     "open-file": "Dosyayı aç",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Hata",
-    "file-missing": "Dosya eksik",
     "duplicate-task": "Bu görev zaten mevcut",
     "error-aria2-next": "Aria2 Next hatası",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Tüm görevler duraklatıldı",
     "pause-all-task-fail": "Tüm görevler duraklatılamadı",
     "resume-all-task": "Tümünü devam ettir",
-    "delete-all-task": "İndirme kuyruğunu temizle",
     "resume-all-task-success": "Tüm görevler devam ediyor",
     "resume-all-task-fail": "Tüm görevler devam ettirilemedi",
     "resume-all-task-confirm": "Tüm görevlere devam edilsin mi?",
     "pause-all-task-confirm": "Tüm görevler duraklatılsın mı?",
-    "purge-record-confirm": "Tamamlanan, başarısız veya kaldırılmış tüm görev kayıtları kaldırılacak.",
-    "purge-record": "Geçmişi temizle",
     "purge-record-success": "Geçmiş temizlendi",
-    "purge-record-fail": "Kayıtlar temizlenemedi",
     "batch-delete-task-success": "İndirme kuyruğu temizlendi",
     "batch-delete-task-fail": "Silme başarısız",
     "batch-delete-task-partial": "{removed} görev kaldırıldı; {failed} başarısız",
@@ -918,5 +907,19 @@
     "recording-options": "Kayıt seçenekleri",
     "unlimited": "Sınırsız",
     "custom": "Özel"
+  },
+  "workspace": {
+    "needs-action": "İşlem gerekiyor",
+    "browser-connection": "Tarayıcı bağlantısı",
+    "more-actions": "Diğer işlemler",
+    "search-tasks": "Görev ara",
+    "no-results": "Eşleşen görev yok",
+    "empty-tasks": "İndirmeleriniz burada görünecek",
+    "select-tasks": "Görevleri seç",
+    "comfortable": "Rahat görünüm",
+    "compact": "Kompakt görünüm",
+    "partial-failure": "Bazı işlemler başarısız oldu. Kalan görevleri kontrol edin.",
+    "back": "Geri",
+    "clear": "Temizle"
   }
 }

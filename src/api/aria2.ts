@@ -1,3 +1,4 @@
+import type { TaskQueryInput, TaskQueryPage } from '@shared/types'
 /**
  * @fileoverview Aria2 API — invoke() transport layer.
  *
@@ -107,6 +108,10 @@ export async function fetchActiveTaskList(): Promise<Aria2Task[]> {
 }
 
 /** Fetches a native task snapshot: all, active+waiting, or stopped. */
+export async function queryTasks(input: TaskQueryInput): Promise<TaskQueryPage> {
+  return invoke<TaskQueryPage>('query_tasks', { input })
+}
+
 export async function fetchTaskList(params: { type: string; limit?: number }): Promise<Aria2Task[]> {
   return invoke<Aria2Task[]>('aria2_fetch_task_list', {
     type: params.type,
@@ -305,6 +310,7 @@ const api = {
   getBtTrackers,
   fetchActiveTaskList,
   fetchTaskList,
+  queryTasks,
   fetchTaskItem,
   fetchTaskItemWithPeers,
   addUri,

@@ -36,6 +36,7 @@ export function useVisibilityPause(): void {
   }
 
   onMounted(() => {
+    onVisibilityChange()
     document.addEventListener('visibilitychange', onVisibilityChange)
   })
 

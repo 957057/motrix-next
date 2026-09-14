@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Feladatok",
-    "add-task": "Feladat hozzáadása",
     "about": "A Rayburst névjegye",
     "preferences": "Beállítások...",
     "check-updates-now": "Ellenőrzés most",
@@ -582,14 +581,9 @@
     "media-default-format": "Alapértelmezett formátum",
     "color-scheme-electric": "Elektromos lila"
   },
-  "subnav": {
-    "task-list": "Feladatok",
-    "preferences": "Beállítások"
-  },
   "task": {
     "scope-all": "Összes",
     "scope-progress": "Folyamatban",
-    "scope-failed": "Sikertelen",
     "scope-completed": "Befejezett",
     "new-task": "Új feladat",
     "open-file": "Fájl megnyitása",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Hiba",
-    "file-missing": "Fájl hiányzik",
     "duplicate-task": "Ez a feladat már létezik",
     "error-aria2-next": "Aria2 Next hiba",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Minden feladat szüneteltetve",
     "pause-all-task-fail": "Az összes feladat szüneteltetése sikertelen",
     "resume-all-task": "Összes folytatása",
-    "delete-all-task": "Letöltési sor ürítése",
     "resume-all-task-success": "Minden feladat folytatva",
     "resume-all-task-fail": "Az összes feladat folytatása sikertelen",
     "resume-all-task-confirm": "Folytatja az összes feladatot?",
     "pause-all-task-confirm": "Szünetelteti az összes feladatot?",
-    "purge-record-confirm": "Ez eltávolít minden befejezett, sikertelen vagy eltávolított feladatrekordot.",
-    "purge-record": "Előzmények ürítése",
     "purge-record-success": "Előzmények kiürítve",
-    "purge-record-fail": "A bejegyzések törlése sikertelen",
     "batch-delete-task-success": "Letöltési sor kiürítve",
     "batch-delete-task-fail": "A törlés sikertelen",
     "batch-delete-task-partial": "{removed} feladat eltávolítva; {failed} sikertelen",
@@ -918,5 +907,19 @@
     "recording-options": "Felvételi beállítások",
     "unlimited": "Korlátlan",
     "custom": "Egyéni"
+  },
+  "workspace": {
+    "needs-action": "Beavatkozás szükséges",
+    "browser-connection": "Böngészőkapcsolat",
+    "more-actions": "További műveletek",
+    "search-tasks": "Feladatok keresése",
+    "no-results": "Nincs megfelelő feladat",
+    "empty-tasks": "A letöltések itt jelennek meg",
+    "select-tasks": "Feladatok kiválasztása",
+    "comfortable": "Szellős nézet",
+    "compact": "Kompakt nézet",
+    "partial-failure": "Néhány művelet sikertelen. Ellenőrizze a hátralévő feladatokat.",
+    "back": "Vissza",
+    "clear": "Törlés"
   }
 }

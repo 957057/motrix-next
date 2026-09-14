@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Задачи",
-    "add-task": "Добавить задачу",
     "about": "О Rayburst",
     "preferences": "Настройки...",
     "check-updates-now": "Проверить сейчас",
@@ -582,14 +581,9 @@
     "media-default-format": "Формат по умолчанию",
     "color-scheme-electric": "Электрический фиолетовый"
   },
-  "subnav": {
-    "task-list": "Задачи",
-    "preferences": "Настройки"
-  },
   "task": {
     "scope-all": "Все",
     "scope-progress": "Выполняются",
-    "scope-failed": "Ошибки",
     "scope-completed": "Завершены",
     "new-task": "Новая задача",
     "open-file": "Открыть файл",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Ошибка",
-    "file-missing": "Файл отсутствует",
     "duplicate-task": "Эта задача уже существует",
     "error-aria2-next": "Ошибка Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Все задачи приостановлены",
     "pause-all-task-fail": "Не удалось приостановить все задачи",
     "resume-all-task": "Возобновить все",
-    "delete-all-task": "Очистить очередь загрузок",
     "resume-all-task-success": "Все задачи возобновлены",
     "resume-all-task-fail": "Не удалось возобновить все задачи",
     "resume-all-task-confirm": "Возобновить все задачи?",
     "pause-all-task-confirm": "Приостановить все задачи?",
-    "purge-record-confirm": "Будут удалены все записи завершенных, неудачных или удаленных задач.",
-    "purge-record": "Очистить историю",
     "purge-record-success": "История очищена",
-    "purge-record-fail": "Не удалось очистить записи",
     "batch-delete-task-success": "Очередь загрузок очищена",
     "batch-delete-task-fail": "Не удалось удалить задачи",
     "batch-delete-task-partial": "Удалено: {removed}; с ошибкой: {failed}",
@@ -918,5 +907,19 @@
     "recording-options": "Параметры записи",
     "unlimited": "Без ограничения",
     "custom": "Другая"
+  },
+  "workspace": {
+    "needs-action": "Требует внимания",
+    "browser-connection": "Подключение браузера",
+    "more-actions": "Другие действия",
+    "search-tasks": "Поиск задач",
+    "no-results": "Нет подходящих задач",
+    "empty-tasks": "Загрузки появятся здесь",
+    "select-tasks": "Выбрать задачи",
+    "comfortable": "Свободный вид",
+    "compact": "Компактный вид",
+    "partial-failure": "Некоторые действия не выполнены. Проверьте оставшиеся задачи.",
+    "back": "Назад",
+    "clear": "Очистить"
   }
 }

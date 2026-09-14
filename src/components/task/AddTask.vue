@@ -66,7 +66,6 @@ import {
 import { useAppMessage } from '@/composables/useAppMessage'
 import type { BatchItem, BatchItemKind, BtFileSelectionItem, UserAgentProfile } from '@shared/types'
 import { FolderOpenOutline, CloudUploadOutline } from '@vicons/ionicons5'
-import { vMotionAutoAnimate } from '@/directives/motionAutoAnimate'
 import { defaultMediaOptions, mediaOutputHint } from '@shared/utils/media'
 import AdvancedOptions from './addtask/AdvancedOptions.vue'
 import DirectoryPopover from '@/components/common/DirectoryPopover.vue'
@@ -403,10 +402,12 @@ onMounted(async () => {
 // use a flag that the batch.length watcher sets synchronously whenever it writes
 // to form.uris — the flag survives the drain and is visible after the await.
 let batchDidWrite = false
+let draftGeneration = 0
 
 watch(
   () => props.show,
   async (visible) => {
+    const generation = ++draftGeneration
     if (!visible) {
       batchDidWrite = false
       return
@@ -416,6 +417,7 @@ watch(
     if (hasBatch.value) {
       // Resolve file-based items
       await localResolveUnresolvedItems()
+      if (generation !== draftGeneration || !props.show) return
       // Flush URI batch items into the editable textarea via normalized merge
       const uriItems = batch.value.filter((i) => i.kind === 'uri')
       if (uriItems.length > 0) {
@@ -447,7 +449,7 @@ watch(
         // processed (and drained) during the async readText() gap.
         // `hasBatch` is unreliable here because batchWatcher drains
         // pendingBatch after writing — use the flag instead.
-        if (batchDidWrite) return
+        if (generation !== draftGeneration || !props.show || batchDidWrite) return
         if (text && detectResource(text, preferenceStore.config.clipboard)) {
           form.value.uris = text.trim()
         }
@@ -574,6 +576,12 @@ async function handleClose(userDismiss = true) {
     }
   }
   emit('close')
+}
+
+function handleAfterLeave() {
+  if (props.show) return
+  appStore.finishAddTaskClose()
+  emit('afterLeave')
   Object.assign(form.value, {
     uris: '',
     out: '',
@@ -713,7 +721,7 @@ async function handleSubmit() {
     :close-on-esc="!submitting"
     :auto-focus="false"
     transform-origin="center"
-    @after-leave="emit('afterLeave')"
+    @after-leave="handleAfterLeave"
     @update:show="
       (v: boolean) => {
         if (!v) handleClose()
@@ -725,11 +733,11 @@ async function handleSubmit() {
       closable
       class="add-task-card"
       :style="{
-        maxWidth: '680px',
-        minWidth: 'min(380px, calc(100vw - 24px))',
-        width: '70vw',
+        maxWidth: '560px',
+        minWidth: '0',
+        width: 'calc(100vw - 48px)',
         margin: 'auto',
-        height: '82vh',
+        maxHeight: 'calc(100dvh - 48px)',
         display: 'flex',
         flexDirection: 'column',
       }"
@@ -756,16 +764,20 @@ async function handleSubmit() {
 
           <!-- ── Torrent Tab ─────────────────────────────────── -->
           <NTabPane :name="ADD_TASK_TYPE.TORRENT" :tab="t('task.torrent-task') || 'Torrent'">
-            <div v-motion-auto-animate="{ duration: 200, easing: 'ease-out' }" class="tab-pane-content">
+            <div class="tab-pane-content">
               <!-- Torrent panel: animated batch list + file detail -->
               <div v-if="fileItems.length > 0" class="torrent-panel">
-                <!-- Batch list with AutoAnimate transitions -->
-                <div v-motion-auto-animate="{ duration: 200, easing: 'ease-out' }" class="batch-list">
+                <!-- The same keyed items remain mounted during their leave transition. -->
+                <TransitionGroup tag="div" name="list" class="batch-list">
                   <div
                     v-for="(item, idx) in fileItems"
                     :key="item.id"
                     class="batch-item"
+                    role="button"
+                    tabindex="0"
                     :class="{ 'batch-item-selected': idx === selectedBatchIndex }"
+                    @keydown.enter.self.prevent="selectedBatchIndex = idx"
+                    @keydown.space.self.prevent="selectedBatchIndex = idx"
                     @click="selectedBatchIndex = idx"
                   >
                     <div class="batch-item-main">
@@ -774,11 +786,17 @@ async function handleSubmit() {
                         <NTag type="info" size="small" :bordered="false">
                           {{ t('task.torrent-task') }}
                         </NTag>
-                        <NButton quaternary size="tiny" @click.stop="removeBatchItem(item)">✕</NButton>
+                        <NButton
+                          quaternary
+                          size="tiny"
+                          :aria-label="t('task.delete-task')"
+                          @click.stop="removeBatchItem(item)"
+                          >✕</NButton
+                        >
                       </NSpace>
                     </div>
                   </div>
-                </div>
+                </TransitionGroup>
 
                 <!-- Add more files button -->
                 <NButton size="small" dashed block style="margin-top: 6px" @click="chooseTorrentFile">
@@ -788,7 +806,7 @@ async function handleSubmit() {
                   {{ t('task.select-torrent') || 'Select torrent files' }}
                 </NButton>
 
-                <Transition name="content-fade" mode="out-in">
+                <Transition name="content-fade">
                   <div
                     v-if="selectedItem?.inspectionState === 'failed'"
                     :key="`${selectedItem.id}-failed`"
@@ -810,12 +828,17 @@ async function handleSubmit() {
               </div>
 
               <!-- Upload zone: shown when no torrents loaded -->
-              <div v-if="fileItems.length === 0" class="torrent-upload-zone" @click="chooseTorrentFile">
+              <button
+                v-if="fileItems.length === 0"
+                type="button"
+                class="torrent-upload-zone"
+                @click="chooseTorrentFile"
+              >
                 <NIcon :size="36" :depth="3"><CloudUploadOutline /></NIcon>
                 <span class="torrent-upload-text">
                   {{ t('task.select-torrent') || 'Drag torrent here or click to select' }}
                 </span>
-              </div>
+              </button>
             </div>
           </NTabPane>
         </NTabs>
@@ -854,7 +877,7 @@ async function handleSubmit() {
               </NInputGroup>
               <div class="category-hint-collapse" :class="{ 'category-hint-collapse--open': !!categoryPreviewText }">
                 <div class="category-hint-collapse__inner">
-                  <Transition name="category-hint" mode="out-in">
+                  <Transition name="category-hint">
                     <div v-if="categoryPreviewText" :key="categoryPreviewText" class="category-hint-text">
                       ⓘ {{ categoryPreviewText }}
                     </div>

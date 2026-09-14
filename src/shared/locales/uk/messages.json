@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Завдання",
-    "add-task": "Додати завдання",
     "about": "Про Rayburst",
     "preferences": "Налаштування...",
     "check-updates-now": "Перевірити зараз",
@@ -582,14 +581,9 @@
     "media-default-format": "Типовий формат",
     "color-scheme-electric": "Електричний фіолетовий"
   },
-  "subnav": {
-    "task-list": "Завдання",
-    "preferences": "Налаштування"
-  },
   "task": {
     "scope-all": "Усі",
     "scope-progress": "Виконуються",
-    "scope-failed": "Невдалі",
     "scope-completed": "Завершені",
     "new-task": "Нове завдання",
     "open-file": "Відкрити файл",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Помилка",
-    "file-missing": "Файл відсутній",
     "duplicate-task": "Це завдання вже існує",
     "error-aria2-next": "Помилка Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Усі завдання призупинено",
     "pause-all-task-fail": "Не вдалося призупинити всі завдання",
     "resume-all-task": "Відновити все",
-    "delete-all-task": "Очистити чергу завантажень",
     "resume-all-task-success": "Усі завдання відновлено",
     "resume-all-task-fail": "Не вдалося відновити всі завдання",
     "resume-all-task-confirm": "Відновити всі завдання?",
     "pause-all-task-confirm": "Призупинити всі завдання?",
-    "purge-record-confirm": "Буде вилучено всі записи завершених, невдалих або видалених завдань.",
-    "purge-record": "Очистити історію",
     "purge-record-success": "Історію очищено",
-    "purge-record-fail": "Не вдалося очистити записи",
     "batch-delete-task-success": "Чергу завантажень очищено",
     "batch-delete-task-fail": "Не вдалося видалити",
     "batch-delete-task-partial": "Видалено: {removed}; невдало: {failed}",
@@ -918,5 +907,19 @@
     "recording-options": "Параметри запису",
     "unlimited": "Без обмежень",
     "custom": "Власна"
+  },
+  "workspace": {
+    "needs-action": "Потребує уваги",
+    "browser-connection": "Підключення браузера",
+    "more-actions": "Інші дії",
+    "search-tasks": "Пошук завдань",
+    "no-results": "Немає відповідних завдань",
+    "empty-tasks": "Завантаження з’являться тут",
+    "select-tasks": "Вибрати завдання",
+    "comfortable": "Вільний вигляд",
+    "compact": "Компактний вигляд",
+    "partial-failure": "Деякі дії не виконано. Перевірте решту завдань.",
+    "back": "Назад",
+    "clear": "Очистити"
   }
 }

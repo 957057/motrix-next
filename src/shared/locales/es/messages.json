@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Tareas",
-    "add-task": "Agregar tarea",
     "about": "Acerca de Rayburst",
     "preferences": "Preferencias...",
     "check-updates-now": "Comprobar ahora",
@@ -582,14 +581,9 @@
     "media-default-format": "Formato predeterminado",
     "color-scheme-electric": "Violeta eléctrico"
   },
-  "subnav": {
-    "task-list": "Tareas",
-    "preferences": "Preferencias"
-  },
   "task": {
     "scope-all": "Todas",
     "scope-progress": "En curso",
-    "scope-failed": "Fallidas",
     "scope-completed": "Completadas",
     "new-task": "Nueva tarea",
     "open-file": "Abrir archivo",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Error",
-    "file-missing": "Archivo no encontrado",
     "duplicate-task": "Esta tarea ya existe",
     "error-aria2-next": "Error de Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Todas las tareas pausadas",
     "pause-all-task-fail": "Error al pausar todas las tareas",
     "resume-all-task": "Reanudar todo",
-    "delete-all-task": "Vaciar cola de descargas",
     "resume-all-task-success": "Todas las tareas reanudadas",
     "resume-all-task-fail": "Error al reanudar todas las tareas",
     "resume-all-task-confirm": "¿Reanudar todas las tareas?",
     "pause-all-task-confirm": "¿Pausar todas las tareas?",
-    "purge-record-confirm": "Se eliminarán todos los registros de tareas completadas, fallidas o eliminadas.",
-    "purge-record": "Vaciar historial",
     "purge-record-success": "Historial vaciado",
-    "purge-record-fail": "Error al borrar registros",
     "batch-delete-task-success": "Cola de descargas vaciada",
     "batch-delete-task-fail": "Error al eliminar tareas",
     "batch-delete-task-partial": "Se eliminaron {removed} tareas; {failed} fallaron",
@@ -918,5 +907,19 @@
     "recording-options": "Opciones de grabación",
     "unlimited": "Sin límite",
     "custom": "Personalizada"
+  },
+  "workspace": {
+    "needs-action": "Requiere atención",
+    "browser-connection": "Conexión con el navegador",
+    "more-actions": "Más acciones",
+    "search-tasks": "Buscar tareas",
+    "no-results": "No hay tareas coincidentes",
+    "empty-tasks": "Tus descargas aparecerán aquí",
+    "select-tasks": "Seleccionar tareas",
+    "comfortable": "Vista cómoda",
+    "compact": "Vista compacta",
+    "partial-failure": "Algunas acciones fallaron. Revisa las tareas restantes.",
+    "back": "Atrás",
+    "clear": "Borrar"
   }
 }

@@ -319,8 +319,8 @@ describe('usePreferenceForm', () => {
       config: expect.objectContaining({ 'max-concurrent-downloads': '6' }),
     })
     expect(mockChangeGlobalOption).toHaveBeenLastCalledWith({ 'max-concurrent-downloads': '6' })
-    expect(result.form.value.maxConcurrentDownloads).toBe(6)
-    expect(result.isDirty.value).toBe(false)
+    expect(result.form.value.maxConcurrentDownloads).toBe(8)
+    expect(result.isDirty.value).toBe(true)
     expect(extractMessageText(mockMessage.error.mock.calls[mockMessage.error.mock.calls.length - 1]?.[0])).toBe(
       'Previous settings restored',
     )
@@ -427,8 +427,8 @@ describe('usePreferenceForm', () => {
     expect(store.updateAndSave).not.toHaveBeenCalled()
     expect(mockInvoke).not.toHaveBeenCalledWith('replace_system_config', expect.anything())
     expect(mockChangeGlobalOption).toHaveBeenLastCalledWith({ 'max-concurrent-downloads': '6' })
-    expect(result.form.value.maxConcurrentDownloads).toBe(6)
-    expect(result.isDirty.value).toBe(false)
+    expect(result.form.value.maxConcurrentDownloads).toBe(8)
+    expect(result.isDirty.value).toBe(true)
 
     unmount()
   })

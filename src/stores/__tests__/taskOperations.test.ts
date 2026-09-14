@@ -36,6 +36,7 @@ vi.mock('@/stores/history', () => ({
 
 function createMockApi(): TaskApi {
   return {
+    queryTasks: vi.fn(),
     fetchTaskList: vi.fn().mockResolvedValue([]),
     fetchTaskItem: vi.fn().mockResolvedValue({}),
     fetchTaskItemWithPeers: vi.fn().mockResolvedValue({}),

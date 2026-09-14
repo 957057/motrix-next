@@ -10,7 +10,6 @@ import { usePreferenceForm } from '@/composables/usePreferenceForm'
 import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
 import { changeGlobalOption, isEngineReady } from '@/api/aria2'
 import { convertTrackerDataToComma, convertTrackerDataToLine } from '@shared/utils/tracker'
-import { SYNC_MIN_DURATION } from '@shared/timing'
 import { DEFAULT_TRACKER_SOURCE, SAFE_LIMIT_BT_MAX_PEERS, TRACKER_SOURCE_OPTIONS } from '@shared/constants'
 import { logger } from '@shared/logger'
 import { getErrorMessage } from '@shared/utils/errorMessage'
@@ -341,10 +340,7 @@ async function handleSyncTracker() {
   }
   syncingTracker.value = true
   try {
-    const [result] = await Promise.all([
-      preferenceStore.fetchBtTracker(form.value.trackerSource),
-      new Promise((r) => setTimeout(r, SYNC_MIN_DURATION)),
-    ])
+    const result = await preferenceStore.fetchBtTracker(form.value.trackerSource)
     const text = convertTrackerDataToLine(result.data)
     if (result.failures.length === 0 && text) {
       await applySyncedTrackers(text, result.data)

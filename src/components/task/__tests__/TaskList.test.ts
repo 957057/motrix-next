@@ -1,34 +1,18 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { createPinia, setActivePinia, type Pinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
 import { useTaskStore } from '@/stores/task'
+import { useTaskViewStore } from '@/stores/taskView'
 import { usePreferenceStore } from '@/stores/preference'
-import type { Aria2Task } from '@shared/types'
-import type { SortableEvent, SortableOptions } from 'sortablejs'
-
-const { sortableCreateMock } = vi.hoisted(() => ({
-  sortableCreateMock: vi.fn((_element: HTMLElement, _options: SortableOptions) => ({ destroy: vi.fn() })),
-}))
-
-vi.mock('sortablejs', () => ({
-  default: {
-    create: sortableCreateMock,
-  },
-}))
-
-vi.mock('../TaskItem.vue', () => ({
-  default: { name: 'TaskItem', props: ['task'], template: '<div class="full-task-item" />' },
-}))
-
-vi.mock('../TaskCompactItem.vue', () => ({
-  default: { name: 'TaskCompactItem', props: ['task'], template: '<div class="compact-task-item" />' },
-}))
-
 import TaskList from '../TaskList.vue'
+import TaskRow from '../TaskRow.vue'
+import type { Aria2Task } from '@shared/types'
 
-function createTask(): Aria2Task {
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (key: string) => key, locale: { value: 'en-US' } }) }))
+vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn().mockResolvedValue(true) }))
+function task(gid = 'a'): Aria2Task {
   return {
-    gid: 'gid-1',
+    gid,
     status: 'active',
     totalLength: '100',
     completedLength: '25',
@@ -37,154 +21,66 @@ function createTask(): Aria2Task {
     uploadSpeed: '0',
     connections: '1',
     dir: '/downloads',
-    files: [],
-    errorMessage: '',
+    files: [
+      { index: '1', path: '/downloads/ubuntu.iso', length: '100', completedLength: '25', selected: 'true', uris: [] },
+    ],
   }
 }
-
-function createTaskWithGid(gid: string): Aria2Task {
-  return { ...createTask(), gid }
-}
-
-describe('TaskList', () => {
-  let pinia: Pinia
-
-  beforeEach(() => {
-    vi.clearAllMocks()
-    pinia = createPinia()
-    setActivePinia(pinia)
-    useTaskStore().currentList = 'progress'
-  })
-
-  it('renders full task cards by default', async () => {
-    const wrapper = mount(TaskList, {
-      global: {
-        plugins: [pinia],
-      },
-    })
-    const taskStore = useTaskStore()
-    taskStore.taskList = [createTask()]
+beforeEach(() => {
+  setActivePinia(createPinia())
+  useTaskStore().taskPagination.all.loaded = true
+  usePreferenceStore().config.reduceMotion = true
+})
+describe('Task workspace', () => {
+  it('keeps the same row and expanded content across density and lifecycle changes', async () => {
+    const tasks = useTaskStore()
+    tasks.taskList = [task()]
+    const wrapper = mount(TaskList)
+    const row = wrapper.findComponent(TaskRow).vm.$.uid
+    await wrapper.find('.task-name').trigger('click')
+    usePreferenceStore().config.taskCardMode = 'compact'
     await wrapper.vm.$nextTick()
-
-    expect(wrapper.find('.full-task-item').exists()).toBe(true)
-    expect(wrapper.find('.compact-task-item').exists()).toBe(false)
-  })
-
-  it('renders compact task cards when taskCardMode is compact', async () => {
-    const wrapper = mount(TaskList, {
-      global: {
-        plugins: [pinia],
-      },
-    })
-    const taskStore = useTaskStore()
-    const preferenceStore = usePreferenceStore()
-    preferenceStore.updatePreference({ taskCardMode: 'compact' })
-    taskStore.taskList = [createTask()]
-
+    expect(wrapper.findComponent(TaskRow).vm.$.uid).toBe(row)
+    expect(wrapper.find('.task-row.compact').exists()).toBe(true)
+    tasks.taskList = [{ ...task(), status: 'complete' }]
     await wrapper.vm.$nextTick()
-
-    expect(wrapper.find('.compact-task-item').exists()).toBe(true)
-    expect(wrapper.find('.full-task-item').exists()).toBe(false)
-  })
-
-  it('reuses the card through download, seeding, pause, and completion', async () => {
-    const store = useTaskStore()
-    store.currentList = 'all'
-    store.taskList = [createTask()]
-    const wrapper = mount(TaskList, { global: { plugins: [pinia] } })
-    const card = wrapper.find('.full-task-item').element
-    for (const update of [
-      { status: 'active', bittorrent: { state: 'seeding' } },
-      { status: 'paused', bittorrent: { state: 'seeding' } },
-      { status: 'active', bittorrent: { state: 'seeding' } },
-      { status: 'complete' },
-    ] satisfies Partial<Aria2Task>[]) {
-      store.taskList = [{ ...createTask(), ...update }]
-      await wrapper.vm.$nextTick()
-      expect(wrapper.find('.full-task-item').element).toBe(card)
-    }
+    expect(wrapper.findComponent(TaskRow).vm.$.uid).toBe(row)
+    expect(useTaskViewStore().expanded).toBe('a')
     wrapper.unmount()
   })
-
-  it('renders only the current task page', async () => {
-    const wrapper = mount(TaskList, {
-      global: {
-        plugins: [pinia],
-      },
-    })
-    const taskStore = useTaskStore()
-    taskStore.setTaskPageSize(2)
-    taskStore.taskList = ['a', 'b', 'c', 'd', 'e'].map(createTaskWithGid)
-    taskStore.taskPagination.progress.total = 5
-    taskStore.taskPagination.progress.loaded = true
-    taskStore.setTaskPage('progress', 2)
-
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.findAll('.full-task-item')).toHaveLength(2)
-    expect(wrapper.text()).not.toContain('a')
+  it('does not paginate a page already selected by SQLite', () => {
+    const tasks = useTaskStore()
+    tasks.taskPagination.all.page = 4
+    tasks.taskList = [task('page-four')]
+    const wrapper = mount(TaskList)
+    expect(wrapper.findAllComponents(TaskRow)).toHaveLength(1)
+    wrapper.unmount()
   })
-
-  it('saves page-local drag order through the store', async () => {
-    const wrapper = mount(TaskList, {
-      global: {
-        plugins: [pinia],
-      },
-    })
-    const taskStore = useTaskStore()
-    const saveSpy = vi.spyOn(taskStore, 'saveVisiblePageManualOrder').mockResolvedValue(undefined)
-    taskStore.setTaskPageSize(2)
-    taskStore.taskList = ['a', 'b', 'c', 'd'].map(createTaskWithGid)
-    taskStore.taskPagination.progress.total = 4
-    taskStore.taskPagination.progress.loaded = true
-    taskStore.setTaskPage('progress', 2)
+  it('retains the presence owner when the final task leaves', async () => {
+    const tasks = useTaskStore()
+    tasks.taskList = [task()]
+    const wrapper = mount(TaskList)
+    const container = wrapper.find('.task-rows').element
+    tasks.taskList = []
     await wrapper.vm.$nextTick()
-    await wrapper.vm.$nextTick()
-
-    const sortableOptions = sortableCreateMock.mock.calls[sortableCreateMock.mock.calls.length - 1]?.[1]
-    expect(sortableOptions?.handle).toBe('.task-drag-handle')
-    await sortableOptions?.onEnd?.({} as SortableEvent)
-
-    expect(saveSpy).toHaveBeenCalledWith([expect.objectContaining({ gid: 'c' }), expect.objectContaining({ gid: 'd' })])
+    expect(wrapper.find('.task-rows').element).toBe(container)
+    wrapper.unmount()
   })
-
-  it('marks a single removed card for collapse with its current height', async () => {
-    const wrapper = mount(TaskList, {
-      global: {
-        plugins: [pinia],
-      },
-    })
-    const taskStore = useTaskStore()
-    taskStore.taskList = ['a', 'b', 'c'].map(createTaskWithGid)
-    taskStore.taskPagination.progress.total = 3
-    await wrapper.vm.$nextTick()
-
-    const removed = wrapper.findAll('.task-list-item')[1].element as HTMLElement
-    Object.defineProperty(removed, 'offsetHeight', { configurable: true, value: 48 })
-
-    await wrapper.findComponent({ name: 'TransitionGroup' }).vm.$emit('before-leave', removed)
-
-    expect(removed.classList.contains('task-list-item--collapsing')).toBe(true)
-    expect(removed.style.getPropertyValue('--task-list-card-leave-height')).toBe('48px')
+  it('opens full details only through an explicit action', async () => {
+    useTaskStore().taskList = [task()]
+    const wrapper = mount(TaskList)
+    await wrapper.find('.task-row').trigger('click')
+    expect(wrapper.emitted('show-info')).toBeUndefined()
+    wrapper.findComponent(TaskRow).vm.$emit('show-info', task())
+    expect(wrapper.emitted('show-info')?.[0][0]).toMatchObject({ gid: 'a' })
+    wrapper.unmount()
   })
-
-  it('does not mark leaving cards for collapse during page swaps', async () => {
-    const wrapper = mount(TaskList, {
-      global: {
-        plugins: [pinia],
-      },
-    })
-    const taskStore = useTaskStore()
-    taskStore.taskList = ['a', 'b', 'c'].map(createTaskWithGid)
-    taskStore.taskPagination.progress.total = 3
-    await wrapper.vm.$nextTick()
-
-    await wrapper.findComponent({ name: 'Transition' }).vm.$emit('before-leave')
-    const leaving = wrapper.findAll('.task-list-item')[1].element as HTMLElement
-
-    await wrapper.findComponent({ name: 'TransitionGroup' }).vm.$emit('before-leave', leaving)
-
-    expect(leaving.classList.contains('task-list-item--collapsing')).toBe(false)
-    expect(leaving.style.getPropertyValue('--task-list-card-leave-height')).toBe('')
+  it('keeps the last page visible when the query fails', () => {
+    useTaskStore().taskList = [task()]
+    useTaskStore().queryError = 'Database unavailable'
+    const wrapper = mount(TaskList)
+    expect(wrapper.find('[role="alert"]').text()).toContain('Database unavailable')
+    expect(wrapper.findAllComponents(TaskRow)).toHaveLength(1)
+    wrapper.unmount()
   })
 })

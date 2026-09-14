@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "المهام",
-    "add-task": "إضافة مهمة",
     "about": "حول Rayburst",
     "preferences": "التفضيلات...",
     "check-updates-now": "تحقق الآن",
@@ -582,14 +581,9 @@
     "media-default-format": "التنسيق الافتراضي",
     "color-scheme-electric": "بنفسجي كهربائي"
   },
-  "subnav": {
-    "task-list": "المهام",
-    "preferences": "التفضيلات"
-  },
   "task": {
     "scope-all": "الكل",
     "scope-progress": "قيد التنفيذ",
-    "scope-failed": "فشل",
     "scope-completed": "مكتمل",
     "new-task": "مهمة جديدة",
     "open-file": "فتح الملف",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "خطأ",
-    "file-missing": "الملف مفقود",
     "duplicate-task": "هذه المهمة موجودة بالفعل",
     "error-aria2-next": "خطأ Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "تم إيقاف جميع المهام مؤقتًا",
     "pause-all-task-fail": "فشل إيقاف جميع المهام مؤقتًا",
     "resume-all-task": "استئناف الكل",
-    "delete-all-task": "مسح قائمة التنزيل",
     "resume-all-task-success": "تم استئناف جميع المهام",
     "resume-all-task-fail": "فشل استئناف جميع المهام",
     "resume-all-task-confirm": "استئناف جميع المهام؟",
     "pause-all-task-confirm": "إيقاف جميع المهام مؤقتًا؟",
-    "purge-record-confirm": "سيزيل هذا كل سجلات المهام المكتملة أو الفاشلة أو المحذوفة.",
-    "purge-record": "مسح سجل التنزيلات",
     "purge-record-success": "تم مسح سجل التنزيلات",
-    "purge-record-fail": "فشل مسح السجلات",
     "batch-delete-task-success": "تم مسح قائمة التنزيل",
     "batch-delete-task-fail": "فشل الحذف",
     "batch-delete-task-partial": "تمت إزالة {removed} من المهام؛ فشل {failed}",
@@ -918,5 +907,19 @@
     "recording-options": "خيارات التسجيل",
     "unlimited": "بلا حد",
     "custom": "مخصص"
+  },
+  "workspace": {
+    "needs-action": "يتطلب إجراءً",
+    "browser-connection": "اتصال المتصفح",
+    "more-actions": "إجراءات أخرى",
+    "search-tasks": "البحث عن مهام",
+    "no-results": "لا توجد مهام مطابقة",
+    "empty-tasks": "ستظهر التنزيلات هنا",
+    "select-tasks": "تحديد المهام",
+    "comfortable": "عرض مريح",
+    "compact": "عرض مضغوط",
+    "partial-failure": "فشلت بعض الإجراءات. راجع المهام المتبقية.",
+    "back": "رجوع",
+    "clear": "مسح"
   }
 }

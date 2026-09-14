@@ -2,12 +2,14 @@
 mod credentials;
 mod history;
 mod submissions;
+mod task_query;
 use crate::error::AppError;
 pub use credentials::HttpAuthCredential;
 pub use history::{HistoryPage, HistoryPageInput, HistoryRecord};
 use rusqlite::Connection;
 use std::{path::Path, sync::Arc};
 pub use submissions::SubmissionState;
+pub use task_query::{TaskQueryInput, TaskQueryPage};
 use tokio::sync::{MappedMutexGuard, Mutex, MutexGuard};
 
 pub const SCHEMA_VERSION: u32 = 4;

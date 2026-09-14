@@ -1,6 +1,8 @@
 <script setup lang="ts">
 /** @fileoverview Task list view with polling, task actions, and file delete confirmation. */
-import { computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { motion } from 'motion-v'
+import { watchDebounced, useDocumentVisibility } from '@vueuse/core'
+import { computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTaskStore } from '@/stores/task'
 import { useTaskSelectionStore } from '@/stores/taskSelection'
@@ -11,7 +13,8 @@ import { isEngineReady } from '@/api/aria2'
 import { useTaskActions } from '@/composables/useTaskActions'
 
 import { logger } from '@shared/logger'
-import { useDialog } from 'naive-ui'
+import { useTaskViewStore } from '@/stores/taskView'
+import { NInput, NIcon, useDialog } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
 import TaskList from '@/components/task/TaskList.vue'
 import TaskActions from '@/components/task/TaskActions.vue'
@@ -19,6 +22,10 @@ import TaskDetail from '@/components/task/TaskDetail.vue'
 
 const props = withDefaults(defineProps<{ status?: string }>(), { status: 'all' })
 
+import { SearchOutline } from '@vicons/ionicons5'
+const view = useTaskViewStore()
+const visibility = useDocumentVisibility()
+let returnFocus: HTMLElement | null = null
 const { t } = useI18n()
 const taskStore = useTaskStore()
 const appStore = useAppStore()
@@ -52,7 +59,7 @@ const {
 const subnavs = computed(() => [
   { key: 'all', title: t('task.scope-all') || 'All' },
   { key: 'progress', title: t('task.scope-progress') || 'In Progress' },
-  { key: 'failed', title: t('task.scope-failed') || 'Failed' },
+  { key: 'failed', title: t('workspace.needs-action') },
   { key: 'completed', title: t('task.scope-completed') || 'Completed' },
 ])
 
@@ -61,13 +68,21 @@ const title = computed(() => {
   return sub?.title ?? props.status
 })
 
+watchDebounced(
+  () => view.query,
+  () => {
+    if (!isUnmounted) taskStore.setCurrentTaskPage(1)
+  },
+  { debounce: 180, maxWait: 400 },
+)
+
 let refreshTimer: ReturnType<typeof setTimeout> | null = null
 let pollStopped = true
 let isUnmounted = false
 let changeRequestId = 0
 
 function startPolling() {
-  if (isUnmounted) return
+  if (isUnmounted || visibility.value === 'hidden') return
   stopPolling()
   pollStopped = false
   async function tick() {
@@ -103,6 +118,24 @@ watch(
     void changeCurrentList()
   },
 )
+watch(visibility, (state) => {
+  if (state === 'hidden') stopPolling()
+  else if (!isUnmounted) void changeCurrentList()
+})
+watch(
+  () => taskStore.taskDetailVisible,
+  async (visible) => {
+    if (!visible) return
+    returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    await nextTick()
+    document.getElementById('task-detail-back')?.focus()
+  },
+)
+function finishDetailClose() {
+  taskStore.taskDetailClosing = false
+  if (taskStore.taskDetailVisible) return
+  if (returnFocus?.isConnected) returnFocus.focus()
+}
 onMounted(() => {
   isUnmounted = false
   void changeCurrentList()
@@ -111,6 +144,7 @@ onBeforeUnmount(() => {
   isUnmounted = true
   changeRequestId += 1
   stopPolling()
+  taskStore.hideTaskDetail()
 })
 // Task action handlers are now provided by useTaskActions composable above.
 // Magnet file selection is handled at app-level in MainLayout.vue.
@@ -118,66 +152,107 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="task-view">
-    <header class="panel-header" data-tauri-drag-region>
-      <h4 :key="status" class="task-title">{{ title }}</h4>
-      <TaskActions />
-    </header>
-    <div class="panel-content">
-      <TaskList
-        @pause="handlePauseTask"
-        @resume="handleResumeTask"
-        @retry="handleRetryTask"
-        @redownload="handleRedownloadTask"
-        @finish-sharing="handleFinishSharing"
-        @finish-media="handleFinishMedia"
-        @delete="handleDeleteTask"
-        @delete-record="handleDeleteRecord"
-        @copy-link="handleCopyLink"
-        @show-info="handleShowInfo"
-        @folder="handleShowInFolder"
-        @open-file="handleOpenFile"
-        @select-files="handleSelectFiles"
-      />
+    <div
+      :inert="taskStore.taskDetailVisible || undefined"
+      :aria-hidden="taskStore.taskDetailVisible || undefined"
+      class="list-view"
+    >
+      <header class="panel-header">
+        <h1 class="task-title">{{ title }}</h1>
+        <NInput
+          v-model:value="view.query"
+          class="task-search"
+          clearable
+          :placeholder="t('workspace.search-tasks')"
+          :aria-label="t('workspace.search-tasks')"
+          ><template #prefix
+            ><NIcon><SearchOutline /></NIcon></template
+        ></NInput>
+        <TaskActions />
+      </header>
+      <motion.div class="panel-content" layout-scroll>
+        <TaskList
+          @pause="handlePauseTask"
+          @resume="handleResumeTask"
+          @retry="handleRetryTask"
+          @redownload="handleRedownloadTask"
+          @finish-sharing="handleFinishSharing"
+          @finish-media="handleFinishMedia"
+          @delete="handleDeleteTask"
+          @delete-record="handleDeleteRecord"
+          @copy-link="handleCopyLink"
+          @show-info="handleShowInfo"
+          @folder="handleShowInFolder"
+          @open-file="handleOpenFile"
+          @select-files="handleSelectFiles"
+        />
+      </motion.div>
     </div>
-    <TaskDetail
-      :show="taskStore.taskDetailVisible"
-      :task="taskStore.currentTaskItem"
-      :files="taskStore.currentTaskFiles"
-      @close="taskStore.hideTaskDetail()"
-    />
+    <Transition name="view" @after-leave="finishDetailClose">
+      <TaskDetail
+        v-if="taskStore.taskDetailVisible"
+        :show="taskStore.taskDetailVisible"
+        :task="taskStore.currentTaskItem"
+        :files="taskStore.currentTaskFiles"
+        @close="taskStore.hideTaskDetail()"
+      />
+    </Transition>
   </div>
 </template>
 
 <style scoped>
 .task-view {
   height: 100%;
+  position: relative;
+}
+.list-view {
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
 .panel-header {
-  position: relative;
-  padding: var(--header-top-offset) 0 12px;
-  margin: 0 36px;
-  border-bottom: 2px solid var(--panel-border);
-  user-select: none;
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px 20px;
+  min-height: 40px;
 }
 .task-title {
+  flex: 1;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
   margin: 0;
-  color: var(--panel-title);
-  font-size: 16px;
-  font-weight: normal;
-  line-height: 24px;
-  align-self: flex-start;
+  white-space: nowrap;
+}
+.task-search {
+  width: 180px;
 }
 .panel-content {
-  padding: 0;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  overscroll-behavior: contain;
+}
+@media (max-width: 959px) {
+  .task-search {
+    width: 140px;
+  }
+  .panel-header {
+    gap: 8px;
+  }
+}
+@media (max-width: 719px) {
+  .panel-header {
+    padding: 8px 16px 16px;
+    flex-wrap: wrap;
+  }
+  .task-title {
+    font-size: 20px;
+  }
+  .task-search {
+    order: 3;
+    width: 100%;
+  }
 }
 </style>

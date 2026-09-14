@@ -7,11 +7,7 @@ export interface AdvancedForm {
   [key: string]: unknown
   rpcListenPort: number
   rpcSecret: string
-  extensionApiPort: number
-  extensionApiSecret: string
   allowRemoteAccess: boolean
-  autoSubmitFromExtension: boolean
-  silentAutoSubmitFromExtension: boolean
   logLevel: AppConfig['logLevel']
   aria2LogLevel: AppConfig['aria2LogLevel']
   tempFilesDir: string
@@ -29,11 +25,7 @@ export function buildAdvancedForm(config: AppConfig): AdvancedForm {
   return {
     rpcListenPort: config.rpcListenPort,
     rpcSecret: config.rpcSecret,
-    extensionApiPort: config.extensionApiPort,
-    extensionApiSecret: config.extensionApiSecret,
     allowRemoteAccess: config.allowRemoteAccess,
-    autoSubmitFromExtension: config.autoSubmitFromExtension,
-    silentAutoSubmitFromExtension: config.silentAutoSubmitFromExtension,
     logLevel: config.logLevel,
     aria2LogLevel: config.aria2LogLevel,
     tempFilesDir: config.tempFilesDir,

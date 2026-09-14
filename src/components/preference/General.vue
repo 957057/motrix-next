@@ -98,7 +98,7 @@ const { form, isDirty, handleSave, handleReset, patchSnapshot, resetSnapshot } =
       if (!isEn) await loadLocale(targetLocale)
       const tt = (key: string) => t(key, {}, { locale: targetLocale })
       dialog.info({
-        style: 'min-width: 520px',
+        style: 'width: min(520px, calc(100vw - 32px))',
         title: isEn
           ? tt('preferences.language-changed-title')
           : () =>

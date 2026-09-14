@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Tâches",
-    "add-task": "Ajouter une tâche",
     "about": "À propos de Rayburst",
     "preferences": "Préférences...",
     "check-updates-now": "Vérifier maintenant",
@@ -582,14 +581,9 @@
     "media-default-format": "Format par défaut",
     "color-scheme-electric": "Violet électrique"
   },
-  "subnav": {
-    "task-list": "Tâches",
-    "preferences": "Préférences"
-  },
   "task": {
     "scope-all": "Toutes",
     "scope-progress": "En cours",
-    "scope-failed": "Échouées",
     "scope-completed": "Terminées",
     "new-task": "Nouvelle tâche",
     "open-file": "Ouvrir le fichier",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Erreur",
-    "file-missing": "Fichier manquant",
     "duplicate-task": "Cette tâche existe déjà",
     "error-aria2-next": "Erreur Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Toutes les tâches suspendues",
     "pause-all-task-fail": "Échec de la suspension",
     "resume-all-task": "Tout reprendre",
-    "delete-all-task": "Vider la file de téléchargements",
     "resume-all-task-success": "Toutes les tâches reprises",
     "resume-all-task-fail": "Échec de la reprise",
     "resume-all-task-confirm": "Reprendre toutes les tâches ?",
     "pause-all-task-confirm": "Suspendre toutes les tâches ?",
-    "purge-record-confirm": "Cela supprimera tous les enregistrements de tâches terminées, échouées ou supprimées.",
-    "purge-record": "Vider l'historique",
     "purge-record-success": "Historique vidé",
-    "purge-record-fail": "Échec de l'effacement",
     "batch-delete-task-success": "File de téléchargements vidée",
     "batch-delete-task-fail": "Échec de la suppression",
     "batch-delete-task-partial": "{removed} tâches supprimées ; {failed} ont échoué",
@@ -918,5 +907,19 @@
     "recording-options": "Options d’enregistrement",
     "unlimited": "Illimitée",
     "custom": "Personnalisée"
+  },
+  "workspace": {
+    "needs-action": "À traiter",
+    "browser-connection": "Connexion au navigateur",
+    "more-actions": "Autres actions",
+    "search-tasks": "Rechercher des tâches",
+    "no-results": "Aucune tâche correspondante",
+    "empty-tasks": "Vos téléchargements apparaîtront ici",
+    "select-tasks": "Sélectionner des tâches",
+    "comfortable": "Affichage aéré",
+    "compact": "Affichage compact",
+    "partial-failure": "Certaines actions ont échoué. Vérifiez les tâches restantes.",
+    "back": "Retour",
+    "clear": "Effacer"
   }
 }

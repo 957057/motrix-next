@@ -21,11 +21,12 @@
   max-width: none;
   box-sizing: border-box;
   flex: none;
-  padding: 16px 30px 64px 36px;
+  padding: 24px;
+  max-width: 900px;
 }
 
 .form-preference .n-form-item {
-  padding-left: 50px;
+  padding-inline-start: 0;
 }
 
 .form-preference .n-divider.n-divider--title-position-left .n-divider__line--left {
@@ -41,7 +42,7 @@
 
 .form-preference .collapse-indent {
   position: relative;
-  margin-left: 16px;
+  margin-inline-start: 16px;
 }
 
 .pref-control-auto,
@@ -115,7 +116,7 @@
 }
 
 .pref-inline-note {
-  margin-left: 8px;
+  margin-inline-start: 8px;
   color: var(--m3-on-surface-variant);
   font-size: 12px;
   line-height: 1.4;
@@ -126,5 +127,38 @@
 }
 
 .pref-meta-link {
-  margin-left: 8px;
+  margin-inline-start: 8px;
+}
+
+.form-preference .n-form-item {
+  padding-block: 4px;
+}
+.form-preference .n-divider {
+  color: var(--m3-on-surface);
+  font-size: 15px;
+  margin-block: 24px 16px;
+}
+.form-preference .n-divider:first-child {
+  margin-top: 0;
+}
+@media (max-width: 959px) {
+  .form-preference .n-form-item {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .form-preference .n-form-item-label {
+    grid-area: auto !important;
+    padding-bottom: 8px;
+    width: auto !important;
+  }
+  .form-preference .n-form-item-blank {
+    grid-area: auto !important;
+  }
+  .form-preference .n-form-item-feedback-wrapper {
+    grid-area: auto !important;
+  }
+}
+@media (max-width: 719px) {
+  .form-preference {
+    padding: 16px;
+  }
 }

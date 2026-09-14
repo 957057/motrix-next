@@ -10,6 +10,7 @@ const FILE_CHECK_THROTTLE_MS = 120
 
 export function useTaskFileMissing(task: ComputedRef<Aria2Task>) {
   const fileMissing = ref(false)
+  let generation = 0
   let fileCheckTimer: ReturnType<typeof setTimeout> | null = null
 
   const fileCheckTargetPath = computed(() => {
@@ -21,21 +22,23 @@ export function useTaskFileMissing(task: ComputedRef<Aria2Task>) {
     return resolveTaskFilePath(task.value)
   })
 
-  async function checkFileExists(targetPath: string | null) {
+  async function checkFileExists(targetPath: string | null, request: number) {
     if (!targetPath) {
       fileMissing.value = false
       return
     }
 
     try {
-      fileMissing.value = !(await invoke<boolean>('check_path_exists', { path: targetPath }))
+      const exists = await invoke<boolean>('check_path_exists', { path: targetPath })
+      if (request === generation) fileMissing.value = !exists
     } catch (e) {
       logger.debug('TaskItem.fileCheck', e)
-      fileMissing.value = false
+      if (request === generation) fileMissing.value = false
     }
   }
 
   function scheduleFileExistsCheck(targetPath: string | null) {
+    const request = ++generation
     if (fileCheckTimer) {
       clearTimeout(fileCheckTimer)
       fileCheckTimer = null
@@ -48,12 +51,13 @@ export function useTaskFileMissing(task: ComputedRef<Aria2Task>) {
 
     fileCheckTimer = setTimeout(() => {
       fileCheckTimer = null
-      void checkFileExists(targetPath)
+      void checkFileExists(targetPath, request)
     }, FILE_CHECK_THROTTLE_MS)
   }
 
   watch([fileCheckTargetPath, recheckTrigger], ([path]) => scheduleFileExistsCheck(path), { immediate: true })
   onBeforeUnmount(() => {
+    generation++
     if (fileCheckTimer) {
       clearTimeout(fileCheckTimer)
       fileCheckTimer = null

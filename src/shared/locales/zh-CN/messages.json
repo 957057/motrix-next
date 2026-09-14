@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "任务列表",
-    "add-task": "新建任务",
     "about": "关于 Rayburst",
     "preferences": "偏好设置...",
     "check-updates-now": "立即检查",
@@ -582,14 +581,9 @@
     "media-default-format": "默认格式",
     "color-scheme-electric": "闪电紫"
   },
-  "subnav": {
-    "task-list": "任务列表",
-    "preferences": "偏好设置"
-  },
   "task": {
     "scope-all": "全部",
     "scope-progress": "进行中",
-    "scope-failed": "失败",
     "scope-completed": "已完成",
     "new-task": "新建任务",
     "open-file": "打开文件",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "错误信息",
-    "file-missing": "文件丢失",
     "duplicate-task": "任务已存在，无法重复添加",
     "error-aria2-next": "Aria2 Next 错误",
     "error-unknown": "未知错误",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "已暂停所有任务",
     "pause-all-task-fail": "暂停所有任务失败",
     "resume-all-task": "全部恢复",
-    "delete-all-task": "清空下载队列",
     "resume-all-task-success": "已恢复所有任务",
     "resume-all-task-fail": "恢复所有任务失败",
     "resume-all-task-confirm": "确定恢复所有任务？",
     "pause-all-task-confirm": "确定暂停所有任务？",
-    "purge-record-confirm": "将移除所有已完成、失败或已移除的任务记录。",
-    "purge-record": "清空历史记录",
     "purge-record-success": "历史记录已清空",
-    "purge-record-fail": "清除记录失败",
     "batch-delete-task-success": "下载队列已清空",
     "batch-delete-task-fail": "批量删除失败",
     "batch-delete-task-partial": "已移除 {removed} 个任务，{failed} 个失败",
@@ -918,5 +907,19 @@
     "recording-options": "录制选项",
     "unlimited": "不限时",
     "custom": "自定义"
+  },
+  "workspace": {
+    "needs-action": "需要处理",
+    "browser-connection": "浏览器连接",
+    "more-actions": "更多操作",
+    "search-tasks": "搜索任务",
+    "no-results": "没有匹配的任务",
+    "empty-tasks": "下载任务将在这里显示",
+    "select-tasks": "选择任务",
+    "comfortable": "舒适密度",
+    "compact": "紧凑密度",
+    "partial-failure": "部分操作失败，请检查剩余任务。",
+    "back": "返回",
+    "clear": "清除"
   }
 }

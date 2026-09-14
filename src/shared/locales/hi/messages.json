@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "कार्य",
-    "add-task": "कार्य जोड़ें",
     "about": "Rayburst के बारे में",
     "preferences": "प्राथमिकताएं...",
     "check-updates-now": "अभी जांचें",
@@ -582,14 +581,9 @@
     "media-default-format": "डिफ़ॉल्ट प्रारूप",
     "color-scheme-electric": "इलेक्ट्रिक पर्पल"
   },
-  "subnav": {
-    "task-list": "कार्य",
-    "preferences": "प्राथमिकताएं"
-  },
   "task": {
     "scope-all": "सभी",
     "scope-progress": "प्रगति में",
-    "scope-failed": "विफल",
     "scope-completed": "पूर्ण",
     "new-task": "नया कार्य",
     "open-file": "फ़ाइल खोलें",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Error",
-    "file-missing": "File missing",
     "duplicate-task": "यह task पहले से मौजूद है और दोबारा नहीं जोड़ा जा सकता",
     "error-aria2-next": "Aria2 Next error",
     "error-unknown": "अज्ञात त्रुटि",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "सभी tasks pause हुए",
     "pause-all-task-fail": "सभी tasks pause नहीं हुए",
     "resume-all-task": "सब Resume करें",
-    "delete-all-task": "Download Queue साफ करें",
     "resume-all-task-success": "सभी tasks resume हुए",
     "resume-all-task-fail": "सभी tasks resume नहीं हुए",
     "resume-all-task-confirm": "सभी tasks resume करें?",
     "pause-all-task-confirm": "सभी tasks pause करें?",
-    "purge-record-confirm": "Completed, failed या removed task records हटेंगे।",
-    "purge-record": "History Records साफ करें",
     "purge-record-success": "History records साफ हुए",
-    "purge-record-fail": "Records साफ नहीं हुए",
     "batch-delete-task-success": "Download queue साफ हुई",
     "batch-delete-task-fail": "Tasks delete नहीं हुए",
     "batch-delete-task-partial": "{removed} टास्क हटाए गए; {failed} विफल",
@@ -918,5 +907,19 @@
     "recording-options": "रिकॉर्डिंग विकल्प",
     "unlimited": "असीमित",
     "custom": "कस्टम"
+  },
+  "workspace": {
+    "needs-action": "कार्रवाई आवश्यक",
+    "browser-connection": "ब्राउज़र कनेक्शन",
+    "more-actions": "अन्य कार्रवाइयाँ",
+    "search-tasks": "कार्य खोजें",
+    "no-results": "कोई मेल खाता कार्य नहीं",
+    "empty-tasks": "आपके डाउनलोड यहाँ दिखाई देंगे",
+    "select-tasks": "कार्य चुनें",
+    "comfortable": "खुला दृश्य",
+    "compact": "सघन दृश्य",
+    "partial-failure": "कुछ कार्रवाइयाँ विफल रहीं। शेष कार्य जाँचें।",
+    "back": "वापस",
+    "clear": "साफ़ करें"
   }
 }

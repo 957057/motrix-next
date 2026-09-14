@@ -162,6 +162,10 @@ export const useAppStore = defineStore('app', () => {
 
   function hideAddTaskDialog() {
     addTaskVisible.value = false
+  }
+
+  function finishAddTaskClose() {
+    if (addTaskVisible.value) return
     pendingBatch.value = []
     clearPendingExternalMetadata()
   }
@@ -482,6 +486,7 @@ export const useAppStore = defineStore('app', () => {
     enqueueBatch,
     showAddTaskDialog,
     hideAddTaskDialog,
+    finishAddTaskClose,
     updateAddTaskOptions,
     handleStatEvent,
     setupStatListener,

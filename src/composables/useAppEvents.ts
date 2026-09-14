@@ -253,10 +253,9 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
   function setupNavGuard() {
     return registerCleanup(
       router.beforeEach((to, from) => {
-        const leavingPrefs = from.path.startsWith('/preference') && !to.path.startsWith('/preference')
-        const switchingPrefsTab =
-          from.path.startsWith('/preference') && to.path.startsWith('/preference') && from.path !== to.path
-        if ((leavingPrefs || switchingPrefsTab) && preferenceStore.pendingChanges) {
+        const leavingForm =
+          (from.path.startsWith('/preference') || from.path === '/connection') && from.path !== to.path
+        if (leavingForm && preferenceStore.pendingChanges) {
           return new Promise<boolean>((resolve) => {
             navDialog.warning({
               title: t('preferences.not-saved'),
@@ -268,8 +267,7 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
                   if (preferenceStore.saveBeforeLeave) {
                     await preferenceStore.saveBeforeLeave()
                   }
-                  preferenceStore.pendingChanges = false
-                  resolve(true)
+                  resolve(!preferenceStore.pendingChanges)
                 } catch (e) {
                   logger.error('NavGuard', e)
                   resolve(false)

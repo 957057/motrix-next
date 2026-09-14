@@ -265,7 +265,7 @@ mod tests {
     fn path_matching_is_case_insensitive_but_requires_the_full_path() {
         let expected = Path::new(r"C:\Program Files\Rayburst\rayburst-engine.exe");
         assert!(paths_match(
-            Path::new(r"c:\program files\rayburst\RAYBURST-NEXT-ENGINE.EXE"),
+            Path::new(r"c:\program files\rayburst\RAYBURST-ENGINE.EXE"),
             expected
         ));
         assert!(!paths_match(

@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Tác vụ",
-    "add-task": "Thêm tác vụ",
     "about": "Về Rayburst",
     "preferences": "Tùy chọn...",
     "check-updates-now": "Kiểm tra ngay",
@@ -582,14 +581,9 @@
     "media-default-format": "Định dạng mặc định",
     "color-scheme-electric": "Tím điện"
   },
-  "subnav": {
-    "task-list": "Tác vụ",
-    "preferences": "Tùy chọn"
-  },
   "task": {
     "scope-all": "Tất cả",
     "scope-progress": "Đang thực hiện",
-    "scope-failed": "Thất bại",
     "scope-completed": "Hoàn tất",
     "new-task": "Tác vụ mới",
     "open-file": "Mở tệp",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Lỗi",
-    "file-missing": "Không tìm thấy tệp",
     "duplicate-task": "Tác vụ này đã tồn tại",
     "error-aria2-next": "Lỗi Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Đã tạm dừng tất cả tác vụ",
     "pause-all-task-fail": "Không thể tạm dừng tất cả",
     "resume-all-task": "Tiếp tục tất cả",
-    "delete-all-task": "Xóa hàng đợi tải xuống",
     "resume-all-task-success": "Đã tiếp tục tất cả tác vụ",
     "resume-all-task-fail": "Không thể tiếp tục tất cả",
     "resume-all-task-confirm": "Tiếp tục tất cả tác vụ?",
     "pause-all-task-confirm": "Tạm dừng tất cả tác vụ?",
-    "purge-record-confirm": "Thao tác này sẽ xóa tất cả bản ghi tác vụ đã hoàn tất, thất bại hoặc đã xóa.",
-    "purge-record": "Xóa lịch sử",
     "purge-record-success": "Đã xóa lịch sử",
-    "purge-record-fail": "Không thể xóa bản ghi",
     "batch-delete-task-success": "Đã xóa hàng đợi tải xuống",
     "batch-delete-task-fail": "Xóa thất bại",
     "batch-delete-task-partial": "Đã xóa {removed} tác vụ; {failed} tác vụ thất bại",
@@ -918,5 +907,19 @@
     "recording-options": "Tùy chọn ghi",
     "unlimited": "Không giới hạn",
     "custom": "Tùy chỉnh"
+  },
+  "workspace": {
+    "needs-action": "Cần xử lý",
+    "browser-connection": "Kết nối trình duyệt",
+    "more-actions": "Thao tác khác",
+    "search-tasks": "Tìm tác vụ",
+    "no-results": "Không có tác vụ phù hợp",
+    "empty-tasks": "Các bản tải xuống sẽ xuất hiện ở đây",
+    "select-tasks": "Chọn tác vụ",
+    "comfortable": "Hiển thị thoáng",
+    "compact": "Hiển thị gọn",
+    "partial-failure": "Một số thao tác thất bại. Hãy kiểm tra các tác vụ còn lại.",
+    "back": "Quay lại",
+    "clear": "Xóa"
   }
 }

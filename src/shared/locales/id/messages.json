@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Tugas",
-    "add-task": "Tambah tugas",
     "about": "Tentang Rayburst",
     "preferences": "Preferensi...",
     "check-updates-now": "Periksa sekarang",
@@ -582,14 +581,9 @@
     "media-default-format": "Format bawaan",
     "color-scheme-electric": "Ungu elektrik"
   },
-  "subnav": {
-    "task-list": "Tugas",
-    "preferences": "Pengaturan"
-  },
   "task": {
     "scope-all": "Semua",
     "scope-progress": "Sedang berjalan",
-    "scope-failed": "Gagal",
     "scope-completed": "Selesai",
     "new-task": "Tugas baru",
     "open-file": "Buka File",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Kesalahan",
-    "file-missing": "File tidak ditemukan",
     "duplicate-task": "Tugas ini sudah ada",
     "error-aria2-next": "Kesalahan Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Semua tugas dijeda",
     "pause-all-task-fail": "Gagal menjeda semua tugas",
     "resume-all-task": "Lanjutkan semua",
-    "delete-all-task": "Kosongkan antrean unduhan",
     "resume-all-task-success": "Semua tugas dilanjutkan",
     "resume-all-task-fail": "Gagal melanjutkan semua tugas",
     "resume-all-task-confirm": "Lanjutkan semua tugas?",
     "pause-all-task-confirm": "Jeda semua tugas?",
-    "purge-record-confirm": "Ini akan menghapus semua catatan tugas yang selesai, gagal, atau dihapus.",
-    "purge-record": "Kosongkan riwayat",
     "purge-record-success": "Riwayat dikosongkan",
-    "purge-record-fail": "Gagal menghapus catatan",
     "batch-delete-task-success": "Antrean unduhan dikosongkan",
     "batch-delete-task-fail": "Penghapusan gagal",
     "batch-delete-task-partial": "{removed} tugas dihapus; {failed} gagal",
@@ -918,5 +907,19 @@
     "recording-options": "Opsi perekaman",
     "unlimited": "Tanpa batas",
     "custom": "Kustom"
+  },
+  "workspace": {
+    "needs-action": "Perlu tindakan",
+    "browser-connection": "Koneksi browser",
+    "more-actions": "Tindakan lainnya",
+    "search-tasks": "Cari tugas",
+    "no-results": "Tidak ada tugas yang cocok",
+    "empty-tasks": "Unduhan Anda akan muncul di sini",
+    "select-tasks": "Pilih tugas",
+    "comfortable": "Tampilan lega",
+    "compact": "Tampilan ringkas",
+    "partial-failure": "Beberapa tindakan gagal. Periksa tugas yang tersisa.",
+    "back": "Kembali",
+    "clear": "Hapus"
   }
 }

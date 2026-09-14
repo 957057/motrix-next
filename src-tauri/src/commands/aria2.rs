@@ -6,7 +6,7 @@
 use crate::aria2::types::{
     Aria2BtPeerAddResult, Aria2BtTrackerConfig, Aria2File, Aria2Task, Aria2TorrentInspection,
 };
-use crate::database::{Database, DatabaseState};
+use crate::database::{Database, DatabaseState, TaskQueryInput, TaskQueryPage};
 use crate::error::AppError;
 use crate::services::tasks::{TaskService, TaskServiceState};
 use serde::{Deserialize, Serialize};
@@ -849,4 +849,14 @@ pub async fn aria2_batch_finish_media(
 #[tauri::command]
 pub async fn cancel_download_request(app: AppHandle, id: String) -> Result<(), AppError> {
     crate::services::downloads::cancel(&app, &id).await
+}
+
+/// Query the current workspace through native policy and one SQLite snapshot.
+#[tauri::command]
+pub async fn query_tasks(
+    state: State<'_, TaskServiceState>,
+    database: State<'_, DatabaseState>,
+    input: TaskQueryInput,
+) -> Result<TaskQueryPage, AppError> {
+    state.0.query_tasks(&database.0, input).await
 }

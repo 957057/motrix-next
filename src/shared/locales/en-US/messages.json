@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Tasks",
-    "add-task": "Add Task",
     "about": "About Rayburst",
     "preferences": "Preferences...",
     "check-updates-now": "Check Now",
@@ -582,14 +581,9 @@
     "media-default-format": "Default format",
     "color-scheme-electric": "Electric Purple"
   },
-  "subnav": {
-    "task-list": "Tasks",
-    "preferences": "Preferences"
-  },
   "task": {
     "scope-all": "All",
     "scope-progress": "In Progress",
-    "scope-failed": "Failed",
     "scope-completed": "Completed",
     "new-task": "New Task",
     "open-file": "Open File",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Error",
-    "file-missing": "File missing",
     "duplicate-task": "This task already exists and cannot be added again",
     "error-aria2-next": "Aria2 Next error",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "All tasks paused",
     "pause-all-task-fail": "Failed to pause all tasks",
     "resume-all-task": "Resume All",
-    "delete-all-task": "Clear Download Queue",
     "resume-all-task-success": "All tasks resumed",
     "resume-all-task-fail": "Failed to resume all tasks",
     "resume-all-task-confirm": "Resume all tasks?",
     "pause-all-task-confirm": "Pause all tasks?",
-    "purge-record-confirm": "This will remove all completed, failed, or removed task records.",
-    "purge-record": "Clear History Records",
     "purge-record-success": "History records cleared",
-    "purge-record-fail": "Failed to clear records",
     "batch-delete-task-success": "Download queue cleared",
     "batch-delete-task-fail": "Failed to delete tasks",
     "batch-delete-task-partial": "Removed {removed} task(s); {failed} failed",
@@ -918,5 +907,19 @@
     "recording-options": "Recording options",
     "unlimited": "Unlimited",
     "custom": "Custom"
+  },
+  "workspace": {
+    "needs-action": "Needs action",
+    "browser-connection": "Browser connection",
+    "more-actions": "More actions",
+    "search-tasks": "Search tasks",
+    "no-results": "No matching tasks",
+    "empty-tasks": "Your downloads will appear here",
+    "select-tasks": "Select tasks",
+    "comfortable": "Comfortable density",
+    "compact": "Compact density",
+    "partial-failure": "Some actions failed. Review the remaining tasks.",
+    "back": "Back",
+    "clear": "Clear"
   }
 }

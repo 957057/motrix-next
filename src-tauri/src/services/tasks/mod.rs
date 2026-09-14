@@ -49,6 +49,16 @@ impl TaskService {
     ) -> Result<T, AppError> {
         self.rpc.call(&format!("aria2.{method}"), params).await
     }
+    pub async fn query_tasks(
+        &self,
+        database: &crate::database::Database,
+        input: crate::database::TaskQueryInput,
+    ) -> Result<crate::database::TaskQueryPage, AppError> {
+        let tasks = self.tell_task_snapshot(true).await?;
+        database
+            .query_tasks(self.tasks.visible_tasks(tasks).await, input)
+            .await
+    }
     // ── Public API ──────────────────────────────────────────────────
 
     pub async fn finish_media(&self, gid: &str) -> Result<String, AppError> {

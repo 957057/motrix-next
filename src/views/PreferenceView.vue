@@ -1,60 +1,83 @@
 <script setup lang="ts">
-/** @fileoverview Preference settings view with preference sub-routes. */
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-
 const { t } = useI18n()
 const route = useRoute()
-
-const tabKey = computed(() => {
-  const path = route.path
-  if (path.includes('downloads')) return 'downloads'
-  if (path.includes('bt')) return 'bt'
-  if (path.includes('ed2k')) return 'ed2k'
-  if (path.includes('network')) return 'network'
-  if (path.includes('advanced')) return 'advanced'
-  return 'general'
-})
+const categories = ['general', 'downloads', 'network', 'bt', 'ed2k', 'advanced']
 </script>
-
 <template>
-  <div class="preference-view">
-    <header class="panel-header" data-tauri-drag-region>
-      <h4>{{ t('preferences.' + tabKey) || 'Settings' }}</h4>
+  <section class="preference-view">
+    <header class="settings-header">
+      <h1>{{ t('app.preferences') }}</h1>
     </header>
+    <nav class="settings-tabs" :aria-label="t('app.preferences')">
+      <RouterLink
+        v-for="category in categories"
+        :key="category"
+        :to="`/preference/${category}`"
+        :aria-current="route.path.endsWith(category) ? 'page' : undefined"
+        >{{ t(`preferences.${category}`) }}</RouterLink
+      >
+    </nav>
     <div class="panel-body">
-      <router-view v-slot="{ Component, route: innerRoute }">
-        <Transition name="fade" mode="out-in">
-          <component :is="Component" :key="innerRoute.path" />
-        </Transition>
-      </router-view>
+      <router-view v-slot="{ Component }"
+        ><Transition
+          name="view"
+          @before-leave="(el) => el.setAttribute('inert', '')"
+          @before-enter="(el) => el.removeAttribute('inert')"
+          @leave-cancelled="(el) => el.removeAttribute('inert')"
+          ><component :is="Component" /></Transition
+      ></router-view>
     </div>
-  </div>
+  </section>
 </template>
-
 <style scoped>
 .preference-view {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
-.panel-header {
-  padding: var(--header-top-offset) 0 12px;
-  margin: 0 36px;
-  border-bottom: 2px solid var(--panel-border);
-  user-select: none;
+.settings-header {
+  padding: 16px 24px 20px;
 }
-.panel-header h4 {
+h1 {
   margin: 0;
-  color: var(--panel-title);
-  font-size: 16px;
-  font-weight: normal;
-  line-height: 24px;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+}
+.settings-tabs {
+  display: flex;
+  gap: 24px;
+  margin-inline: 24px;
+  border-bottom: 1px solid var(--divider);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+.settings-tabs a {
+  padding-block: 8px 12px;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--m3-on-surface-variant);
+  border-bottom: 2px solid transparent;
+}
+.settings-tabs a[aria-current] {
+  color: var(--m3-primary);
+  border-bottom-color: var(--m3-primary);
 }
 .panel-body {
+  position: relative;
   flex: 1;
-  min-width: 0;
+  min-height: 0;
   overflow: hidden;
+}
+@media (max-width: 719px) {
+  .settings-header {
+    padding: 8px 16px 16px;
+  }
+  .settings-tabs {
+    margin-inline: 16px;
+    gap: 16px;
+  }
 }
 </style>

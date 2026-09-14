@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Taken",
-    "add-task": "Taak toevoegen",
     "about": "Over Rayburst",
     "preferences": "Instellingen...",
     "check-updates-now": "Nu controleren",
@@ -582,14 +581,9 @@
     "media-default-format": "Standaardformaat",
     "color-scheme-electric": "Elektrisch paars"
   },
-  "subnav": {
-    "task-list": "Taken",
-    "preferences": "Instellingen"
-  },
   "task": {
     "scope-all": "Alle",
     "scope-progress": "Bezig",
-    "scope-failed": "Mislukt",
     "scope-completed": "Voltooid",
     "new-task": "Nieuwe taak",
     "open-file": "Bestand openen",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Fout",
-    "file-missing": "Bestand ontbreekt",
     "duplicate-task": "Deze taak bestaat al",
     "error-aria2-next": "Aria2 Next-fout",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Alle taken gepauzeerd",
     "pause-all-task-fail": "Pauzeren van alle taken mislukt",
     "resume-all-task": "Alles hervatten",
-    "delete-all-task": "Downloadwachtrij legen",
     "resume-all-task-success": "Alle taken hervat",
     "resume-all-task-fail": "Hervatten van alle taken mislukt",
     "resume-all-task-confirm": "Alle taken hervatten?",
     "pause-all-task-confirm": "Alle taken pauzeren?",
-    "purge-record-confirm": "Dit verwijdert alle voltooide, mislukte of verwijderde taakrecords.",
-    "purge-record": "Geschiedenis legen",
     "purge-record-success": "Geschiedenis geleegd",
-    "purge-record-fail": "Records wissen mislukt",
     "batch-delete-task-success": "Downloadwachtrij geleegd",
     "batch-delete-task-fail": "Verwijderen mislukt",
     "batch-delete-task-partial": "{removed} taken verwijderd; {failed} mislukt",
@@ -918,5 +907,19 @@
     "recording-options": "Opnameopties",
     "unlimited": "Onbeperkt",
     "custom": "Aangepast"
+  },
+  "workspace": {
+    "needs-action": "Actie vereist",
+    "browser-connection": "Browserverbinding",
+    "more-actions": "Meer acties",
+    "search-tasks": "Taken zoeken",
+    "no-results": "Geen overeenkomende taken",
+    "empty-tasks": "Je downloads verschijnen hier",
+    "select-tasks": "Taken selecteren",
+    "comfortable": "Ruime weergave",
+    "compact": "Compacte weergave",
+    "partial-failure": "Sommige acties zijn mislukt. Controleer de overige taken.",
+    "back": "Terug",
+    "clear": "Wissen"
   }
 }

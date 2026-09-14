@@ -1,44 +1,36 @@
-.n-modal-mask-enter-active {
-  transition: opacity 0.25s cubic-bezier(0.2, 0, 0, 1) !important;
-}
-
-.n-modal-mask-leave-active {
-  transition: opacity 0.15s cubic-bezier(0.3, 0, 0.8, 0.15) !important;
-}
-
-.n-modal-body-wrapper--enter-active {
+/* Naive UI owns modal focus, stacking, scroll locks and transition completion.
+   Its public API has no motion override; this bounded adapter replaces the
+   library's large scale transition with a short, reversible translation. */
+.n-modal.fade-in-scale-up-transition-enter-active {
   transition:
-    opacity 0.3s cubic-bezier(0.2, 0, 0, 1),
-    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    opacity var(--dialog-enter-duration, 200ms) cubic-bezier(0.2, 0, 0, 1),
+    transform var(--dialog-enter-duration, 200ms) cubic-bezier(0.2, 0, 0, 1) !important;
 }
-
-.n-modal-body-wrapper--leave-active {
+.n-modal.fade-in-scale-up-transition-leave-active {
   transition:
-    opacity 0.15s cubic-bezier(0.3, 0, 0.8, 0.15),
-    transform 0.15s cubic-bezier(0.3, 0, 0.8, 0.15) !important;
+    opacity var(--dialog-leave-duration, 160ms) cubic-bezier(0.2, 0, 0, 1),
+    transform var(--dialog-leave-duration, 160ms) cubic-bezier(0.2, 0, 0, 1) !important;
 }
-
-.n-modal-body-wrapper--enter-from {
+.n-modal.fade-in-scale-up-transition-enter-from,
+.n-modal.fade-in-scale-up-transition-leave-to {
   opacity: 0 !important;
-  transform: scale(0.92) !important;
+  transform: translateY(6px) !important;
 }
-
-.n-modal-body-wrapper--leave-to {
-  opacity: 0 !important;
-  transform: scale(0.96) !important;
+.n-modal {
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  border-radius: 12px;
 }
-
 .n-dialog {
-  transform-origin: center center !important;
+  overflow-y: auto;
 }
-
-.n-dialog .n-button {
-  min-width: 68px;
-  height: 32px;
-  padding: 0 16px;
-}
-
-.n-drawer-container,
 .n-modal-mask {
+  background: rgb(0 0 0 / 24%);
+}
+.n-modal-mask-enter-active,
+.n-modal-mask-leave-active {
+  transition: opacity var(--dialog-leave-duration, 160ms) ease !important;
+}
+.n-drawer-container {
   overflow: hidden;
 }

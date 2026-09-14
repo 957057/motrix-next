@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "งาน",
-    "add-task": "เพิ่มงาน",
     "about": "เกี่ยวกับ Rayburst",
     "preferences": "การตั้งค่า...",
     "check-updates-now": "ตรวจสอบตอนนี้",
@@ -582,14 +581,9 @@
     "media-default-format": "รูปแบบเริ่มต้น",
     "color-scheme-electric": "ม่วงประกายไฟ"
   },
-  "subnav": {
-    "task-list": "รายการงาน",
-    "preferences": "การตั้งค่า"
-  },
   "task": {
     "scope-all": "ทั้งหมด",
     "scope-progress": "กำลังดำเนินการ",
-    "scope-failed": "ล้มเหลว",
     "scope-completed": "เสร็จสิ้น",
     "new-task": "งานใหม่",
     "open-file": "เปิดไฟล์",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "ข้อผิดพลาด",
-    "file-missing": "ไม่พบไฟล์",
     "duplicate-task": "งานนี้มีอยู่แล้ว",
     "error-aria2-next": "ข้อผิดพลาด Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "หยุดทุกงานชั่วคราวแล้ว",
     "pause-all-task-fail": "หยุดทุกงานชั่วคราวไม่ได้",
     "resume-all-task": "ดำเนินการทั้งหมดต่อ",
-    "delete-all-task": "ล้างคิวดาวน์โหลด",
     "resume-all-task-success": "ดำเนินการทุกงานต่อแล้ว",
     "resume-all-task-fail": "ไม่สามารถดำเนินการทุกงานต่อได้",
     "resume-all-task-confirm": "ดำเนินการทั้งหมดต่อ?",
     "pause-all-task-confirm": "หยุดทั้งหมดชั่วคราว?",
-    "purge-record-confirm": "จะลบบันทึกงานที่เสร็จแล้ว ล้มเหลว หรือถูกลบทั้งหมด",
-    "purge-record": "ล้างประวัติ",
     "purge-record-success": "ล้างประวัติแล้ว",
-    "purge-record-fail": "ล้างรายการไม่ได้",
     "batch-delete-task-success": "ล้างคิวดาวน์โหลดแล้ว",
     "batch-delete-task-fail": "ลบไม่สำเร็จ",
     "batch-delete-task-partial": "ลบแล้ว {removed} งาน; ล้มเหลว {failed} งาน",
@@ -918,5 +907,19 @@
     "recording-options": "ตัวเลือกการบันทึก",
     "unlimited": "ไม่จำกัด",
     "custom": "กำหนดเอง"
+  },
+  "workspace": {
+    "needs-action": "ต้องดำเนินการ",
+    "browser-connection": "การเชื่อมต่อเบราว์เซอร์",
+    "more-actions": "การดำเนินการเพิ่มเติม",
+    "search-tasks": "ค้นหางาน",
+    "no-results": "ไม่พบงานที่ตรงกัน",
+    "empty-tasks": "รายการดาวน์โหลดจะแสดงที่นี่",
+    "select-tasks": "เลือกงาน",
+    "comfortable": "มุมมองแบบสบายตา",
+    "compact": "มุมมองแบบกะทัดรัด",
+    "partial-failure": "บางการดำเนินการล้มเหลว โปรดตรวจสอบงานที่เหลือ",
+    "back": "ย้อนกลับ",
+    "clear": "ล้าง"
   }
 }

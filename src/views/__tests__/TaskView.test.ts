@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 
 const changeCurrentListMock = vi.fn()
 const fetchListMock = vi.fn()
@@ -31,6 +32,8 @@ vi.mock('vue-i18n', () => ({
 
 vi.mock('naive-ui', () => ({
   useDialog: () => ({}),
+  NInput: { template: '<input />' },
+  NIcon: { template: '<span><slot /></span>' },
 }))
 
 vi.mock('@/stores/task', () => ({
@@ -99,6 +102,7 @@ function deferredPromise() {
 
 describe('TaskView', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     vi.clearAllMocks()
     vi.useFakeTimers()
     appStore.interval = 1000

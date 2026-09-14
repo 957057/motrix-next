@@ -184,11 +184,12 @@ describe('useAppStore', () => {
       expect(store.pendingRequestHeaders).toEqual([])
     })
 
-    it('hideAddTaskDialog sets addTaskVisible to false and clears pendingBatch', () => {
+    it('clears the batch when the dialog finishes leaving', () => {
       const store = useAppStore()
       store.addTaskVisible = true
       store.pendingBatch = [createBatchItem('uri', 'https://example.com')]
       store.hideAddTaskDialog()
+      store.finishAddTaskClose()
       expect(store.addTaskVisible).toBe(false)
       expect(store.pendingBatch).toEqual([])
     })
@@ -397,7 +398,7 @@ describe('useAppStore', () => {
       expect(store.pendingReferer).toBe('https://site-b.com')
     })
 
-    it('clears pendingReferer when hideAddTaskDialog is called', () => {
+    it('clears pendingReferer after the dialog finishes leaving', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://example.com/file.zip')
       const referer = encodeURIComponent('https://example.com')
@@ -405,6 +406,7 @@ describe('useAppStore', () => {
       expect(store.pendingReferer).toBe('https://example.com')
 
       store.hideAddTaskDialog()
+      store.finishAddTaskClose()
       expect(store.pendingReferer).toBe('')
     })
 
@@ -442,7 +444,7 @@ describe('useAppStore', () => {
       expect(store.pendingCookie).toBe('sid=bbb')
     })
 
-    it('clears pendingCookie when hideAddTaskDialog is called', () => {
+    it('clears pendingCookie after the dialog finishes leaving', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://example.com/file.zip')
       const cookie = encodeURIComponent('auth=secret')
@@ -450,6 +452,7 @@ describe('useAppStore', () => {
       expect(store.pendingCookie).toBe('auth=secret')
 
       store.hideAddTaskDialog()
+      store.finishAddTaskClose()
       expect(store.pendingCookie).toBe('')
     })
 
@@ -508,7 +511,7 @@ describe('useAppStore', () => {
       expect(store.pendingFilename).toBe('')
     })
 
-    it('clears pendingFilename when hideAddTaskDialog is called', () => {
+    it('clears pendingFilename after the dialog finishes leaving', () => {
       const store = useAppStore()
       const url = encodeURIComponent('https://cdn.quark.cn/hash123')
       const filename = encodeURIComponent('test.zip')
@@ -516,6 +519,7 @@ describe('useAppStore', () => {
       expect(store.pendingFilename).toBe('test.zip')
 
       store.hideAddTaskDialog()
+      store.finishAddTaskClose()
       expect(store.pendingFilename).toBe('')
     })
 

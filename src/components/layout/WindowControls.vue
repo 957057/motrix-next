@@ -98,7 +98,7 @@ async function close() {
           :aria-label="isMaximized ? t('app.window-restore') : t('app.window-maximize')"
           @click="toggleMaximize"
         >
-          <Transition name="icon-swap" mode="out-in">
+          <Transition name="icon-swap">
             <!-- Restore: two overlapping rectangles -->
             <svg
               v-if="isMaximized"

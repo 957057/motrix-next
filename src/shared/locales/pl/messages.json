@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Zadania",
-    "add-task": "Dodaj zadanie",
     "about": "O Rayburst",
     "preferences": "Ustawienia...",
     "check-updates-now": "Sprawdź teraz",
@@ -582,14 +581,9 @@
     "media-default-format": "Domyślny format",
     "color-scheme-electric": "Elektryczny fiolet"
   },
-  "subnav": {
-    "task-list": "Zadania",
-    "preferences": "Ustawienia"
-  },
   "task": {
     "scope-all": "Wszystkie",
     "scope-progress": "W toku",
-    "scope-failed": "Nieudane",
     "scope-completed": "Ukończone",
     "new-task": "Nowe zadanie",
     "open-file": "Otwórz plik",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Błąd",
-    "file-missing": "Brak pliku",
     "duplicate-task": "To zadanie już istnieje",
     "error-aria2-next": "Błąd Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Wszystkie zadania wstrzymane",
     "pause-all-task-fail": "Nie udało się wstrzymać wszystkich zadań",
     "resume-all-task": "Wznów wszystko",
-    "delete-all-task": "Wyczyść kolejkę pobierania",
     "resume-all-task-success": "Wszystkie zadania wznowione",
     "resume-all-task-fail": "Nie udało się wznowić wszystkich zadań",
     "resume-all-task-confirm": "Wznowić wszystkie zadania?",
     "pause-all-task-confirm": "Wstrzymać wszystkie zadania?",
-    "purge-record-confirm": "Spowoduje to usunięcie wszystkich ukończonych, nieudanych lub usuniętych rekordów zadań.",
-    "purge-record": "Wyczyść historię",
     "purge-record-success": "Historia wyczyszczona",
-    "purge-record-fail": "Nie udało się wyczyścić wpisów",
     "batch-delete-task-success": "Kolejka pobierania wyczyszczona",
     "batch-delete-task-fail": "Usuwanie nie powiodło się",
     "batch-delete-task-partial": "Usunięto {removed} zadań; {failed} nie powiodło się",
@@ -918,5 +907,19 @@
     "recording-options": "Opcje nagrywania",
     "unlimited": "Bez limitu",
     "custom": "Własny"
+  },
+  "workspace": {
+    "needs-action": "Wymaga działania",
+    "browser-connection": "Połączenie z przeglądarką",
+    "more-actions": "Więcej działań",
+    "search-tasks": "Szukaj zadań",
+    "no-results": "Brak pasujących zadań",
+    "empty-tasks": "Pobrane pliki pojawią się tutaj",
+    "select-tasks": "Wybierz zadania",
+    "comfortable": "Widok przestronny",
+    "compact": "Widok zwarty",
+    "partial-failure": "Niektóre działania nie powiodły się. Sprawdź pozostałe zadania.",
+    "back": "Wstecz",
+    "clear": "Wyczyść"
   }
 }

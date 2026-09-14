@@ -119,7 +119,7 @@ function dismiss() {
         <div class="selection-name" :title="name">{{ name || '' }}</div>
       </div>
       <NAlert v-if="error" type="error" class="selection-error">{{ error }}</NAlert>
-      <Transition name="selection-content" mode="out-in">
+      <Transition name="selection-content">
         <div v-if="loading" key="loading" class="selection-loading" role="status" aria-busy="true">
           <NSpin size="small" /> {{ t('task.bt-metadata-fetching') }}
         </div>

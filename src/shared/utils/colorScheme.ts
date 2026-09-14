@@ -66,12 +66,12 @@ export interface AppColorTokens {
 
 const SURFACE_TONES = {
   light: {
-    surfaceDim: 84,
-    surfaceContainerLowest: 98,
-    surfaceContainerLow: 94,
-    surfaceContainer: 91,
-    surfaceContainerHigh: 88,
-    surfaceContainerHighest: 85,
+    surfaceDim: 95,
+    surfaceContainerLowest: 100,
+    surfaceContainerLow: 99,
+    surfaceContainer: 97,
+    surfaceContainerHigh: 99,
+    surfaceContainerHighest: 94,
   },
   dark: {
     surfaceDim: 6,

@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "وظایف",
-    "add-task": "افزودن وظیفه",
     "about": "درباره Rayburst",
     "preferences": "تنظیمات...",
     "check-updates-now": "بررسی اکنون",
@@ -582,14 +581,9 @@
     "media-default-format": "قالب پیش‌فرض",
     "color-scheme-electric": "بنفش الکتریکی"
   },
-  "subnav": {
-    "task-list": "وظایف",
-    "preferences": "تنظیمات"
-  },
   "task": {
     "scope-all": "همه",
     "scope-progress": "در حال انجام",
-    "scope-failed": "ناموفق",
     "scope-completed": "تکمیل‌شده",
     "new-task": "وظیفه جدید",
     "open-file": "باز کردن فایل",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "خطا",
-    "file-missing": "فایل موجود نیست",
     "duplicate-task": "این وظیفه از قبل وجود دارد",
     "error-aria2-next": "خطای Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "همه وظایف متوقف شدند",
     "pause-all-task-fail": "توقف همه وظایف ناموفق بود",
     "resume-all-task": "ادامه همه",
-    "delete-all-task": "پاک کردن صف دانلود",
     "resume-all-task-success": "همه وظایف ادامه یافتند",
     "resume-all-task-fail": "ادامه همه وظایف ناموفق بود",
     "resume-all-task-confirm": "همه وظایف ادامه یابند؟",
     "pause-all-task-confirm": "همه وظایف متوقف شوند؟",
-    "purge-record-confirm": "همه رکوردهای وظایف کامل‌شده، ناموفق یا حذف‌شده حذف می‌شوند.",
-    "purge-record": "پاک کردن تاریخچه",
     "purge-record-success": "تاریخچه پاک شد",
-    "purge-record-fail": "پاک کردن رکوردها ناموفق بود",
     "batch-delete-task-success": "صف دانلود پاک شد",
     "batch-delete-task-fail": "حذف ناموفق بود",
     "batch-delete-task-partial": "{removed} وظیفه حذف شد؛ {failed} مورد ناموفق بود",
@@ -918,5 +907,19 @@
     "recording-options": "گزینه‌های ضبط",
     "unlimited": "نامحدود",
     "custom": "سفارشی"
+  },
+  "workspace": {
+    "needs-action": "نیازمند رسیدگی",
+    "browser-connection": "اتصال مرورگر",
+    "more-actions": "اقدامات بیشتر",
+    "search-tasks": "جستجوی کارها",
+    "no-results": "کاری مطابق جستجو یافت نشد",
+    "empty-tasks": "بارگیری‌ها اینجا نمایش داده می‌شوند",
+    "select-tasks": "انتخاب کارها",
+    "comfortable": "نمای باز",
+    "compact": "نمای فشرده",
+    "partial-failure": "برخی اقدامات ناموفق بودند. کارهای باقی‌مانده را بررسی کنید.",
+    "back": "بازگشت",
+    "clear": "پاک کردن"
   }
 }

@@ -59,7 +59,7 @@ import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 
 const engineStore = useEngineStore()
-const { restartEngine } = useEngineRestart()
+const { restartEngine, confirmManualRestart } = useEngineRestart()
 
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
@@ -171,25 +171,6 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
       if (!ok) return false
     }
 
-    // Gate: extension API port change confirmation.
-    // Separate from engine restart — this only rebinds the HTTP API server,
-    // downloads are unaffected.
-    if (changed.extensionApiPort !== undefined) {
-      const ok = await new Promise<boolean>((resolve) => {
-        dialog.warning({
-          title: t('preferences.extension-api-port'),
-          content: t('preferences.extension-api-port-confirm', { port: f.extensionApiPort }),
-          positiveText: t('app.confirm'),
-          negativeText: t('app.cancel'),
-          maskClosable: false,
-          onPositiveClick: () => resolve(true),
-          onNegativeClick: () => resolve(false),
-          onClose: () => resolve(false),
-        })
-      })
-      if (!ok) return false
-    }
-
     return true
   },
   afterSave: async (f, prevConfig) => {
@@ -228,27 +209,10 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
         },
       })
     }
-
-    // Extension API port — user already confirmed in beforeSave, execute immediately.
-    if (changed.extensionApiPort !== undefined) {
-      const newPort = f.extensionApiPort
-      try {
-        const appliedPort = await invoke<number>('restart_http_api', { port: newPort })
-        if (appliedPort !== newPort) {
-          f.extensionApiPort = appliedPort
-          preferenceStore.updatePreference({ extensionApiPort: appliedPort })
-          resetSnapshot()
-        }
-        message.success(t('preferences.extension-api-port-applied', { port: appliedPort }))
-      } catch (e) {
-        logger.warn('Advanced.extensionApi', `restart_http_api port=${newPort} failed: ${e}`)
-      }
-    }
   },
 })
 const numericFieldsValid = computed(() =>
   areConfigFieldsValid({
-    extensionApiPort: form.value.extensionApiPort,
     rpcListenPort: form.value.rpcListenPort,
   }),
 )
@@ -324,10 +288,6 @@ function onRpcSecretDice() {
   form.value.rpcSecret = generateConfigSecret()
 }
 
-function onApiSecretDice() {
-  form.value.extensionApiSecret = generateConfigSecret()
-}
-
 async function copyToClipboard(text: string, label: string) {
   if (!text) return
   try {
@@ -394,58 +354,6 @@ onMounted(async () => {
   <div class="preference-form-wrapper">
     <div class="preference-form-scroll">
       <NForm label-placement="left" label-align="left" label-width="260px" size="small" class="form-preference">
-        <NDivider title-placement="left">{{ t('preferences.extension-section') }}</NDivider>
-        <NFormItem :label="t('preferences.auto-submit-from-extension')">
-          <NSwitch v-model:value="form.autoSubmitFromExtension" />
-        </NFormItem>
-        <NCollapseTransition :show="form.autoSubmitFromExtension" class="collapse-indent">
-          <NFormItem :label="t('preferences.silent-auto-submit-from-extension')">
-            <NSwitch v-model:value="form.silentAutoSubmitFromExtension" />
-          </NFormItem>
-        </NCollapseTransition>
-        <NFormItem
-          :label="t('preferences.extension-api-port')"
-          v-bind="configFieldProps('extensionApiPort', form.extensionApiPort)"
-        >
-          <NInputNumber
-            v-model:value="form.extensionApiPort"
-            :min="constraint('extensionApiPort').min"
-            :max="constraint('extensionApiPort').max"
-            class="pref-port"
-          />
-        </NFormItem>
-        <NFormItem :validation-status="form.extensionApiSecret ? undefined : 'warning'">
-          <template #label>
-            <PreferenceHintLabel
-              :label="t('preferences.extension-api-secret')"
-              :hint="t('preferences.extension-api-secret-tip')"
-            />
-          </template>
-          <NInputGroup>
-            <NInput
-              v-model:value="form.extensionApiSecret"
-              type="password"
-              show-password-on="click"
-              :placeholder="t('preferences.extension-api-secret')"
-              class="pref-control-full"
-              :status="form.extensionApiSecret ? undefined : 'warning'"
-            />
-            <NButton
-              class="pref-icon-button"
-              @click="copyToClipboard(form.extensionApiSecret, t('preferences.extension-api-secret'))"
-            >
-              <template #icon>
-                <NIcon :size="14"><CopyOutline /></NIcon>
-              </template>
-            </NButton>
-            <NButton class="pref-icon-button" @click="onApiSecretDice">
-              <template #icon>
-                <NIcon :size="14"><DiceOutline /></NIcon>
-              </template>
-            </NButton>
-          </NInputGroup>
-        </NFormItem>
-
         <NDivider title-placement="left">{{ t('preferences.rpc') }}</NDivider>
         <NFormItem
           :label="t('preferences.rpc-listen-port')"
@@ -497,6 +405,9 @@ onMounted(async () => {
         </NFormItem>
 
         <NDivider title-placement="left">{{ t('preferences.engine-section') }}</NDivider>
+        <NFormItem :label="t('preferences.engine-restart-btn')"
+          ><NButton @click="confirmManualRestart">{{ t('preferences.engine-restart-now') }}</NButton></NFormItem
+        >
         <NFormItem :label="t('preferences.allow-remote-access')">
           <NSwitch v-model:value="form.allowRemoteAccess" />
         </NFormItem>

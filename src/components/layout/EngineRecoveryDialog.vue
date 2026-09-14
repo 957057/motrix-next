@@ -152,7 +152,7 @@ async function cleanupAndRetry() {
   <NModal :show="visible" :mask-closable="false" :close-on-esc="false" transform-origin="center">
     <section class="engine-dialog" :data-state="panelState" aria-live="polite">
       <div class="engine-panel-viewport">
-        <Transition name="engine-panel" mode="out-in">
+        <Transition name="engine-panel">
           <div :key="panelState" class="engine-panel-state" :data-panel="panelState">
             <template v-if="panelState === 'recovering'">
               <div class="engine-heading-row">
@@ -239,7 +239,7 @@ async function cleanupAndRetry() {
       </div>
 
       <footer class="engine-dialog-footer">
-        <Transition name="engine-actions" mode="out-in">
+        <Transition name="engine-actions">
           <div v-if="panelState === 'recovering'" key="recovering" class="engine-footer-state">
             <NButton :loading="pendingAction === 'cancel'" :disabled="pendingAction !== null" @click="cancel">
               {{ t('app.cancel') }}

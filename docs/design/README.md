@@ -4,6 +4,7 @@ The approved baseline is [01 task overview](screens/01-task-overview.png): light
 
 ## Contents
 
+- [IMPLEMENTATION.md](IMPLEMENTATION.md): component ownership, data queries and native acceptance.
 - [GALLERY.html](GALLERY.html): browse all 23 design screens and state boards.
 - [screens/](screens/): current design images only.
 - [specs/VISUAL-SPEC.md](specs/VISUAL-SPEC.md): layout, typography, colors and platform adaptation.
@@ -19,4 +20,4 @@ The approved baseline is [01 task overview](screens/01-task-overview.png): light
 
 Use the written specification and native contracts when generated image details disagree. The official logo is [src/assets/rayburst.svg](../../src/assets/rayburst.svg); no duplicate brand assets are stored here.
 
-This directory contains the current design reference only, without versioned exploration folders or generation transcripts. Application implementation remains unchanged.
+This directory contains the current design reference only, without versioned exploration folders or generation transcripts. The desktop implementation now follows this reference; native visual acceptance is tracked in IMPLEMENTATION.md.

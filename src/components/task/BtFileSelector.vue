@@ -87,13 +87,13 @@ function updateSelection(keys: DataTableRowKey[]) {
       @update:checked-row-keys="updateSelection"
     />
     <div class="file-summary" aria-live="polite">
-      <Transition :name="countDirection" mode="out-in">
+      <Transition :name="countDirection">
         <span :key="selectedIndices.length" class="summary-value">
           {{ selectedIndices.length }}/{{ files.length }}
         </span>
       </Transition>
       <span class="summary-divider">—</span>
-      <Transition :name="sizeDirection" mode="out-in">
+      <Transition :name="sizeDirection">
         <span :key="bytesToSize(selectedSize)" class="summary-value">{{ bytesToSize(selectedSize) }}</span>
       </Transition>
     </div>

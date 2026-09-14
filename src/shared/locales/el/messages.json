@@ -13,7 +13,6 @@
   },
   "app": {
     "task-list": "Εργασίες",
-    "add-task": "Προσθήκη εργασίας",
     "about": "Σχετικά με το Rayburst",
     "preferences": "Προτιμήσεις...",
     "check-updates-now": "Έλεγχος τώρα",
@@ -582,14 +581,9 @@
     "media-default-format": "Προεπιλεγμένη μορφή",
     "color-scheme-electric": "Ηλεκτρικό μοβ"
   },
-  "subnav": {
-    "task-list": "Εργασίες",
-    "preferences": "Προτιμήσεις"
-  },
   "task": {
     "scope-all": "Όλα",
     "scope-progress": "Σε εξέλιξη",
-    "scope-failed": "Απέτυχαν",
     "scope-completed": "Ολοκληρώθηκαν",
     "new-task": "Νέα εργασία",
     "open-file": "Άνοιγμα αρχείου",
@@ -669,7 +663,6 @@
     "task-referer-placeholder": "https://example.com/page",
     "task-cookie-placeholder": "key=value; key2=value2",
     "task-error-info": "Σφάλμα",
-    "file-missing": "Το αρχείο λείπει",
     "duplicate-task": "Αυτή η εργασία υπάρχει ήδη",
     "error-aria2-next": "Σφάλμα Aria2 Next",
     "error-unknown": "Unknown error",
@@ -810,15 +803,11 @@
     "pause-all-task-success": "Όλες οι εργασίες σε παύση",
     "pause-all-task-fail": "Αποτυχία παύσης όλων",
     "resume-all-task": "Συνέχιση όλων",
-    "delete-all-task": "Εκκαθάριση ουράς λήψεων",
     "resume-all-task-success": "Όλες οι εργασίες συνεχίστηκαν",
     "resume-all-task-fail": "Αποτυχία συνέχισης όλων",
     "resume-all-task-confirm": "Συνέχιση όλων των εργασιών;",
     "pause-all-task-confirm": "Παύση όλων των εργασιών;",
-    "purge-record-confirm": "Θα αφαιρεθούν όλες οι ολοκληρωμένες, αποτυχημένες ή αφαιρεμένες εγγραφές εργασιών.",
-    "purge-record": "Εκκαθάριση ιστορικού",
     "purge-record-success": "Το ιστορικό εκκαθαρίστηκε",
-    "purge-record-fail": "Αποτυχία εκκαθάρισης εγγραφών",
     "batch-delete-task-success": "Η ουρά λήψεων εκκαθαρίστηκε",
     "batch-delete-task-fail": "Αποτυχία διαγραφής",
     "batch-delete-task-partial": "Αφαιρέθηκαν {removed} εργασίες· {failed} απέτυχαν",
@@ -918,5 +907,19 @@
     "recording-options": "Επιλογές εγγραφής",
     "unlimited": "Χωρίς όριο",
     "custom": "Προσαρμοσμένη"
+  },
+  "workspace": {
+    "needs-action": "Απαιτείται ενέργεια",
+    "browser-connection": "Σύνδεση προγράμματος περιήγησης",
+    "more-actions": "Περισσότερες ενέργειες",
+    "search-tasks": "Αναζήτηση εργασιών",
+    "no-results": "Δεν βρέθηκαν εργασίες",
+    "empty-tasks": "Οι λήψεις σας θα εμφανιστούν εδώ",
+    "select-tasks": "Επιλογή εργασιών",
+    "comfortable": "Άνετη προβολή",
+    "compact": "Συμπαγής προβολή",
+    "partial-failure": "Ορισμένες ενέργειες απέτυχαν. Ελέγξτε τις υπόλοιπες εργασίες.",
+    "back": "Πίσω",
+    "clear": "Εκκαθάριση"
   }
 }

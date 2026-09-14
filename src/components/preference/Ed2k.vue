@@ -332,11 +332,11 @@ onMounted(() => {
                   </Transition>
                 </span>
               </template>
-              <Transition name="ed2k-search-label" mode="out-in">
+              <Transition name="ed2k-search-label">
                 <span :key="searchButtonText">{{ searchButtonText }}</span>
               </Transition>
             </NButton>
-            <Transition name="ed2k-search-status" mode="out-in">
+            <Transition name="ed2k-search-status">
               <NText :key="searchState" depth="3" class="ed2k-search-status">{{ searchStatusText }}</NText>
             </Transition>
           </div>

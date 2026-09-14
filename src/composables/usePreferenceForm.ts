@@ -189,8 +189,7 @@ export function usePreferenceForm<T extends Record<string, unknown>>(options: Us
         }
       }
       if (!rollbackFailed) {
-        Object.assign(form.value, options.buildForm())
-        savedSnapshot.value = JSON.parse(JSON.stringify(form.value)) as T
+        savedSnapshot.value = JSON.parse(JSON.stringify(options.buildForm())) as T
       }
       message.error(
         saveFeedback
@@ -208,8 +207,7 @@ export function usePreferenceForm<T extends Record<string, unknown>>(options: Us
     Object.assign(form.value, options.buildForm())
     savedSnapshot.value = JSON.parse(JSON.stringify(form.value)) as T
 
-    if (saveFeedback) message.success(saveFeedback.success)
-    message.success(t('preferences.save-success-message'))
+    message.success(saveFeedback?.success ?? t('preferences.save-success-message'))
   }
 
   function handleReset(): void {
@@ -246,7 +244,7 @@ export function usePreferenceForm<T extends Record<string, unknown>>(options: Us
     // The route guard is responsible for clearing pendingChanges when the
     // user confirms navigation. Resetting here would silently discard
     // unsaved changes when switching between Basic ↔ Advanced tabs.
-    preferenceStore.saveBeforeLeave = null
+    if (preferenceStore.saveBeforeLeave === handleSave) preferenceStore.saveBeforeLeave = null
   })
 
   return {
