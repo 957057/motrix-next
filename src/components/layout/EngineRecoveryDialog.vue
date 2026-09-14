@@ -152,7 +152,7 @@ async function cleanupAndRetry() {
   <NModal :show="visible" :mask-closable="false" :close-on-esc="false" transform-origin="center">
     <section class="engine-dialog" :data-state="panelState" aria-live="polite">
       <div class="engine-panel-viewport">
-        <Transition name="engine-panel">
+        <Transition name="view">
           <div :key="panelState" class="engine-panel-state" :data-panel="panelState">
             <template v-if="panelState === 'recovering'">
               <div class="engine-heading-row">
@@ -163,7 +163,7 @@ async function cleanupAndRetry() {
                 </div>
               </div>
 
-              <TransitionGroup name="engine-recovery-content" tag="div" class="engine-recovery-body">
+              <div class="engine-recovery-body">
                 <div key="stages" class="engine-stage-track" role="list" :aria-label="activeStageLabel">
                   <template v-for="(stage, index) in recoveryStages" :key="stage.label">
                     <div
@@ -193,7 +193,7 @@ async function cleanupAndRetry() {
                   <span class="engine-error-label">{{ t('app.engine-last-error') }}</span>
                   <code>{{ failureDetail }}</code>
                 </div>
-              </TransitionGroup>
+              </div>
             </template>
 
             <template v-else-if="panelState === 'cleaning'">
@@ -225,7 +225,6 @@ async function cleanupAndRetry() {
             <template v-else>
               <div class="engine-complete">
                 <div class="engine-success-mark" aria-hidden="true">
-                  <span class="engine-success-halo" />
                   <NIcon :size="38"><CheckmarkOutline /></NIcon>
                 </div>
                 <div class="engine-complete-copy">
@@ -239,7 +238,7 @@ async function cleanupAndRetry() {
       </div>
 
       <footer class="engine-dialog-footer">
-        <Transition name="engine-actions">
+        <Transition name="fade">
           <div v-if="panelState === 'recovering'" key="recovering" class="engine-footer-state">
             <NButton :loading="pendingAction === 'cancel'" :disabled="pendingAction !== null" @click="cancel">
               {{ t('app.cancel') }}
@@ -274,401 +273,130 @@ async function cleanupAndRetry() {
 
 <style scoped>
 .engine-dialog {
-  width: min(520px, calc(100vw - 40px));
-  height: min(440px, calc(100vh - 40px));
-  overflow: hidden;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) 82px;
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: 16px;
-  color: var(--m3-on-surface);
-  background: var(--m3-surface-container-high);
-  box-shadow: 0 18px 56px var(--m3-shadow);
+  width: min(440px, calc(100vw - 48px));
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  padding: 24px;
+  border-radius: 12px;
+  background: var(--main-bg);
+  box-shadow: 0 12px 40px var(--m3-shadow);
 }
-
-.engine-dialog[data-state='complete'] {
-  border-color: transparent;
-}
-
-.engine-error-label {
-  color: var(--m3-on-surface-variant);
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.engine-heading-row .engine-attempt {
-  margin-top: 7px;
-  color: var(--m3-primary);
-  font-size: 14px;
-  font-weight: 650;
-  line-height: 1.35;
-}
-
 .engine-panel-viewport {
   position: relative;
-  min-height: 0;
-  overflow: hidden;
+  min-height: 160px;
 }
-
-.engine-panel-state {
-  position: absolute;
-  inset: 0;
-  overflow: auto;
-  padding: 30px 24px 24px;
-}
-
 .engine-heading-row {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
-.engine-heading-row h2,
-.engine-complete h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 650;
-  line-height: 1.35;
+h2 {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
 }
-
 .engine-heading-row p,
-.engine-complete p,
-.engine-description {
-  margin: 4px 0 0;
+.engine-description,
+.engine-attempt,
+.engine-complete-copy p {
   color: var(--m3-on-surface-variant);
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 20px;
+  margin-top: 8px;
 }
-
-.engine-heading-row--error {
-  align-items: flex-start;
-  color: var(--m3-error);
-}
-
-.engine-heading-row--error p {
-  color: var(--m3-on-surface-variant);
-}
-
-.engine-panel-state[data-panel='recovering'] {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-}
-
-.engine-recovery-body {
-  display: grid;
-  min-height: 0;
-  align-content: center;
-  gap: 26px;
-}
-
-.engine-recovery-content-move,
-.engine-recovery-content-enter-active,
-.engine-recovery-content-leave-active {
-  transition:
-    opacity 0.28s cubic-bezier(0.2, 0, 0, 1),
-    transform 0.34s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.engine-recovery-content-enter-from,
-.engine-recovery-content-leave-to {
-  opacity: 0;
-  transform: translateY(10px) scale(0.98);
-}
-
 .engine-stage-track {
-  display: grid;
-  grid-template-columns: auto minmax(24px, 1fr) auto minmax(24px, 1fr) auto;
-  align-items: start;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 24px 0;
 }
-
 .engine-recovery-stage {
-  display: grid;
-  min-width: 74px;
-  justify-items: center;
-  gap: 9px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--m3-on-surface-variant);
 }
-
 .engine-stage-marker {
-  position: relative;
-  z-index: 1;
-  display: grid;
   width: 24px;
   height: 24px;
+  display: grid;
   place-items: center;
 }
-
-.engine-stage-marker > * {
-  grid-area: 1 / 1;
-}
-
 .engine-stage-dot {
   width: 10px;
   height: 10px;
-  border: 2px solid var(--m3-outline);
+  border: 1px solid var(--m3-outline);
   border-radius: 50%;
-  background: var(--m3-surface-container-high);
-  transition:
-    opacity 0.24s cubic-bezier(0.2, 0, 0, 1),
-    transform 0.28s cubic-bezier(0.2, 0, 0, 1),
-    border-color 0.28s cubic-bezier(0.2, 0, 0, 1),
-    background-color 0.28s cubic-bezier(0.2, 0, 0, 1);
 }
-
+.engine-stage-check {
+  display: none;
+}
+.engine-recovery-stage[data-state='active'] {
+  color: var(--m3-primary);
+}
 .engine-recovery-stage[data-state='active'] .engine-stage-dot {
   border-color: var(--m3-primary);
   background: var(--m3-primary);
-  animation: engine-stage-pulse 1.8s cubic-bezier(0.2, 0, 0, 1) infinite;
 }
-
-.engine-stage-check {
-  color: var(--m3-success);
-  opacity: 0;
-  transform: scale(0.7);
-  transition:
-    opacity 0.24s cubic-bezier(0.2, 0, 0, 1),
-    transform 0.28s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.engine-recovery-stage[data-state='complete'] .engine-stage-dot {
-  opacity: 0;
-  transform: scale(1.35);
-}
-
 .engine-recovery-stage[data-state='complete'] .engine-stage-check {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.engine-stage-label {
-  color: var(--m3-on-surface-variant);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.35;
-  text-align: center;
-  transition:
-    color 0.28s cubic-bezier(0.2, 0, 0, 1),
-    font-weight 0.28s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.engine-recovery-stage[data-state='active'] .engine-stage-label {
+  display: block;
   color: var(--m3-primary);
-  font-weight: 650;
 }
-
-.engine-recovery-stage[data-state='pending'] .engine-stage-label {
-  color: var(--m3-outline);
+.engine-recovery-stage[data-state='complete'] .engine-stage-dot {
+  display: none;
 }
-
 .engine-stage-connector {
-  position: relative;
-  height: 2px;
-  overflow: hidden;
-  margin-top: 11px;
-  border-radius: 1px;
-  background: var(--m3-outline-variant);
+  flex: 1;
+  min-width: 12px;
+  height: 1px;
+  background: var(--divider);
 }
-
-.engine-stage-connector::after {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--m3-success);
-  content: '';
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 0.34s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.engine-stage-connector[data-complete='true']::after {
-  transform: scaleX(1);
-}
-
-.engine-panel-state[data-panel='recovering'] .engine-error-block {
-  width: min(100%, 430px);
-  box-sizing: border-box;
-  margin: 0 auto;
-}
-
 .engine-error-block {
-  display: grid;
+  margin-block: 20px;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
-  margin-top: 26px;
-  padding: 13px 15px;
-  border: 1px solid color-mix(in srgb, var(--m3-error) 30%, var(--m3-outline-variant));
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--m3-error) 7%, var(--m3-surface-container));
-}
-
-.engine-error-block code {
-  overflow-wrap: anywhere;
-  color: var(--m3-on-surface);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.engine-cleanup-warning {
-  margin: 18px 0 0;
-  color: var(--m3-on-surface-variant);
   font-size: 13px;
-  line-height: 1.55;
+}
+.engine-error-block code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--m3-error);
+}
+.engine-cleanup-warning {
+  margin-block: 16px;
+  font-size: 13px;
+  line-height: 20px;
   white-space: pre-line;
 }
-
-.engine-complete {
-  display: flex;
-  height: 100%;
-  align-items: center;
-  flex-direction: column;
-  justify-content: center;
-  gap: 20px;
-  text-align: center;
-}
-
-.engine-success-mark {
-  position: relative;
-  display: grid;
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  color: var(--m3-on-success-container);
-  background: var(--m3-success-container);
-  place-items: center;
-  animation: engine-success-arrive 0.56s cubic-bezier(0.2, 0, 0, 1) both;
-}
-
-.engine-success-halo {
-  position: absolute;
-  inset: -9px;
-  border: 1px solid color-mix(in srgb, var(--m3-success) 45%, transparent);
-  border-radius: 50%;
-  animation: engine-success-halo 0.72s cubic-bezier(0.2, 0, 0, 1) both;
-}
-
-.engine-complete-copy {
-  display: grid;
-  max-width: 360px;
-  gap: 6px;
-}
-
-.engine-complete p {
-  margin: 0;
-  color: var(--m3-on-surface-variant);
-}
-
-.engine-description {
-  margin-top: 16px;
-}
-
 .engine-dialog-footer {
   position: relative;
-  display: flex;
-  align-items: center;
-  padding: 16px 24px;
-  border-top: 1px solid var(--m3-outline-variant);
-  transition: border-color 0.24s cubic-bezier(0.2, 0, 0, 1);
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--divider);
 }
-
-.engine-dialog[data-state='complete'] .engine-dialog-footer {
-  border-top-color: transparent;
-}
-
-.engine-footer-state {
-  position: absolute;
-  inset: 16px 24px;
+.engine-footer-state,
+.engine-dialog-actions {
   display: flex;
-  align-items: center;
   justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
 }
-
 .engine-footer-state--failed {
   justify-content: space-between;
 }
-
-.engine-dialog-actions {
+.engine-complete {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 16px;
+  padding-block: 32px;
 }
-
-.engine-panel-enter-active,
-.engine-panel-leave-active,
-.engine-actions-enter-active,
-.engine-actions-leave-active {
-  transition:
-    opacity 0.24s cubic-bezier(0.2, 0, 0, 1),
-    transform 0.24s cubic-bezier(0.2, 0, 0, 1);
+.engine-success-mark {
+  color: var(--m3-primary);
 }
-
-.engine-panel-enter-active[data-panel='complete'] {
-  transition-duration: 0.36s;
-}
-
-.engine-panel-enter-from,
-.engine-actions-enter-from {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-.engine-panel-leave-to,
-.engine-actions-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-
-@keyframes engine-stage-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--m3-primary) 30%, transparent);
-    transform: scale(0.94);
-  }
-
-  50% {
-    box-shadow: 0 0 0 7px color-mix(in srgb, var(--m3-primary) 0%, transparent);
-    transform: scale(1);
-  }
-}
-
-@keyframes engine-success-arrive {
-  from {
-    opacity: 0;
-    transform: scale(0.76) rotate(-8deg);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1) rotate(0);
-  }
-}
-
-@keyframes engine-success-halo {
-  from {
-    opacity: 0;
-    transform: scale(0.72);
-  }
-
-  55% {
-    opacity: 1;
-  }
-
-  to {
-    opacity: 0.55;
-    transform: scale(1);
-  }
-}
-
-@media (max-width: 560px) {
-  .engine-dialog {
-    height: min(500px, calc(100vh - 24px));
-  }
-
-  .engine-footer-state--failed {
-    align-items: stretch;
-    flex-direction: column-reverse;
-  }
-
-  .engine-dialog-actions {
-    flex-direction: column;
-  }
+.engine-heading-row--error {
+  color: var(--m3-error);
 }
 </style>

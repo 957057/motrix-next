@@ -2,7 +2,8 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { AnimatePresence, motion, Reorder } from 'motion-v'
-import { NEmpty, NButton, NSpin } from 'naive-ui'
+import { NEmpty, NButton, NSpin, NIcon } from 'naive-ui'
+import { DocumentOutline, SearchOutline } from '@vicons/ionicons5'
 import { useTaskStore } from '@/stores/task'
 import { useTaskViewStore } from '@/stores/taskView'
 import { usePreferenceStore } from '@/stores/preference'
@@ -115,6 +116,9 @@ function move(gid: string, direction: -1 | 1) {
       class="list-empty"
       :description="view.query ? t('workspace.no-results') : t('workspace.empty-tasks')"
     >
+      <template #icon
+        ><NIcon :size="40"><SearchOutline v-if="view.query" /><DocumentOutline v-else /></NIcon
+      ></template>
       <template #extra
         ><NButton v-if="!view.query" type="primary" @click="app.showAddTaskDialog()">{{ t('task.new-task') }}</NButton
         ><NButton v-else @click="view.query = ''">{{ t('workspace.clear') }}</NButton></template

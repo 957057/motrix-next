@@ -8,7 +8,7 @@ import {
   type CustomColor,
   type CustomColorGroup,
   type Theme,
-  type TonalPalette,
+  TonalPalette,
 } from '@material/material-color-utilities'
 import { COLOR_SCHEMES, CUSTOM_COLOR_SCHEME_ID, type ColorSchemeDefinition } from '@shared/constants'
 import { normalizeCustomColorScheme } from '@shared/utils/colorSchemeConfig'
@@ -68,9 +68,9 @@ const SURFACE_TONES = {
   light: {
     surfaceDim: 95,
     surfaceContainerLowest: 100,
-    surfaceContainerLow: 99,
+    surfaceContainerLow: 100,
     surfaceContainer: 97,
-    surfaceContainerHigh: 99,
+    surfaceContainerHigh: 100,
     surfaceContainerHighest: 94,
   },
   dark: {
@@ -171,7 +171,7 @@ function extendedRole(theme: Theme, name: SemanticColorName, dark: boolean): Sta
 export function buildAppColorTokens(theme: Theme, dark: boolean): AppColorTokens {
   const scheme = dark ? theme.schemes.dark : theme.schemes.light
   const surfaceTones = dark ? SURFACE_TONES.dark : SURFACE_TONES.light
-  const neutral = theme.palettes.neutral
+  const neutral = TonalPalette.fromHueAndChroma(0, 0)
   const primary = schemeRole(
     theme.palettes.primary,
     {

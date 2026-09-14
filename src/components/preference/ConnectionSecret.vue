@@ -19,7 +19,7 @@ async function copy() {
 </script>
 
 <template>
-  <NInputGroup class="connection-secret">
+  <NInputGroup class="connection-secret" role="group" :aria-label="label">
     <NInput
       v-model:value="value"
       :type="revealed ? 'text' : 'password'"

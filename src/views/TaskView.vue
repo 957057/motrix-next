@@ -194,7 +194,19 @@ onBeforeUnmount(() => {
         :show="taskStore.taskDetailVisible"
         :task="taskStore.currentTaskItem"
         :files="taskStore.currentTaskFiles"
+        @pause="handlePauseTask"
+        @resume="handleResumeTask"
         @close="taskStore.hideTaskDetail()"
+        @retry="handleRetryTask"
+        @redownload="handleRedownloadTask"
+        @finish-sharing="handleFinishSharing"
+        @finish-media="handleFinishMedia"
+        @delete="handleDeleteTask"
+        @delete-record="handleDeleteRecord"
+        @copy-link="handleCopyLink"
+        @folder="handleShowInFolder"
+        @open-file="handleOpenFile"
+        @select-files="handleSelectFiles"
       />
     </Transition>
   </div>

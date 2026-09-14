@@ -4,6 +4,63 @@ The desktop follows the approved left-navigation reference. The download engine,
 browser submission identities and native file operations keep their existing
 ownership. There is one interface, without a legacy layout switch.
 
+## Visual implementation
+
+The reference is the light sidebar and unboxed-list composition, with neutral
+white content, quiet separators, consistent typography and restrained purple
+actions. Settings keep the seven current categories; Connections supersedes the
+standalone browser entry in older raster references.
+
+`SettingsRow.vue` composes Naive UI form items into a label/description column
+and a right-aligned control column. Short containers stack the same row. There
+are no fixed 260 px label columns, divider titles or label-padding shims.
+Appearance comes first; version and system information live in `AboutDialog.vue`.
+Appearance saves preserve unrelated drafts and restore the control on failure.
+Grouped forms expose their save bar only while dirty or applying.
+
+Settings search uses Naive UI filtering over `settingsCatalog.ts`, which owns
+only translated labels and destinations. Native configuration ownership does
+not move into the catalog. Search can reveal dependent fields without enabling
+their controlling settings. Each result targets an actual form anchor and uses
+native scrolling and focus. The catalog has a regression check for stale links.
+
+`AppDialog.vue` centralizes Naive UI modal focus, close policy, title, scrolling
+body and action layout. New download uses top labels, link/torrent tabs, location,
+file name and library disclosure for advanced fields. URL validation reuses the
+existing input parser and the native URL parser; non-web protocol grammar stays
+with the engine. Empty drafts cannot submit. Errors retain the draft.
+
+Media quality uses radio choices; track, container and recording controls retain
+native identifiers and capabilities. File filters retain selections outside the
+visible results. Detail headers reuse task display and action models, including
+missing-file and protocol-specific behavior.
+
+The former glass About panel, staggered entrances, count rolling, search icon
+scaling, recovery halo, progress shimmer, hand-written collapse geometry and
+private tab-animation access are removed. Rule editors use light lists and
+library drag/drop; reset confirmation uses Naive UI. Piece graphics use native
+Canvas roundRect without a custom shape algorithm or activation glow.
+
+## Reference coverage
+
+This table records implementation coverage, not completed visual acceptance.
+Every surface still needs the maintainer's separately built-app E2E review.
+
+| References     | Surface                                             | Current implementation                                                                 |
+| -------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 01, 04, 05     | List, expansion, density, batch operations          | Shared task row, native query identity, Motion presence/layout                         |
+| 02, 10         | New download and advanced/error states              | Shared dialog, top-labelled form, library disclosure, preserved submission lifecycle   |
+| 03, 12, 13, 14 | General, connections, download and network settings | Shared setting rows, searchable locations, explicit grouped apply                      |
+| 06, 22         | Detail, files, sources, peers and task actions      | Shared summary/actions and quiet library tables                                        |
+| 07             | Torrent/magnet selection                            | Shared dialog, file search and stable selection                                        |
+| 08, 09         | Media selection and live recording                  | Quality radios, track selectors, native duration/finalization states                   |
+| 11             | History and removal                                 | Selected-task confirmation, separate file deletion                                     |
+| 15             | Category and User-Agent rules                       | Shared dialog, list/editor layout, library reordering                                  |
+| 16             | BitTorrent and eD2k                                 | Shared settings rows, native search and protocol operations                            |
+| 17, 18         | Empty, recovery, updates, maintenance               | Existing native state machines with simplified presentation                            |
+| 19, 23         | Platforms, narrow layouts, localization and themes  | Logical CSS, system fonts, existing platform APIs and 27 locales                       |
+| 20, 21         | Controls and motion                                 | Shared theme/control anatomy, CSS/Vue and Naive UI; Motion only for coordinated layout |
+
 ## Interface ownership
 
 | Area                                  | Implementation                                               |
@@ -17,6 +74,9 @@ ownership. There is one interface, without a legacy layout switch.
 | Contextual task capabilities          | `src/components/task/TaskItemActions.vue`                    |
 | Full task details                     | `src/components/task/TaskDetail.vue`                         |
 | Connections settings                  | `src/components/preference/Connections.vue`                  |
+| Shared settings rows                  | `src/components/preference/SettingsRow.vue`                  |
+| Shared dialogs                        | `src/components/common/AppDialog.vue`                        |
+| About                                 | `src/components/about/AboutDialog.vue`                       |
 | Shared settings layout                | `src/views/PreferenceView.vue`, `src/styles/preferences.css` |
 
 Navigation is 192 px wide, becomes a 56 px rail below 960 px, and uses the
@@ -51,8 +111,8 @@ existing immediate behavior; engine settings use explicit save/discard. Failed
 saves restore the native configuration and keep the editable proposal dirty.
 Language selection retains the existing application restart contract.
 
-All 27 locale resources remain present. New interface text is translated in
-every locale. The active locale sets document language and direction, and Naive
+All 27 locale resources remain present. New labels and descriptions are translated in
+every locale. Chinese and English copy also use concise, context-specific actions. The active locale sets document language and direction, and Naive
 UI supplies its exported RTL control styles. System fonts and the official SVG
 logo remain the only typography and logo sources.
 

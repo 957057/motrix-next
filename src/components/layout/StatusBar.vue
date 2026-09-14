@@ -43,6 +43,7 @@ const ulLimitBadge = computed(() => formatLimitBadge(preferenceStore.config.maxO
 // ── Popover state ───────────────────────────────────────────────────
 
 const showPopover = ref(false)
+const applying = ref(false)
 const popoverDlValue = ref(0)
 const popoverDlUnit = ref('K')
 const popoverUlValue = ref(0)
@@ -72,7 +73,7 @@ function makeDeps() {
   }
 }
 
-// ── Left-click: toggle speed limit ──────────────────────────────────
+// Apply the explicit switch inside the limits panel.
 
 async function handleClick() {
   if (!isEngineReady()) return
@@ -92,12 +93,10 @@ async function handleClick() {
   }
 }
 
-// ── Right-click: open configuration popover ─────────────────────────
-
 // ── Apply custom limit from popover ─────────────────────────────────
 
 async function handleApply() {
-  if (!isEngineReady()) return
+  if (!isEngineReady() || applying.value) return
 
   // Reject 0/0 — at least one direction must have a non-zero limit
   if (popoverDlValue.value === 0 && popoverUlValue.value === 0) {
@@ -108,12 +107,16 @@ async function handleApply() {
   const dlStr = buildSpeedLimitString(popoverDlValue.value, popoverDlUnit.value)
   const ulStr = buildSpeedLimitString(popoverUlValue.value, popoverUlUnit.value)
 
+  applying.value = true
   try {
     await applyCustomLimit(dlStr, ulStr, makeDeps())
     showPopover.value = false
     message.success(t('app.speedometer-limit-applied'))
   } catch (e) {
-    logger.error('Speedometer.applyLimit', e)
+    logger.error('StatusBar.applyLimit', e)
+    message.error(t('preferences.save-fail-message'))
+  } finally {
+    applying.value = false
   }
 }
 
@@ -142,43 +145,22 @@ async function handleScheduleToggle(enabled: boolean) {
     />
     <NPopover
       :show="showPopover"
-      trigger="manual"
+      trigger="click"
       placement="top-end"
       :show-arrow="false"
-      @clickoutside="showPopover = false"
-      @update:show="showPopover = $event"
+      @update:show="(value) => (value ? openPopover() : (showPopover = false))"
     >
       <template #trigger
-        ><button
-          class="limit-trigger"
-          :aria-label="t('app.speedometer-set-limit')"
-          @click="showPopover ? (showPopover = false) : openPopover()"
-        >
+        ><button class="limit-trigger" :aria-label="t('app.speedometer-set-limit')" :aria-expanded="showPopover">
           {{ t('app.speedometer-set-limit') }}<span v-if="isLimited"> · {{ dlLimitBadge }} / {{ ulLimitBadge }}</span
           ><span aria-hidden="true">⌄</span>
         </button></template
       >
       <!-- Speed limit configuration panel -->
       <div class="limit-panel">
-        <NSwitch :value="isLimited" :aria-label="t('app.speedometer-set-limit')" @update:value="handleClick" />
-        <div class="limit-panel-title">{{ t('app.speedometer-set-limit') }}</div>
-
-        <div class="limit-panel-row">
-          <div class="limit-panel-label">
-            <NIcon :size="12"><ArrowUpOutline /></NIcon>
-            <span>{{ t('app.speedometer-upload-limit') }}</span>
-          </div>
-          <div class="limit-panel-inputs">
-            <NInputNumber
-              v-model:value="popoverUlValue"
-              :min="0"
-              :max="65535"
-              :step="1"
-              size="small"
-              style="width: 100px"
-            />
-            <NSelect v-model:value="popoverUlUnit" :options="speedUnitOptions" size="small" style="width: 88px" />
-          </div>
+        <div class="limit-panel-heading">
+          <div class="limit-panel-title">{{ t('app.speedometer-enable-limit') }}</div>
+          <NSwitch :value="isLimited" :aria-label="t('app.speedometer-enable-limit')" @update:value="handleClick" />
         </div>
 
         <div class="limit-panel-row">
@@ -199,6 +181,24 @@ async function handleScheduleToggle(enabled: boolean) {
           </div>
         </div>
 
+        <div class="limit-panel-row">
+          <div class="limit-panel-label">
+            <NIcon :size="12"><ArrowUpOutline /></NIcon>
+            <span>{{ t('app.speedometer-upload-limit') }}</span>
+          </div>
+          <div class="limit-panel-inputs">
+            <NInputNumber
+              v-model:value="popoverUlValue"
+              :min="0"
+              :max="65535"
+              :step="1"
+              size="small"
+              style="width: 100px"
+            />
+            <NSelect v-model:value="popoverUlUnit" :options="speedUnitOptions" size="small" style="width: 88px" />
+          </div>
+        </div>
+
         <NDivider style="margin: 12px 0 8px" />
         <div class="limit-panel-row">
           <div class="limit-panel-label">
@@ -207,18 +207,24 @@ async function handleScheduleToggle(enabled: boolean) {
           </div>
           <NSwitch :value="isScheduleActive" size="small" @update:value="handleScheduleToggle" />
         </div>
-        <Transition name="hint-slide">
-          <NText
-            v-if="isScheduleActive && !isLimited"
-            depth="3"
-            type="warning"
-            style="font-size: 11px; margin-top: 4px; display: block"
-          >
-            {{ t('preferences.schedule-needs-limit') }}
-          </NText>
-        </Transition>
 
-        <NButton type="primary" size="small" block style="margin-top: 12px" @click="handleApply">
+        <NText
+          v-if="isScheduleActive && !isLimited"
+          depth="3"
+          type="warning"
+          style="font-size: 11px; margin-top: 4px; display: block"
+        >
+          {{ t('preferences.schedule-needs-limit') }}
+        </NText>
+
+        <NButton
+          type="primary"
+          :loading="applying"
+          :disabled="applying"
+          block
+          style="margin-top: 12px"
+          @click="handleApply"
+        >
           {{ t('app.speedometer-apply') }}
         </NButton>
       </div>
@@ -265,7 +271,9 @@ async function handleScheduleToggle(enabled: boolean) {
   color: var(--m3-primary);
 }
 .limit-panel {
-  width: min(300px, calc(100vw - 56px));
+  width: min(340px, calc(100vw - 56px));
+  max-height: calc(100dvh - 96px);
+  overflow: auto;
 }
 .limit-panel-title {
   font-weight: 600;
@@ -276,6 +284,7 @@ async function handleScheduleToggle(enabled: boolean) {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
   margin-block: 12px;
 }
 .limit-panel-label {
@@ -304,5 +313,11 @@ async function handleScheduleToggle(enabled: boolean) {
     min-width: 32px;
     justify-content: center;
   }
+}
+.limit-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
 }
 </style>

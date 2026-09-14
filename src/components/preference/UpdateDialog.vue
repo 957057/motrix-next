@@ -285,7 +285,7 @@ defineExpose({ open, present })
       </header>
 
       <div class="update-dialog-viewport">
-        <Transition name="update-panel">
+        <Transition name="view">
           <div v-if="phase === 'checking'" key="checking" class="update-panel update-panel--centered">
             <NSpin size="large" />
             <div class="update-copy">
@@ -340,7 +340,7 @@ defineExpose({ open, present })
               <p>v{{ version }}</p>
             </div>
             <div class="update-progress-wrap">
-              <NProgress type="line" :percentage="progressPercent" :show-indicator="false" processing />
+              <NProgress type="line" :percentage="progressPercent" :show-indicator="false" />
               <div class="update-progress-meta">
                 <span>{{ downloadedMB }} / {{ totalMB }} MB</span>
                 <strong>{{ progressPercent }}%</strong>
@@ -386,9 +386,7 @@ defineExpose({ open, present })
         </NButton>
         <NButton class="action-btn" :type="actionType" :disabled="actionDisabled" @click="handleActionClick">
           <span class="action-label">
-            <Transition name="action-label-swap">
-              <span :key="actionLabel">{{ t(actionLabel) }}</span>
-            </Transition>
+            <span :key="actionLabel">{{ t(actionLabel) }}</span>
           </span>
         </NButton>
       </footer>
@@ -398,184 +396,110 @@ defineExpose({ open, present })
 
 <style scoped>
 .update-dialog {
-  width: min(558px, calc(100vw - 40px));
-  height: min(513px, calc(100vh - 40px));
-  display: grid;
-  grid-template-rows: 66px minmax(0, 1fr) 74px;
-  color: var(--m3-on-surface);
-  background: var(--m3-surface-container-high);
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: 16px;
+  width: min(560px, calc(100vw - 48px));
+  max-height: calc(100dvh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--main-bg);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px var(--m3-shadow);
   overflow: hidden;
-  box-shadow: 0 18px 56px var(--m3-shadow);
 }
 .update-dialog-header {
+  padding: 24px 24px 16px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  border-bottom: 1px solid var(--m3-outline-variant);
+  align-items: center;
 }
 .update-dialog-title {
-  font-size: 16px;
-  font-weight: 650;
-}
-.update-dialog-close {
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--m3-outline);
   font-size: 20px;
-  cursor: pointer;
-  line-height: 30px;
-  transition:
-    background-color 0.2s cubic-bezier(0.2, 0, 0, 1),
-    color 0.2s cubic-bezier(0.2, 0, 0, 1);
-}
-.update-dialog-close:hover {
-  color: var(--m3-on-surface);
-  background: var(--m3-surface-container-highest);
-}
-.update-dialog-close:disabled {
-  cursor: default;
-  opacity: 0.35;
-}
-.update-dialog-viewport {
-  position: relative;
-  min-height: 0;
-  overflow: hidden;
-}
-.update-dialog-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 0 24px;
-  border-top: 1px solid var(--m3-outline-variant);
-}
-.update-dialog-close-action {
-  min-width: 96px;
-}
-.action-btn {
-  min-width: 150px;
-}
-.action-label {
-  display: inline-grid;
-  place-items: center;
-}
-.action-label > span {
-  grid-area: 1 / 1;
+  font-weight: 600;
 }
 .update-dialog-title-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
-.update-panel {
-  position: absolute;
-  inset: 0;
-  box-sizing: border-box;
-  padding: 28px 32px;
+.update-dialog-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  font-size: 22px;
+  color: var(--m3-on-surface-variant);
+}
+.update-dialog-viewport {
+  position: relative;
+  min-height: 220px;
+  min-width: 0;
+  overflow: auto;
+  padding: 0 24px 24px;
+}
+.update-dialog-viewport > .view-leave-active {
+  inset: 0 24px 24px;
 }
 .update-panel--centered {
   display: flex;
   flex-direction: column;
+  gap: 16px;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  min-height: 220px;
   text-align: center;
 }
 .update-panel--document {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 .update-summary {
   display: flex;
-  align-items: center;
   gap: 16px;
+  align-items: center;
 }
 .update-status-icon {
-  display: grid;
-  width: 54px;
-  height: 54px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  place-items: center;
-}
-.update-status-icon--primary {
-  color: var(--m3-on-primary-container);
-  background: var(--m3-primary-container);
-}
-.update-status-icon--success {
-  color: var(--m3-on-success-container);
-  background: var(--m3-success-container);
-}
-.update-status-icon--warning {
-  color: var(--m3-on-warning-container);
-  background: var(--m3-warning-container);
+  color: var(--m3-primary);
 }
 .update-status-icon--error {
-  color: var(--m3-on-error-container);
-  background: var(--m3-error-container);
+  color: var(--m3-error);
+}
+.update-status-icon--warning {
+  color: var(--m3-warning);
 }
 .update-copy h2 {
-  margin: 0;
-  color: var(--m3-on-surface);
-  font-size: 19px;
-  font-weight: 650;
-  line-height: 1.35;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 600;
 }
-.update-copy p {
-  margin: 6px 0 0;
+.update-copy p,
+.update-version-flow {
+  margin-top: 8px;
   color: var(--m3-on-surface-variant);
   font-size: 13px;
-}
-.update-copy--left {
-  text-align: left;
 }
 .update-version-flow {
   display: flex;
-  align-items: baseline;
-  gap: 9px;
-  margin-top: 6px;
-  color: var(--m3-on-surface-variant);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 13px;
-}
-.update-version-flow strong {
-  color: var(--m3-primary);
-  font-size: 15px;
-}
-.update-version-arrow {
-  color: var(--m3-outline);
+  align-items: center;
+  gap: 12px;
 }
 .update-progress-wrap {
-  width: min(100%, 430px);
+  width: 100%;
 }
 .update-progress-meta {
   display: flex;
   justify-content: space-between;
-  margin-top: 10px;
-  color: var(--m3-on-surface-variant);
-  font-size: 12px;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 13px;
 }
-.update-progress-meta strong {
-  color: var(--m3-primary);
-  font-weight: 650;
+.update-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--divider);
 }
-.update-document,
-.update-error-detail {
-  min-height: 0;
-  margin: 0;
-  padding: 18px 20px;
-  overflow: auto;
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: 12px;
-  background: var(--m3-surface-container);
-  scrollbar-gutter: stable;
+.action-btn {
+  min-width: 120px;
 }
 .update-notes-text {
   font-size: 13px;
@@ -750,60 +674,5 @@ defineExpose({ open, present })
   font-size: 12.5px;
   line-height: 1.6;
   overflow-wrap: anywhere;
-}
-
-.update-panel-enter-active,
-.update-panel-leave-active {
-  transition:
-    opacity 0.48s cubic-bezier(0.2, 0, 0, 1),
-    transform 0.56s cubic-bezier(0.2, 0, 0, 1);
-}
-.update-panel-enter-from {
-  opacity: 0;
-  transform: translateY(8px);
-}
-.update-panel-leave-to {
-  opacity: 0;
-  transform: translateY(-5px);
-}
-
-@media (max-width: 680px) {
-  .update-dialog {
-    width: calc(100vw - 24px);
-    height: calc(100vh - 24px);
-  }
-
-  .update-panel {
-    padding: 22px 20px;
-  }
-
-  .update-dialog-header,
-  .update-dialog-footer {
-    padding-right: 20px;
-    padding-left: 20px;
-  }
-}
-</style>
-
-<style>
-.action-label-swap-enter-active {
-  animation: action-pulse 0.4s ease;
-  transition: opacity 0.28s cubic-bezier(0.05, 0.7, 0.1, 1);
-}
-.action-label-swap-leave-active {
-  transition: opacity 0.18s cubic-bezier(0.3, 0, 0.8, 0.15);
-}
-.action-label-swap-enter-from,
-.action-label-swap-leave-to {
-  opacity: 0;
-}
-@keyframes action-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.04);
-  }
 }
 </style>

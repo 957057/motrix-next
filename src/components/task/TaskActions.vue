@@ -8,7 +8,7 @@ import { useTaskStore } from '@/stores/task'
 import { batchFinishMedia, saveSession, isEngineReady } from '@/api/aria2'
 import type { I18nKey } from '@shared/i18nTypes'
 import { canFinishMedia } from '@shared/utils/media'
-import { getTaskSharingState } from '@shared/utils/task'
+import { getTaskSharingState, getTaskName } from '@shared/utils/task'
 import { deleteTaskFiles } from '@/composables/useFileDelete'
 
 import { logger } from '@shared/logger'
@@ -138,16 +138,23 @@ function onDeleteAll() {
     message.warning(t('app.engine-not-ready'))
     return
   }
-  // In 'all' view, clear only live aria2 tasks, not DB-only history items.
+  // Capture the user's explicit selection before dispatching native removals.
   const targetGids = [...view.selected]
   if (targetGids.length === 0) return
   const gids = targetGids
   const deleteFiles = ref(false)
   const d = dialog.error({
-    title: t('task.delete-task-queue'),
+    title: t('task.delete-task'),
     content: () =>
       h('div', {}, [
         h('p', { style: 'margin: 0 0 12px;' }, t('task.batch-delete-task-confirm', { count: gids.length })),
+        h(
+          'ul',
+          { class: 'removal-task-list' },
+          taskStore.taskList
+            .filter((task) => gids.includes(task.gid))
+            .map((task) => h('li', { key: task.gid }, getTaskName(task))),
+        ),
         h(
           NCheckbox,
           {
@@ -159,8 +166,8 @@ function onDeleteAll() {
           { default: () => deleteFilesLabel.value },
         ),
       ]),
-    positiveText: t('app.yes'),
-    negativeText: t('app.no'),
+    positiveText: t('task.delete-task'),
+    negativeText: t('app.cancel'),
     onPositiveClick: async () => {
       await lockDialog(d)
       // Capture task references BEFORE removal — the store list mutates after
@@ -215,8 +222,8 @@ function resumeAll() {
   const d = dialog.info({
     title: t('task.resume-all-task'),
     content: t('task.resume-all-task-confirm') || 'Resume all tasks?',
-    positiveText: t('app.yes'),
-    negativeText: t('app.no'),
+    positiveText: t('task.resume-all-task'),
+    negativeText: t('app.cancel'),
     onPositiveClick: async () => {
       await lockDialog(d)
       try {
@@ -241,8 +248,8 @@ function pauseAll() {
   const d = dialog.info({
     title: t('task.pause-all-task'),
     content: t('task.pause-all-task-confirm') || 'Pause all tasks?',
-    positiveText: t('app.yes'),
-    negativeText: t('app.no'),
+    positiveText: t('task.pause-all-task'),
+    negativeText: t('app.cancel'),
     onPositiveClick: async () => {
       await lockDialog(d)
       try {
@@ -269,8 +276,8 @@ function finishAllSharing() {
   const d = dialog.warning({
     title: t('task.finish-all-sharing'),
     content: t('task.finish-all-sharing-confirm', { count: gids.length }),
-    positiveText: t('app.yes'),
-    negativeText: t('app.no'),
+    positiveText: t('task.finish-all-sharing'),
+    negativeText: t('app.cancel'),
     onPositiveClick: async () => {
       await lockDialog(d)
       try {

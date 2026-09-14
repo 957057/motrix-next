@@ -1,25 +1,18 @@
 <script setup lang="ts">
+import TaskDetailHeader from './TaskDetailHeader.vue'
 /** @fileoverview Detailed task view with file list, peers, and BT info. */
 import { ref, computed, watch, defineComponent } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { I18nKey } from '@shared/i18nTypes'
 import { logger } from '@shared/logger'
 import { writeAppClipboardText } from '@shared/utils'
-import {
-  checkTaskIsBT,
-  checkTaskIsSharing,
-  getTaskSharingState,
-  getTaskSharingTime,
-  getTaskName,
-  bytesToSize,
-  localeDateTimeFormat,
-  isBtMetadataTask,
-} from '@shared/utils'
+import { checkTaskIsBT, getTaskSharingTime, bytesToSize, localeDateTimeFormat } from '@shared/utils'
 import {
   NDescriptions,
+  NTabs,
+  NTab,
   NDescriptionsItem,
   NIcon,
-  NTag,
   NButton,
   NSwitch,
   NForm,
@@ -46,7 +39,6 @@ import {
   buildTaskDetailKind,
   buildTaskTransferSummary,
   buildUriDetailSummary,
-  getTaskDetailStatusLabelKey,
 } from '@/composables/useTaskDetailSummary'
 import { usePreferenceStore } from '@/stores/preference'
 import { useTaskStore } from '@/stores/task'
@@ -57,8 +49,6 @@ import { getAddedAt } from '@/composables/useTaskOrder'
 import type { Aria2Task, Aria2File, UserAgentProfile } from '@shared/types'
 import UserAgentPopover from '@/components/common/UserAgentPopover.vue'
 import { renderDetailCopyableText } from './detail/TaskDetailShared'
-import { mediaStateLabel, canSelectMedia } from '@shared/utils/media'
-import { useTaskSelectionStore } from '@/stores/taskSelection'
 import TaskDetailActivity from './detail/TaskDetailActivity.vue'
 import TaskDetailFiles from './detail/TaskDetailFiles.vue'
 import TaskDetailPeers from './detail/TaskDetailPeers.vue'
@@ -66,14 +56,28 @@ import TaskDetailSources from './detail/TaskDetailSources.vue'
 import TaskDetailTrackers from './detail/TaskDetailTrackers.vue'
 import { forceBtRecheck } from '@/api/aria2'
 import { getErrorMessage } from '@shared/utils/errorMessage'
-import { formatSharingDuration, getBtLifecycleState } from '@/composables/useBtLifecycle'
+import { formatSharingDuration } from '@/composables/useBtLifecycle'
 
 const props = defineProps<{
   show: boolean
   task: Aria2Task | null
   files: Aria2File[]
 }>()
-const emit = defineEmits<{ close: [] }>()
+const emit = defineEmits<{
+  close: []
+  pause: [task: Aria2Task]
+  resume: [task: Aria2Task]
+  retry: [task: Aria2Task]
+  redownload: [task: Aria2Task]
+  'finish-sharing': [task: Aria2Task]
+  'finish-media': [task: Aria2Task]
+  delete: [task: Aria2Task]
+  'delete-record': [task: Aria2Task]
+  'copy-link': [task: Aria2Task]
+  folder: [task: Aria2Task]
+  'open-file': [task: Aria2Task]
+  'select-files': [task: Aria2Task]
+}>()
 
 const { t, locale } = useI18n()
 const preferenceStore = usePreferenceStore()
@@ -178,7 +182,6 @@ const CopyableValue = defineComponent({
 })
 
 const activeTab = ref('general')
-const prevTabIndex = ref(0)
 
 interface TabDef {
   key: string
@@ -219,8 +222,6 @@ watch(activeTab, (tab) => {
   if (tab === 'peers') void taskStore.fetchList()
 })
 function switchTab(key: string) {
-  const newIdx = visibleTabs.value.findIndex((t) => t.key === key)
-  prevTabIndex.value = newIdx
   activeTab.value = key
 }
 
@@ -233,12 +234,6 @@ const btHealth = computed(() => buildBtHealthSummary(props.task))
 const ed2kSummary = computed(() => buildEd2kDetailSummary(props.task))
 const transferSummary = computed(() => buildTaskTransferSummary(props.task))
 const mediaRows = computed(() => buildMediaDetailRows(props.task, locale.value))
-function editMedia() {
-  if (!props.task || !canSelectMedia(props.task)) return
-  taskStore.hideTaskDetail()
-  useTaskSelectionStore().request({ kind: 'media', gid: props.task.gid })
-}
-
 const prevTaskGid = ref('')
 watch(
   () => props.task?.gid,
@@ -253,41 +248,8 @@ watch(
 watch(visibleTabs, (tabs) => {
   if (!tabs.some((tab) => tab.key === activeTab.value)) {
     activeTab.value = 'general'
-    prevTabIndex.value = 0
   }
 })
-const sharingState = computed(() => (props.task ? getTaskSharingState(props.task) : null))
-const sharingKind = computed(() => sharingState.value?.kind ?? null)
-const isSharing = computed(() => (props.task ? checkTaskIsSharing(props.task) : false))
-const isMetadataFetching = computed(() => (props.task ? isBtMetadataTask(props.task) : false))
-const btLifecycle = computed(() => (props.task ? getBtLifecycleState(props.task) : 'none'))
-const taskStatusKey = computed(() =>
-  btLifecycle.value === 'selection'
-    ? 'awaiting-file-selection'
-    : btLifecycle.value === 'recovering'
-      ? 'bt-recovering'
-      : btLifecycle.value === 'error'
-        ? 'error'
-        : sharingState.value?.phase === 'paused'
-          ? sharingState.value.kind === 'bt'
-            ? 'seeding-paused'
-            : 'sharing-paused'
-          : isSharing.value
-            ? sharingKind.value === 'bt'
-              ? 'seeding'
-              : 'sharing'
-            : isMetadataFetching.value
-              ? 'bt-metadata-fetching'
-              : props.task?.status,
-)
-const taskStatus = computed(() => {
-  if (props.task?.media) return t(mediaStateLabel[props.task.media.state])
-  const key = taskStatusKey.value
-  const labelKey = getTaskDetailStatusLabelKey(key)
-  const translated = t(labelKey)
-  return translated !== labelKey ? translated : key
-})
-const taskFullName = computed(() => (props.task ? getTaskName(props.task, { defaultName: 'Unknown' }) : ''))
 // ── Task date display ────────────────────────────────────────────────
 const taskAddedAt = computed(() => {
   if (!props.task) return ''
@@ -363,28 +325,6 @@ function yesNo(value?: boolean | string): string {
   return normalized ? t('task.task-ed2k-yes') : t('task.task-ed2k-no')
 }
 
-type TaskStatusTagType = 'default' | 'success' | 'warning' | 'error' | 'info'
-
-const statusTagType = computed<TaskStatusTagType>(() => {
-  switch (taskStatusKey.value) {
-    case 'active':
-    case 'waiting':
-    case 'bt-metadata-fetching':
-    case 'awaiting-file-selection':
-    case 'bt-recovering':
-      return 'warning'
-    case 'seeding':
-    case 'sharing':
-      return 'info'
-    case 'complete':
-      return 'success'
-    case 'error':
-      return 'error'
-    default:
-      return 'default'
-  }
-})
-
 function handleClose() {
   emit('close')
 }
@@ -393,24 +333,32 @@ function handleClose() {
 <template>
   <section class="task-detail-pane">
     <header class="detail-header">
-      <NButton quaternary @click="handleClose"
+      <NButton id="task-detail-back" quaternary @click="handleClose"
         ><template #icon
           ><NIcon><ArrowBackOutline /></NIcon></template
         >{{ t('workspace.back') }}</NButton
       >
-      <h1>{{ taskFullName }}</h1>
     </header>
-    <div class="detail-tabs">
-      <button
-        v-for="tab in visibleTabs"
-        :key="tab.key"
-        :class="['detail-tab', { active: activeTab === tab.key }]"
-        @click="switchTab(tab.key)"
-      >
-        <NIcon :size="16"><component :is="tab.icon" /></NIcon>
-        <span class="detail-tab-label">{{ t(tab.labelKey) }}</span>
-      </button>
-    </div>
+    <TaskDetailHeader
+      v-if="task"
+      :task="task"
+      :pending="taskStore.pendingGids.includes(task.gid)"
+      @pause="emit('pause', $event)"
+      @resume="emit('resume', $event)"
+      @retry="emit('retry', $event)"
+      @redownload="emit('redownload', $event)"
+      @finish-sharing="emit('finish-sharing', $event)"
+      @finish-media="emit('finish-media', $event)"
+      @delete="emit('delete', $event)"
+      @delete-record="emit('delete-record', $event)"
+      @copy-link="emit('copy-link', $event)"
+      @folder="emit('folder', $event)"
+      @open-file="emit('open-file', $event)"
+      @select-files="emit('select-files', $event)"
+    />
+    <NTabs :value="activeTab" type="line" class="detail-tabs" @update:value="switchTab">
+      <NTab v-for="tab in visibleTabs" :key="tab.key" :name="tab.key">{{ t(tab.labelKey) }}</NTab>
+    </NTabs>
 
     <div class="tab-content-wrapper">
       <Transition
@@ -424,24 +372,14 @@ function handleClose() {
             <NDescriptions
               :column="1"
               label-placement="left"
-              bordered
+              :bordered="false"
               size="small"
               :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
             >
-              <NDescriptionsItem :label="t('task.task-name') || 'Name'">
-                <CopyableValue :value="taskFullName" :label="copyLabel(t('task.task-name'), 'Name')" />
-              </NDescriptionsItem>
               <NDescriptionsItem v-if="task.dir" :label="t('task.task-dir') || 'Directory'">
                 <CopyableValue :value="task.dir" :label="copyLabel(t('task.task-dir'), 'Directory')" />
               </NDescriptionsItem>
-              <NDescriptionsItem :label="t('task.task-status') || 'Status'">
-                <div class="detail-status-value">
-                  <NTag :type="statusTagType" size="small">{{ taskStatus }}</NTag>
-                  <NButton v-if="canSelectMedia(task)" text type="primary" size="small" @click="editMedia">{{
-                    t('media.select-tracks')
-                  }}</NButton>
-                </div>
-              </NDescriptionsItem>
+
               <NDescriptionsItem :label="t('task.task-type') || 'Type'">
                 {{
                   task.media
@@ -475,7 +413,7 @@ function handleClose() {
               <NDescriptions
                 :column="1"
                 label-placement="left"
-                bordered
+                :bordered="false"
                 size="small"
                 :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
               >
@@ -507,7 +445,7 @@ function handleClose() {
               <NDescriptions
                 :column="1"
                 label-placement="left"
-                bordered
+                :bordered="false"
                 size="small"
                 :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
               >
@@ -536,7 +474,7 @@ function handleClose() {
             <NDescriptions
               :column="1"
               label-placement="left"
-              bordered
+              :bordered="false"
               size="small"
               :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
             >
@@ -596,8 +534,8 @@ function handleClose() {
         </div>
 
         <div v-else-if="activeTab === 'options'" key="options" class="tab-content">
-          <NForm label-placement="left" label-width="110px" class="options-form">
-            <NFormItem :label="t('task.task-user-agent') + ':'">
+          <NForm label-placement="top" class="options-form">
+            <NFormItem :label="t('task.task-user-agent')">
               <NInputGroup class="detail-ua-row">
                 <NInput
                   v-model:value="optForm.userAgent"
@@ -616,7 +554,7 @@ function handleClose() {
                 />
               </NInputGroup>
             </NFormItem>
-            <NFormItem :label="t('task.task-authorization') + ':'">
+            <NFormItem :label="t('task.task-authorization')">
               <NInput
                 v-model:value="optForm.authorization"
                 type="textarea"
@@ -625,7 +563,7 @@ function handleClose() {
                 :placeholder="t('task.task-authorization-placeholder') || ''"
               />
             </NFormItem>
-            <NFormItem :label="t('task.task-http-auth') + ':'">
+            <NFormItem :label="t('task.task-http-auth')">
               <div class="http-auth-fields">
                 <NInput
                   v-model:value="optForm.httpAuthUsername"
@@ -641,7 +579,7 @@ function handleClose() {
                 />
               </div>
             </NFormItem>
-            <NFormItem :label="t('task.task-referer') + ':'">
+            <NFormItem :label="t('task.task-referer')">
               <NInput
                 v-model:value="optForm.referer"
                 type="textarea"
@@ -650,7 +588,7 @@ function handleClose() {
                 :placeholder="t('task.task-referer-placeholder') || ''"
               />
             </NFormItem>
-            <NFormItem :label="t('task.task-cookie') + ':'">
+            <NFormItem :label="t('task.task-cookie')">
               <NInput
                 v-model:value="optForm.cookie"
                 type="textarea"
@@ -659,7 +597,7 @@ function handleClose() {
                 :placeholder="t('task.task-cookie-placeholder') || ''"
               />
             </NFormItem>
-            <NFormItem :label="t('task.use-proxy') + ':'">
+            <NFormItem :label="t('task.use-proxy')">
               <NSwitch
                 :value="optForm.proxyMode === 'manual'"
                 :disabled="!optCanModify"
@@ -716,16 +654,14 @@ function handleClose() {
             <NDescriptions
               :column="1"
               label-placement="left"
-              bordered
+              :bordered="false"
               size="small"
               :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
             >
               <NDescriptionsItem :label="t('task.task-ed2k-hash')">
                 <CopyableValue :value="ed2kInfo.hash || '-'" :label="t('task.task-ed2k-hash')" />
               </NDescriptionsItem>
-              <NDescriptionsItem :label="t('task.task-name')">
-                <CopyableValue :value="ed2kInfo.name || taskFullName" :label="t('task.task-name')" />
-              </NDescriptionsItem>
+
               <NDescriptionsItem :label="t('task.task-file-size')">
                 {{ ed2kInfo.length ? bytesToSize(ed2kInfo.length) : bytesToSize(task?.totalLength || '0') }}
               </NDescriptionsItem>
@@ -822,6 +758,7 @@ function handleClose() {
   background: var(--main-bg);
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
   padding: 16px 24px 0;
   box-sizing: border-box;
 }
@@ -829,7 +766,7 @@ function handleClose() {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 .detail-header h1 {
   font-size: 20px;
@@ -851,45 +788,13 @@ function handleClose() {
   flex-wrap: wrap;
 }
 .detail-tabs {
-  overflow-x: auto;
   flex-shrink: 0;
-  display: flex;
-  gap: 2px;
-  border-bottom: 1px solid var(--panel-border);
-  padding-bottom: 0;
-  margin-bottom: 0;
 }
-
-.detail-tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 0 12px;
-  height: 36px;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--m3-on-surface-variant);
-  cursor: pointer;
-  font-size: 12px;
-  white-space: nowrap;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.detail-tab:hover {
-  color: var(--m3-on-surface);
-}
-
-.detail-tab.active {
-  color: var(--m3-on-surface);
-  border-bottom-color: var(--m3-primary);
-}
-
 .tab-content-wrapper {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: visible;
+  flex-shrink: 0;
   position: relative;
 }
 
@@ -980,34 +885,9 @@ function handleClose() {
   margin-bottom: 12px;
 }
 
-/* Probe button M3 transition */
-:deep(.probe-btn) {
-  transition:
-    background-color 0.3s cubic-bezier(0.2, 0, 0, 1),
-    border-color 0.3s cubic-bezier(0.2, 0, 0, 1),
-    color 0.3s cubic-bezier(0.2, 0, 0, 1);
-}
-
-/* Spinning indicator matching Naive UI's loading style */
-:deep(.probe-spinner) {
-  width: 14px;
-  height: 14px;
-  border: 2px solid transparent;
-  border-top-color: currentColor;
-  border-radius: 50%;
-  animation: m3-spin 0.8s linear infinite;
-  will-change: transform;
-  contain: layout style paint;
-}
-
-@keyframes m3-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* ── Options tab ─────────────────────────────────────────────────── */
 .options-form {
+  max-width: 680px;
   padding: 4px 0;
 }
 .detail-ua-row {

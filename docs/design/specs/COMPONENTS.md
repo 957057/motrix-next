@@ -1,6 +1,6 @@
 # Component contracts
 
-All specifications here are proposals for the approved visual direction. Source contracts override generated pixels. The [component sheet](../screens/20-components.png) is a visual sample; exact behavior lives here.
+These contracts implement the approved visual direction. Source contracts override generated pixels. The [component sheet](../screens/20-components.png) is a visual sample; exact behavior lives here.
 
 | Component                  | Anatomy and variants                                         | Interaction and state contract                                                                |
 | -------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
@@ -70,7 +70,7 @@ Do not use generated icon duplication as a pattern. In image 06 the folder row i
 
 ## Settings transaction families
 
-1. Appearance-only choices can apply immediately with rollback and a local error if persistence fails. This is the proposal pictured in image 03; existing forms currently use explicit saves, so it requires deliberate implementation.
+1. Appearance-only choices can apply immediately with rollback and a local error if persistence fails. Theme, accent, list density, task counts and reduced motion apply immediately; grouped native settings retain explicit saves.
 2. Related download/network/engine settings are edited as a draft and applied together. Keep restore, apply, pending, saved, failed and restart-required states.
 3. For hot changes, preserve the current validated native/persistence transaction and rollback behavior. Do not mark saved after only one stage succeeds.
 4. Non-hot settings follow existing restart capability metadata. No text saying settings are active before required restart.

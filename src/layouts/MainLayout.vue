@@ -7,7 +7,7 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import StatusBar from '@/components/layout/StatusBar.vue'
 import WindowControls from '@/components/layout/WindowControls.vue'
 import EngineRecoveryDialog from '@/components/layout/EngineRecoveryDialog.vue'
-import AboutPanel from '@/components/about/AboutPanel.vue'
+import AboutDialog from '@/components/about/AboutDialog.vue'
 import AddTask from '@/components/task/AddTask.vue'
 import UpdateDialog from '@/components/preference/UpdateDialog.vue'
 import TaskSelectionHost from '@/components/task/TaskSelectionHost.vue'
@@ -77,7 +77,7 @@ const {
       @close="showExitDialog = true"
       @maximize-toggled="onMaximizeToggled"
     />
-    <AboutPanel :show="showAbout" @close="showAbout = false" />
+    <AboutDialog :show="showAbout" @close="showAbout = false" />
     <AddTask
       :show="appStore.addTaskVisible"
       @close="appStore.hideAddTaskDialog()"

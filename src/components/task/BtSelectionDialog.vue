@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import AppDialog from '@/components/common/AppDialog.vue'
 /** @fileoverview BitTorrent file selection using the existing native task. */
 import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NModal, NCard, NSpace, NButton, NAlert, NSpin } from 'naive-ui'
+import { NButton, NAlert, NSpin } from 'naive-ui'
 import { useTaskStore } from '@/stores/task'
 import { useBtSelection } from '@/composables/useBtSelection'
 import { isPendingMagnetSelectionTask, parseFilesForSelection } from '@/composables/useMagnetFlow'
@@ -95,30 +96,19 @@ function dismiss() {
 </script>
 
 <template>
-  <NModal
+  <AppDialog
     :show="show"
-    :mask-closable="false"
-    :close-on-esc="!submitting"
-    transform-origin="center"
-    @update:show="(value) => !value && dismiss()"
+    :title="t('task.select-files')"
+    size="wide"
+    :busy="submitting"
+    @close="dismiss"
     @after-leave="emit('afterLeave')"
   >
-    <NCard
-      :title="t('task.select-files')"
-      :bordered="false"
-      :closable="!submitting"
-      role="dialog"
-      :aria-label="t('task.select-files')"
-      aria-modal="true"
-      class="selection-dialog"
-      :content-style="{ overflowY: 'auto', minHeight: '0', flex: '1' }"
-      :segmented="{ footer: true }"
-      @close="dismiss"
-    >
-      <div class="selection-summary">
-        <div class="selection-name" :title="name">{{ name || '' }}</div>
-      </div>
-      <NAlert v-if="error" type="error" class="selection-error">{{ error }}</NAlert>
+    <div class="selection-summary">
+      <div class="selection-name" :title="name">{{ name || '' }}</div>
+    </div>
+    <NAlert v-if="error" type="error" class="selection-error">{{ error }}</NAlert>
+    <div class="selection-stage">
       <Transition name="selection-content">
         <div v-if="loading" key="loading" class="selection-loading" role="status" aria-busy="true">
           <NSpin size="small" /> {{ t('task.bt-metadata-fetching') }}
@@ -127,17 +117,15 @@ function dismiss() {
           <BtFileSelector v-model:selected-indices="indices" :files="files" :max-height="360" />
         </div>
       </Transition>
-      <template #footer>
-        <NSpace justify="end">
-          <NButton :disabled="submitting" @click="dismiss">{{ t('task.magnet-choose-later') }}</NButton>
-          <NButton v-if="error && !ready" :loading="loading" @click="load(gid)">{{ t('task.retry-task') }}</NButton>
-          <NButton v-else type="primary" :loading="submitting" :disabled="!ready || !indices.length" @click="confirm">{{
-            t('task.magnet-start-download')
-          }}</NButton>
-        </NSpace>
-      </template>
-    </NCard>
-  </NModal>
+    </div>
+    <template #footer>
+      <NButton :disabled="submitting" @click="dismiss">{{ t('task.magnet-choose-later') }}</NButton>
+      <NButton v-if="error && !ready" :loading="loading" @click="load(gid)">{{ t('task.retry-task') }}</NButton>
+      <NButton v-else type="primary" :loading="submitting" :disabled="!ready || !indices.length" @click="confirm">{{
+        t('task.magnet-start-download')
+      }}</NButton>
+    </template>
+  </AppDialog>
 </template>
 
 <style src="@/styles/selection-dialog.css" scoped></style>

@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import AppDialog from '@/components/common/AppDialog.vue'
 /** @fileoverview Native media selection, output options and retry. */
 import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NModal, NCard, NButton, NSpace, NForm, NAlert, NSpin } from 'naive-ui'
+import { NButton, NForm, NAlert, NSpin } from 'naive-ui'
 import { useTaskStore } from '@/stores/task'
 import { getOption, confirmMedia } from '@/api/aria2'
 import {
@@ -113,33 +114,22 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <NModal
+  <AppDialog
     :show="show"
-    :mask-closable="false"
-    :close-on-esc="!submitting"
-    transform-origin="center"
-    @update:show="(show) => !show && dismiss()"
+    :title="title"
+    size="regular"
+    :busy="submitting"
+    @close="dismiss"
     @after-leave="emit('afterLeave')"
   >
-    <NCard
-      :title="title"
-      :bordered="false"
-      :closable="!submitting"
-      role="dialog"
-      :aria-label="title"
-      aria-modal="true"
-      class="selection-dialog selection-dialog--media"
-      :content-style="{ overflowY: 'auto', minHeight: '0', flex: '1' }"
-      :segmented="{ footer: true }"
-      @close="dismiss"
-    >
-      <div class="selection-summary">
-        <div class="selection-name" :title="output">{{ ready ? output : '' }}</div>
-        <div class="selection-meta">
-          {{ media ? (media.live === 'true' ? t('media.live') : mediaDuration(media.duration)) : '' }}
-        </div>
+    <div class="selection-summary">
+      <div class="selection-name" :title="output">{{ ready ? output : '' }}</div>
+      <div class="selection-meta">
+        {{ media ? (media.live === 'true' ? t('media.live') : mediaDuration(media.duration)) : '' }}
       </div>
-      <NAlert v-if="error" type="error" class="selection-error">{{ error }}</NAlert>
+    </div>
+    <NAlert v-if="error" type="error" class="selection-error">{{ error }}</NAlert>
+    <div class="selection-stage">
       <Transition name="selection-content">
         <div v-if="loading" key="loading" class="selection-loading" role="status" aria-busy="true">
           <NSpin size="small" /> {{ t('media.probing') }}
@@ -154,17 +144,15 @@ onBeforeUnmount(() => {
           }}</NAlert>
         </NForm>
       </Transition>
-      <template #footer>
-        <NSpace justify="end">
-          <NButton :disabled="submitting" @click="dismiss">{{ t('task.magnet-choose-later') }}</NButton>
-          <NButton v-if="error && !ready" :loading="loading" @click="load(gid)">{{ t('task.retry-task') }}</NButton>
-          <NButton v-else type="primary" :loading="submitting" :disabled="!ready" @click="confirm">{{
-            media?.live === 'true' ? t('media.start-recording') : t('task.magnet-start-download')
-          }}</NButton>
-        </NSpace>
-      </template>
-    </NCard>
-  </NModal>
+    </div>
+    <template #footer>
+      <NButton :disabled="submitting" @click="dismiss">{{ t('task.magnet-choose-later') }}</NButton>
+      <NButton v-if="error && !ready" :loading="loading" @click="load(gid)">{{ t('task.retry-task') }}</NButton>
+      <NButton v-else type="primary" :loading="submitting" :disabled="!ready" @click="confirm">{{
+        media?.live === 'true' ? t('media.start-recording') : t('task.magnet-start-download')
+      }}</NButton>
+    </template>
+  </AppDialog>
 </template>
 
 <style src="@/styles/selection-dialog.css" scoped></style>

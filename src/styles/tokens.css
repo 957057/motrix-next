@@ -10,12 +10,12 @@
 :root {
   /* ── M3 Surface Tonal System ───────────────────────────────────── */
   --m3-surface: #fffbff;
-  --m3-surface-dim: #f5eff4;
+  --m3-surface-dim: #f1f1f1;
   --m3-surface-container-lowest: #ffffff;
-  --m3-surface-container-low: #fffbff;
-  --m3-surface-container: #fbf5fa;
-  --m3-surface-container-high: #fffbff;
-  --m3-surface-container-highest: #f2ecf1;
+  --m3-surface-container-low: #ffffff;
+  --m3-surface-container: #f6f6f6;
+  --m3-surface-container-high: #ffffff;
+  --m3-surface-container-highest: #eeeeee;
 
   /* ── M3 On-Surface / Text ──────────────────────────────────────── */
   --m3-on-surface: #1d1b1e;
@@ -91,14 +91,6 @@
   --panel-title: var(--m3-on-surface);
   --panel-border: var(--m3-outline-variant);
 
-  --about-card-bg: var(--m3-surface-container-lowest);
-  --about-card-hover-bg: var(--m3-surface-container-high);
-
-  /* ── Layout ────────────────────────────────────────────────────── */
-
-  /* Clear native title-bar controls. */
-  --header-top-offset: 48px;
-
   /* ── Typography ────────────────────────────────────────────────── */
   --font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
@@ -107,11 +99,8 @@
   --font-size-sm: 13px;
   --font-size-xs: 12px;
   --border-radius: 6px;
-  --transition-all: all 0.2s cubic-bezier(0.2, 0, 0, 1);
   --task-motion-enter: 200ms;
   --task-motion-leave: 150ms;
-  --task-motion-progress: 300ms;
-  --task-motion-state: 400ms;
   --task-motion-ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
@@ -120,11 +109,11 @@
   /* ── M3 Surface Tonal System ───────────────────────────────────── */
   --m3-surface: #1d1b1e;
   --m3-surface-dim: #141316;
-  --m3-surface-container-lowest: #0f0e11;
-  --m3-surface-container-low: #1d1b1e;
-  --m3-surface-container: #211f22;
-  --m3-surface-container-high: #2b292d;
-  --m3-surface-container-highest: #363438;
+  --m3-surface-container-lowest: #0e0e0e;
+  --m3-surface-container-low: #1b1b1b;
+  --m3-surface-container: #1f1f1f;
+  --m3-surface-container-high: #2a2a2a;
+  --m3-surface-container-highest: #353535;
 
   /* ── M3 On-Surface / Text ──────────────────────────────────────── */
   --m3-on-surface: #e7e1e6;
@@ -190,7 +179,4 @@
 
   /* Dark workspace surface. */
   --main-bg: var(--m3-surface-container-low);
-
-  --about-card-bg: var(--m3-surface-container);
-  --about-card-hover-bg: var(--m3-surface-container-highest);
 }

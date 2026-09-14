@@ -43,6 +43,7 @@ const preference = usePreferenceStore()
 const reduceMotion = useReducedMotion()
 const controls = useDragControls()
 const taskRef = computed(() => props.task)
+const sourceUrl = computed(() => props.task.files?.[0]?.uris?.[0]?.uri ?? '')
 const {
   taskFullName,
   statusBadge,
@@ -171,8 +172,32 @@ function toggleExpanded() {
         >
           <div class="quick-details-inner">
             <p v-if="task.errorMessage" class="error">{{ task.errorMessage }}</p>
-            <p v-if="hasSizeInfo">{{ completedSize }} / {{ totalSize }}</p>
-            <button v-if="task.dir" class="path-link" @click="emit('folder', task)">{{ task.dir }}</button>
+            <dl class="quick-metrics">
+              <div v-if="hasSizeInfo">
+                <dt>{{ t('task.task-file-size') }}</dt>
+                <dd>{{ completedSize }} / {{ totalSize }}</dd>
+              </div>
+              <div v-if="task.connections">
+                <dt>{{ t('task.task-connections') }}</dt>
+                <dd>{{ task.connections }}</dd>
+              </div>
+              <div v-if="remainingText">
+                <dt>{{ t('task.remaining-prefix') }}</dt>
+                <dd>{{ remainingText }}</dd>
+              </div>
+              <div v-if="task.dir">
+                <dt>{{ t('task.task-dir') }}</dt>
+                <dd>
+                  <button class="path-link" @click="emit('folder', task)">{{ task.dir }}</button>
+                </dd>
+              </div>
+              <div v-if="sourceUrl">
+                <dt>{{ t('task.task-tab-sources') }}</dt>
+                <dd>
+                  <button class="path-link" @click="emit('copy-link', task)">{{ sourceUrl }}</button>
+                </dd>
+              </div>
+            </dl>
             <NButton text type="primary" @click="emit('show-info', task)"
               >{{ t('task.task-detail-title')
               }}<template #icon
@@ -226,7 +251,7 @@ function toggleExpanded() {
   display: flex;
   align-items: center;
   gap: 16px;
-  min-height: 72px;
+  min-height: 80px;
   padding: 12px 8px;
   box-sizing: border-box;
 }
@@ -270,14 +295,14 @@ function toggleExpanded() {
 }
 .progress-line span {
   width: 34px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--m3-on-surface-variant);
   font-variant-numeric: tabular-nums;
 }
 progress {
   appearance: none;
   width: 100%;
-  height: 3px;
+  height: 4px;
   display: block;
   border: 0;
   border-radius: 3px;
@@ -307,14 +332,18 @@ progress:indeterminate {
 }
 .compact .row-content {
   display: grid;
-  grid-template-columns: minmax(100px, 1fr) minmax(80px, 160px);
+  grid-template-columns: minmax(120px, 1fr) minmax(100px, 180px) minmax(90px, 120px);
   column-gap: 16px;
   align-items: center;
 }
 .compact .task-name {
+  grid-column: 1;
+  grid-row: 1;
   font-size: 14px;
 }
 .compact .row-meta {
+  grid-column: 3;
+  grid-row: 1;
   font-size: 12px;
   text-align: end;
 }
@@ -322,11 +351,25 @@ progress:indeterminate {
   display: none;
 }
 .compact .progress-line {
-  grid-column: 1 / -1;
-  margin-top: 2px;
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
 }
 .compact .progress-line span {
-  display: none;
+  display: block;
+}
+@media (max-width: 800px) {
+  .compact .row-content {
+    grid-template-columns: minmax(100px, 1fr) minmax(80px, 120px);
+  }
+  .compact .row-meta {
+    grid-column: 2;
+  }
+  .compact .progress-line {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 4px;
+  }
 }
 .quick-details {
   overflow: hidden;
@@ -378,6 +421,30 @@ progress:indeterminate {
   }
   .quick-details-inner {
     padding-inline-start: 8px;
+  }
+}
+.quick-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.quick-metrics > div {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+}
+.quick-metrics dt {
+  color: var(--m3-on-surface-variant);
+}
+.quick-metrics dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .quick-metrics > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }
 </style>

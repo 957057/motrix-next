@@ -417,8 +417,7 @@ pub async fn spawn_http_api(
 /// Apply the requested HTTP binding, retaining an already matching listener.
 ///
 /// Used by:
-/// - `on_engine_ready()` during startup (idempotent — skipped if already
-///   bound to the correct port by the caller)
+/// - `on_engine_ready()` during startup and engine restart
 /// - `apply_http_api` command when the user changes the port at runtime
 ///
 /// A changed interface on the same port requires releasing the old listener first.
@@ -431,7 +430,10 @@ pub async fn apply_on_port(app: &AppHandle, new_port: u16) -> Result<u16, AppErr
 
     let allow_remote_access = read_extension_api_allow_remote_access(app).await;
     if let Some(handle) = guard.as_ref() {
-        if handle.port() == new_port && handle.allow_remote_access() == allow_remote_access {
+        if handle.port() == new_port
+            && handle.allow_remote_access() == allow_remote_access
+            && !handle.join_handle.is_finished()
+        {
             return Ok(handle.port());
         }
     }

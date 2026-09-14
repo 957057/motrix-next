@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NDataTable, NSelect } from 'naive-ui'
+import { NDataTable, NSelect, NInput } from 'naive-ui'
 import { bytesToSize } from '@shared/utils'
 import { calcColumnWidth } from '@shared/utils/calcColumnWidth'
 import type { Aria2File, BtFilePriority } from '@shared/types'
@@ -26,6 +26,10 @@ const message = useAppMessage()
 const priorityOverrides = ref<Record<number, BtFilePriority>>({})
 const pendingPriority = ref<number | null>(null)
 const rows = computed(() => buildFileDetailRows(props.files))
+const query = ref('')
+const visibleRows = computed(() =>
+  rows.value.filter((row) => row.name.toLocaleLowerCase().includes(query.value.trim().toLocaleLowerCase())),
+)
 const priorityOptions = computed(() =>
   (['off', 'normal', 'high', 'top'] as const).map((value) => ({
     value,
@@ -142,15 +146,33 @@ const columns = computed(() => {
 </script>
 
 <template>
-  <NDataTable
-    :columns="columns"
-    :data="rows"
-    :row-key="(row: FileDetailRow) => row.idx"
-    size="small"
-    :bordered="true"
-    :max-height="400"
-    :virtual-scroll="true"
-    :min-row-height="34"
-    striped
-  />
+  <div class="detail-files">
+    <NInput
+      v-model:value="query"
+      :placeholder="t('task.search-files')"
+      :input-props="{ 'aria-label': t('task.search-files') }"
+      clearable
+    />
+    <NDataTable
+      :columns="columns"
+      :data="visibleRows"
+      :row-key="(row: FileDetailRow) => row.idx"
+      size="small"
+      :bordered="false"
+      :max-height="400"
+      :virtual-scroll="true"
+      :min-row-height="34"
+    />
+  </div>
 </template>
+
+<style scoped>
+.detail-files {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.detail-files > .n-input {
+  max-width: 360px;
+}
+</style>

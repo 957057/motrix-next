@@ -83,6 +83,7 @@ interface AppEventsDeps {
   }
   preferenceStore: {
     pendingChanges: boolean
+    savingChanges: boolean
     saveBeforeLeave: (() => Promise<void>) | null
     config: {
       rpcListenPort?: string | number

@@ -184,8 +184,8 @@ export function useTaskActions(deps: TaskActionsDeps) {
             { default: deleteFilesLabel },
           ),
         ]),
-      positiveText: t('app.yes'),
-      negativeText: t('app.no'),
+      positiveText: t('task.delete-task'),
+      negativeText: t('app.cancel'),
       onPositiveClick: async () => {
         d.loading = true
         d.negativeButtonProps = { disabled: true }
@@ -239,7 +239,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     const deleteFiles = ref(false)
     const name = getTaskName(task, { defaultName: 'Unknown' })
     const d = dialog.error({
-      title: t('task.delete-task'),
+      title: t('task.remove-record'),
       content: () =>
         h('div', {}, [
           h('p', { class: 'technical-text-wrap', style: 'margin: 0 0 12px;' }, name),
@@ -254,8 +254,8 @@ export function useTaskActions(deps: TaskActionsDeps) {
             { default: deleteFilesLabel },
           ),
         ]),
-      positiveText: t('app.yes'),
-      negativeText: t('app.no'),
+      positiveText: t('task.remove-record'),
+      negativeText: t('app.cancel'),
       onPositiveClick: async () => {
         d.loading = true
         d.negativeButtonProps = { disabled: true }

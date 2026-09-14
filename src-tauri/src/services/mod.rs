@@ -260,36 +260,21 @@ async fn spawn_background_services(app: &tauri::AppHandle) {
         }
     }
 
-    // HTTP API — keep running across engine restarts.  Idempotent: skips
-    // if already bound to the correct port and interface. On mismatch the old
-    // server is stopped and a new one spawned.
+    // The binding service retains matching live listeners across engine restarts.
     let desired_port = http_api::read_extension_api_port(app).await;
-    let desired_remote_access = http_api::read_extension_api_allow_remote_access(app).await;
-    if let Some(api_state) = app.try_state::<http_api::HttpApiState>() {
-        let guard = api_state.0.lock().await;
-        let current_port = guard.as_ref().map(http_api::HttpApiHandle::port);
-        let current_remote_access = guard
-            .as_ref()
-            .map(http_api::HttpApiHandle::allow_remote_access);
-        drop(guard);
-        if current_port != Some(desired_port)
-            || current_remote_access != Some(desired_remote_access)
-        {
-            match http_api::apply_on_port(app, desired_port).await {
-                Ok(active_port) => {
-                    log::info!("runtime_services: HTTP API listening on port {active_port}");
-                }
-                Err(e) => {
-                    log::warn!(
-                        "runtime_services: HTTP API bind failed on port {desired_port}: {e}"
-                    );
-                    port_guard::emit_bind_failed(
-                        app,
-                        port_guard::PortKind::ExtensionApi,
-                        desired_port,
-                        port_guard::PortSwitchFailureSource::Startup,
-                    );
-                }
+    if app.try_state::<http_api::HttpApiState>().is_some() {
+        match http_api::apply_on_port(app, desired_port).await {
+            Ok(active_port) => {
+                log::info!("runtime_services: HTTP API listening on port {active_port}");
+            }
+            Err(e) => {
+                log::warn!("runtime_services: HTTP API bind failed on port {desired_port}: {e}");
+                port_guard::emit_bind_failed(
+                    app,
+                    port_guard::PortKind::ExtensionApi,
+                    desired_port,
+                    port_guard::PortSwitchFailureSource::Startup,
+                );
             }
         }
     }

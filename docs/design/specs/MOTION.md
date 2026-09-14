@@ -6,7 +6,7 @@ Primary requirement: no empty exit frame, no task teleportation, no full-window 
 
 Use a single animation owner for each property. Vue Transition handles simple enter/leave, mature layout/presence primitives handle coordinated task movement where needed, and the existing native engine owns download state. Do not stack AutoAnimate, TransitionGroup and Motion layout animation on the same node.
 
-Motion for Vue 2.4.2 owns coordinated list layout, presence and reordering. Naive UI owns form controls, disclosures, dialogs and menus; Reka UI is not used. CSS transitions and Vue lifecycle primitives handle simple view changes. Do not write a custom spring solver, FLIP engine, modal focus trap or animation scheduler. Native WebView acceptance remains separate from unit tests.
+Motion for Vue 2.4.2 owns coordinated list layout, presence and reordering. Naive UI owns form controls, disclosures, dialogs and menus; Reka UI is not used. CSS transitions and Vue lifecycle primitives handle simple view changes. Do not write a custom spring solver, FLIP engine, modal focus trap or animation scheduler. Settings use Naive UI collapse; About has no stagger or glass. Recovery and update views keep only content fades and library loading indicators. Native WebView acceptance remains separate from unit tests.
 
 ## Timing tokens
 

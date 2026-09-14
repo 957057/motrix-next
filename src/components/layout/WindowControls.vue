@@ -207,10 +207,8 @@ async function close() {
 }
 .icon-swap-enter-from {
   opacity: 0;
-  transform: scale(0.75);
 }
 .icon-swap-leave-to {
   opacity: 0;
-  transform: scale(0.75);
 }
 </style>

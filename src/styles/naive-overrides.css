@@ -23,6 +23,30 @@
 }
 .n-dialog {
   overflow-y: auto;
+  border-radius: 12px;
+  padding: 24px;
+  width: min(440px, calc(100vw - 48px));
+}
+.n-dialog .n-dialog__title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+.n-dialog .n-dialog__content {
+  font-size: 14px;
+  line-height: 22px;
+  margin-block: 20px;
+}
+.removal-task-list {
+  list-style: none;
+  max-height: 200px;
+  overflow: auto;
+  margin-bottom: 20px;
+}
+.removal-task-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--divider);
+  overflow-wrap: anywhere;
 }
 .n-modal-mask {
   background: rgb(0 0 0 / 24%);

@@ -1,4 +1,4 @@
-/* ── Preference Layout ─────────────────────────────────────────────── */
+/* Shared settings structure; Naive UI owns validation and controls. */
 .preference-form-wrapper {
   height: 100%;
   min-width: 0;
@@ -6,45 +6,133 @@
   flex-direction: column;
   overflow: hidden;
 }
-
 .preference-form-scroll {
   flex: 1;
-  min-width: 0;
   min-height: 0;
+  min-width: 0;
   overflow: auto;
 }
-
 .form-preference {
-  min-height: 100%;
-  overflow: visible;
+  container-type: inline-size;
   width: 100%;
-  max-width: none;
+  max-width: 1120px;
   box-sizing: border-box;
-  flex: none;
-  padding: 24px;
-  max-width: 900px;
+  padding: 8px 24px 32px;
 }
-
-.form-preference .n-form-item {
-  padding-inline-start: 0;
+.settings-section-title {
+  margin: 28px 0 4px;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--m3-on-surface);
 }
-
-.form-preference .n-divider.n-divider--title-position-left .n-divider__line--left {
-  width: 28px;
-  flex: 0 0 28px;
+.settings-section-title:first-child {
+  margin-top: 12px;
 }
-
-.form-preference .n-divider.n-divider--title-position-left .n-divider__line--right {
-  width: auto;
+.form-preference .setting-row.n-form-item {
+  display: grid;
+  grid-template-areas: none;
+  grid-template-rows: auto;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 44%);
+  column-gap: 32px;
+  padding: 16px 0;
+  min-height: 68px;
+  border-bottom: 1px solid var(--divider);
+  align-items: center;
+}
+.form-preference .setting-row .n-form-item-label {
+  grid-area: 1 / 1;
+  height: auto;
+  padding: 0;
   min-width: 0;
-  flex: 1 1 auto;
+  line-height: 22px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: normal;
+  flex-direction: column;
+  align-items: flex-start;
 }
-
+.form-preference .setting-row .n-form-item-blank {
+  grid-area: 1 / 2;
+  min-width: 0;
+  justify-content: flex-end;
+}
+.form-preference .setting-row .n-form-item-feedback-wrapper {
+  grid-area: 2 / 2;
+  min-height: 0;
+}
+.form-preference .setting-row .n-form-item-feedback-wrapper:empty {
+  display: none;
+}
+.form-preference .setting-row--wide.n-form-item {
+  grid-template-columns: minmax(0, 1fr);
+}
+.form-preference .setting-row--wide .n-form-item-blank {
+  grid-area: 1 / 1;
+  justify-content: flex-start;
+}
+.form-preference .setting-row--wide .n-form-item-feedback-wrapper {
+  grid-area: 2 / 1;
+}
+.setting-label,
+.setting-hint {
+  display: block;
+}
+.setting-hint {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--m3-on-surface-variant);
+}
+.form-preference .setting-row:target {
+  background: var(--selection-bg);
+}
 .form-preference .collapse-indent {
-  position: relative;
-  margin-inline-start: 16px;
+  margin-inline-start: 0;
 }
-
+.form-preference .n-collapse {
+  margin-block: 16px;
+}
+.form-preference .n-input-group {
+  max-width: 480px;
+}
+.form-preference .n-radio-group {
+  flex-shrink: 0;
+}
+.form-preference .n-input-group > .pref-control-auto {
+  min-width: 80px;
+}
+.form-preference .n-input-group > .n-button {
+  min-width: 0;
+}
+@container (max-width: 560px) {
+  .form-preference .setting-row.n-form-item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .form-preference .setting-row .n-form-item-label {
+    grid-area: 1 / 1;
+  }
+  .form-preference .setting-row .n-form-item-blank {
+    grid-area: 2 / 1;
+    justify-content: flex-start;
+  }
+  .form-preference .setting-row .n-form-item-feedback-wrapper {
+    grid-area: 3 / 1;
+  }
+  .form-preference .setting-row--wide .n-form-item-blank {
+    grid-area: 1 / 1;
+  }
+  .form-preference .setting-row--wide .n-form-item-feedback-wrapper {
+    grid-area: 2 / 1;
+  }
+}
+@media (max-width: 719px) {
+  .form-preference {
+    padding-inline: 16px;
+  }
+}
 .pref-control-auto,
 .pref-number,
 .pref-port {
@@ -53,7 +141,7 @@
 
 .pref-control-auto {
   width: fit-content;
-  min-width: 160px;
+  min-width: 180px;
   max-width: 100%;
 }
 
@@ -72,7 +160,7 @@
 
 .pref-action-button {
   width: fit-content;
-  min-width: 160px;
+  min-width: 180px;
   max-width: 100%;
 }
 
@@ -128,37 +216,4 @@
 
 .pref-meta-link {
   margin-inline-start: 8px;
-}
-
-.form-preference .n-form-item {
-  padding-block: 4px;
-}
-.form-preference .n-divider {
-  color: var(--m3-on-surface);
-  font-size: 15px;
-  margin-block: 24px 16px;
-}
-.form-preference .n-divider:first-child {
-  margin-top: 0;
-}
-@media (max-width: 959px) {
-  .form-preference .n-form-item {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-  .form-preference .n-form-item-label {
-    grid-area: auto !important;
-    padding-bottom: 8px;
-    width: auto !important;
-  }
-  .form-preference .n-form-item-blank {
-    grid-area: auto !important;
-  }
-  .form-preference .n-form-item-feedback-wrapper {
-    grid-area: auto !important;
-  }
-}
-@media (max-width: 719px) {
-  .form-preference {
-    padding: 16px;
-  }
 }

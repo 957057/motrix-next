@@ -67,6 +67,6 @@ The remaining raster limitations must not be copied into implementation:
 - 127 declared AppConfig keys compared using the TypeScript AST against settings-map.json: no missing, extra or duplicate keys.
 - Gallery and Markdown links checked against local files.
 - Only the current design screens and implementation specifications are retained.
-- Repository integrity and formatting of the new documentation checked; application code untouched.
+- Repository integrity and formatting checked. Desktop code coverage and pending native acceptance are tracked in IMPLEMENTATION.md.
 
 Static images do not prove accessible focus behavior, native API behavior or smooth animation. The native acceptance list in MOTION.md remains an implementation requirement, not a completed test claim.

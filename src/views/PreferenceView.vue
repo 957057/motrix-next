@@ -1,14 +1,46 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { computed } from 'vue'
+import { NSelect, NIcon } from 'naive-ui'
+import { SearchOutline } from '@vicons/ionicons5'
+import { settingsCatalog } from '@shared/settingsCatalog'
+import { usePlatform } from '@/composables/usePlatform'
+import { useAppStore } from '@/stores/app'
 const { t } = useI18n()
 const route = useRoute()
+const router = useRouter()
+const { platform } = usePlatform()
+const app = useAppStore()
+const searchOptions = computed(() =>
+  settingsCatalog
+    .filter(
+      (item) => (!item.platforms || item.platforms.includes(platform.value)) && (!item.updates || app.updatesAvailable),
+    )
+    .map((item) => ({ label: `${t(item.key)} · ${t('preferences.' + item.category)}`, value: item.key })),
+)
+function goToSetting(key: string | null) {
+  const item = settingsCatalog.find((item) => item.key === key)
+  if (item) void router.push({ path: `/preference/${item.category}`, hash: `#setting-${item.key}` })
+}
 const categories = ['general', 'downloads', 'network', 'bt', 'ed2k', 'connections', 'advanced']
 </script>
 <template>
   <section class="preference-view">
     <header class="settings-header">
       <h1>{{ t('app.preferences') }}</h1>
+      <NSelect
+        class="settings-search"
+        :value="null"
+        filterable
+        clearable
+        :options="searchOptions"
+        :placeholder="t('preferences.search-settings')"
+        :aria-label="t('preferences.search-settings')"
+        @update:value="goToSetting"
+        ><template #arrow
+          ><NIcon><SearchOutline /></NIcon></template
+      ></NSelect>
     </header>
     <nav class="settings-tabs" :aria-label="t('app.preferences')">
       <RouterLink
@@ -37,7 +69,14 @@ const categories = ['general', 'downloads', 'network', 'bt', 'ed2k', 'connection
   display: flex;
   flex-direction: column;
 }
+.settings-search {
+  width: min(360px, 48%);
+}
 .settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
   padding: 16px 24px 20px;
 }
 h1 {

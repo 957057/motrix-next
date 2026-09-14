@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
+import SettingsRow from './SettingsRow.vue'
 /** @fileoverview Advanced preferences: clipboard, system integration, engine maintenance, and diagnostics. */
 import { ref, computed, onMounted } from 'vue'
 import { useEventListener } from '@vueuse/core'
@@ -19,14 +21,12 @@ import { APP_LOG_LEVELS, ARIA2_LOG_LEVELS } from '@shared/constants'
 import { buildAdvancedForm, transformAdvancedForStore } from '@/composables/useAdvancedPreference'
 import {
   NForm,
-  NFormItem,
   NInput,
   NInputGroup,
   NSwitch,
   NSelect,
   NButton,
   NSpace,
-  NDivider,
   NIcon,
   NModal,
   NCard,
@@ -52,6 +52,7 @@ import PreferenceHintLabel from './PreferenceHintLabel.vue'
 const engineStore = useEngineStore()
 const { confirmManualRestart } = useEngineRestart()
 
+const settingsRoute = useRoute()
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
 const historyStore = useHistoryStore()
@@ -276,14 +277,20 @@ onMounted(async () => {
 <template>
   <div class="preference-form-wrapper">
     <div class="preference-form-scroll">
-      <NForm label-placement="left" label-align="left" label-width="260px" size="small" class="form-preference">
-        <NDivider title-placement="left">{{ t('preferences.engine-section') }}</NDivider>
-        <NFormItem :label="t('preferences.engine-restart-btn')"
-          ><NButton @click="confirmManualRestart">{{ t('preferences.engine-restart-now') }}</NButton></NFormItem
+      <NForm
+        label-placement="left"
+        label-align="left"
+        class="form-preference"
+        :disabled="preferenceStore.savingChanges"
+      >
+        <h2 class="settings-section-title">{{ t('preferences.engine-section') }}</h2>
+        <SettingsRow setting-key="preferences.engine-restart-btn" :label="t('preferences.engine-restart-btn')"
+          ><NButton @click="confirmManualRestart">{{ t('preferences.engine-restart-now') }}</NButton></SettingsRow
         >
-        <NFormItem :label="t('preferences.temp-files-dir')">
+        <SettingsRow setting-key="preferences.temp-files-dir" :label="t('preferences.temp-files-dir')">
           <NInputGroup>
             <NInput
+              :input-props="{ 'aria-label': t('preferences.engine-restart-btn') }"
               :value="form.tempFilesDir || defaultTempPath"
               readonly
               class="pref-control-full"
@@ -306,10 +313,15 @@ onMounted(async () => {
               {{ t('preferences.ua-reset') }}
             </NButton>
           </NInputGroup>
-        </NFormItem>
-        <NFormItem :label="t('preferences.aria2-conf-path')">
+        </SettingsRow>
+        <SettingsRow setting-key="preferences.aria2-conf-path" :label="t('preferences.aria2-conf-path')">
           <NInputGroup>
-            <NInput :value="aria2ConfPath" readonly class="pref-control-full" />
+            <NInput
+              :input-props="{ 'aria-label': t('preferences.aria2-conf-path') }"
+              :value="aria2ConfPath"
+              readonly
+              class="pref-control-full"
+            />
             <NButton class="pref-icon-button" @click="copyToClipboard(aria2ConfPath, t('preferences.aria2-conf-path'))">
               <template #icon>
                 <NIcon :size="14"><CopyOutline /></NIcon>
@@ -321,10 +333,15 @@ onMounted(async () => {
               </template>
             </NButton>
           </NInputGroup>
-        </NFormItem>
-        <NFormItem :label="t('preferences.engine-state-path')">
+        </SettingsRow>
+        <SettingsRow setting-key="preferences.engine-state-path" :label="t('preferences.engine-state-path')">
           <NInputGroup>
-            <NInput :value="engineStatePath" readonly class="pref-control-full" />
+            <NInput
+              :input-props="{ 'aria-label': t('preferences.engine-state-path') }"
+              :value="engineStatePath"
+              readonly
+              class="pref-control-full"
+            />
             <NButton
               class="pref-icon-button"
               @click="copyToClipboard(engineStatePath, t('preferences.engine-state-path'))"
@@ -339,17 +356,22 @@ onMounted(async () => {
               </template>
             </NButton>
           </NInputGroup>
-        </NFormItem>
-        <NFormItem label=" ">
+        </SettingsRow>
+        <SettingsRow label=" ">
           <NButton type="error" ghost @click="handleEngineStateReset">
             {{ t('preferences.reset-engine-state') }}
           </NButton>
-        </NFormItem>
+        </SettingsRow>
 
-        <NDivider title-placement="left">{{ t('preferences.log-section') }}</NDivider>
-        <NFormItem :label="t('preferences.log-path')">
+        <h2 class="settings-section-title">{{ t('preferences.log-section') }}</h2>
+        <SettingsRow setting-key="preferences.log-path" :label="t('preferences.log-path')">
           <NInputGroup>
-            <NInput :value="logPath" readonly class="pref-control-full" />
+            <NInput
+              :input-props="{ 'aria-label': t('preferences.log-path') }"
+              :value="logPath"
+              readonly
+              class="pref-control-full"
+            />
             <NButton class="pref-icon-button" @click="copyToClipboard(logPath, t('preferences.log-path'))">
               <template #icon>
                 <NIcon :size="14"><CopyOutline /></NIcon>
@@ -361,13 +383,14 @@ onMounted(async () => {
               </template>
             </NButton>
           </NInputGroup>
-        </NFormItem>
-        <NFormItem :label="t('preferences.log-level')">
+        </SettingsRow>
+        <SettingsRow setting-key="preferences.log-level" :label="t('preferences.log-level')">
           <div class="log-level-row">
             <div class="log-level-control">
               <span class="log-level-control__label">{{ t('preferences.rayburst') }}</span>
               <NSelect
                 v-model:value="form.logLevel"
+                :aria-label="t('preferences.log-level')"
                 :options="appLogLevelOptions"
                 class="pref-control-auto pref-control-log-level"
               />
@@ -376,13 +399,14 @@ onMounted(async () => {
               <span class="log-level-control__label">{{ t('preferences.aria2-next') }}</span>
               <NSelect
                 v-model:value="form.aria2LogLevel"
+                :aria-label="t('preferences.log-level')"
                 :options="aria2LogLevelOptions"
                 class="pref-control-auto pref-control-log-level"
               />
             </div>
           </div>
-        </NFormItem>
-        <NFormItem label=" ">
+        </SettingsRow>
+        <SettingsRow label=" ">
           <div class="log-action-row">
             <NButton type="primary" ghost :loading="exportingLogs" @click="handleExportLogs">
               <template #icon>
@@ -397,19 +421,19 @@ onMounted(async () => {
               {{ t('preferences.clear-log') }}
             </NButton>
           </div>
-        </NFormItem>
+        </SettingsRow>
 
-        <NDivider title-placement="left">{{ t('preferences.maintenance-section') }}</NDivider>
-        <NFormItem v-if="isLinux">
+        <h2 class="settings-section-title">{{ t('preferences.maintenance-section') }}</h2>
+        <SettingsRow v-if="isLinux" setting-key="preferences.hardware-rendering">
           <template #label>
             <PreferenceHintLabel
               :label="t('preferences.hardware-rendering')"
               :hint="t('preferences.hardware-rendering-hint')"
             />
           </template>
-          <NSwitch v-model:value="form.hardwareRendering" />
-        </NFormItem>
-        <NFormItem :label="t('preferences.history-section')">
+          <NSwitch v-model:value="form.hardwareRendering" :aria-label="t('preferences.hardware-rendering')" />
+        </SettingsRow>
+        <SettingsRow setting-key="preferences.history-section" :label="t('preferences.history-section')">
           <NSpace>
             <NButton class="db-integrity-check-btn" @click="handleDbIntegrityCheck">
               {{ t('preferences.db-integrity-check') }}
@@ -421,9 +445,9 @@ onMounted(async () => {
               {{ t('preferences.db-reset') }}
             </NButton>
           </NSpace>
-        </NFormItem>
+        </SettingsRow>
 
-        <NFormItem :label="t('preferences.configuration-section')">
+        <SettingsRow setting-key="preferences.configuration-section" :label="t('preferences.configuration-section')">
           <NSpace>
             <NButton class="open-config-folder-btn" @click="handleOpenConfigFolder">
               <template #icon>
@@ -438,8 +462,8 @@ onMounted(async () => {
               {{ t('preferences.factory-reset') }}
             </NButton>
           </NSpace>
-        </NFormItem>
-        <NFormItem :label="t('preferences.settings-backup')">
+        </SettingsRow>
+        <SettingsRow setting-key="preferences.settings-backup" :label="t('preferences.settings-backup')">
           <div class="settings-backup-row">
             <NSpace>
               <NButton type="primary" ghost :loading="exportingSettings" @click="handleExportSettings">
@@ -456,28 +480,28 @@ onMounted(async () => {
               </NButton>
             </NSpace>
           </div>
-        </NFormItem>
+        </SettingsRow>
 
         <!-- Clipboard Detection (migrated from Basic) -->
-        <NDivider title-placement="left">{{ t('preferences.clipboard-detection') }}</NDivider>
-        <NFormItem>
+        <h2 class="settings-section-title">{{ t('preferences.clipboard-detection') }}</h2>
+        <SettingsRow setting-key="preferences.clipboard-auto-detect">
           <template #label>
             <PreferenceHintLabel
               :label="t('preferences.clipboard-auto-detect')"
               :hint="t('preferences.clipboard-filter-hint')"
             />
           </template>
-          <NSwitch v-model:value="form.clipboardEnable" />
-        </NFormItem>
-        <NCollapseTransition :show="form.clipboardEnable">
-          <NFormItem label=" ">
+          <NSwitch v-model:value="form.clipboardEnable" :aria-label="t('preferences.clipboard-auto-detect')" />
+        </SettingsRow>
+        <NCollapseTransition :show="form.clipboardEnable || !!settingsRoute.hash">
+          <SettingsRow label=" ">
             <PreferenceCheckboxGrid v-model:value="selectedClipboardTypes" :options="clipboardTypeOptions" />
-          </NFormItem>
+          </SettingsRow>
         </NCollapseTransition>
 
         <!-- Default programs reflect the current OS association, not a saved preference. -->
-        <NDivider title-placement="left">{{ t('preferences.default-programs') }}</NDivider>
-        <NFormItem v-for="protocol in protocolOptions" :key="protocol.key" :label="protocol.label">
+        <h2 class="settings-section-title">{{ t('preferences.default-programs') }}</h2>
+        <SettingsRow v-for="protocol in protocolOptions" :key="protocol.key" :label="protocol.label">
           <NSwitch
             v-if="protocolStatus[protocol.key] !== null"
             :value="protocolStatus[protocol.key] === true"
@@ -492,7 +516,7 @@ onMounted(async () => {
               {{ t('app.retry') }}
             </NButton>
           </NSpace>
-        </NFormItem>
+        </SettingsRow>
       </NForm>
     </div>
 
@@ -502,6 +526,7 @@ onMounted(async () => {
         :title="t('preferences.db-browse-title')"
         closable
         class="db-record-modal"
+        content-class="db-record-content"
         :bordered="false"
         @close="showDbBrowse = false"
       >
@@ -523,7 +548,12 @@ onMounted(async () => {
         </NDataTable>
       </NCard>
     </NModal>
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionBar
+      :is-saving="preferenceStore.savingChanges"
+      :is-dirty="isDirty"
+      @save="handleSave"
+      @discard="handleReset"
+    />
   </div>
 </template>
 
@@ -541,9 +571,9 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
 }
-.db-record-modal :deep(.n-card__content) {
+.db-record-modal :deep(.db-record-content) {
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
 }
 .log-level-control {
   display: inline-flex;

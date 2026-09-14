@@ -95,6 +95,7 @@ function createDeps() {
   })
   const preferenceStore = reactive({
     pendingChanges: false,
+    savingChanges: false,
     saveBeforeLeave: null as (() => Promise<void>) | null,
     updatePreference: vi.fn(),
     config: {
@@ -204,6 +205,19 @@ describe('useAppEvents', () => {
     const removeGuard = routerBeforeEachMock.mock.results[0]?.value as (() => void) | undefined
     expect(removeGuard).toBeDefined()
     expect(removeGuard).toHaveBeenCalledTimes(1)
+  })
+
+  it('blocks navigation while connection settings are being applied', async () => {
+    const { deps } = createDeps()
+    const { setupListeners, unmount } = mountComposable(deps)
+    await setupListeners()
+    deps.preferenceStore.savingChanges = true
+    const guard = routerBeforeEachMock.mock.calls[0][0]
+    expect(guard({ path: '/task/all' }, { path: '/preference/connections' })).toBe(false)
+    expect(deps.navDialog.warning).not.toHaveBeenCalled()
+    deps.preferenceStore.savingChanges = false
+    expect(guard({ path: '/task/all' }, { path: '/preference/connections' })).toBe(true)
+    unmount()
   })
 
   it('keeps task data intact while task route tabs switch', async () => {

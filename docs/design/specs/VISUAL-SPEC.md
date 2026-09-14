@@ -1,6 +1,6 @@
 # Visual specification
 
-Status: proposed implementation specification, derived from the user-approved [01 task overview](../screens/01-task-overview.png). The baseline image is approved; the remaining screens and the exact values below are design proposals for implementation review. No application code or dependencies have changed.
+Implementation reference, derived from the user-approved [01 task overview](../screens/01-task-overview.png). The baseline image defines visual direction. Related boards cover additional states. The implemented ownership and remaining native acceptance are documented in IMPLEMENTATION.md.
 
 ## Authority
 
@@ -101,11 +101,11 @@ Three layers:
 - Semantic: app surface, sidebar, field boundary, text, accent, focus, feedback.
 - Component: task row, nav item, dialog, button, input and footer consume those semantics.
 
-Proposed mapping uses the existing generated neutral palette:
+Surface mapping uses Material Color Utilities with an achromatic neutral palette; brand and semantic roles retain their existing generation:
 
-- Main and dialog: light neutral tone 99–100; dark tone 8–10.
-- Sidebar: light neutral tone 97; dark tone 12.
-- Raised menu/field surface: light tone 99; dark tone 17.
+- Main and dialog: light achromatic tone 100; dark tone 10–17 according to elevation.
+- Sidebar: light achromatic tone 97; dark tone 12.
+- Raised menu/field surface: light tone 100; dark tone 17.
 - Quiet row hover: foreground mixed 3–4% into surface.
 - Selected navigation/row: primary mixed about 6–8% into surface; selected text uses accessible primary.
 - Main and secondary text: existing onSurface / onSurfaceVariant.

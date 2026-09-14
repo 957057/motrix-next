@@ -89,15 +89,15 @@
   "motionEasing": "cubic-bezier(0.2, 0, 0, 1)",
   "surfaceMapping": {
     "light": {
-      "mainNeutralTone": 99,
+      "mainNeutralTone": 100,
       "sidebarNeutralTone": 97,
-      "menuNeutralTone": 99
+      "menuNeutralTone": 100
     },
     "dark": {
       "mainNeutralTone": 10,
       "sidebarNeutralTone": 12,
       "menuNeutralTone": 17
     },
-    "note": "Apply these proposed tone selections within existing MCU palette; validate runtime contrast and first paint."
+    "note": "Material Color Utilities achromatic surface tones; brand and status palettes remain generated from the current seed."
   }
 }

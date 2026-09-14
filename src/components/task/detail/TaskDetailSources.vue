@@ -104,7 +104,7 @@ const columns = computed(() => {
     <NDescriptions
       :column="1"
       label-placement="left"
-      bordered
+      :bordered="false"
       size="small"
       :label-style="{ width: '1px', whiteSpace: 'nowrap' }"
     >
@@ -142,7 +142,7 @@ const columns = computed(() => {
         :loading="loading"
         :pagination="pagination"
         size="small"
-        :bordered="true"
+        :bordered="false"
         :max-height="320"
         striped
       />

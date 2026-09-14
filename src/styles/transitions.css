@@ -2,17 +2,13 @@
 .view-enter-active,
 .view-leave-active,
 .fade-enter-active,
-.fade-leave-active,
-.fade-scale-enter-active,
-.fade-scale-leave-active {
+.fade-leave-active {
   transition: opacity 160ms cubic-bezier(0.2, 0, 0, 1);
 }
 .view-enter-from,
 .view-leave-to,
 .fade-enter-from,
-.fade-leave-to,
-.fade-scale-enter-from,
-.fade-scale-leave-to {
+.fade-leave-to {
   opacity: 0;
 }
 .view-leave-active {

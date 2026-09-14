@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import AppDialog from '@/components/common/AppDialog.vue'
 /** @fileoverview Single-layer file category manager modal. */
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { buildDefaultCategories, MAX_FILE_CATEGORIES } from '@shared/constants'
@@ -10,18 +11,17 @@ import ReorderItem from '@/components/common/ReorderItem.vue'
 import type { FileCategory } from '@shared/types'
 import {
   NButton,
-  NCard,
+  useDialog,
   NCollapseTransition,
   NDynamicTags,
   NIcon,
   NInput,
   NInputGroup,
-  NModal,
   NSelect,
   NSpace,
   NText,
 } from 'naive-ui'
-import { FolderOpenOutline } from '@vicons/ionicons5'
+import { FolderOpenOutline, ReorderTwoOutline } from '@vicons/ionicons5'
 
 const props = defineProps<{
   show: boolean
@@ -39,8 +39,7 @@ const draft = ref<FileCategory[]>([])
 const selectedKey = ref('')
 const urlPatternText = ref('')
 const urlRuleError = ref('')
-const resetConfirming = ref(false)
-let resetConfirmTimer: ReturnType<typeof setTimeout> | undefined
+const dialog = useDialog()
 let categoryUid = 0
 const categoryKeys = new WeakMap<FileCategory, string>()
 
@@ -90,7 +89,6 @@ function categoryMeta(category: FileCategory): string {
 }
 
 function closeModal() {
-  stopResetConfirm()
   emit('update:show', false)
 }
 
@@ -152,29 +150,18 @@ function handleDeleteCategory() {
   urlRuleError.value = ''
 }
 
-function stopResetConfirm() {
-  if (resetConfirmTimer !== undefined) {
-    clearTimeout(resetConfirmTimer)
-    resetConfirmTimer = undefined
-  }
-  resetConfirming.value = false
-}
-
-function startResetConfirm() {
-  stopResetConfirm()
-  resetConfirming.value = true
-  resetConfirmTimer = setTimeout(stopResetConfirm, 2000)
-}
-
 function handleResetCategories() {
-  if (!resetConfirming.value) {
-    startResetConfirm()
-    return
-  }
-  stopResetConfirm()
-  draft.value = cloneCategories(buildDefaultCategories(props.baseDir))
-  selectedIndex.value = 0
-  syncUrlPatternText()
+  dialog.warning({
+    title: t('preferences.file-category-reset'),
+    content: t('preferences.file-category-reset-confirm'),
+    positiveText: t('preferences.file-category-reset'),
+    negativeText: t('app.cancel'),
+    onPositiveClick() {
+      draft.value = cloneCategories(buildDefaultCategories(props.baseDir))
+      selectedIndex.value = 0
+      syncUrlPatternText()
+    },
+  })
 }
 
 function handleLabelChange(value: string) {
@@ -248,460 +235,262 @@ watch(
       props.categories.length > 0 ? props.categories : buildDefaultCategories(props.baseDir),
     )
     selectedIndex.value = 0
-    stopResetConfirm()
     syncUrlPatternText()
     urlRuleError.value = ''
   },
   { immediate: true },
 )
-onUnmounted(stopResetConfirm)
 </script>
 
 <template>
-  <NModal
-    :show="show"
-    :mask-closable="false"
-    transform-origin="center"
-    @update:show="(value: boolean) => emit('update:show', value)"
-  >
-    <NCard
-      :title="t('preferences.file-category-manager-title')"
-      closable
-      class="category-manager-card"
-      :bordered="false"
-      @close="closeModal"
-    >
-      <div class="category-manager">
-        <aside class="category-manager-list">
-          <div class="category-manager-priority-hint">
-            {{ t('preferences.file-category-priority-hint') }}
-          </div>
-          <Reorder.Group v-model:values="draft" as="div" axis="y" class="category-manager-list-items" layout-scroll>
-            <AnimatePresence :initial="false" mode="popLayout">
-              <ReorderItem
-                v-for="(category, index) in draft"
-                v-slot="{ start }"
-                :key="categoryKey(category)"
-                :value="category"
+  <AppDialog :show="show" :title="t('preferences.file-category-manager-title')" size="wide" @close="closeModal">
+    <div class="category-manager">
+      <aside class="category-manager-list">
+        <div class="category-manager-priority-hint">
+          {{ t('preferences.file-category-priority-hint') }}
+        </div>
+        <Reorder.Group v-model:values="draft" as="div" axis="y" class="category-manager-list-items" layout-scroll>
+          <AnimatePresence :initial="false" mode="popLayout">
+            <ReorderItem
+              v-for="(category, index) in draft"
+              v-slot="{ start }"
+              :key="categoryKey(category)"
+              :value="category"
+              role="button"
+              tabindex="0"
+              class="category-manager-list-item"
+              :class="{ 'category-manager-list-item--active': index === selectedIndex }"
+              @click="handleSelectCategory(index)"
+              @keydown.enter.prevent="handleSelectCategory(index)"
+              @keydown.space.prevent="handleSelectCategory(index)"
+            >
+              <span
+                class="category-manager-drag-handle"
                 role="button"
                 tabindex="0"
-                class="category-manager-list-item"
-                :class="{ 'category-manager-list-item--active': index === selectedIndex }"
-                @click="handleSelectCategory(index)"
-                @keydown.enter.prevent="handleSelectCategory(index)"
-                @keydown.space.prevent="handleSelectCategory(index)"
+                :aria-label="t('preferences.file-category-priority-hint')"
+                @click.stop
+                @pointerdown="
+                  (event) => {
+                    handleDragHandlePointerDown(index)
+                    start(event)
+                  }
+                "
+                @keydown.up.stop.prevent="moveCategory(index, Math.max(0, index - 1))"
+                @keydown.down.stop.prevent="moveCategory(index, Math.min(draft.length - 1, index + 1))"
               >
-                <span
-                  class="category-manager-drag-handle"
-                  role="button"
-                  tabindex="0"
-                  :aria-label="t('preferences.file-category-priority-hint')"
-                  @click.stop
-                  @pointerdown="
-                    (event) => {
-                      handleDragHandlePointerDown(index)
-                      start(event)
-                    }
-                  "
-                  @keydown.up.stop.prevent="moveCategory(index, Math.max(0, index - 1))"
-                  @keydown.down.stop.prevent="moveCategory(index, Math.min(draft.length - 1, index + 1))"
-                >
-                  <span aria-hidden="true">⋮⋮</span>
-                </span>
-                <span class="category-manager-list-copy">
-                  <span class="category-manager-list-title">{{ categoryTitle(category) }}</span>
-                  <span class="category-manager-list-meta">{{ categoryMeta(category) }}</span>
-                </span>
-              </ReorderItem>
-            </AnimatePresence>
-          </Reorder.Group>
-          <div class="category-manager-list-actions">
-            <NButton size="small" block :disabled="draft.length >= MAX_FILE_CATEGORIES" @click="handleAddCategory">
-              {{ t('preferences.file-category-add') }}
-            </NButton>
-            <NButton
-              size="small"
-              block
-              :type="resetConfirming ? 'error' : 'default'"
-              class="category-manager-reset-button"
-              :class="{ 'category-manager-reset-button--confirm': resetConfirming }"
-              @click="handleResetCategories"
-            >
-              <span class="category-manager-reset-content">
-                <Transition name="reset-label">
-                  <span :key="resetConfirming ? 'confirm' : 'idle'">
-                    {{
-                      resetConfirming
-                        ? t('preferences.file-category-reset-confirm')
-                        : t('preferences.file-category-reset')
-                    }}
-                  </span>
-                </Transition>
+                <NIcon :size="18"><ReorderTwoOutline /></NIcon>
               </span>
-            </NButton>
-          </div>
-        </aside>
+              <span class="category-manager-list-copy">
+                <span class="category-manager-list-title">{{ categoryTitle(category) }}</span>
+                <span class="category-manager-list-meta">{{ categoryMeta(category) }}</span>
+              </span>
+            </ReorderItem>
+          </AnimatePresence>
+        </Reorder.Group>
+        <div class="category-manager-list-actions">
+          <NButton size="small" block :disabled="draft.length >= MAX_FILE_CATEGORIES" @click="handleAddCategory">
+            {{ t('preferences.file-category-add') }}
+          </NButton>
+          <NButton size="small" block class="category-manager-reset-button" @click="handleResetCategories">
+            {{ t('preferences.file-category-reset') }}
+          </NButton>
+        </div>
+      </aside>
 
-        <section v-if="selectedCategory" class="category-manager-editor">
-          <Transition name="content-fade">
-            <div :key="selectedKey" class="category-manager-editor-content">
-              <div class="category-manager-field">
-                <span>{{ t('preferences.file-category-custom-label') }}</span>
-                <NInput :value="categoryTitle(selectedCategory)" size="small" @update:value="handleLabelChange" />
+      <section v-if="selectedCategory" class="category-manager-editor">
+        <Transition name="fade">
+          <div :key="selectedKey" class="category-manager-editor-content">
+            <div class="category-manager-field">
+              <span>{{ t('preferences.file-category-custom-label') }}</span>
+              <NInput :value="categoryTitle(selectedCategory)" size="small" @update:value="handleLabelChange" />
+            </div>
+
+            <div class="category-manager-field">
+              <div class="category-manager-field-title">
+                <span>{{ t('preferences.file-category-file-types') }}</span>
+                <NText depth="3" class="category-manager-hint">
+                  {{ t('preferences.file-category-file-types-hint') }}
+                </NText>
               </div>
+              <NDynamicTags
+                :value="selectedCategory.extensions.map((extension: string) => `.${extension}`)"
+                size="small"
+                @update:value="handleExtChange"
+              />
+            </div>
 
-              <div class="category-manager-field">
+            <div class="category-manager-field">
+              <div class="category-manager-field-row">
                 <div class="category-manager-field-title">
-                  <span>{{ t('preferences.file-category-file-types') }}</span>
+                  <span>{{ t('preferences.file-category-url-rules') }}</span>
                   <NText depth="3" class="category-manager-hint">
-                    {{ t('preferences.file-category-file-types-hint') }}
+                    {{ t('preferences.file-category-url-rules-hint') }}
                   </NText>
                 </div>
-                <NDynamicTags
-                  :value="selectedCategory.extensions.map((extension: string) => `.${extension}`)"
+                <div class="category-manager-field-row-right">
+                  <NSelect
+                    :value="selectedCategory.urlPatternMode ?? 'wildcard'"
+                    :options="modeOptions"
+                    size="small"
+                    class="category-manager-mode"
+                    @update:value="handleUrlModeChange"
+                  />
+                </div>
+              </div>
+              <div class="category-manager-url-control">
+                <NInput
+                  :value="urlPatternText"
+                  type="textarea"
+                  :rows="4"
                   size="small"
-                  @update:value="handleExtChange"
+                  :status="urlRuleError ? 'error' : undefined"
+                  :placeholder="t('preferences.file-category-url-placeholder')"
+                  @update:value="handleUrlPatternChange"
                 />
-              </div>
-
-              <div class="category-manager-field">
-                <div class="category-manager-field-row">
-                  <div class="category-manager-field-title">
-                    <span>{{ t('preferences.file-category-url-rules') }}</span>
-                    <NText depth="3" class="category-manager-hint">
-                      {{ t('preferences.file-category-url-rules-hint') }}
-                    </NText>
+                <NCollapseTransition :show="!!urlRuleError">
+                  <div class="category-manager-error">
+                    {{ urlRuleError }}
                   </div>
-                  <div class="category-manager-field-row-right">
-                    <NSelect
-                      :value="selectedCategory.urlPatternMode ?? 'wildcard'"
-                      :options="modeOptions"
-                      size="small"
-                      class="category-manager-mode"
-                      @update:value="handleUrlModeChange"
-                    />
-                  </div>
-                </div>
-                <div class="category-manager-url-control">
-                  <NInput
-                    :value="urlPatternText"
-                    type="textarea"
-                    :rows="4"
-                    size="small"
-                    :status="urlRuleError ? 'error' : undefined"
-                    :placeholder="t('preferences.file-category-url-placeholder')"
-                    @update:value="handleUrlPatternChange"
-                  />
-                  <NCollapseTransition :show="!!urlRuleError">
-                    <div class="category-manager-error">
-                      {{ urlRuleError }}
-                    </div>
-                  </NCollapseTransition>
-                </div>
-              </div>
-
-              <div class="category-manager-field">
-                <span>{{ t('preferences.download-path') }}</span>
-                <NInputGroup>
-                  <NInput
-                    :value="selectedCategory.directory"
-                    size="small"
-                    class="category-manager-path"
-                    @update:value="handleDirectoryInput"
-                  />
-                  <NButton size="small" class="pref-icon-button-sm" @click="handleSelectCategoryDir">
-                    <template #icon>
-                      <NIcon :size="14"><FolderOpenOutline /></NIcon>
-                    </template>
-                  </NButton>
-                </NInputGroup>
+                </NCollapseTransition>
               </div>
             </div>
-          </Transition>
-        </section>
-      </div>
 
-      <template #footer>
-        <NSpace justify="space-between" align="center">
-          <div class="category-manager-footer-left">
-            <Transition name="footer-delete">
-              <NButton
-                v-if="selectedCategory"
-                key="delete-category"
-                size="small"
-                ghost
-                type="error"
-                @click="handleDeleteCategory"
-              >
-                {{ t('app.delete') }}
-              </NButton>
-              <NText v-else key="delete-empty" depth="3" />
-            </Transition>
+            <div class="category-manager-field">
+              <span>{{ t('preferences.download-path') }}</span>
+              <NInputGroup>
+                <NInput
+                  :value="selectedCategory.directory"
+                  size="small"
+                  class="category-manager-path"
+                  @update:value="handleDirectoryInput"
+                />
+                <NButton size="small" class="pref-icon-button-sm" @click="handleSelectCategoryDir">
+                  <template #icon>
+                    <NIcon :size="14"><FolderOpenOutline /></NIcon>
+                  </template>
+                </NButton>
+              </NInputGroup>
+            </div>
           </div>
-          <NSpace>
-            <NButton @click="closeModal">{{ t('app.cancel') }}</NButton>
-            <NButton type="primary" @click="handleSave">{{ t('app.save') }}</NButton>
-          </NSpace>
+        </Transition>
+      </section>
+    </div>
+
+    <template #footer>
+      <NSpace justify="space-between" align="center">
+        <div class="category-manager-footer-left">
+          <Transition name="fade">
+            <NButton
+              v-if="selectedCategory"
+              key="delete-category"
+              size="small"
+              ghost
+              type="error"
+              @click="handleDeleteCategory"
+            >
+              {{ t('app.delete') }}
+            </NButton>
+            <NText v-else key="delete-empty" depth="3" />
+          </Transition>
+        </div>
+        <NSpace>
+          <NButton @click="closeModal">{{ t('app.cancel') }}</NButton>
+          <NButton type="primary" @click="handleSave">{{ t('app.save') }}</NButton>
         </NSpace>
-      </template>
-    </NCard>
-  </NModal>
+      </NSpace>
+    </template>
+  </AppDialog>
 </template>
 
 <style scoped>
-.category-manager-card {
-  width: min(840px, calc(100vw - 32px));
-  max-height: min(720px, calc(100dvh - 48px));
-}
-
-.category-manager-card :deep(.n-card__content) {
-  min-height: 0;
-  overflow: hidden;
-}
-
 .category-manager {
-  display: grid;
-  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
-  gap: 16px;
-  height: min(520px, calc(100dvh - 208px));
-  min-height: 0;
-}
-
-.category-manager-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-height: 0;
-  min-width: 0;
+  gap: 24px;
 }
-
 .category-manager-priority-hint {
-  flex: 0 0 auto;
-  color: var(--n-text-color-3);
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: 13px;
+  color: var(--m3-on-surface-variant);
+  margin-bottom: 12px;
 }
-
 .category-manager-list-items {
-  flex: 1 1 0;
   position: relative;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding-right: 2px;
+  max-height: 240px;
+  overflow: auto;
 }
-
 .category-manager-list-item {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  min-height: 54px;
-  margin-bottom: 6px;
-  padding: 8px 10px;
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: 8px;
-  color: var(--n-text-color);
-  background: var(--m3-surface-container-low);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background-color 0.2s cubic-bezier(0.2, 0, 0, 1),
-    border-color 0.2s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.category-manager-drag-handle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: stretch;
-  min-width: 22px;
-  border-radius: 6px;
-  color: var(--n-text-color-3);
-  cursor: grab;
-  touch-action: none;
-  transition:
-    color 0.18s cubic-bezier(0.2, 0, 0, 1),
-    background-color 0.18s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.category-manager-drag-handle:hover {
-  color: var(--m3-primary);
-  background: var(--m3-surface-container-highest);
-}
-
-.category-manager-drag-handle:active {
-  cursor: grabbing;
-}
-
-.category-manager-list-copy {
   display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 8px;
+  border-bottom: 1px solid var(--divider);
+  cursor: pointer;
 }
-
-.category-manager-list-item:hover {
-  border-color: var(--m3-primary);
-}
-
 .category-manager-list-item--active {
-  border-color: var(--m3-primary);
-  background: var(--m3-surface-container-high);
+  background: var(--selection-bg);
+}
+.category-manager-list-copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 .category-manager-list-title {
-  overflow: hidden;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
-
 .category-manager-list-meta {
-  font-size: 12px;
-  color: var(--n-text-color-3);
+  font-size: 13px;
+  color: var(--m3-on-surface-variant);
+  overflow-wrap: anywhere;
 }
-
-.category-manager-list-actions {
+.category-manager-drag-handle {
+  cursor: grab;
+  touch-action: none;
   display: grid;
-  gap: 8px;
-  flex: 0 0 auto;
+  place-items: center;
+  width: 32px;
+  min-height: 32px;
 }
-
-.category-manager-reset-button {
-  transition:
-    color 0.2s cubic-bezier(0.2, 0, 0, 1),
-    background-color 0.2s cubic-bezier(0.2, 0, 0, 1),
-    border-color 0.2s cubic-bezier(0.2, 0, 0, 1);
+.category-manager-list-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
 }
-
-.category-manager-reset-button--confirm {
-  background: color-mix(in srgb, var(--m3-error) 14%, transparent);
-}
-
-.category-manager-reset-content {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: 0;
-}
-
 .category-manager-editor {
-  min-width: 0;
-  padding: 2px 0;
+  border-top: 1px solid var(--divider);
+  padding-top: 24px;
 }
-
 .category-manager-editor-content {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 20px;
 }
-
 .category-manager-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-  font-size: 13px;
+  gap: 8px;
+}
+.category-manager-field > span {
   font-weight: 500;
 }
-
-.category-manager-hint {
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.35;
-  white-space: nowrap;
+.category-manager-field p,
+.category-manager-field .n-text {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--m3-on-surface-variant);
 }
-
-.category-manager-field-title {
+.category-manager-rule-mode {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
-  min-width: 0;
-}
-
-.category-manager-field-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 12px;
 }
-
-.category-manager-field-row-right {
+.category-manager-dir-row {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
+  gap: 8px;
 }
-
-.category-manager-mode {
-  width: 128px;
-  flex: 0 0 auto;
-}
-
-.category-manager-url-control {
-  min-width: 0;
-}
-
-.category-manager-path {
+.category-manager-dir-row .n-input {
   flex: 1;
-}
-
-.category-manager-error {
-  margin-top: 6px;
-  color: var(--m3-error);
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.35;
-}
-
-.category-manager-footer-left {
-  min-width: 76px;
-}
-
-.content-fade-enter-active {
-  transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.content-fade-leave-active {
-  transition: opacity 0.14s cubic-bezier(0.3, 0, 0.8, 0.15);
-}
-
-.content-fade-enter-from,
-.content-fade-leave-to {
-  opacity: 0;
-}
-
-.reset-label-enter-active,
-.reset-label-leave-active {
-  transition:
-    opacity 0.16s cubic-bezier(0.2, 0, 0, 1),
-    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.reset-label-enter-from,
-.reset-label-leave-to {
-  opacity: 0;
-  transform: scale(0.94);
-}
-
-.footer-delete-enter-active {
-  transition:
-    opacity 0.26s cubic-bezier(0.2, 0, 0, 1),
-    transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.footer-delete-leave-active {
-  transition:
-    opacity 0.14s cubic-bezier(0.3, 0, 0.8, 0.15),
-    transform 0.14s cubic-bezier(0.3, 0, 0.8, 0.15);
-}
-
-.footer-delete-enter-from,
-.footer-delete-leave-to {
-  opacity: 0;
-  transform: scale(0.94);
 }
 </style>

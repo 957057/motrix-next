@@ -1,16 +1,15 @@
 <script setup lang="ts">
+import AppDialog from '@/components/common/AppDialog.vue'
 /** @fileoverview User-Agent profile and host-rule manager. */
 import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NButton,
-  NCard,
   NEmpty,
   NForm,
   NFormItem,
   NIcon,
   NInput,
-  NModal,
   NRadioButton,
   NRadioGroup,
   NSelect,
@@ -151,554 +150,358 @@ watch(
 </script>
 
 <template>
-  <NModal
-    :show="show"
-    :mask-closable="false"
-    transform-origin="center"
-    @update:show="(value: boolean) => emit('update:show', value)"
-  >
-    <NCard closable class="ua-manager-card" :bordered="false" @close="closeModal">
-      <template #header>
-        <div class="ua-manager-heading">
-          <strong>{{ t('preferences.ua-manager-title') }}</strong>
-          <NText depth="3">{{ t('preferences.ua-manager-description') }}</NText>
-        </div>
-      </template>
+  <AppDialog :show="show" :title="t('preferences.ua-manager-title')" size="wide" @close="closeModal">
+    <p class="manager-description">{{ t('preferences.ua-manager-description') }}</p>
+    <NTabs :value="manager.activePanel.value" type="line" @update:value="handlePanelChange">
+      <NTab name="profiles">{{ t('preferences.ua-saved') }} · {{ manager.profiles.value.length }}</NTab>
+      <NTab name="rules">{{ t('preferences.ua-rules') }} · {{ manager.rules.value.length }}</NTab>
+    </NTabs>
 
-      <NTabs :value="manager.activePanel.value" type="segment" @update:value="handlePanelChange">
-        <NTab name="profiles">{{ t('preferences.ua-saved') }} · {{ manager.profiles.value.length }}</NTab>
-        <NTab name="rules">{{ t('preferences.ua-rules') }} · {{ manager.rules.value.length }}</NTab>
-      </NTabs>
-
-      <div class="ua-manager-content-stage">
-        <Transition name="fade-scale">
-          <div v-if="manager.activePanel.value === 'profiles'" :key="activeView" class="ua-manager-pane-stage">
-            <div v-if="manager.profiles.value.length === 0" class="ua-manager-full-empty">
-              <NEmpty :description="t('task.ua-no-saved')">
-                <template #extra>
-                  <NButton type="primary" :disabled="!manager.canAddProfile.value" @click="addProfile">
-                    <template #icon
-                      ><NIcon><AddOutline /></NIcon
-                    ></template>
-                    {{ t('preferences.ua-add-profile') }}
-                  </NButton>
-                </template>
-              </NEmpty>
-            </div>
-
-            <div v-else class="ua-manager-workspace">
-              <aside class="ua-manager-sidebar">
-                <div class="ua-manager-sidebar-header">
-                  <NText depth="3">{{ t('preferences.ua-saved') }}</NText>
-                  <NButton size="small" secondary :disabled="!manager.canAddProfile.value" @click="addProfile">
-                    <template #icon
-                      ><NIcon><AddOutline /></NIcon
-                    ></template>
-                    {{ t('preferences.ua-add-profile') }}
-                  </NButton>
-                </div>
-                <TransitionGroup tag="div" name="list" class="ua-manager-list">
-                  <NButton
-                    v-for="profile in manager.profiles.value"
-                    :key="profile.id"
-                    block
-                    class="ua-manager-list-button"
-                    :secondary="manager.selectedProfileId.value === profile.id"
-                    :quaternary="manager.selectedProfileId.value !== profile.id"
-                    :aria-pressed="manager.selectedProfileId.value === profile.id"
-                    @click="manager.selectProfile(profile.id)"
-                  >
-                    <span class="ua-manager-list-copy">
-                      <span class="ua-manager-list-title">{{ profile.name }}</span>
-                      <span class="ua-manager-list-meta">{{ profileMeta(profile) }}</span>
-                    </span>
-                  </NButton>
-                </TransitionGroup>
-              </aside>
-
-              <section class="ua-manager-editor">
-                <Transition name="view">
-                  <NForm
-                    v-if="manager.selectedProfile.value"
-                    :key="manager.selectedProfile.value.id"
-                    label-placement="top"
-                    size="small"
-                  >
-                    <NFormItem
-                      :label="t('preferences.ua-profile-name')"
-                      :validation-status="profileNameInvalid ? 'error' : undefined"
-                      :feedback="profileNameInvalid ? t('preferences.ua-profile-invalid') : undefined"
-                    >
-                      <NInput v-model:value="manager.selectedProfile.value.name" />
-                    </NFormItem>
-                    <NFormItem
-                      :label="t('preferences.user-agent')"
-                      :validation-status="profileValueInvalid ? 'error' : undefined"
-                      :feedback="profileValueInvalid ? t('preferences.ua-profile-invalid') : undefined"
-                    >
-                      <NInput
-                        v-model:value="manager.selectedProfile.value.value"
-                        type="textarea"
-                        :autosize="{ minRows: 5, maxRows: 9 }"
-                      />
-                    </NFormItem>
-                    <NText depth="3" class="ua-manager-editor-note">
-                      {{ t('preferences.ua-profile-rule-count', { count: selectedProfileRuleCount }) }}
-                    </NText>
-                  </NForm>
-                </Transition>
-              </section>
-            </div>
+    <div class="ua-manager-content-stage">
+      <Transition name="fade">
+        <div v-if="manager.activePanel.value === 'profiles'" :key="activeView" class="ua-manager-pane-stage">
+          <div v-if="manager.profiles.value.length === 0" class="ua-manager-full-empty">
+            <NEmpty :description="t('task.ua-no-saved')">
+              <template #extra>
+                <NButton type="primary" :disabled="!manager.canAddProfile.value" @click="addProfile">
+                  <template #icon
+                    ><NIcon><AddOutline /></NIcon
+                  ></template>
+                  {{ t('preferences.ua-add-profile') }}
+                </NButton>
+              </template>
+            </NEmpty>
           </div>
 
-          <div v-else :key="activeView" class="ua-manager-pane-stage">
-            <div v-if="manager.profiles.value.length === 0" class="ua-manager-full-empty">
-              <NEmpty :description="t('preferences.ua-rules-require-profile')">
-                <template #extra>
-                  <NButton type="primary" @click="openProfileSetup">
-                    <template #icon
-                      ><NIcon><AddOutline /></NIcon
-                    ></template>
-                    {{ t('preferences.ua-add-profile') }}
-                  </NButton>
-                </template>
-              </NEmpty>
-            </div>
-
-            <div v-else-if="manager.rules.value.length === 0" class="ua-manager-full-empty">
-              <NEmpty :description="t('preferences.ua-no-rules')">
-                <template #extra>
-                  <NButton type="primary" :disabled="!manager.canAddRule.value" @click="addRule">
-                    <template #icon
-                      ><NIcon><AddOutline /></NIcon
-                    ></template>
-                    {{ t('preferences.ua-add-rule') }}
-                  </NButton>
-                </template>
-              </NEmpty>
-            </div>
-
-            <div v-else class="ua-manager-workspace">
-              <aside class="ua-manager-sidebar">
-                <div class="ua-manager-sidebar-header ua-manager-sidebar-header--stacked">
-                  <NText depth="3">{{ t('preferences.ua-rule-order-hint') }}</NText>
-                  <NButton size="small" secondary :disabled="!manager.canAddRule.value" @click="addRule">
-                    <template #icon
-                      ><NIcon><AddOutline /></NIcon
-                    ></template>
-                    {{ t('preferences.ua-add-rule') }}
-                  </NButton>
-                </div>
-                <Reorder.Group
-                  v-model:values="manager.rules.value"
-                  as="div"
-                  axis="y"
-                  class="ua-manager-list ua-manager-rule-list"
-                  layout-scroll
+          <div v-else class="ua-manager-workspace">
+            <aside class="ua-manager-sidebar">
+              <div class="ua-manager-sidebar-header">
+                <NText depth="3">{{ t('preferences.ua-saved') }}</NText>
+                <NButton size="small" secondary :disabled="!manager.canAddProfile.value" @click="addProfile">
+                  <template #icon
+                    ><NIcon><AddOutline /></NIcon
+                  ></template>
+                  {{ t('preferences.ua-add-profile') }}
+                </NButton>
+              </div>
+              <TransitionGroup tag="div" name="list" class="ua-manager-list">
+                <NButton
+                  v-for="profile in manager.profiles.value"
+                  :key="profile.id"
+                  block
+                  class="ua-manager-list-button"
+                  :secondary="manager.selectedProfileId.value === profile.id"
+                  :quaternary="manager.selectedProfileId.value !== profile.id"
+                  :aria-pressed="manager.selectedProfileId.value === profile.id"
+                  @click="manager.selectProfile(profile.id)"
                 >
-                  <AnimatePresence :initial="false" mode="popLayout">
-                    <ReorderItem
-                      v-for="(rule, index) in manager.rules.value"
-                      v-slot="{ start }"
-                      :key="rule.id"
-                      :value="rule"
+                  <span class="ua-manager-list-copy">
+                    <span class="ua-manager-list-title">{{ profile.name }}</span>
+                    <span class="ua-manager-list-meta">{{ profileMeta(profile) }}</span>
+                  </span>
+                </NButton>
+              </TransitionGroup>
+            </aside>
+
+            <section class="ua-manager-editor">
+              <Transition name="view">
+                <NForm
+                  v-if="manager.selectedProfile.value"
+                  :key="manager.selectedProfile.value.id"
+                  label-placement="top"
+                  size="small"
+                >
+                  <NFormItem
+                    :label="t('preferences.ua-profile-name')"
+                    :validation-status="profileNameInvalid ? 'error' : undefined"
+                    :feedback="profileNameInvalid ? t('preferences.ua-profile-invalid') : undefined"
+                  >
+                    <NInput v-model:value="manager.selectedProfile.value.name" />
+                  </NFormItem>
+                  <NFormItem
+                    :label="t('preferences.user-agent')"
+                    :validation-status="profileValueInvalid ? 'error' : undefined"
+                    :feedback="profileValueInvalid ? t('preferences.ua-profile-invalid') : undefined"
+                  >
+                    <NInput
+                      v-model:value="manager.selectedProfile.value.value"
+                      type="textarea"
+                      :autosize="{ minRows: 5, maxRows: 9 }"
+                    />
+                  </NFormItem>
+                  <NText depth="3" class="ua-manager-editor-note">
+                    {{ t('preferences.ua-profile-rule-count', { count: selectedProfileRuleCount }) }}
+                  </NText>
+                </NForm>
+              </Transition>
+            </section>
+          </div>
+        </div>
+
+        <div v-else :key="activeView" class="ua-manager-pane-stage">
+          <div v-if="manager.profiles.value.length === 0" class="ua-manager-full-empty">
+            <NEmpty :description="t('preferences.ua-rules-require-profile')">
+              <template #extra>
+                <NButton type="primary" @click="openProfileSetup">
+                  <template #icon
+                    ><NIcon><AddOutline /></NIcon
+                  ></template>
+                  {{ t('preferences.ua-add-profile') }}
+                </NButton>
+              </template>
+            </NEmpty>
+          </div>
+
+          <div v-else-if="manager.rules.value.length === 0" class="ua-manager-full-empty">
+            <NEmpty :description="t('preferences.ua-no-rules')">
+              <template #extra>
+                <NButton type="primary" :disabled="!manager.canAddRule.value" @click="addRule">
+                  <template #icon
+                    ><NIcon><AddOutline /></NIcon
+                  ></template>
+                  {{ t('preferences.ua-add-rule') }}
+                </NButton>
+              </template>
+            </NEmpty>
+          </div>
+
+          <div v-else class="ua-manager-workspace">
+            <aside class="ua-manager-sidebar">
+              <div class="ua-manager-sidebar-header ua-manager-sidebar-header--stacked">
+                <NText depth="3">{{ t('preferences.ua-rule-order-hint') }}</NText>
+                <NButton size="small" secondary :disabled="!manager.canAddRule.value" @click="addRule">
+                  <template #icon
+                    ><NIcon><AddOutline /></NIcon
+                  ></template>
+                  {{ t('preferences.ua-add-rule') }}
+                </NButton>
+              </div>
+              <Reorder.Group
+                v-model:values="manager.rules.value"
+                as="div"
+                axis="y"
+                class="ua-manager-list ua-manager-rule-list"
+                layout-scroll
+              >
+                <AnimatePresence :initial="false" mode="popLayout">
+                  <ReorderItem
+                    v-for="(rule, index) in manager.rules.value"
+                    v-slot="{ start }"
+                    :key="rule.id"
+                    :value="rule"
+                    role="button"
+                    tabindex="0"
+                    class="ua-manager-rule-row"
+                    :class="{ 'ua-manager-rule-row--active': manager.selectedRuleId.value === rule.id }"
+                    :aria-pressed="manager.selectedRuleId.value === rule.id"
+                    @click="manager.selectRule(rule.id)"
+                    @keydown.enter.prevent="manager.selectRule(rule.id)"
+                    @keydown.space.prevent="manager.selectRule(rule.id)"
+                  >
+                    <span
+                      class="ua-manager-rule-handle"
                       role="button"
                       tabindex="0"
-                      class="ua-manager-rule-row"
-                      :class="{ 'ua-manager-rule-row--active': manager.selectedRuleId.value === rule.id }"
-                      :aria-pressed="manager.selectedRuleId.value === rule.id"
-                      @click="manager.selectRule(rule.id)"
-                      @keydown.enter.prevent="manager.selectRule(rule.id)"
-                      @keydown.space.prevent="manager.selectRule(rule.id)"
-                    >
-                      <span
-                        class="ua-manager-rule-handle"
-                        role="button"
-                        tabindex="0"
-                        :aria-label="t('preferences.ua-rule-reorder')"
-                        @click.stop
-                        @pointerdown="
-                          (event) => {
-                            manager.selectRule(rule.id)
-                            start(event)
-                          }
-                        "
-                        @keydown.up.stop.prevent="manager.moveRule(index, Math.max(0, index - 1))"
-                        @keydown.down.stop.prevent="
-                          manager.moveRule(index, Math.min(manager.rules.value.length - 1, index + 1))
-                        "
-                      >
-                        <NIcon aria-hidden="true"><ReorderThreeOutline /></NIcon>
-                      </span>
-                      <span class="ua-manager-list-copy">
-                        <span class="ua-manager-list-title">{{
-                          rule.hostPattern || t('preferences.ua-new-rule')
-                        }}</span>
-                        <span class="ua-manager-list-meta">
-                          {{ profileName(rule.profileId) }} ·
-                          {{ rule.enabled ? t('preferences.ua-rule-enabled') : t('preferences.ua-rule-disabled') }}
-                        </span>
-                      </span>
-                    </ReorderItem>
-                  </AnimatePresence>
-                </Reorder.Group>
-              </aside>
-
-              <section class="ua-manager-editor">
-                <Transition name="view">
-                  <NForm
-                    v-if="manager.selectedRule.value"
-                    :key="manager.selectedRule.value.id"
-                    label-placement="top"
-                    size="small"
-                  >
-                    <NFormItem :label="t('preferences.ua-rule-enabled')">
-                      <NSwitch v-model:value="manager.selectedRule.value.enabled" />
-                    </NFormItem>
-                    <NFormItem
-                      :label="t('preferences.ua-rule-host')"
-                      :validation-status="ruleHostInvalid ? 'error' : undefined"
-                      :feedback="
-                        ruleHostInvalid ? t('preferences.ua-rule-invalid') : t('preferences.ua-rule-host-hint')
+                      :aria-label="t('preferences.ua-rule-reorder')"
+                      @click.stop
+                      @pointerdown="
+                        (event) => {
+                          manager.selectRule(rule.id)
+                          start(event)
+                        }
+                      "
+                      @keydown.up.stop.prevent="manager.moveRule(index, Math.max(0, index - 1))"
+                      @keydown.down.stop.prevent="
+                        manager.moveRule(index, Math.min(manager.rules.value.length - 1, index + 1))
                       "
                     >
-                      <NInput v-model:value="manager.selectedRule.value.hostPattern" placeholder="*.example.com" />
-                    </NFormItem>
-                    <NFormItem
-                      :label="t('preferences.ua-rule-profile')"
-                      :validation-status="ruleProfileInvalid ? 'error' : undefined"
-                      :feedback="ruleProfileInvalid ? t('preferences.ua-rule-invalid') : undefined"
-                    >
-                      <NSelect
-                        v-model:value="manager.selectedRule.value.profileId"
-                        :options="manager.profileOptions.value"
-                      />
-                    </NFormItem>
-                    <NFormItem :label="t('preferences.ua-browser-user-agent')">
-                      <NRadioGroup v-model:value="pluginBehavior" size="small">
-                        <NRadioButton value="preserve">{{ t('preferences.ua-override-off') }}</NRadioButton>
-                        <NRadioButton value="override">{{ t('preferences.ua-override-on') }}</NRadioButton>
-                      </NRadioGroup>
-                    </NFormItem>
-                    <div class="ua-manager-rule-preview">
-                      <div class="ua-manager-rule-flow">
-                        <strong>{{ manager.selectedRule.value.hostPattern || '*.example.com' }}</strong>
-                        <NIcon aria-hidden="true"><ArrowForwardOutline /></NIcon>
-                        <strong>{{ selectedRuleProfileName }}</strong>
-                      </div>
-                      <NText depth="3">
-                        {{
-                          manager.selectedRule.value.overridePlugin
-                            ? t('preferences.ua-override-on')
-                            : t('preferences.ua-override-off')
-                        }}
-                      </NText>
-                    </div>
-                  </NForm>
-                </Transition>
-              </section>
-            </div>
-          </div>
-        </Transition>
-      </div>
+                      <NIcon aria-hidden="true"><ReorderThreeOutline /></NIcon>
+                    </span>
+                    <span class="ua-manager-list-copy">
+                      <span class="ua-manager-list-title">{{ rule.hostPattern || t('preferences.ua-new-rule') }}</span>
+                      <span class="ua-manager-list-meta">
+                        {{ profileName(rule.profileId) }} ·
+                        {{ rule.enabled ? t('preferences.ua-rule-enabled') : t('preferences.ua-rule-disabled') }}
+                      </span>
+                    </span>
+                  </ReorderItem>
+                </AnimatePresence>
+              </Reorder.Group>
+            </aside>
 
-      <template #footer>
-        <NSpace justify="space-between" align="center">
-          <div class="ua-manager-footer-left">
-            <Transition name="fade-scale">
-              <NButton v-if="canDeleteSelected" size="small" ghost type="error" @click="removeSelected">
-                {{ t('app.delete') }}
-              </NButton>
-            </Transition>
+            <section class="ua-manager-editor">
+              <Transition name="view">
+                <NForm
+                  v-if="manager.selectedRule.value"
+                  :key="manager.selectedRule.value.id"
+                  label-placement="top"
+                  size="small"
+                >
+                  <NFormItem :label="t('preferences.ua-rule-enabled')">
+                    <NSwitch v-model:value="manager.selectedRule.value.enabled" />
+                  </NFormItem>
+                  <NFormItem
+                    :label="t('preferences.ua-rule-host')"
+                    :validation-status="ruleHostInvalid ? 'error' : undefined"
+                    :feedback="ruleHostInvalid ? t('preferences.ua-rule-invalid') : t('preferences.ua-rule-host-hint')"
+                  >
+                    <NInput v-model:value="manager.selectedRule.value.hostPattern" placeholder="*.example.com" />
+                  </NFormItem>
+                  <NFormItem
+                    :label="t('preferences.ua-rule-profile')"
+                    :validation-status="ruleProfileInvalid ? 'error' : undefined"
+                    :feedback="ruleProfileInvalid ? t('preferences.ua-rule-invalid') : undefined"
+                  >
+                    <NSelect
+                      v-model:value="manager.selectedRule.value.profileId"
+                      :options="manager.profileOptions.value"
+                    />
+                  </NFormItem>
+                  <NFormItem :label="t('preferences.ua-browser-user-agent')">
+                    <NRadioGroup v-model:value="pluginBehavior" size="small">
+                      <NRadioButton value="preserve">{{ t('preferences.ua-override-off') }}</NRadioButton>
+                      <NRadioButton value="override">{{ t('preferences.ua-override-on') }}</NRadioButton>
+                    </NRadioGroup>
+                  </NFormItem>
+                  <div class="ua-manager-rule-preview">
+                    <div class="ua-manager-rule-flow">
+                      <strong>{{ manager.selectedRule.value.hostPattern || '*.example.com' }}</strong>
+                      <NIcon aria-hidden="true"><ArrowForwardOutline /></NIcon>
+                      <strong>{{ selectedRuleProfileName }}</strong>
+                    </div>
+                    <NText depth="3">
+                      {{
+                        manager.selectedRule.value.overridePlugin
+                          ? t('preferences.ua-override-on')
+                          : t('preferences.ua-override-off')
+                      }}
+                    </NText>
+                  </div>
+                </NForm>
+              </Transition>
+            </section>
           </div>
-          <NSpace>
-            <NButton @click="closeModal">{{ t('app.cancel') }}</NButton>
-            <NButton type="primary" @click="handleSave">{{ t('app.save') }}</NButton>
-          </NSpace>
+        </div>
+      </Transition>
+    </div>
+
+    <template #footer>
+      <NSpace justify="space-between" align="center">
+        <div class="ua-manager-footer-left">
+          <Transition name="fade">
+            <NButton v-if="canDeleteSelected" size="small" ghost type="error" @click="removeSelected">
+              {{ t('app.delete') }}
+            </NButton>
+          </Transition>
+        </div>
+        <NSpace>
+          <NButton @click="closeModal">{{ t('app.cancel') }}</NButton>
+          <NButton type="primary" @click="handleSave">{{ t('app.save') }}</NButton>
         </NSpace>
-      </template>
-    </NCard>
-  </NModal>
+      </NSpace>
+    </template>
+  </AppDialog>
 </template>
 
 <style scoped>
-.ua-manager-card {
-  width: min(820px, calc(100vw - 32px));
-  max-height: min(740px, calc(100dvh - 32px));
+.manager-description {
+  margin-bottom: 16px;
+  color: var(--m3-on-surface-variant);
+  font-size: 13px;
 }
-
-.ua-manager-card :deep(.n-card__content) {
-  min-height: 0;
-  overflow: hidden;
+.ua-manager-content-stage {
+  margin-top: 20px;
+  min-height: 200px;
 }
-
-.ua-manager-heading {
+.ua-manager-pane-stage {
+  position: relative;
+}
+.ua-manager-workspace {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 24px;
 }
-
-.ua-manager-heading strong {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.ua-manager-heading .n-text {
-  font-size: 12px;
-  font-weight: 400;
-}
-
-.ua-manager-content-stage {
-  height: min(490px, calc(100dvh - 208px));
-  min-height: 0;
-  margin-top: 16px;
-}
-
-.ua-manager-pane-stage {
-  height: 100%;
-  min-height: 0;
-}
-
-.ua-manager-workspace {
-  display: grid;
-  grid-template-columns: minmax(220px, 270px) minmax(0, 1fr);
-  gap: 20px;
-  height: 100%;
-  min-height: 0;
-}
-
 .ua-manager-sidebar,
 .ua-manager-editor {
   min-width: 0;
-  min-height: 0;
 }
-
-.ua-manager-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-right: 16px;
-  border-right: 1px solid var(--m3-outline-variant);
-}
-
 .ua-manager-sidebar-header {
   display: flex;
-  min-height: 34px;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
-
-.ua-manager-sidebar-header--stacked {
-  align-items: flex-start;
-}
-
-.ua-manager-sidebar-header .n-text {
-  font-size: 12px;
-  line-height: 1.4;
-}
-
 .ua-manager-list {
-  display: flex;
-  min-height: 0;
-  flex: 1;
-  flex-direction: column;
-  gap: 6px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  position: relative;
+  max-height: 220px;
+  overflow: auto;
 }
-
 .ua-manager-list-button {
+  width: 100%;
   height: auto;
   min-height: 56px;
-  padding: 8px 10px;
+  padding: 12px;
   justify-content: flex-start;
+  border-bottom: 1px solid var(--divider);
+  border-radius: 0;
 }
-
-.ua-manager-list-button :deep(.n-button__content) {
-  width: 100%;
-  min-width: 0;
-  justify-content: flex-start;
-}
-
 .ua-manager-list-copy {
   display: flex;
-  min-width: 0;
-  flex: 1;
   flex-direction: column;
-  gap: 2px;
-  text-align: left;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
 }
-
-.ua-manager-list-title,
-.ua-manager-list-meta {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .ua-manager-list-title {
-  font-size: 13px;
   font-weight: 500;
+  font-size: 14px;
 }
-
 .ua-manager-list-meta {
+  font-size: 13px;
   color: var(--m3-on-surface-variant);
-  font-size: 12px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
-
-.ua-manager-rule-list {
+.ua-manager-editor {
   position: relative;
-  gap: 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--divider);
 }
-
+.ua-manager-editor > .view-leave-active {
+  inset-block-start: 20px;
+}
+.ua-manager-editor-form,
+.ua-manager-rule-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ua-manager-full-empty {
+  padding-block: 32px;
+}
 .ua-manager-rule-row {
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
-  gap: 8px;
+  position: relative;
+  display: flex;
   align-items: center;
-  width: 100%;
-  min-height: 56px;
-  margin-bottom: 8px;
-  padding: 8px 10px;
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: 8px;
-  color: var(--m3-on-surface);
-  background: var(--m3-surface-container-low);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background-color 0.2s cubic-bezier(0.2, 0, 0, 1),
-    border-color 0.2s cubic-bezier(0.2, 0, 0, 1);
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--divider);
 }
-
-.ua-manager-rule-row:hover,
-.ua-manager-rule-row--active {
-  border-color: var(--m3-primary);
+.ua-rule-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-
-.ua-manager-rule-row--active {
-  background: var(--m3-surface-container-high);
-}
-
 .ua-manager-rule-handle {
-  display: inline-flex;
-  min-width: 24px;
-  align-self: stretch;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  color: var(--m3-on-surface-variant);
   cursor: grab;
   touch-action: none;
-  transition:
-    color 0.18s cubic-bezier(0.2, 0, 0, 1),
-    background-color 0.18s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.ua-manager-rule-handle:hover {
-  color: var(--m3-primary);
-  background: var(--m3-surface-container-highest);
-}
-
-.ua-manager-rule-handle:active {
-  cursor: grabbing;
-}
-
-.ua-manager-editor {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 2px 4px 8px 0;
-}
-
-.ua-manager-editor :deep(.n-form-item) {
-  margin-bottom: 10px;
-}
-
-.ua-manager-editor-note {
-  display: block;
-  font-size: 12px;
-}
-
-.ua-manager-rule-preview {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 14px 16px;
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: 10px;
-  background: var(--m3-surface-container-low);
-}
-
-.ua-manager-rule-flow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
 }
-
-.ua-manager-rule-flow strong {
-  overflow: hidden;
-  font-size: 13px;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ua-manager-rule-flow strong:last-child {
-  text-align: right;
-}
-
-.ua-manager-rule-preview .n-text {
-  font-size: 12px;
-}
-
-.ua-manager-full-empty {
-  display: flex;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-}
-
-.ua-manager-footer-left {
-  min-width: 88px;
-  min-height: 34px;
-}
-
-@media (max-width: 720px) {
-  .ua-manager-card {
-    width: calc(100vw - 20px);
-    max-height: calc(100dvh - 20px);
-  }
-
-  .ua-manager-content-stage {
-    height: min(570px, calc(100dvh - 240px));
-    min-height: 300px;
-  }
-
-  .ua-manager-workspace {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    overflow-y: auto;
-  }
-
-  .ua-manager-sidebar {
-    max-height: 210px;
-    flex: 0 0 auto;
-    padding-right: 0;
-    padding-bottom: 14px;
-    border-right: 0;
-    border-bottom: 1px solid var(--m3-outline-variant);
-  }
-
-  .ua-manager-list {
-    min-height: 96px;
-  }
-
-  .ua-manager-editor {
-    flex: 0 0 auto;
-    overflow: visible;
-  }
+.ua-manager-rule-row--active {
+  background: var(--selection-bg);
 }
 </style>

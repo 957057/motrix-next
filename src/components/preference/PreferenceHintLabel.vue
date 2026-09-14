@@ -17,9 +17,7 @@ defineProps<{
   display: inline-flex;
   flex-direction: column;
   gap: 4px;
-  max-width: 220px;
-  padding-bottom: 29.25px;
-  line-height: 1.35;
+  line-height: 1.5;
   white-space: normal;
 }
 .preference-hint-label__title,
@@ -29,7 +27,7 @@ defineProps<{
 }
 .preference-hint-label__hint {
   color: var(--m3-on-surface-variant);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
 }
 </style>

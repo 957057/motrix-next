@@ -38,16 +38,14 @@ describe('contextual media controls', () => {
     expect(wrapper.find('[data-label="media.subtitles"]').exists()).toBe(false)
     expect(wrapper.find('[data-label="media.record-time"]').exists()).toBe(false)
     expect(wrapper.find('[data-label="media.video"]').exists()).toBe(true)
-    const video = wrapper.find('[data-label="media.video"]').findComponent({ name: 'Select' })
-    expect(video.props('options')).toContainEqual({
-      value: 'muxed-main',
-      label: 'English · 1280×720 · avc1,mp4a · 1000 kb/s',
-    })
+    const video = wrapper.find('[data-label="media.video"]')
+    expect(video.text()).toContain('English · 1280×720 · avc1,mp4a · 1000 kb/s')
+    expect(video.find('input[type="radio"][value="muxed-main"]').exists()).toBe(true)
     wrapper.unmount()
   })
   it('switches multiplexed media to audio-only without contradictory video selection', async () => {
     const { wrapper, model } = setup([muxed], true)
-    wrapper.find('[data-label="media.content"]').findComponent({ name: 'Select' }).vm.$emit('update:value', 'audio')
+    await wrapper.find('[data-label="media.content"] input[type="radio"][value="audio"]').setValue()
     await wrapper.vm.$nextTick()
     expect(model.value.video).toBe('none')
     expect(model.value.audio).toBe('best')

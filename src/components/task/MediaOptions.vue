@@ -2,7 +2,7 @@
 /** @fileoverview Contextual controls for a natively inspected media presentation. */
 import { computed, watch, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NFormItem, NSelect, NInputNumber } from 'naive-ui'
+import { NFormItem, NSelect, NInputNumber, NRadioGroup, NRadioButton, NRadio, NCollapseTransition } from 'naive-ui'
 import type { Aria2MediaTrack } from '@shared/types'
 import { mediaTrackLabel, type MediaOptions } from '@shared/utils/media'
 
@@ -36,6 +36,10 @@ watch(selectedVideo, (video) => {
   if ((video?.type === 'muxed' && audio?.id !== video.id) || (video?.type === 'video' && audio?.type === 'muxed'))
     model.value.audio = 'best'
 })
+function videoHeight(id: string) {
+  return props.tracks.find((track) => track.id === id)?.height
+}
+
 function choices(type: 'video' | 'audio' | 'subtitle') {
   return [
     ...(type === 'subtitle' ? [{ value: 'none', label: t('media.none') }] : []),
@@ -86,7 +90,7 @@ const durationOptions = computed(() => [
 </script>
 
 <template>
-  <TransitionGroup name="media-field" tag="div" class="media-fields">
+  <div class="media-fields">
     <NFormItem
       v-if="hasVideo && hasAudio"
       key="content"
@@ -94,26 +98,43 @@ const durationOptions = computed(() => [
       :label="t('media.content')"
       :show-feedback="false"
     >
-      <NSelect v-model:value="content" :options="contentOptions" :disabled="disabled" />
+      <NRadioGroup v-model:value="content" :disabled="disabled"
+        ><NRadioButton v-for="option in contentOptions" :key="option.value" :value="option.value">{{
+          option.label
+        }}</NRadioButton></NRadioGroup
+      >
     </NFormItem>
-    <NFormItem v-if="hasVideo && model.video !== 'none'" key="video" :label="t('media.video')" :show-feedback="false">
-      <NSelect v-model:value="model.video" :options="choices('video')" :disabled="disabled" />
-    </NFormItem>
-    <NFormItem v-if="hasAudio && model.audio !== 'none'" key="audio" :label="t('media.audio')" :show-feedback="false">
-      <NSelect v-model:value="model.audio" :options="choices('audio')" filterable :disabled="disabled" />
-    </NFormItem>
-    <NFormItem v-if="hasSubtitles" key="subtitles" :label="t('media.subtitles')" :show-feedback="false">
-      <NSelect v-model:value="model.subtitles" :options="choices('subtitle')" filterable :disabled="disabled" />
-    </NFormItem>
+    <NCollapseTransition :show="hasVideo && model.video !== 'none'"
+      ><NFormItem key="video" :label="t('media.video')" :show-feedback="false">
+        <NRadioGroup v-model:value="model.video" class="video-options" :disabled="disabled"
+          ><NRadio v-for="option in choices('video')" :key="option.value" :value="option.value" class="video-option"
+            ><span class="video-choice"
+              ><strong>{{
+                Number(videoHeight(option.value)) > 0 ? `${videoHeight(option.value)}p` : option.label
+              }}</strong
+              ><small v-if="Number(videoHeight(option.value)) > 0">{{ option.label }}</small></span
+            ></NRadio
+          ></NRadioGroup
+        >
+      </NFormItem></NCollapseTransition
+    >
+    <NCollapseTransition :show="hasAudio && model.audio !== 'none'"
+      ><NFormItem key="audio" :label="t('media.audio')" :show-feedback="false">
+        <NSelect v-model:value="model.audio" :options="choices('audio')" filterable :disabled="disabled" /> </NFormItem
+    ></NCollapseTransition>
+    <NCollapseTransition :show="hasSubtitles"
+      ><NFormItem key="subtitles" :label="t('media.subtitles')" :show-feedback="false">
+        <NSelect
+          v-model:value="model.subtitles"
+          :options="choices('subtitle')"
+          filterable
+          :disabled="disabled"
+        /> </NFormItem
+    ></NCollapseTransition>
     <NFormItem key="format" :label="t('media.format')" :show-feedback="false">
-      <NSelect
-        v-model:value="model.format"
-        :options="[
-          { value: 'mp4', label: 'MP4' },
-          { value: 'mkv', label: 'MKV' },
-        ]"
-        :disabled="disabled"
-      />
+      <NRadioGroup v-model:value="model.format" :disabled="disabled"
+        ><NRadioButton value="mp4">MP4</NRadioButton><NRadioButton value="mkv">MKV</NRadioButton></NRadioGroup
+      >
     </NFormItem>
     <NFormItem
       v-if="live"
@@ -136,19 +157,30 @@ const durationOptions = computed(() => [
         </NInputNumber>
       </div>
     </NFormItem>
-  </TransitionGroup>
+  </div>
 </template>
 
 <style scoped>
 .media-fields {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
-.media-field-wide {
-  grid-column: 1 / -1;
+.media-fields :deep(.n-form-item) {
+  margin: 0;
+}
+.video-options {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  max-height: 260px;
+  overflow: auto;
+}
+.video-option {
+  margin: 0;
+  padding: 14px 0;
+  width: 100%;
+  border-bottom: 1px solid var(--divider);
 }
 .media-duration {
   display: flex;
@@ -157,25 +189,19 @@ const durationOptions = computed(() => [
 }
 .media-duration > * {
   flex: 1;
-  min-width: 0;
 }
-.media-field-enter-active,
-.media-field-move {
-  transition:
-    opacity var(--task-motion-enter) var(--task-motion-ease),
-    transform var(--task-motion-enter) var(--task-motion-ease);
+.video-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-.media-field-leave-active {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
+.video-choice strong {
+  font-size: 14px;
+  font-weight: 500;
 }
-.media-field-enter-from {
-  opacity: 0;
-}
-@media (max-width: 420px) {
-  .media-fields {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.video-choice small {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--m3-on-surface-variant);
 }
 </style>

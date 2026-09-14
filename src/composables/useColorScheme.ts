@@ -95,12 +95,15 @@ export function buildNaiveTheme(tokens: AppColorTokens): GlobalThemeOverrides {
       borderRadius: '6px',
       heightMedium: '36px',
       heightSmall: '32px',
+      fontSize: '14px',
+      fontSizeSmall: '13px',
       fontFamily:
         '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif',
     },
     Divider: {
-      color: tokens.outlineVariant,
+      color: `color-mix(in srgb, ${tokens.onSurface} 10%, transparent)`,
     },
+    Form: { labelFontSizeLeftMedium: '14px', labelFontSizeTopMedium: '14px', feedbackHeightMedium: '0px' },
     Button: {
       border: `1px solid ${tokens.outlineVariant}`,
       borderHover: `1px solid ${tokens.outline}`,
@@ -127,8 +130,8 @@ export function buildNaiveTheme(tokens: AppColorTokens): GlobalThemeOverrides {
       textColorFocusError: error.onColor,
     },
     Input: {
-      color: tokens.surfaceContainer,
-      colorFocus: tokens.surfaceContainer,
+      color: tokens.surfaceContainerLow,
+      colorFocus: tokens.surfaceContainerLow,
       textColor: tokens.onSurface,
       placeholderColor: tokens.onSurfaceVariant,
       border: `1px solid ${tokens.outlineVariant}`,
@@ -138,8 +141,8 @@ export function buildNaiveTheme(tokens: AppColorTokens): GlobalThemeOverrides {
     InputNumber: {
       peers: {
         Input: {
-          color: tokens.surfaceContainer,
-          colorFocus: tokens.surfaceContainer,
+          color: tokens.surfaceContainerLow,
+          colorFocus: tokens.surfaceContainerLow,
           textColor: tokens.onSurface,
           border: `1px solid ${tokens.outlineVariant}`,
           borderHover: `1px solid ${tokens.outline}`,
@@ -152,6 +155,8 @@ export function buildNaiveTheme(tokens: AppColorTokens): GlobalThemeOverrides {
       },
     },
     Card: {
+      titleFontSizeMedium: '20px',
+      titleFontWeight: '600',
       color: tokens.surfaceContainerLow,
       textColor: tokens.onSurface,
       titleTextColor: tokens.onSurface,
@@ -181,10 +186,10 @@ export function buildNaiveTheme(tokens: AppColorTokens): GlobalThemeOverrides {
       railColorActive: primary.color,
     },
     Tabs: {
-      tabTextColorActiveLine: tokens.onSurface,
+      tabTextColorActiveLine: primary.color,
       tabTextColorActiveBar: tokens.onSurface,
       tabTextColorActiveCard: tokens.onSurface,
-      tabTextColorHoverLine: tokens.onSurface,
+      tabTextColorHoverLine: primary.color,
       tabTextColorHoverBar: tokens.onSurface,
       tabTextColorHoverCard: tokens.onSurface,
       barColor: primary.color,

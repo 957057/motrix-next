@@ -25,7 +25,13 @@ import { getBtLifecycleState } from '@/composables/useBtLifecycle'
 import { getSharingActionLabelKey, getTaskSharingState } from '@shared/utils/task'
 
 const props = withDefaults(
-  defineProps<{ task: Aria2Task; fileMissing?: boolean; pending?: boolean; density?: 'full' | 'compact' }>(),
+  defineProps<{
+    task: Aria2Task
+    fileMissing?: boolean
+    pending?: boolean
+    density?: 'full' | 'compact'
+    inDetail?: boolean
+  }>(),
   { density: 'full' },
 )
 const emit = defineEmits<{
@@ -155,7 +161,7 @@ const actions = computed(() => {
     { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
     { key: 'link', icon: LinkOutline, label: t('task.copy-link'), event: 'copy-link' },
     { key: 'info', icon: InformationCircleOutline, label: t('task.task-detail-title'), event: 'show-info' },
-  ].filter((a) => !primaryKeys.has(a.key))
+  ].filter((a) => !primaryKeys.has(a.key) && !(props.inDetail && a.key === 'info'))
 
   return [...leading, ...common, ...trailing].map((action) => ({
     ...action,
