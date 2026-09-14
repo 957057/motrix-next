@@ -10,6 +10,7 @@ import {
   type AppColorTokens,
 } from '@shared/utils/colorScheme'
 import type { GlobalThemeOverrides } from 'naive-ui'
+import { argbFromHex, redFromArgb, greenFromArgb, blueFromArgb } from '@material/material-color-utilities'
 
 export const APP_COLOR_TOKENS_KEY: InjectionKey<ComputedRef<AppColorTokens>> = Symbol('app-color-tokens')
 
@@ -64,6 +65,11 @@ export function buildCssVariables(tokens: AppColorTokens): Record<string, string
 
 export function buildNaiveTheme(tokens: AppColorTokens): GlobalThemeOverrides {
   const { primary, info, success, warning, error } = tokens
+  // Naive UI computes derived colors in JavaScript, before CSS can resolve expressions.
+  const translucent = (color: string, opacity: number) => {
+    const argb = argbFromHex(color)
+    return `rgba(${redFromArgb(argb)}, ${greenFromArgb(argb)}, ${blueFromArgb(argb)}, ${opacity})`
+  }
   return {
     common: {
       primaryColor: primary.color,
@@ -91,7 +97,7 @@ export function buildNaiveTheme(tokens: AppColorTokens): GlobalThemeOverrides {
       modalColor: tokens.surfaceContainerHigh,
       popoverColor: tokens.surfaceContainerHigh,
       borderColor: tokens.outlineVariant,
-      dividerColor: `color-mix(in srgb, ${tokens.onSurface} 9%, transparent)`,
+      dividerColor: translucent(tokens.onSurface, 0.09),
       borderRadius: '6px',
       heightMedium: '36px',
       heightSmall: '32px',
@@ -101,9 +107,9 @@ export function buildNaiveTheme(tokens: AppColorTokens): GlobalThemeOverrides {
         '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif',
     },
     Divider: {
-      color: `color-mix(in srgb, ${tokens.onSurface} 10%, transparent)`,
+      color: translucent(tokens.onSurface, 0.1),
     },
-    Form: { labelFontSizeLeftMedium: '14px', labelFontSizeTopMedium: '14px', feedbackHeightMedium: '0px' },
+    Form: { labelFontSizeLeftMedium: '14px', labelFontSizeTopMedium: '14px' },
     Button: {
       border: `1px solid ${tokens.outlineVariant}`,
       borderHover: `1px solid ${tokens.outline}`,
@@ -213,8 +219,8 @@ export function buildNaiveTheme(tokens: AppColorTokens): GlobalThemeOverrides {
           optionTextColorActive: tokens.onSurface,
           optionTextColorPressed: tokens.onSurface,
           optionCheckColor: primary.color,
-          optionColorActive: `color-mix(in srgb, ${primary.color} 10%, transparent)`,
-          optionColorActivePending: `color-mix(in srgb, ${primary.color} 14%, transparent)`,
+          optionColorActive: translucent(primary.color, 0.1),
+          optionColorActivePending: translucent(primary.color, 0.14),
         },
       },
     },

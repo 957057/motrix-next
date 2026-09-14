@@ -145,7 +145,7 @@ export async function chooseTorrentFile(deps: FileOpsDeps) {
   try {
     const selected = await openDialog({
       multiple: true,
-      filters: [{ name: 'Torrent', extensions: ['torrent'] }],
+      filters: [{ name: t('task.torrent-task'), extensions: ['torrent'] }],
     })
     const paths = typeof selected === 'string' ? [selected] : Array.isArray(selected) ? selected : []
     if (paths.length === 0) return

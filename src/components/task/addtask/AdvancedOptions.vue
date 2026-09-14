@@ -110,118 +110,125 @@ const { detecting: detectingProxy, detect: detectProxy } = useSystemProxyDetect(
           @update:value="(value) => $emit('update:mediaMode', value)"
         />
       </NFormItem>
-      <div>
-        <NFormItem :label="t('task.task-user-agent')">
-          <div class="ua-field-wrapper">
-            <NInputGroup class="ua-input-row">
-              <NInput
-                :value="userAgent"
-                type="textarea"
-                :autosize="{ minRows: 1, maxRows: 3 }"
-                @update:value="$emit('update:userAgent', $event)"
-              />
-              <UserAgentPopover
-                :url="sourceUrl"
-                :final-url="finalUrl"
-                :referer="referer"
-                :profiles="userAgentProfiles"
-                :rules="userAgentRules"
-                :recent-profile-ids="recentUserAgentProfileIds"
-                @select="$emit('selectUserAgentProfile', $event)"
-              />
-            </NInputGroup>
-            <NCollapseTransition :show="!!userAgentSource"
-              ><p class="field-hint">{{ userAgentSource }}</p></NCollapseTransition
-            >
-            <NCollapseTransition :show="uaHasIssue"
-              ><div class="field-warning">
-                <span>{{ t('preferences.ua-unsafe-chars-detected') }}</span
-                ><NButton size="small" @click="cleanUserAgent">{{ t('preferences.ua-sanitize') }}</NButton>
-              </div></NCollapseTransition
-            >
-          </div>
-        </NFormItem>
-        <NFormItem :label="t('task.task-authorization')">
-          <NInput
-            :value="authorization"
-            type="textarea"
-            :autosize="{ minRows: 1, maxRows: 3 }"
-            @update:value="$emit('update:authorization', $event)"
-          />
-        </NFormItem>
-        <NFormItem :label="t('task.task-http-auth')">
-          <div class="http-auth-fields">
+      <NCollapse
+        :default-expanded-names="['request', ...(authorization || httpAuthUsername ? ['auth'] : [])]"
+        class="advanced-groups"
+      >
+        <NCollapseItem name="request" :title="t('task.request-options')">
+          <NFormItem :label="t('task.task-user-agent')">
+            <div class="ua-field-wrapper">
+              <NInputGroup class="ua-input-row">
+                <NInput
+                  :value="userAgent"
+                  type="textarea"
+                  :autosize="{ minRows: 1, maxRows: 3 }"
+                  @update:value="$emit('update:userAgent', $event)"
+                />
+                <UserAgentPopover
+                  :url="sourceUrl"
+                  :final-url="finalUrl"
+                  :referer="referer"
+                  :profiles="userAgentProfiles"
+                  :rules="userAgentRules"
+                  :recent-profile-ids="recentUserAgentProfileIds"
+                  @select="$emit('selectUserAgentProfile', $event)"
+                />
+              </NInputGroup>
+              <NCollapseTransition :show="!!userAgentSource"
+                ><p class="field-hint">{{ userAgentSource }}</p></NCollapseTransition
+              >
+              <NCollapseTransition :show="uaHasIssue"
+                ><div class="field-warning">
+                  <span>{{ t('preferences.ua-unsafe-chars-detected') }}</span
+                  ><NButton size="small" @click="cleanUserAgent">{{ t('preferences.ua-sanitize') }}</NButton>
+                </div></NCollapseTransition
+              >
+            </div>
+          </NFormItem>
+          <NFormItem :label="t('task.task-referer')">
             <NInput
-              :value="httpAuthUsername"
-              :placeholder="t('task.task-http-auth-username-placeholder')"
-              @update:value="$emit('update:httpAuthUsername', $event)"
+              :value="referer"
+              type="textarea"
+              :autosize="{ minRows: 1, maxRows: 3 }"
+              @update:value="$emit('update:referer', $event)"
+            />
+          </NFormItem>
+          <NFormItem :label="t('task.task-cookie')">
+            <NInput
+              :value="cookie"
+              type="textarea"
+              :autosize="{ minRows: 1, maxRows: 3 }"
+              @update:value="$emit('update:cookie', $event)"
+            />
+          </NFormItem>
+        </NCollapseItem>
+        <NCollapseItem name="auth" :title="t('task.task-http-auth')">
+          <NFormItem :label="t('task.task-authorization')">
+            <NInput
+              :value="authorization"
+              type="textarea"
+              :autosize="{ minRows: 1, maxRows: 3 }"
+              @update:value="$emit('update:authorization', $event)"
+            />
+          </NFormItem>
+          <NFormItem :label="t('task.task-http-auth')">
+            <div class="http-auth-fields">
+              <NInput
+                :value="httpAuthUsername"
+                :placeholder="t('task.task-http-auth-username-placeholder')"
+                :input-props="{ 'aria-label': t('task.task-http-auth-username-placeholder') }"
+                @update:value="$emit('update:httpAuthUsername', $event)"
+              />
+              <NInput
+                :value="httpAuthPassword"
+                type="password"
+                show-password-on="click"
+                :placeholder="t('task.task-http-auth-password-placeholder')"
+                :input-props="{ 'aria-label': t('task.task-http-auth-password-placeholder') }"
+                @update:value="$emit('update:httpAuthPassword', $event)"
+              />
+              <NCheckbox :checked="saveHttpAuth" @update:checked="$emit('update:saveHttpAuth', $event)">
+                {{ t('task.task-http-auth-save') }}
+              </NCheckbox>
+            </div>
+          </NFormItem>
+        </NCollapseItem>
+      </NCollapse>
+      <NFormItem :label="t('task.use-proxy')">
+        <NSwitch
+          :value="proxyMode === 'manual'"
+          @update:value="$emit('update:proxyMode', $event ? 'manual' : 'direct')"
+        />
+      </NFormItem>
+      <NCollapseTransition :show="proxyMode === 'manual'">
+        <div class="proxy-radio-group">
+          <div class="custom-proxy-input">
+            <NInput
+              :value="customProxy"
+              placeholder="http://host:port"
+              @update:value="$emit('update:customProxy', $event)"
             />
             <NInput
-              :value="httpAuthPassword"
+              :value="customProxyUsername"
+              :placeholder="t('preferences.proxy-username')"
+              @update:value="$emit('update:customProxyUsername', $event)"
+            />
+            <NInput
+              :value="customProxyPassword"
               type="password"
               show-password-on="click"
-              :placeholder="t('task.task-http-auth-password-placeholder')"
-              @update:value="$emit('update:httpAuthPassword', $event)"
+              :placeholder="t('preferences.proxy-password')"
+              @update:value="$emit('update:customProxyPassword', $event)"
             />
-            <NCheckbox :checked="saveHttpAuth" @update:checked="$emit('update:saveHttpAuth', $event)">
-              {{ t('task.task-http-auth-save') }}
-            </NCheckbox>
+            <NButton :loading="detectingProxy" size="small" @click="detectProxy">
+              <template #icon>
+                <NIcon><SearchOutline /></NIcon>
+              </template>
+              {{ t('preferences.detect-system-proxy') }}
+            </NButton>
           </div>
-        </NFormItem>
-        <NFormItem :label="t('task.task-referer')">
-          <NInput
-            :value="referer"
-            type="textarea"
-            :autosize="{ minRows: 1, maxRows: 3 }"
-            @update:value="$emit('update:referer', $event)"
-          />
-        </NFormItem>
-        <NFormItem :label="t('task.task-cookie')">
-          <NInput
-            :value="cookie"
-            type="textarea"
-            :autosize="{ minRows: 1, maxRows: 3 }"
-            @update:value="$emit('update:cookie', $event)"
-          />
-        </NFormItem>
-        <NFormItem :label="t('task.use-proxy')">
-          <NSwitch
-            :value="proxyMode === 'manual'"
-            @update:value="$emit('update:proxyMode', $event ? 'manual' : 'direct')"
-          />
-        </NFormItem>
-        <NFormItem label=" " :show-feedback="false" class="proxy-options-item">
-          <NCollapseTransition :show="proxyMode === 'manual'">
-            <div class="proxy-radio-group">
-              <div class="custom-proxy-input">
-                <NInput
-                  :value="customProxy"
-                  placeholder="http://host:port"
-                  @update:value="$emit('update:customProxy', $event)"
-                />
-                <NInput
-                  :value="customProxyUsername"
-                  :placeholder="t('preferences.proxy-username')"
-                  @update:value="$emit('update:customProxyUsername', $event)"
-                />
-                <NInput
-                  :value="customProxyPassword"
-                  type="password"
-                  show-password-on="click"
-                  :placeholder="t('preferences.proxy-password')"
-                  @update:value="$emit('update:customProxyPassword', $event)"
-                />
-                <NButton :loading="detectingProxy" size="small" @click="detectProxy">
-                  <template #icon>
-                    <NIcon><SearchOutline /></NIcon>
-                  </template>
-                  {{ t('preferences.detect-system-proxy') }}
-                </NButton>
-              </div>
-            </div>
-          </NCollapseTransition>
-        </NFormItem>
-      </div>
+        </div>
+      </NCollapseTransition>
     </NCollapseItem>
   </NCollapse>
 </template>
@@ -249,5 +256,14 @@ const { detecting: detectingProxy, detect: detectProxy } = useSystemProxyDetect(
 }
 .custom-proxy-input .n-button {
   align-self: flex-start;
+}
+.advanced-groups {
+  margin-block-end: 24px;
+}
+.advanced-groups :deep(.n-collapse-item) {
+  border-top: 0;
+}
+.proxy-radio-group {
+  padding-block-end: 8px;
 }
 </style>

@@ -14,15 +14,15 @@ import { useTaskActions } from '@/composables/useTaskActions'
 
 import { logger } from '@shared/logger'
 import { useTaskViewStore } from '@/stores/taskView'
-import { NInput, NIcon, useDialog } from 'naive-ui'
+import { NSpin, useDialog } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
+import TransitionText from '@/components/common/TransitionText.vue'
 import TaskList from '@/components/task/TaskList.vue'
 import TaskActions from '@/components/task/TaskActions.vue'
 import TaskDetail from '@/components/task/TaskDetail.vue'
 
 const props = withDefaults(defineProps<{ status?: string }>(), { status: 'all' })
 
-import { SearchOutline } from '@vicons/ionicons5'
 const view = useTaskViewStore()
 const visibility = useDocumentVisibility()
 let returnFocus: HTMLElement | null = null
@@ -64,7 +64,7 @@ const subnavs = computed(() => [
 ])
 
 const title = computed(() => {
-  const sub = subnavs.value.find((s) => s.key === props.status)
+  const sub = subnavs.value.find((s) => s.key === taskStore.displayedList)
   return sub?.title ?? props.status
 })
 
@@ -158,19 +158,20 @@ onBeforeUnmount(() => {
       class="list-view"
     >
       <header class="panel-header">
-        <h1 class="task-title">{{ title }}</h1>
-        <NInput
-          v-model:value="view.query"
-          class="task-search"
-          clearable
-          :placeholder="t('workspace.search-tasks')"
-          :aria-label="t('workspace.search-tasks')"
-          ><template #prefix
-            ><NIcon><SearchOutline /></NIcon></template
-        ></NInput>
-        <TaskActions />
+        <h1 class="task-title">
+          <TransitionText
+            :text="view.selecting ? t('workspace.selected-count', { count: view.selected.length }) : title"
+          /><NSpin
+            v-if="taskStore.listPending && taskStore.currentList !== taskStore.displayedList"
+            :size="16"
+            :aria-label="t('about.loading')"
+          />
+        </h1>
+        <div class="toolbar-region" :inert="taskStore.currentList !== taskStore.displayedList || undefined">
+          <TaskActions />
+        </div>
       </header>
-      <motion.div class="panel-content" layout-scroll>
+      <motion.div class="panel-content" layout-scroll :aria-busy="taskStore.listPending">
         <TaskList
           @pause="handlePauseTask"
           @resume="handleResumeTask"
@@ -230,15 +231,29 @@ onBeforeUnmount(() => {
   min-height: 40px;
 }
 .task-title {
-  flex: 1;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 30%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 24px;
   font-weight: 600;
   line-height: 32px;
   margin: 0;
   white-space: nowrap;
 }
-.task-search {
-  width: 180px;
+.toolbar-region {
+  min-width: 0;
+  flex: 1;
+}
+.task-title :deep(.transition-text) {
+  min-width: 0;
+  overflow: hidden;
+}
+.task-title :deep(.transition-text > span) {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .panel-content {
   flex: 1;
@@ -247,9 +262,6 @@ onBeforeUnmount(() => {
   overscroll-behavior: contain;
 }
 @media (max-width: 959px) {
-  .task-search {
-    width: 140px;
-  }
   .panel-header {
     gap: 8px;
   }
@@ -257,14 +269,9 @@ onBeforeUnmount(() => {
 @media (max-width: 719px) {
   .panel-header {
     padding: 8px 16px 16px;
-    flex-wrap: wrap;
   }
   .task-title {
     font-size: 20px;
-  }
-  .task-search {
-    order: 3;
-    width: 100%;
   }
 }
 </style>

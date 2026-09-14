@@ -38,7 +38,6 @@ import {
   NIcon,
   NCheckbox,
   NCheckboxGroup,
-  NText,
   useDialog,
 } from 'naive-ui'
 import PreferenceActionBar from './PreferenceActionBar.vue'
@@ -662,7 +661,7 @@ onMounted(() => {
             :aria-label="t('preferences.bt-peer-blocklist-enable')"
           />
         </SettingsRow>
-        <NCollapseTransition :show="form.btPeerBlocklistEnabled || !!settingsRoute.hash">
+        <NCollapseTransition :show="form.btPeerBlocklistEnabled || !!settingsRoute.hash" class="collapse-indent">
           <div class="blocklist-collapse__inner">
             <SettingsRow
               setting-key="preferences.bt-peer-blocklist-url"
@@ -683,28 +682,23 @@ onMounted(() => {
                 class="pref-control-auto bt-blocklist-scope-select"
               />
             </SettingsRow>
-            <SettingsRow label=" ">
-              <div class="pref-action-stack">
-                <NButton
-                  class="pref-action-button bt-blocklist-update-button"
-                  :loading="syncingBlocklist"
-                  :disabled="isDirty"
-                  type="primary"
-                  secondary
-                  @click="handleSyncBlocklist"
-                >
-                  <template #icon>
-                    <NIcon><SyncOutline /></NIcon>
-                  </template>
-                  {{ t('preferences.bt-peer-blocklist-update') }}
-                </NButton>
-                <NText depth="3" class="pref-inline-row__meta">{{ blocklistStatusText }}</NText>
-              </div>
+            <SettingsRow :label="t('preferences.bt-peer-blocklist')" :hint="blocklistStatusText" actions>
+              <NButton
+                class="pref-action-button bt-blocklist-update-button"
+                :loading="syncingBlocklist"
+                :disabled="isDirty"
+                @click="handleSyncBlocklist"
+              >
+                <template #icon>
+                  <NIcon><SyncOutline /></NIcon>
+                </template>
+                {{ t('preferences.bt-peer-blocklist-update') }}
+              </NButton>
             </SettingsRow>
             <SettingsRow setting-key="preferences.auto-sync" :label="t('preferences.auto-sync')">
               <NSwitch v-model:value="form.btPeerBlocklistAutoSync" :aria-label="t('preferences.auto-sync')" />
             </SettingsRow>
-            <NCollapseTransition :show="form.btPeerBlocklistAutoSync || !!settingsRoute.hash">
+            <NCollapseTransition :show="form.btPeerBlocklistAutoSync || !!settingsRoute.hash" class="collapse-indent">
               <div class="blocklist-frequency-collapse__inner">
                 <SettingsRow setting-key="preferences.sync-frequency" :label="t('preferences.sync-frequency')">
                   <NSelect
@@ -754,55 +748,52 @@ onMounted(() => {
           setting-key="preferences.bt-tracker-source-custom"
           :label="t('preferences.bt-tracker-source-custom')"
         >
-          <NInputGroup>
-            <NInput
-              v-model:value="customTrackerInput"
-              :input-props="{ 'aria-label': t('preferences.bt-tracker-source-custom') }"
-              :placeholder="t('preferences.bt-tracker-source-custom-placeholder')"
+          <div class="tracker-custom-field">
+            <NInputGroup>
+              <NInput
+                v-model:value="customTrackerInput"
+                :input-props="{ 'aria-label': t('preferences.bt-tracker-source-custom') }"
+                :placeholder="t('preferences.bt-tracker-source-custom-placeholder')"
+                clearable
+                class="pref-control-full"
+                @keydown.enter="onAddCustomTracker"
+              />
+              <NButton class="pref-input-group-action" :aria-label="t('app.add')" @click="onAddCustomTracker">
+                <template #icon>
+                  <NIcon><AddCircleOutline /></NIcon>
+                </template>
+                {{ t('app.add') }}
+              </NButton>
+            </NInputGroup>
+            <NSelect
+              v-model:value="customSources"
+              :options="customSelectOptions"
+              :render-option="renderCustomOption"
+              multiple
               clearable
-              class="pref-control-full"
-              @keydown.enter="onAddCustomTracker"
+              :placeholder="customPlaceholder"
+              max-tag-count="responsive"
             />
-            <NButton size="small" class="pref-input-group-action" @click="onAddCustomTracker">
-              <template #icon>
-                <NIcon><AddCircleOutline /></NIcon>
-              </template>
-            </NButton>
-          </NInputGroup>
-        </SettingsRow>
-        <SettingsRow label=" ">
-          <NSelect
-            v-model:value="customSources"
-            :options="customSelectOptions"
-            :render-option="renderCustomOption"
-            multiple
-            clearable
-            :placeholder="customPlaceholder"
-            max-tag-count="responsive"
-          />
-        </SettingsRow>
-        <SettingsRow label=" ">
-          <div class="pref-action-stack">
-            <NButton
-              class="pref-action-button bt-tracker-sync-button"
-              :loading="syncingTracker"
-              type="primary"
-              secondary
-              @click="handleSyncTracker"
-            >
-              <template #icon>
-                <NIcon><SyncOutline /></NIcon>
-              </template>
-              {{ t('preferences.bt-tracker-sync') }}
-            </NButton>
-            <NText depth="3" class="pref-inline-row__meta">
-              {{ t('preferences.bt-tracker-count', { count: mergedTrackerCount }) }} ·
-              {{ t('preferences.last-sync-time') }}
-              {{ form.lastSyncTrackerTime ? new Date(form.lastSyncTrackerTime as number).toLocaleString() : '—' }}
-            </NText>
           </div>
         </SettingsRow>
-        <SettingsRow setting-key="preferences.bt-tracker-content" :label="t('preferences.bt-tracker-content')">
+
+        <SettingsRow
+          :label="t('preferences.bt-tracker-content')"
+          :hint="`${t('preferences.bt-tracker-count', { count: mergedTrackerCount })} · ${t('preferences.last-sync-time')} ${form.lastSyncTrackerTime ? new Date(form.lastSyncTrackerTime as number).toLocaleString() : '—'}`"
+          actions
+        >
+          <NButton
+            class="pref-action-button bt-tracker-sync-button"
+            :loading="syncingTracker"
+            @click="handleSyncTracker"
+          >
+            <template #icon>
+              <NIcon><SyncOutline /></NIcon>
+            </template>
+            {{ t('preferences.bt-tracker-sync') }}
+          </NButton>
+        </SettingsRow>
+        <SettingsRow setting-key="preferences.bt-tracker-content" :show-label="false">
           <NInput
             v-model:value="form.btTracker"
             :input-props="{ 'aria-label': t('preferences.bt-tracker-content') }"
@@ -814,18 +805,16 @@ onMounted(() => {
         <SettingsRow setting-key="preferences.auto-sync" :label="t('preferences.auto-sync')">
           <NSwitch v-model:value="form.btTrackerAutoSync" :aria-label="t('preferences.auto-sync')" />
         </SettingsRow>
-        <SettingsRow
-          v-if="form.btTrackerAutoSync || !!settingsRoute.hash"
-          setting-key="preferences.sync-frequency"
-          :label="t('preferences.sync-frequency')"
-        >
-          <NSelect
-            v-model:value="form.btTrackerSyncIntervalHours"
-            :aria-label="t('preferences.sync-frequency')"
-            :options="syncIntervalOptions"
-            class="pref-control-auto"
-          />
-        </SettingsRow>
+        <NCollapseTransition :show="form.btTrackerAutoSync || !!settingsRoute.hash" class="collapse-indent">
+          <SettingsRow setting-key="preferences.sync-frequency" :label="t('preferences.sync-frequency')">
+            <NSelect
+              v-model:value="form.btTrackerSyncIntervalHours"
+              :aria-label="t('preferences.sync-frequency')"
+              :options="syncIntervalOptions"
+              class="pref-control-auto"
+            />
+          </SettingsRow>
+        </NCollapseTransition>
       </NForm>
     </div>
     <PreferenceActionBar
@@ -898,27 +887,15 @@ onMounted(() => {
   width: 100%;
   max-width: 520px;
 }
+.tracker-custom-field {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
 .tracker-source-option {
   min-width: 0;
-  padding: 9px 12px;
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--m3-surface-container-low) 72%, transparent);
-  transition:
-    border-color 180ms ease,
-    background-color 180ms ease;
-}
-.tracker-source-option:hover {
-  border-color: color-mix(in srgb, var(--m3-primary) 42%, var(--m3-outline-variant));
-  background: var(--m3-surface-container-low);
-}
-.tracker-source-option.n-checkbox--checked {
-  border-color: color-mix(in srgb, var(--m3-primary) 58%, var(--m3-outline-variant));
-  background: color-mix(in srgb, var(--m3-primary) 7%, var(--m3-surface-container-low));
-}
-.tracker-source-option:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--m3-primary) 68%, transparent);
-  outline-offset: 2px;
+  padding-block: 4px;
 }
 .tracker-source-option :deep(.n-checkbox__label) {
   min-width: 0;
@@ -932,9 +909,8 @@ onMounted(() => {
 }
 .tracker-source-option__owner,
 .tracker-source-option__repository {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .tracker-source-option__owner {
   color: var(--m3-on-surface);

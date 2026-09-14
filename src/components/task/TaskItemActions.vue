@@ -21,6 +21,7 @@ import {
 } from '@vicons/ionicons5'
 import { type Component } from 'vue'
 import type { Aria2Task } from '@shared/types'
+import { canPauseTask, canResumeTask } from '@/composables/taskCapabilities'
 import { getBtLifecycleState } from '@/composables/useBtLifecycle'
 import { getSharingActionLabelKey, getTaskSharingState } from '@shared/utils/task'
 
@@ -165,14 +166,21 @@ const actions = computed(() => {
 
   return [...leading, ...common, ...trailing].map((action) => ({
     ...action,
-    disabled: props.pending || (action.key === 'open' && props.fileMissing),
+    disabled:
+      props.pending ||
+      (action.key === 'open' && props.fileMissing) ||
+      (action.event === 'pause' && !canPauseTask(props.task)) ||
+      (action.event === 'resume' && action.key === 'toggle' && !canResumeTask(props.task)),
   }))
 })
 
 const primary = computed(() => actions.value.find((action) => !['delete', 'trash'].includes(action.key)))
+const inlineActions = computed(() =>
+  actions.value.filter((action) => action === primary.value || action.key === 'finish-sharing'),
+)
 const menuOptions = computed(() =>
   actions.value
-    .filter((action) => action !== primary.value)
+    .filter((action) => !inlineActions.value.includes(action))
     .map((action) => ({
       key: action.event,
       label: action.label,
@@ -229,17 +237,22 @@ function onAction(event: string) {
 <template>
   <div class="row-actions" @click.stop @dblclick.stop>
     <button
-      v-if="primary"
+      v-for="action in inlineActions"
+      :key="action.key"
       type="button"
       class="primary-action"
-      :class="{ emphasized: primary.emphasis }"
-      :aria-label="primary.label"
-      :title="primary.label"
-      :disabled="primary.disabled"
-      @click="onAction(primary.event)"
+      :class="{ emphasized: action.emphasis }"
+      :aria-label="action.label"
+      :title="action.label"
+      :disabled="action.disabled"
+      @click="onAction(action.event)"
     >
-      <NIcon :size="18"><component :is="primary.icon" /></NIcon
-      ><span v-if="primary.emphasis || primary.key === 'open'">{{ primary.label }}</span>
+      <span class="action-icon"
+        ><Transition name="fade"
+          ><NIcon :key="action.event" :size="18"><component :is="action.icon" /></NIcon></Transition></span
+      ><span v-if="action.emphasis || action.key === 'open' || action.key === 'finish-sharing'">{{
+        action.label
+      }}</span>
     </button>
     <NDropdown trigger="click" :options="menuOptions" @select="onAction">
       <button type="button" class="icon-button" :aria-label="t('workspace.more-actions')" :disabled="pending">
@@ -249,6 +262,14 @@ function onAction(event: string) {
   </div>
 </template>
 <style scoped>
+.action-icon {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+}
+.action-icon > .n-icon {
+  grid-area: 1 / 1;
+}
 .row-actions {
   display: flex;
   align-items: center;
@@ -282,8 +303,8 @@ function onAction(event: string) {
   cursor: default;
 }
 @media (max-width: 479px) {
-  .primary-action span {
-    display: none;
+  .primary-action {
+    padding-inline: 4px;
   }
 }
 </style>

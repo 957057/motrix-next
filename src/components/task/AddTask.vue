@@ -62,6 +62,7 @@ import {
   NInputGroup,
   NEllipsis,
   NCollapseTransition,
+  NSpin,
   NAlert,
 } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
@@ -709,13 +710,13 @@ async function handleSubmit() {
 <template>
   <AppDialog
     :show="props.show"
-    :title="t('task.new-task')"
+    :title="t('task.new-task-title')"
     :busy="submitting"
     :auto-focus="true"
     @close="handleClose"
     @after-leave="handleAfterLeave"
   >
-    <NForm label-placement="top" :disabled="submitting" class="download-form">
+    <NForm :show-feedback="false" label-placement="top" :disabled="submitting" class="download-form">
       <NTabs :value="activeTab" type="line" animated @update:value="activateTab">
         <!-- ── URI Tab ──────────────────────────────────────── -->
         <NTabPane :name="ADD_TASK_TYPE.URI" :tab="t('task.uri-task') || 'URL'">
@@ -735,7 +736,6 @@ async function handleSubmit() {
                 :placeholder="t('task.uri-task-tips') || 'One URL per line'"
               />
             </NFormItem>
-            <p class="field-hint">{{ t('task.uri-task-tips') }}</p>
           </div>
         </NTabPane>
 
@@ -773,16 +773,24 @@ async function handleSubmit() {
               </TransitionGroup>
 
               <!-- Add more files button -->
-              <NButton size="small" dashed block style="margin-top: 6px" @click="chooseTorrentFile">
+              <NButton size="small" quaternary class="add-torrent-button" @click="chooseTorrentFile">
                 <template #icon>
                   <NIcon><CloudUploadOutline /></NIcon>
                 </template>
-                {{ t('task.select-files') }}
+                {{ t('task.add-torrent') }}
               </NButton>
 
               <Transition name="fade">
                 <div
-                  v-if="selectedItem?.inspectionState === 'failed'"
+                  v-if="selectedItem && ['reading', 'inspecting'].includes(selectedItem.inspectionState ?? '')"
+                  key="inspecting"
+                  class="torrent-inspection-loading"
+                  role="status"
+                >
+                  <NSpin size="small" />{{ t('about.loading') }}
+                </div>
+                <div
+                  v-else-if="selectedItem?.inspectionState === 'failed'"
                   :key="`${selectedItem.id}-failed`"
                   class="torrent-inspection-error"
                 >
@@ -805,7 +813,7 @@ async function handleSubmit() {
             <button v-if="fileItems.length === 0" type="button" class="torrent-upload-zone" @click="chooseTorrentFile">
               <NIcon :size="36" :depth="3"><CloudUploadOutline /></NIcon>
               <span class="torrent-upload-text">
-                {{ t('task.select-torrent') || 'Drag torrent here or click to select' }}
+                {{ t('task.select-torrent') }}
               </span>
             </button>
           </div>
@@ -839,6 +847,7 @@ async function handleSubmit() {
           <NInput v-model:value="form.out" :placeholder="t('task.task-out-tips')" :autofocus="false" />
         </NFormItem>
         <AdvancedOptions
+          v-if="activeTab === ADD_TASK_TYPE.URI"
           v-model:show="showAdvanced"
           v-model:authorization="form.authorization"
           v-model:http-auth-username="form.httpAuthUsername"
@@ -866,6 +875,7 @@ async function handleSubmit() {
           @select-user-agent-profile="selectUserAgentProfile"
         >
           <NFormItem
+            v-if="activeTab === ADD_TASK_TYPE.URI"
             :label="t('task.task-connections')"
             v-bind="configFieldProps('streamMaxConnections', form.streamMaxConnections)"
           >
@@ -924,8 +934,15 @@ async function handleSubmit() {
 }
 .batch-item-main {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 12px;
+}
+.torrent-inspection-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-block: 20px;
 }
 .torrent-inspection-error {
   display: flex;
@@ -955,7 +972,24 @@ async function handleSubmit() {
 .download-settings {
   padding-top: 20px;
 }
+.download-form :deep(.n-form-item) {
+  margin-block-end: 22px;
+}
 .download-form :deep(.n-form-item-label) {
   font-weight: 500;
+  padding-block: 0 6px;
+}
+.download-form :deep(.n-form-item-feedback-wrapper) {
+  min-height: 0;
+}
+.download-form :deep(.n-input-group) {
+  align-items: stretch;
+}
+.download-form :deep(.n-input-group > .n-button) {
+  height: auto;
+  min-height: 36px;
+}
+.add-torrent-button {
+  margin-block: 8px;
 }
 </style>

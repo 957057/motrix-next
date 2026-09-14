@@ -18,6 +18,7 @@ export function useEngineRestart() {
   }
 
   function confirmManualRestart(): void {
+    if (engineStore.isBusy) return
     let accepted = false
     dialog.info({
       title: t('preferences.engine-restart-title'),
@@ -29,7 +30,7 @@ export function useEngineRestart() {
         accepted = true
       },
       onAfterLeave: () => {
-        if (accepted) restartEngine('manualRestart')
+        if (accepted && !engineStore.isBusy) restartEngine('manualRestart')
       },
     })
   }

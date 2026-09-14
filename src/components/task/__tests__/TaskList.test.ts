@@ -83,4 +83,19 @@ describe('Task workspace', () => {
     expect(wrapper.findAllComponents(TaskRow)).toHaveLength(1)
     wrapper.unmount()
   })
+  it('shows native sharing and paused states on the same task row', async () => {
+    const tasks = useTaskStore()
+    const shared = { ...task(), seeder: 'true', bittorrent: { state: 'seeding' } as Aria2Task['bittorrent'] }
+    tasks.taskList = [shared]
+    const wrapper = mount(TaskList)
+    expect(wrapper.find('.row-meta').text()).toContain('task.seeding')
+    expect(wrapper.find('.primary-action[aria-label="task.finish-seeding"]').exists()).toBe(true)
+    tasks.taskList = [{ ...shared, status: 'paused' }]
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.row-meta').text()).toContain('task.seeding-paused')
+    tasks.taskList = [{ ...task(), status: 'paused' }]
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.row-meta').text()).toContain('task.status-paused')
+    wrapper.unmount()
+  })
 })

@@ -8,7 +8,7 @@ import { generateConfigSecret } from '@shared/utils/configHydration'
 import { writeAppClipboardText } from '@shared/utils'
 
 const value = defineModel<string>({ required: true })
-const props = defineProps<{ label: string; disabled: boolean }>()
+const props = defineProps<{ label: string; disabled: boolean; describedBy?: string }>()
 const { t } = useI18n()
 const message = useAppMessage()
 const revealed = ref(false)
@@ -25,7 +25,7 @@ async function copy() {
       :type="revealed ? 'text' : 'password'"
       :disabled="disabled"
       :status="value ? undefined : 'warning'"
-      :input-props="{ 'aria-label': label, autocomplete: 'off', spellcheck: false }"
+      :input-props="{ 'aria-label': label, 'aria-describedby': describedBy, autocomplete: 'off', spellcheck: false }"
     />
     <NButton
       :disabled="disabled"

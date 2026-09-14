@@ -319,9 +319,14 @@ describe('TaskStore', () => {
           resolveOld = resolve
         }),
     )
+    store.displayedList = 'progress'
     const old = store.fetchList()
+    expect(store.listPending).toBe(true)
+    expect(store.displayedList).toBe('progress')
     expect(store.taskList[0].gid).toBe('visible')
     await store.changeCurrentList('completed')
+    expect(store.displayedList).toBe('completed')
+    expect(store.listPending).toBe(false)
     resolveOld({
       tasks: [makeMockTask('stale')],
       history: [],
@@ -333,6 +338,7 @@ describe('TaskStore', () => {
     })
     await old
     expect(store.taskList.map((task) => task.gid)).not.toContain('stale')
+    expect(store.displayedList).toBe('completed')
   })
 
   it('removeTask calls API and refreshes list', async () => {
@@ -714,5 +720,30 @@ describe('TaskStore', () => {
       expect(store.consumeTorrentSource('hash1')).toBe('/path/a.torrent')
       expect(store.consumeTorrentSource('hash2')).toBe('/path/b.torrent')
     })
+  })
+  it('sets sort direction explicitly and preserves other scopes', async () => {
+    const { usePreferenceStore } = await import('@/stores/preference')
+    const preferences = usePreferenceStore()
+    const completed = { ...preferences.config.taskSort.completed }
+    const persist = vi.spyOn(preferences, 'updateAndSave').mockImplementation(async (config) => {
+      preferences.updatePreference(config)
+      return true
+    })
+    await store.setCurrentSort('name', 'asc')
+    expect(preferences.config.taskSort.progress).toEqual({ field: 'name', direction: 'asc' })
+    await store.setCurrentSort('name', 'asc')
+    expect(persist).toHaveBeenCalledTimes(1)
+    await store.setCurrentSort('name', 'desc')
+    expect(preferences.config.taskSort.progress.direction).toBe('desc')
+    expect(preferences.config.taskSort.completed).toEqual(completed)
+  })
+  it('does not change the displayed sort when persistence fails', async () => {
+    const { usePreferenceStore } = await import('@/stores/preference')
+    const preferences = usePreferenceStore()
+    const previous = { ...preferences.config.taskSort.progress }
+    vi.spyOn(preferences, 'updateAndSave').mockResolvedValue(false)
+    await expect(store.setCurrentSort('name', 'asc')).rejects.toThrow('Could not save task sorting')
+    expect(preferences.config.taskSort.progress).toEqual(previous)
+    expect(mockApi.queryTasks).not.toHaveBeenCalled()
   })
 })

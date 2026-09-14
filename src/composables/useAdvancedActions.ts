@@ -160,18 +160,22 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
   // ── Handlers ─────────────────────────────────────────────────────────
 
   function handleEngineStateReset() {
+    if (engineStore.isBusy) return
+    let accepted = false
     dialog.error({
       title: t('preferences.reset-engine-state'),
       content: t('preferences.reset-engine-state-confirm'),
-      positiveText: t('app.yes'),
-      negativeText: t('app.no'),
-      onPositiveClick: async () => {
-        try {
-          await engineStore.recoverRuntimeState()
-          message.success(t('preferences.reset-engine-state-success'))
-        } catch (e) {
-          logger.error('Advanced.engineStateReset', e)
-        }
+      positiveText: t('preferences.reset-engine-state'),
+      negativeText: t('app.cancel'),
+      maskClosable: false,
+      onPositiveClick: () => {
+        accepted = true
+      },
+      onAfterLeave: () => {
+        if (!accepted || engineStore.isBusy) return
+        void engineStore.recoverRuntimeState().catch((error: unknown) => {
+          logger.error('Advanced.engineStateReset', error)
+        })
       },
     })
   }

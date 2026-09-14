@@ -444,7 +444,7 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
       await webview.onDragDropEvent((event) => {
         if (event.payload.type === 'drop') {
           const paths = event.payload.paths
-          const validPaths = paths?.filter((p: string) => p.endsWith('.torrent')) || []
+          const validPaths = paths?.filter((p: string) => detectKind(p) === 'torrent') || []
           if (validPaths.length > 0) {
             logger.info('DragDrop', `dropped ${validPaths.length} file(s): [${validPaths.join(', ')}]`)
             const items = validPaths.map((p: string) => createBatchItem(detectKind(p), p))

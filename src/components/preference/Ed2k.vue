@@ -6,7 +6,19 @@ import { ref, computed, onMounted, h } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { useI18n } from 'vue-i18n'
 import { useDialog } from 'naive-ui'
-import { NButton, NDataTable, NForm, NIcon, NInput, NInputGroup, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
+import {
+  NButton,
+  NCollapseTransition,
+  NDataTable,
+  NForm,
+  NIcon,
+  NInput,
+  NInputGroup,
+  NInputNumber,
+  NSelect,
+  NSwitch,
+  NText,
+} from 'naive-ui'
 import { DiceOutline, DownloadOutline, RefreshOutline, SearchOutline } from '@vicons/ionicons5'
 import { usePreferenceStore } from '@/stores/preference'
 import { useTaskStore } from '@/stores/task'
@@ -309,23 +321,19 @@ onMounted(() => {
             @keyup.enter="handleSearch"
           />
         </SettingsRow>
-        <SettingsRow label=" ">
-          <div class="ed2k-search-actions">
-            <NButton
-              class="ed2k-search-button"
-              type="primary"
-              :disabled="searchState === 'cancelling'"
-              @click="handleSearch"
-            >
-              <template #icon>
-                <NIcon><SearchOutline /></NIcon>
-              </template>
+        <SettingsRow :label="t('preferences.ed2k-search')" :hint="searchStatusText" actions>
+          <NButton
+            class="ed2k-search-button"
+            type="primary"
+            :disabled="searchState === 'cancelling'"
+            @click="handleSearch"
+          >
+            <template #icon>
+              <NIcon><SearchOutline /></NIcon>
+            </template>
 
-              <span :key="searchButtonText">{{ searchButtonText }}</span>
-            </NButton>
-
-            <NText :key="searchState" depth="3" class="ed2k-search-status">{{ searchStatusText }}</NText>
-          </div>
+            <span :key="searchButtonText">{{ searchButtonText }}</span>
+          </NButton>
         </SettingsRow>
         <SettingsRow setting-key="preferences.ed2k-search-type" :label="t('preferences.ed2k-search-type')">
           <NSelect
@@ -482,36 +490,31 @@ onMounted(() => {
         <SettingsRow setting-key="preferences.auto-sync" :label="t('preferences.auto-sync')">
           <NSwitch v-model:value="form.ed2kBootstrapAutoSync" :aria-label="t('preferences.auto-sync')" />
         </SettingsRow>
+        <NCollapseTransition :show="form.ed2kBootstrapAutoSync || !!settingsRoute.hash" class="collapse-indent">
+          <SettingsRow setting-key="preferences.sync-frequency" :label="t('preferences.sync-frequency')">
+            <NSelect
+              v-model:value="form.ed2kBootstrapSyncIntervalHours"
+              :aria-label="t('preferences.sync-frequency')"
+              :options="syncIntervalOptions"
+              class="pref-control-auto"
+            />
+          </SettingsRow>
+        </NCollapseTransition>
         <SettingsRow
-          v-if="form.ed2kBootstrapAutoSync || !!settingsRoute.hash"
-          setting-key="preferences.sync-frequency"
-          :label="t('preferences.sync-frequency')"
+          :label="t('preferences.ed2k-bootstrap')"
+          :hint="`${t('preferences.last-sync-time')} ${bootstrapLastSyncText}`"
+          actions
         >
-          <NSelect
-            v-model:value="form.ed2kBootstrapSyncIntervalHours"
-            :aria-label="t('preferences.sync-frequency')"
-            :options="syncIntervalOptions"
-            class="pref-control-auto"
-          />
-        </SettingsRow>
-        <SettingsRow label=" ">
-          <div class="pref-action-stack">
-            <NButton
-              class="pref-action-button ed2k-bootstrap-sync-button"
-              :loading="bootstrapSyncing"
-              type="primary"
-              secondary
-              @click="handleSyncBootstrapFiles"
-            >
-              <template #icon>
-                <NIcon><RefreshOutline /></NIcon>
-              </template>
-              {{ t('preferences.ed2k-bootstrap-sync') }}
-            </NButton>
-            <NText depth="3" class="pref-inline-row__meta">
-              {{ t('preferences.last-sync-time') }} {{ bootstrapLastSyncText }}
-            </NText>
-          </div>
+          <NButton
+            class="pref-action-button ed2k-bootstrap-sync-button"
+            :loading="bootstrapSyncing"
+            @click="handleSyncBootstrapFiles"
+          >
+            <template #icon>
+              <NIcon><RefreshOutline /></NIcon>
+            </template>
+            {{ t('preferences.ed2k-bootstrap-sync') }}
+          </NButton>
         </SettingsRow>
       </NForm>
     </div>
@@ -536,19 +539,5 @@ onMounted(() => {
 .ed2k-search-button {
   min-width: 104px;
   overflow: hidden;
-}
-.ed2k-search-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  min-height: 34px;
-}
-.ed2k-search-status {
-  display: inline-flex;
-  min-width: 0;
-  font-size: 12px;
-  line-height: 1.4;
-  white-space: normal;
 }
 </style>

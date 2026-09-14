@@ -7,7 +7,7 @@ import { usePreferenceStore } from '@/stores/preference'
 import { changeGlobalOption, isEngineReady } from '@/api/aria2'
 import { bytesToSize } from '@shared/utils'
 import { NIcon, NPopover, NInputNumber, NSelect, NButton, NSwitch, NDivider, NText } from 'naive-ui'
-import { ArrowUpOutline, ArrowDownOutline, TimerOutline } from '@vicons/ionicons5'
+import { ArrowUpOutline, ArrowDownOutline, TimerOutline, ChevronUpOutline } from '@vicons/ionicons5'
 import {
   formatLimitBadge,
   parseSpeedLimitValue,
@@ -76,20 +76,18 @@ function makeDeps() {
 // Apply the explicit switch inside the limits panel.
 
 async function handleClick() {
-  if (!isEngineReady()) return
-
-  const result = await toggleSpeedLimit(preferenceStore.config, makeDeps())
-
-  switch (result) {
-    case 'enabled':
-      message.success(t('app.speedometer-limit-applied'))
-      break
-    case 'disabled':
-      message.success(t('app.speedometer-limit-removed'))
-      break
-    case 'needs-config':
-      message.info(t('app.speedometer-needs-config'))
-      break
+  if (!isEngineReady() || applying.value) return
+  applying.value = true
+  try {
+    const result = await toggleSpeedLimit(preferenceStore.config, makeDeps())
+    if (result === 'enabled') message.success(t('app.speedometer-limit-applied'))
+    else if (result === 'disabled') message.success(t('app.speedometer-limit-removed'))
+    else message.info(t('app.speedometer-needs-config'))
+  } catch (error) {
+    logger.error('StatusBar.toggleLimit', error)
+    message.error(t('preferences.save-fail-message'))
+  } finally {
+    applying.value = false
   }
 }
 
@@ -122,8 +120,17 @@ async function handleApply() {
 
 // ── Schedule toggle from popover ───────────────────────────────────────
 async function handleScheduleToggle(enabled: boolean) {
-  await preferenceStore.updateAndSave({ speedScheduleEnabled: enabled })
-  message.success(t(enabled ? 'app.schedule-enabled' : 'app.schedule-disabled'))
+  if (applying.value) return
+  applying.value = true
+  try {
+    await preferenceStore.updateAndSave({ speedScheduleEnabled: enabled })
+    message.success(t(enabled ? 'app.schedule-enabled' : 'app.schedule-disabled'))
+  } catch (error) {
+    logger.error('StatusBar.toggleSchedule', error)
+    message.error(t('preferences.save-fail-message'))
+  } finally {
+    applying.value = false
+  }
 }
 </script>
 <template>
@@ -140,6 +147,7 @@ async function handleScheduleToggle(enabled: boolean) {
       :page="tasks.taskPagination[tasks.currentList].page"
       :page-count="tasks.currentTaskPageCount()"
       :page-slot="3"
+      :disabled="tasks.currentList !== tasks.displayedList"
       size="small"
       @update:page="tasks.setCurrentTaskPage"
     />
@@ -152,15 +160,22 @@ async function handleScheduleToggle(enabled: boolean) {
     >
       <template #trigger
         ><button class="limit-trigger" :aria-label="t('app.speedometer-set-limit')" :aria-expanded="showPopover">
-          {{ t('app.speedometer-set-limit') }}<span v-if="isLimited"> · {{ dlLimitBadge }} / {{ ulLimitBadge }}</span
-          ><span aria-hidden="true">⌄</span>
-        </button></template
-      >
+          <span class="limit-label">{{ t('app.speedometer-set-limit') }}</span
+          ><span v-if="isLimited" class="limit-badge"> · {{ dlLimitBadge }} / {{ ulLimitBadge }}</span
+          ><NIcon class="limit-chevron" :class="{ expanded: showPopover }" :size="14" aria-hidden="true"
+            ><ChevronUpOutline
+          /></NIcon></button
+      ></template>
       <!-- Speed limit configuration panel -->
       <div class="limit-panel">
         <div class="limit-panel-heading">
           <div class="limit-panel-title">{{ t('app.speedometer-enable-limit') }}</div>
-          <NSwitch :value="isLimited" :aria-label="t('app.speedometer-enable-limit')" @update:value="handleClick" />
+          <NSwitch
+            :disabled="applying"
+            :value="isLimited"
+            :aria-label="t('app.speedometer-enable-limit')"
+            @update:value="handleClick"
+          />
         </div>
 
         <div class="limit-panel-row">
@@ -171,13 +186,21 @@ async function handleScheduleToggle(enabled: boolean) {
           <div class="limit-panel-inputs">
             <NInputNumber
               v-model:value="popoverDlValue"
+              :input-props="{ 'aria-label': t('app.speedometer-download-limit') }"
+              :disabled="applying"
               :min="0"
               :max="65535"
               :step="1"
               size="small"
               style="width: 100px"
             />
-            <NSelect v-model:value="popoverDlUnit" :options="speedUnitOptions" size="small" style="width: 88px" />
+            <NSelect
+              v-model:value="popoverDlUnit"
+              :disabled="applying"
+              :options="speedUnitOptions"
+              size="small"
+              style="width: 88px"
+            />
           </div>
         </div>
 
@@ -189,13 +212,21 @@ async function handleScheduleToggle(enabled: boolean) {
           <div class="limit-panel-inputs">
             <NInputNumber
               v-model:value="popoverUlValue"
+              :input-props="{ 'aria-label': t('app.speedometer-upload-limit') }"
+              :disabled="applying"
               :min="0"
               :max="65535"
               :step="1"
               size="small"
               style="width: 100px"
             />
-            <NSelect v-model:value="popoverUlUnit" :options="speedUnitOptions" size="small" style="width: 88px" />
+            <NSelect
+              v-model:value="popoverUlUnit"
+              :disabled="applying"
+              :options="speedUnitOptions"
+              size="small"
+              style="width: 88px"
+            />
           </div>
         </div>
 
@@ -205,7 +236,13 @@ async function handleScheduleToggle(enabled: boolean) {
             <NIcon :size="12"><TimerOutline /></NIcon>
             <span>{{ t('preferences.speed-schedule-enabled') }}</span>
           </div>
-          <NSwitch :value="isScheduleActive" size="small" @update:value="handleScheduleToggle" />
+          <NSwitch
+            :disabled="applying"
+            :aria-label="t('preferences.speed-schedule-enabled')"
+            :value="isScheduleActive"
+            size="small"
+            @update:value="handleScheduleToggle"
+          />
         </div>
 
         <NText
@@ -266,9 +303,18 @@ async function handleScheduleToggle(enabled: boolean) {
   font: inherit;
   cursor: pointer;
   text-align: end;
+  white-space: nowrap;
+  border-radius: 4px;
 }
 .limit-trigger:hover {
   color: var(--m3-primary);
+}
+.limit-chevron {
+  flex-shrink: 0;
+  transition: transform 160ms ease;
+}
+.limit-chevron.expanded {
+  transform: rotate(180deg);
 }
 .limit-panel {
   width: min(340px, calc(100vw - 56px));
@@ -306,7 +352,7 @@ async function handleScheduleToggle(enabled: boolean) {
   }
 }
 @media (max-width: 479px) {
-  .limit-label {
+  .limit-badge {
     display: none;
   }
   .limit-trigger {

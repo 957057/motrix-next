@@ -4,6 +4,45 @@ The desktop follows the approved left-navigation reference. The download engine,
 browser submission identities and native file operations keep their existing
 ownership. There is one interface, without a legacy layout switch.
 
+## Interaction corrections
+
+Naive UI theme overrides use resolved color values. CSS color expressions remain
+in CSS; they are not passed to the library's JavaScript color calculations.
+Torrent selection tests mount the actual data table with both application themes
+and exercise checked rows and filtered selections.
+
+Task rows and details use the same localized lifecycle labels. Seeding and ED2K
+sharing show upload speed and expose their stop action inline. Batch actions are
+visible in the toolbar, limit pause/resume to eligible selected tasks, and retain
+failed or unresolved selections. Select-all is explicitly scoped to the page.
+Native completion and file-preservation behavior remains unchanged.
+
+The displayed task scope changes with the accepted query result. Stale responses
+cannot relabel the visible list. Query errors retain their retry action outside
+the temporarily inactive rows. Vue Transition crossfades title and state text;
+Naive UI owns disclosures, and Motion retains row layout and identity. No custom
+animation scheduler or replacement drag/drop implementation is introduced.
+
+Creation fields use explicit spacing between labeled groups. Optional request
+and authentication details use library disclosures. Settings use section borders
+instead of a divider on every row, right-aligned actions, and a responsive grid
+for clipboard types. The speed-limit trigger uses a stateful upward chevron.
+
+These are code and component-test guarantees, not native visual acceptance.
+
+## Toolbar organization
+
+The task header keeps search, View, Select and New in one row. View groups density,
+sort field and explicit direction using Naive UI controls. Queue-wide pause/resume
+is restricted to the progress page's Queue menu. Normal refresh follows polling;
+failed queries expose Retry beside the retained error.
+
+Selection replaces the header title with its selected count. Only applicable
+selected-task actions are shown; narrow containers move secondary actions into
+an overflow menu. Done restores the normal controls without clearing search.
+CSS container queries own responsiveness; no custom width measurement or menu
+positioning is used. View-preference persistence failures remain visible.
+
 ## Visual implementation
 
 The reference is the light sidebar and unboxed-list composition, with neutral
@@ -198,3 +237,26 @@ Check these cases with real downloads:
 
 The website rebuild and extension visual alignment remain separate work after
 desktop acceptance.
+
+## Settings density and engine feedback
+
+Settings use 36 px controls, 52 px minimum rows, 8 px block padding, 4 px helper
+spacing, and 24 px between sections. Labels and descriptions stay together;
+field instructions sit under the field. Dependent labels indent by 16 px without shifting the control column.
+The settings surface is capped at 960 px. All control groups share the trailing
+edge, including switches, segmented choices, fields and maintenance actions.
+Checkbox labels remain leading-aligned inside their group. Narrow layouts stack
+inside the same setting row and align every control group to the leading edge.
+
+Connections exposes extension credentials directly alongside the RPC section.
+RPC restart guidance belongs to the section; access-scope help belongs to its
+switch. Tracker, blocklist, bootstrap and maintenance actions use labeled rows
+with trailing buttons. Source selection remains a standard checkbox group.
+
+Engine recovery retains the stop/start/verify track through success. CSS fades
+markers and colors; Vue owns text transitions, and Naive UI owns dialog and
+collapse lifecycles. The last presentation survives dismissal until after-leave.
+Success dismissal is tied to the native operation ID and never delays native
+readiness. The action area keeps its height when Cancel changes to Close.
+Tests cover retained leave content, superseded operations and repeated snapshots;
+real WebView animation acceptance remains the maintainer's responsibility.

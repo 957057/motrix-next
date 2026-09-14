@@ -46,19 +46,20 @@ beforeEach(() => {
   useTaskStore().taskList = [task('a'), task('b'), task('c')]
 })
 describe('Workspace actions', () => {
-  it('uses one primary action and two menu triggers', () => {
+  it('exposes creation and batch actions without opening a menu', () => {
     const wrapper = mount(TaskActions)
-    expect(wrapper.findAll('button')).toHaveLength(3)
+    expect(wrapper.find('[aria-label="workspace.select-tasks"]').exists()).toBe(true)
     expect(wrapper.find('[aria-label="task.new-task"]').exists()).toBe(true)
     wrapper.unmount()
   })
   it('replaces the toolbar with selection actions', async () => {
     const wrapper = mount(TaskActions)
-    wrapper.findAllComponents(NDropdown)[1].vm.$emit('select', 'select')
+    await wrapper.find('[aria-label="workspace.select-tasks"]').trigger('click')
     await wrapper.vm.$nextTick()
     expect(useTaskViewStore().selecting).toBe(true)
     expect(wrapper.find('[aria-label="task.new-task"]').exists()).toBe(false)
-    expect(wrapper.find('[aria-label="task.delete-task"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('[aria-label="task.delete-task"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label="workspace.done"]').exists()).toBe(true)
     wrapper.unmount()
   })
   it('confirms only selected downloads and keeps failed items selected', async () => {
@@ -101,6 +102,78 @@ describe('Workspace actions', () => {
     expect(tasks.pauseTask).toHaveBeenCalledTimes(2)
     expect(mocks.error).toHaveBeenCalledWith('workspace.partial-failure')
     expect(view.selecting).toBe(true)
+    expect(view.selected).toEqual(['b'])
+    wrapper.unmount()
+  })
+  it('skips selection-required and completed tasks during batch resume', async () => {
+    const tasks = useTaskStore()
+    const view = useTaskViewStore()
+    tasks.taskList = [
+      { ...task('a'), status: 'paused' },
+      { ...task('b'), status: 'paused', bittorrent: { fileSelectionState: 'awaiting' } as Aria2Task['bittorrent'] },
+      { ...task('c'), status: 'complete' },
+    ]
+    view.selecting = true
+    view.selected = ['a', 'b', 'c']
+    tasks.resumeTask = vi.fn().mockResolvedValue(true)
+    const wrapper = mount(TaskActions)
+    await wrapper.find('[aria-label="task.resume-task"]').trigger('click')
+    await flushPromises()
+    expect(tasks.resumeTask).toHaveBeenCalledTimes(1)
+    expect(tasks.resumeTask).toHaveBeenCalledWith(expect.objectContaining({ gid: 'a' }))
+    expect(view.selected).toEqual(['b', 'c'])
+    wrapper.unmount()
+  })
+  it('exposes stopping seeding and retains only failed selected seeders', async () => {
+    const tasks = useTaskStore()
+    const view = useTaskViewStore()
+    tasks.taskList = ['a', 'b'].map((gid) => ({
+      ...task(gid),
+      seeder: 'true',
+      bittorrent: { state: 'seeding' } as Aria2Task['bittorrent'],
+    }))
+    view.selecting = true
+    view.selected = ['a', 'b']
+    tasks.finishSharingTasks = vi.fn().mockResolvedValue({ succeeded: ['a'], failed: [{ gid: 'b', message: 'Busy' }] })
+    const wrapper = mount(TaskActions)
+    await wrapper.find('[aria-label="task.finish-seeding"]').trigger('click')
+    await mocks.dialog.mock.calls[0][0].onPositiveClick()
+    expect(tasks.finishSharingTasks).toHaveBeenCalledWith(['a', 'b'])
+    expect(view.selected).toEqual(['b'])
+    wrapper.unmount()
+  })
+  it('offers global controls only in the progress scope and keeps their native scope', async () => {
+    const tasks = useTaskStore()
+    tasks.taskCounts.progress = 3
+    tasks.pauseAllTask = vi.fn().mockResolvedValue(undefined)
+    tasks.pauseTask = vi.fn()
+    const wrapper = mount(TaskActions)
+    expect(wrapper.find('[aria-label="workspace.queue"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label="task.sort-by"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label="workspace.view"]').exists()).toBe(true)
+    tasks.currentList = 'progress'
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[aria-label="workspace.queue"]').exists()).toBe(true)
+    const queue = wrapper
+      .findAllComponents(NDropdown)
+      .find((dropdown) => dropdown.props('options')?.some((option) => option?.key === 'pause'))!
+    queue.vm.$emit('select', 'pause')
+    await mocks.dialog.mock.calls[0][0].onPositiveClick()
+    expect(tasks.pauseAllTask).toHaveBeenCalledOnce()
+    expect(tasks.pauseTask).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+  it('leaves selection mode without changing the search or selected task data', async () => {
+    const view = useTaskViewStore()
+    view.query = 'linux'
+    view.selecting = true
+    view.selected = ['a']
+    const wrapper = mount(TaskActions)
+    await wrapper.find('[aria-label="workspace.done"]').trigger('click')
+    expect(view.selecting).toBe(false)
+    expect(view.selected).toEqual([])
+    expect(view.query).toBe('linux')
+    expect(useTaskStore().taskList).toHaveLength(3)
     wrapper.unmount()
   })
 })

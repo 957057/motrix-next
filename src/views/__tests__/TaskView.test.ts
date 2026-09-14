@@ -33,6 +33,7 @@ vi.mock('vue-i18n', () => ({
 vi.mock('naive-ui', () => ({
   useDialog: () => ({}),
   NInput: { template: '<input />' },
+  NSpin: { template: '<span />' },
   NIcon: { template: '<span><slot /></span>' },
 }))
 

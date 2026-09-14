@@ -15,12 +15,14 @@
 .form-preference {
   container-type: inline-size;
   width: 100%;
-  max-width: 1120px;
+  max-width: 960px;
+  --settings-control-align: flex-end;
   box-sizing: border-box;
   padding: 8px 24px 32px;
 }
 .settings-section-title {
-  margin: 28px 0 4px;
+  margin: 24px 0 8px;
+  padding-block-start: 0;
   font-size: 16px;
   line-height: 24px;
   font-weight: 600;
@@ -28,22 +30,25 @@
 }
 .settings-section-title:first-child {
   margin-top: 12px;
+  padding-block-start: 0;
+  border-top: 0;
 }
 .form-preference .setting-row.n-form-item {
   display: grid;
   grid-template-areas: none;
   grid-template-rows: auto;
-  grid-template-columns: minmax(0, 1fr) minmax(160px, 44%);
-  column-gap: 32px;
-  padding: 16px 0;
-  min-height: 68px;
-  border-bottom: 1px solid var(--divider);
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 44cqw);
+  column-gap: 24px;
+  padding-block: 8px;
+  padding-inline: 16px 0;
+  min-height: 52px;
   align-items: center;
 }
 .form-preference .setting-row .n-form-item-label {
   grid-area: 1 / 1;
   height: auto;
   padding: 0;
+  padding-inline-start: var(--settings-label-indent, 0px);
   min-width: 0;
   line-height: 22px;
   font-size: 14px;
@@ -55,7 +60,7 @@
 .form-preference .setting-row .n-form-item-blank {
   grid-area: 1 / 2;
   min-width: 0;
-  justify-content: flex-end;
+  justify-content: var(--settings-control-align);
 }
 .form-preference .setting-row .n-form-item-feedback-wrapper {
   grid-area: 2 / 2;
@@ -89,7 +94,10 @@
   background: var(--selection-bg);
 }
 .form-preference .collapse-indent {
-  margin-inline-start: 0;
+  --settings-label-indent: 16px;
+}
+.form-preference .collapse-indent .collapse-indent {
+  --settings-label-indent: 32px;
 }
 .form-preference .n-collapse {
   margin-block: 16px;
@@ -107,6 +115,9 @@
   min-width: 0;
 }
 @container (max-width: 560px) {
+  .form-preference .setting-row {
+    --settings-control-align: flex-start;
+  }
   .form-preference .setting-row.n-form-item {
     grid-template-columns: minmax(0, 1fr);
     gap: 10px;
@@ -180,14 +191,6 @@
   flex-shrink: 0;
 }
 
-.pref-action-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  min-width: 0;
-}
-
 .pref-inline-row {
   display: flex;
   align-items: center;
@@ -216,4 +219,44 @@
 
 .pref-meta-link {
   margin-inline-start: 8px;
+}
+
+/* Wider action groups use the same alignment rule as every other control. */
+.form-preference .setting-row--actions.n-form-item {
+  grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr);
+}
+.setting-field {
+  width: 100%;
+  min-width: 0;
+}
+.setting-field-hint,
+.settings-section-hint {
+  color: var(--m3-on-surface-variant);
+  font-size: 13px;
+  line-height: 20px;
+}
+.setting-field-hint {
+  margin-block-start: 4px;
+}
+.settings-section-hint {
+  margin-block: -4px 8px;
+}
+.form-preference .n-input-group > .n-button {
+  height: 36px;
+  align-self: flex-start;
+}
+@container (max-width: 560px) {
+  .form-preference .setting-row--actions.n-form-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.settings-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: var(--settings-control-align);
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
 }

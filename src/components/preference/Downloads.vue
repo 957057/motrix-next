@@ -413,7 +413,7 @@ onMounted(async () => {
           </SettingsRow>
         </NCollapseTransition>
         <NCollapseTransition :show="form.sharingMode === 'manual-stop' || !!settingsRoute.hash" class="collapse-indent">
-          <SettingsRow label=" ">
+          <SettingsRow continuation>
             <NText depth="3">{{ t('preferences.sharing-mode-manual-stop-tips') }}</NText>
           </SettingsRow>
         </NCollapseTransition>
@@ -584,8 +584,8 @@ onMounted(async () => {
             :aria-label="t('preferences.no-confirm-before-delete-task')"
           />
         </SettingsRow>
-        <NCollapseTransition :show="form.noConfirmBeforeDeleteTask || !!settingsRoute.hash">
-          <SettingsRow label=" ">
+        <NCollapseTransition :show="form.noConfirmBeforeDeleteTask || !!settingsRoute.hash" class="collapse-indent">
+          <SettingsRow continuation>
             <NCheckbox v-model:checked="form.deleteFilesWhenSkipConfirm">
               {{ skipConfirmationFileLabel }}
             </NCheckbox>
@@ -594,8 +594,8 @@ onMounted(async () => {
         <SettingsRow setting-key="preferences.task-completed-notify" :label="t('preferences.task-completed-notify')">
           <NSwitch v-model:value="form.taskNotification" :aria-label="t('preferences.task-completed-notify')" />
         </SettingsRow>
-        <NCollapseTransition :show="form.taskNotification || !!settingsRoute.hash">
-          <SettingsRow label=" ">
+        <NCollapseTransition :show="form.taskNotification || !!settingsRoute.hash" class="collapse-indent">
+          <SettingsRow continuation>
             <PreferenceCheckboxGrid v-model:value="selectedNotificationTypes" :options="notificationTypeOptions" />
           </SettingsRow>
         </NCollapseTransition>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NCheckbox, NIcon, NButton } from 'naive-ui'
+import { NCheckbox, NIcon, NButton, NCollapseTransition } from 'naive-ui'
 import { DocumentOutline, ChevronForwardOutline, ReorderTwoOutline } from '@vicons/ionicons5'
 import { AnimatePresence, motion, Reorder, useDragControls } from 'motion-v'
 import { useTaskCardModel } from '@/composables/useTaskCardModel'
@@ -10,6 +10,7 @@ import { useReducedMotion } from '@/composables/useReducedMotion'
 import { useTaskViewStore } from '@/stores/taskView'
 import { usePreferenceStore } from '@/stores/preference'
 import TaskItemActions from './TaskItemActions.vue'
+import TransitionText from '@/components/common/TransitionText.vue'
 import type { Aria2Task } from '@shared/types'
 
 const props = defineProps<{
@@ -42,6 +43,13 @@ const view = useTaskViewStore()
 const preference = usePreferenceStore()
 const reduceMotion = useReducedMotion()
 const controls = useDragControls()
+const groupTitle = ref(props.heading ?? '')
+watch(
+  () => props.heading,
+  (heading) => {
+    if (heading) groupTitle.value = heading
+  },
+)
 const taskRef = computed(() => props.task)
 const sourceUrl = computed(() => props.task.files?.[0]?.uris?.[0]?.uri ?? '')
 const {
@@ -57,12 +65,13 @@ const {
   uploadSpeed,
   remainingText,
   isSharing,
+  sharingKind,
 } = useTaskCardModel(taskRef)
 const { fileMissing } = useTaskFileMissing(taskRef)
 const expanded = computed(() => view.expanded === props.task.gid)
 const compact = computed(() => preference.config.taskCardMode === 'compact')
 const transferring = computed(() => isActive.value || isSharing.value)
-const showProgress = computed(() => ['active', 'waiting', 'paused'].includes(props.task.status) && !isSharing.value)
+const showProgress = computed(() => ['active', 'waiting', 'paused'].includes(props.task.status) && !sharingKind.value)
 const transition = computed(() => ({
   duration: reduceMotion.value ? 0 : 0.2,
   ease: [0.2, 0, 0, 1] as [number, number, number, number],
@@ -90,7 +99,9 @@ function toggleExpanded() {
     @drag-start="emit('drag-start')"
     @drag-end="emit('drag-end')"
   >
-    <h2 v-if="heading" class="group-heading">{{ heading }}</h2>
+    <NCollapseTransition :show="Boolean(heading)">
+      <h2 class="group-heading"><TransitionText :text="groupTitle" /></h2>
+    </NCollapseTransition>
     <article
       class="task-row"
       :class="{ compact, expanded, selected: view.selected.includes(task.gid) }"
@@ -125,14 +136,14 @@ function toggleExpanded() {
             {{ taskFullName }}
           </button>
           <div class="row-meta" :class="{ error: task.status === 'error' || fileMissing }">
-            <span v-if="fileMissing">{{ t('task.file-not-exist') }}</span>
-            <template v-else-if="transferring"
-              ><span>{{ isSharing ? uploadSpeed : downloadSpeed }}/s</span
-              ><span v-if="remainingText && !isSharing" class="remaining"> · {{ remainingText }}</span
-              ><span v-if="statusBadge && task.media"> · {{ statusBadge.label }}</span></template
+            <TransitionText :text="fileMissing ? t('task.file-not-exist') : (statusBadge?.label ?? '')" />
+            <span v-if="!fileMissing && transferring">
+              · {{ isSharing ? '↑ ' : '↓ ' }}{{ isSharing ? uploadSpeed : downloadSpeed }}/s</span
             >
-            <span v-else-if="statusBadge && task.status !== 'complete'">{{ statusBadge.label }}</span>
-            <span v-else-if="hasSizeInfo">{{ totalSize }}</span>
+            <span v-if="!fileMissing && remainingText && !isSharing && isActive" class="remaining">
+              · {{ remainingText }}</span
+            >
+            <span v-else-if="!transferring && hasSizeInfo"> · {{ totalSize }}</span>
           </div>
           <div v-if="showProgress" class="progress-line">
             <progress :value="indeterminate ? undefined : percent" max="100" :aria-label="taskFullName" /><span>{{
@@ -142,7 +153,7 @@ function toggleExpanded() {
         </div>
         <TaskItemActions
           :task="task"
-          :pending="pending"
+          :pending="pending || view.selecting"
           :file-missing="fileMissing"
           @pause="emit('pause', task)"
           @resume="emit('resume', task)"
@@ -236,7 +247,6 @@ function toggleExpanded() {
   padding-top: 8px;
 }
 .task-row {
-  border-bottom: 1px solid var(--divider);
   border-radius: 6px;
   transition: background-color 120ms ease;
 }
@@ -332,7 +342,7 @@ progress:indeterminate {
 }
 .compact .row-content {
   display: grid;
-  grid-template-columns: minmax(120px, 1fr) minmax(100px, 180px) minmax(90px, 120px);
+  grid-template-columns: minmax(120px, 1fr) minmax(80px, 160px) minmax(130px, auto);
   column-gap: 16px;
   align-items: center;
 }

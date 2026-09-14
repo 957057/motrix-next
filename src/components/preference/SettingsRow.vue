@@ -4,7 +4,14 @@ import { useRoute } from 'vue-router'
 import { NFormItem } from 'naive-ui'
 
 defineOptions({ inheritAttrs: false })
-const props = defineProps<{ label?: string; hint?: string; settingKey?: string }>()
+const props = defineProps<{
+  label?: string
+  hint?: string
+  fieldHint?: string
+  actions?: boolean
+  continuation?: boolean
+  settingKey?: string
+}>()
 const route = useRoute()
 const labelId = useId()
 const item = ref<InstanceType<typeof NFormItem> | null>(null)
@@ -28,7 +35,10 @@ watch(
     ref="item"
     v-bind="$attrs"
     class="setting-row"
-    :class="{ 'setting-row--wide': !$slots.label && (!label?.trim() || $attrs['show-label'] === false) }"
+    :class="{
+      'setting-row--actions': actions,
+      'setting-row--wide': !continuation && !$slots.label && (!label?.trim() || $attrs['show-label'] === false),
+    }"
     :label="label"
     :show-label="Boolean(label?.trim() || $slots.label) && $attrs['show-label'] !== false"
     :label-props="{ id: labelId }"
@@ -36,6 +46,7 @@ watch(
     label-align="left"
     :show-feedback="Boolean($attrs.feedback || $attrs.rule || $slots.feedback)"
     role="group"
+    :aria-describedby="fieldHint ? `${labelId}-hint` : undefined"
     :aria-labelledby="label || $slots.label ? labelId : undefined"
   >
     <template v-if="label || $slots.label" #label>
@@ -44,7 +55,11 @@ watch(
         <span v-if="hint" class="setting-hint">{{ hint }}</span>
       </slot>
     </template>
-    <slot />
+    <div v-if="fieldHint" class="setting-field">
+      <slot :description="`${labelId}-hint`" />
+      <p :id="`${labelId}-hint`" class="setting-field-hint">{{ fieldHint }}</p>
+    </div>
+    <slot v-else :description="undefined" />
     <template v-if="$slots.feedback" #feedback><slot name="feedback" /></template>
   </NFormItem>
 </template>

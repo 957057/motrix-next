@@ -100,6 +100,9 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
         tone: 'waiting',
       }
     }
+    if (btLifecycle.value === 'checking') {
+      return { key: 'bt-checking', label: t('task.bt-checking'), tone: 'waiting' }
+    }
     if (btLifecycle.value === 'error') {
       return {
         key: 'bt-error',
@@ -129,6 +132,10 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
       }
 
     switch (task.value.status) {
+      case TASK_STATUS.ACTIVE:
+        return { key: TASK_STATUS.ACTIVE, label: t('task.status-active'), tone: 'waiting' }
+      case TASK_STATUS.PAUSED:
+        return { key: TASK_STATUS.PAUSED, label: t('task.status-paused'), tone: 'muted' }
       case TASK_STATUS.WAITING:
         return { key: TASK_STATUS.WAITING, label: t('task.status-waiting') || 'Queued', tone: 'waiting' }
       case TASK_STATUS.COMPLETE:
@@ -144,7 +151,11 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
   const isActive = computed(() => task.value.status === TASK_STATUS.ACTIVE)
   const displayedTotalLength = computed(() => stableProgress.value.total)
   const completedLengthValue = computed(() => stableProgress.value.completed)
-  const indeterminate = computed(() => Boolean(task.value.media) && mediaPercent(task.value) === null)
+  const indeterminate = computed(
+    () =>
+      ['metadata', 'checking', 'recovering'].includes(btLifecycle.value) ||
+      (Boolean(task.value.media) && mediaPercent(task.value) === null),
+  )
   const percent = computed(() =>
     task.value.media
       ? (mediaPercent(task.value) ?? 0)

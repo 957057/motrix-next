@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n'
 import { useTaskCardModel } from '@/composables/useTaskCardModel'
 import { useTaskFileMissing } from '@/composables/useTaskFileMissing'
 import TaskItemActions from './TaskItemActions.vue'
+import TransitionText from '@/components/common/TransitionText.vue'
 import type { Aria2Task } from '@shared/types'
 const props = defineProps<{ task: Aria2Task; pending: boolean }>()
 defineEmits<{
@@ -28,7 +29,7 @@ const { fileMissing } = useTaskFileMissing(taskRef)
 const {
   taskFullName,
   hasSizeInfo,
-  taskStatus,
+  statusBadge,
   completedSize,
   totalSize,
   downloadSpeed,
@@ -48,7 +49,7 @@ const {
       <NIcon :size="40"><DocumentOutline /></NIcon>
       <div class="detail-title">
         <h1>{{ taskFullName }}</h1>
-        <p>{{ taskStatus }}</p>
+        <p><TransitionText :text="statusBadge?.label ?? ''" /></p>
       </div>
       <TaskItemActions
         :task="task"
@@ -76,7 +77,7 @@ const {
       </div>
       <div v-if="isActive || isSharing">
         <dt>{{ isSharing ? t('task.task-upload-speed') : t('task.task-download-speed') }}</dt>
-        <dd>{{ isSharing ? uploadSpeed : downloadSpeed }}</dd>
+        <dd>{{ isSharing ? uploadSpeed : downloadSpeed }}/s</dd>
       </div>
       <div v-if="isActive && remainingText">
         <dt>{{ t('task.remaining-prefix') }}</dt>

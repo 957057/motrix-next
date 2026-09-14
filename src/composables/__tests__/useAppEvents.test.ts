@@ -484,4 +484,15 @@ describe('useAppEvents', () => {
     expect(loggerMock.info.mock.calls.flat().join(' ')).not.toContain('token=secret')
     expect(loggerMock.info.mock.calls.flat().join(' ')).not.toContain('BrowserUA')
   })
+  it('accepts uppercase torrent extensions through native drag and drop', async () => {
+    const { deps, appStore } = createDeps()
+    const { setupListeners, unmount } = mountComposable(deps)
+    await setupListeners()
+    const callback = dragDropListenerMock.mock.calls[0][0]
+    callback({ payload: { type: 'drop', paths: ['C:/Downloads/Linux.TORRENT', 'C:/Downloads/readme.txt'] } })
+    expect(appStore.enqueueBatch).toHaveBeenCalledWith([
+      expect.objectContaining({ kind: 'torrent', source: 'C:/Downloads/Linux.TORRENT' }),
+    ])
+    unmount()
+  })
 })

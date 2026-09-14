@@ -453,7 +453,7 @@ export const settingsCatalog: ReadonlyArray<{
     category: 'connections',
   },
   {
-    key: 'preferences.engine-restart-btn',
+    key: 'preferences.engine-maintenance',
     category: 'advanced',
   },
   {

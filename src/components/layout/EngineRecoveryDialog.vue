@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NButton, NIcon, NModal, NSpin } from 'naive-ui'
-import { CheckmarkCircleOutline, CheckmarkOutline, CloseCircleOutline } from '@vicons/ionicons5'
+import { NButton, NCollapseTransition, NIcon, NModal, NSpin } from 'naive-ui'
+import { CheckmarkCircleOutline, CloseCircleOutline } from '@vicons/ionicons5'
 import { useEngineStore, type EnginePhase } from '@/stores/engine'
 import { useAppMessage } from '@/composables/useAppMessage'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { logger } from '@shared/logger'
+import TransitionText from '@/components/common/TransitionText.vue'
 import { ENGINE_RECOVERY_SUCCESS_DURATION } from '@shared/timing'
 
 type PanelState = 'recovering' | 'cleaning' | 'failed' | 'complete'
@@ -23,10 +24,12 @@ const message = useAppMessage()
 const pendingAction = ref<'cancel' | 'retry' | 'cleanup' | null>(null)
 const visible = ref(false)
 const completed = ref(false)
+// Keep the last presentation alive until the modal has finished leaving.
+const presentation = ref(engineStore.snapshot)
 let successTimer: ReturnType<typeof setTimeout> | null = null
 
-const failed = computed(() => engineStore.snapshot.phase === 'failed')
-const cleaning = computed(() => engineStore.snapshot.phase === 'cleaning')
+const failed = computed(() => presentation.value.phase === 'failed')
+const cleaning = computed(() => presentation.value.phase === 'cleaning')
 const panelState = computed<PanelState>(() => {
   if (completed.value) return 'complete'
   if (failed.value) return 'failed'
@@ -34,26 +37,45 @@ const panelState = computed<PanelState>(() => {
   return 'recovering'
 })
 const title = computed(() =>
-  engineStore.snapshot.cause === 'runtimeCrash' ? t('app.engine-crashed') : t('app.engine-failed'),
+  presentation.value.cause === 'runtimeCrash' ? t('app.engine-crashed') : t('app.engine-failed'),
 )
 const attemptText = computed(() => {
-  const { attempt, maxAttempts } = engineStore.snapshot
+  const { attempt, maxAttempts } = presentation.value
   return `${attempt} / ${maxAttempts}`
 })
 const failureDetail = computed(() => {
-  const failure = engineStore.snapshot.failure
+  const failure = presentation.value.failure
   if (!failure) return ''
   const stderr = failure.stderrTail.map((line) => line.trim()).filter((line) => line && line !== 'Exception caught')
   return stderr.length > 0 ? stderr[stderr.length - 1] : failure.message
 })
 const activeStage = computed(() => {
-  const phase: EnginePhase = engineStore.snapshot.phase
+  if (completed.value) return 3
+  const phase: EnginePhase = presentation.value.phase
   if (phase === 'starting') return 1
   if (phase === 'probing' || phase === 'initializing' || phase === 'stabilizing') return 2
   return 0
 })
-const activeStageLabel = computed(
-  () => [t('app.engine-stage-stop'), t('app.engine-stage-start'), t('app.engine-stage-verify')][activeStage.value],
+const activeStageLabel = computed(() =>
+  completed.value
+    ? t('preferences.engine-restarted')
+    : [t('app.engine-stage-stop'), t('app.engine-stage-start'), t('app.engine-stage-verify')][activeStage.value],
+)
+const statusTitle = computed(() => {
+  if (completed.value)
+    return presentation.value.cause === 'sessionRecovery'
+      ? t('preferences.reset-engine-state-success')
+      : t('preferences.engine-restarted')
+  return ['manualRestart', 'settingsChange'].includes(presentation.value.cause)
+    ? t('app.engine-restarting')
+    : t('app.engine-recovering')
+})
+const statusDescription = computed(() =>
+  completed.value
+    ? t('app.engine-recovered-description')
+    : presentation.value.attempt > 1
+      ? `${t('app.engine-attempt')} ${attemptText.value}`
+      : activeStageLabel.value,
 )
 const recoveryStages = computed<RecoveryStage[]>(() =>
   [t('app.engine-stage-stop'), t('app.engine-stage-start'), t('app.engine-stage-verify')].map((label, index) => ({
@@ -68,45 +90,40 @@ function clearSuccessTimer() {
   successTimer = null
 }
 
-function scheduleSuccessDismissal() {
+function dismiss() {
   clearSuccessTimer()
-  void nextTick(() => {
-    if (!visible.value || !completed.value) return
-    successTimer = setTimeout(() => {
-      visible.value = false
-      completed.value = false
-      successTimer = null
-    }, ENGINE_RECOVERY_SUCCESS_DURATION)
-  })
+  visible.value = false
+}
+
+function afterLeave() {
+  if (visible.value) return
+  completed.value = false
 }
 
 watch(
-  () => engineStore.showStatusDialog,
-  (show) => {
-    if (show) {
+  () => engineStore.snapshot,
+  (snapshot) => {
+    if (engineStore.showStatusDialog) {
       clearSuccessTimer()
-      visible.value = true
+      presentation.value = snapshot
       completed.value = false
+      visible.value = true
+      return
+    }
+    if (snapshot.phase === 'running' && visible.value) {
+      if (completed.value && presentation.value.operationId === snapshot.operationId) return
+      clearSuccessTimer()
+      presentation.value = snapshot
+      completed.value = true
+      const operationId = snapshot.operationId
+      successTimer = setTimeout(() => {
+        if (presentation.value.operationId === operationId && completed.value) dismiss()
+      }, ENGINE_RECOVERY_SUCCESS_DURATION)
+    } else if (snapshot.phase === 'stopped') {
+      dismiss()
     }
   },
   { immediate: true, flush: 'sync' },
-)
-
-watch(
-  () => engineStore.snapshot.phase,
-  (phase) => {
-    if (phase === 'running' && visible.value) {
-      completed.value = true
-      scheduleSuccessDismissal()
-      return
-    }
-    if (phase === 'stopped') {
-      clearSuccessTimer()
-      visible.value = false
-      completed.value = false
-    }
-  },
-  { flush: 'sync' },
 )
 
 onBeforeUnmount(clearSuccessTimer)
@@ -149,17 +166,34 @@ async function cleanupAndRetry() {
 </script>
 
 <template>
-  <NModal :show="visible" :mask-closable="false" :close-on-esc="false" transform-origin="center">
+  <NModal
+    :show="visible"
+    :mask-closable="false"
+    :close-on-esc="false"
+    transform-origin="center"
+    @after-leave="afterLeave"
+  >
     <section class="engine-dialog" :data-state="panelState" aria-live="polite">
       <div class="engine-panel-viewport">
-        <Transition name="view">
-          <div :key="panelState" class="engine-panel-state" :data-panel="panelState">
-            <template v-if="panelState === 'recovering'">
+        <Transition
+          name="view"
+          @before-leave="(element) => element.setAttribute('inert', '')"
+          @before-enter="(element) => element.removeAttribute('inert')"
+          @leave-cancelled="(element) => element.removeAttribute('inert')"
+        >
+          <div
+            :key="panelState === 'complete' ? 'recovering' : panelState"
+            class="engine-panel-state"
+            :data-panel="panelState"
+          >
+            <template v-if="panelState === 'recovering' || panelState === 'complete'">
               <div class="engine-heading-row">
-                <NSpin size="small" />
-                <div>
-                  <h2>{{ t('app.engine-recovering') }}</h2>
-                  <p class="engine-attempt">{{ t('app.engine-attempt') }} {{ attemptText }}</p>
+                <span class="engine-heading-icon" aria-hidden="true">
+                  <NSpin size="small" class="engine-heading-spinner" :class="{ 'is-hidden': completed }" />
+                </span>
+                <div class="engine-heading-copy">
+                  <h2><TransitionText :text="statusTitle" /></h2>
+                  <p class="engine-attempt"><TransitionText :text="statusDescription" /></p>
                 </div>
               </div>
 
@@ -189,10 +223,12 @@ async function cleanupAndRetry() {
                   </template>
                 </div>
 
-                <div v-if="failureDetail" key="error" class="engine-error-block">
-                  <span class="engine-error-label">{{ t('app.engine-last-error') }}</span>
-                  <code>{{ failureDetail }}</code>
-                </div>
+                <NCollapseTransition :show="!!failureDetail && !completed"
+                  ><div key="error" class="engine-error-block">
+                    <span class="engine-error-label">{{ t('app.engine-last-error') }}</span>
+                    <code>{{ failureDetail }}</code>
+                  </div></NCollapseTransition
+                >
               </div>
             </template>
 
@@ -221,24 +257,17 @@ async function cleanupAndRetry() {
 
               <p class="engine-cleanup-warning">{{ t('app.engine-cleanup-warning') }}</p>
             </template>
-
-            <template v-else>
-              <div class="engine-complete">
-                <div class="engine-success-mark" aria-hidden="true">
-                  <NIcon :size="38"><CheckmarkOutline /></NIcon>
-                </div>
-                <div class="engine-complete-copy">
-                  <h2>{{ t('preferences.engine-restarted') }}</h2>
-                  <p>{{ t('app.engine-recovered-description') }}</p>
-                </div>
-              </div>
-            </template>
           </div>
         </Transition>
       </div>
 
       <footer class="engine-dialog-footer">
-        <Transition name="fade">
+        <Transition
+          name="fade"
+          @before-leave="(element) => element.setAttribute('inert', '')"
+          @before-enter="(element) => element.removeAttribute('inert')"
+          @leave-cancelled="(element) => element.removeAttribute('inert')"
+        >
           <div v-if="panelState === 'recovering'" key="recovering" class="engine-footer-state">
             <NButton :loading="pendingAction === 'cancel'" :disabled="pendingAction !== null" @click="cancel">
               {{ t('app.cancel') }}
@@ -264,6 +293,9 @@ async function cleanupAndRetry() {
             </div>
           </div>
 
+          <div v-else-if="panelState === 'complete'" key="complete" class="engine-footer-state">
+            <NButton @click="dismiss">{{ t('app.close') }}</NButton>
+          </div>
           <div v-else :key="panelState" class="engine-footer-state" />
         </Transition>
       </footer>
@@ -297,8 +329,7 @@ h2 {
 }
 .engine-heading-row p,
 .engine-description,
-.engine-attempt,
-.engine-complete-copy p {
+.engine-attempt {
   color: var(--m3-on-surface-variant);
   font-size: 13px;
   line-height: 20px;
@@ -317,12 +348,21 @@ h2 {
   gap: 8px;
   font-size: 13px;
   color: var(--m3-on-surface-variant);
+  transition: color 160ms ease;
 }
 .engine-stage-marker {
   width: 24px;
   height: 24px;
   display: grid;
   place-items: center;
+}
+.engine-stage-dot,
+.engine-stage-check {
+  grid-area: 1 / 1;
+  transition:
+    opacity 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
 }
 .engine-stage-dot {
   width: 10px;
@@ -331,7 +371,7 @@ h2 {
   border-radius: 50%;
 }
 .engine-stage-check {
-  display: none;
+  opacity: 0;
 }
 .engine-recovery-stage[data-state='active'] {
   color: var(--m3-primary);
@@ -341,11 +381,11 @@ h2 {
   background: var(--m3-primary);
 }
 .engine-recovery-stage[data-state='complete'] .engine-stage-check {
-  display: block;
+  opacity: 1;
   color: var(--m3-primary);
 }
 .engine-recovery-stage[data-state='complete'] .engine-stage-dot {
-  display: none;
+  opacity: 0;
 }
 .engine-stage-connector {
   flex: 1;
@@ -372,10 +412,15 @@ h2 {
   white-space: pre-line;
 }
 .engine-dialog-footer {
-  position: relative;
+  display: grid;
+  min-height: 53px;
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--divider);
+}
+.engine-footer-state {
+  grid-area: 1 / 1;
+  min-height: 36px;
 }
 .engine-footer-state,
 .engine-dialog-actions {
@@ -387,14 +432,29 @@ h2 {
 .engine-footer-state--failed {
   justify-content: space-between;
 }
-.engine-complete {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding-block: 32px;
-}
-.engine-success-mark {
+.engine-heading-icon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: grid;
+  place-items: center;
   color: var(--m3-primary);
+}
+.engine-heading-spinner {
+  grid-area: 1 / 1;
+  transition: opacity 160ms ease;
+}
+.is-hidden {
+  opacity: 0;
+}
+.engine-heading-copy {
+  min-width: 0;
+}
+.engine-stage-connector {
+  transition: background-color 160ms ease;
+}
+.engine-stage-connector[data-complete='true'] {
+  background: var(--m3-primary);
 }
 .engine-heading-row--error {
   color: var(--m3-error);

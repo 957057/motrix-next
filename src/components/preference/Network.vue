@@ -364,7 +364,7 @@ onMounted(() => {
             </NCollapseTransition>
           </div>
         </SettingsRow>
-        <SettingsRow label=" ">
+        <SettingsRow continuation actions>
           <div class="ua-preset-row">
             <NButtonGroup size="small">
               <NButton @click="changeUA('chrome')">Chrome</NButton>
@@ -377,23 +377,18 @@ onMounted(() => {
             </NButton>
           </div>
         </SettingsRow>
-        <SettingsRow setting-key="preferences.ua-saved" :label="t('preferences.ua-saved')">
-          <div class="ua-manager-entry">
-            <div class="ua-manager-entry-text">
-              <strong>{{ t('preferences.ua-manager-title') }}</strong>
-              <span>
-                {{
-                  t('preferences.ua-manager-summary', {
-                    profiles: form.userAgentProfiles.length,
-                    rules: form.userAgentRules.length,
-                  })
-                }}
-              </span>
-            </div>
-            <NButton size="small" @click="showUserAgentManager = true">
-              {{ t('preferences.ua-manage') }}
-            </NButton>
-          </div>
+        <SettingsRow
+          setting-key="preferences.ua-saved"
+          :label="t('preferences.ua-manager-title')"
+          :hint="
+            t('preferences.ua-manager-summary', {
+              profiles: form.userAgentProfiles.length,
+              rules: form.userAgentRules.length,
+            })
+          "
+          actions
+        >
+          <NButton @click="showUserAgentManager = true">{{ t('preferences.ua-manage') }}</NButton>
         </SettingsRow>
 
         <!-- Port mapping -->
@@ -487,33 +482,5 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   width: 100%;
-}
-.ua-manager-entry {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-  min-height: 44px;
-  padding: 8px 10px;
-  border: 1px solid color-mix(in srgb, var(--m3-outline-variant) 62%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--m3-surface-container-low) 54%, transparent);
-}
-.ua-manager-entry-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.ua-manager-entry-text strong {
-  font-size: 13px;
-  font-weight: 500;
-}
-.ua-manager-entry-text span {
-  overflow: hidden;
-  color: var(--n-text-color-3);
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 </style>

@@ -30,15 +30,15 @@ const visibleFiles = computed(() =>
 const columns = computed<DataTableColumns<BtFileSelectionItem>>(() => [
   { type: 'selection' },
   {
-    title: t('task.file-name') || 'File Name',
+    title: t('task.file-name'),
     key: 'path',
     ellipsis: { tooltip: true },
   },
   {
-    title: t('task.file-size') || 'Size',
+    title: t('task.file-size'),
     key: 'length',
     width: calcColumnWidth({
-      title: t('task.file-size') || 'Size',
+      title: t('task.file-size'),
       values: props.files.map((file) => bytesToSize(file.length)),
       sortable: true,
     }),
@@ -71,6 +71,8 @@ function updateSelection(keys: DataTableRowKey[]) {
     <NDataTable
       :columns="columns"
       :bordered="false"
+      :single-line="true"
+      :pagination="false"
       :data="visibleFiles"
       :row-key="(row: BtFileSelectionItem) => row.index"
       :checked-row-keys="selectedIndices"

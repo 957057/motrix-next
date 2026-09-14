@@ -37,7 +37,7 @@ const app = useAppStore()
 const dragging = ref(false)
 const order = ref<string[]>([])
 const manual = computed(
-  () => preference.config.taskSort[tasks.currentList].field === 'manual' && !view.query && !view.selecting,
+  () => preference.config.taskSort[tasks.displayedList].field === 'manual' && !view.query && !view.selecting,
 )
 const page = computed(() => tasks.taskList)
 function group(task: Aria2Task) {
@@ -60,11 +60,12 @@ const rows = computed(() => {
     return order.value
       .map((gid) => page.value.find((task) => task.gid === gid))
       .filter((task): task is Aria2Task => !!task)
-  if (tasks.currentList !== 'all') return page.value
+  if (tasks.displayedList !== 'all') return page.value
   return ['progress', 'attention', 'completed'].flatMap((key) => page.value.filter((task) => group(task) === key))
 })
 const layoutRevision = computed(() =>
   [
+    tasks.displayedList,
     preference.config.taskCardMode,
     view.expanded,
     locale.value,
@@ -79,7 +80,7 @@ watch(
   { immediate: true },
 )
 watch(
-  () => [tasks.currentList, tasks.taskPagination[tasks.currentList].page, view.query],
+  () => [tasks.displayedList, tasks.taskPagination[tasks.displayedList].page, view.query],
   () => view.clearSelection(),
 )
 async function saveOrder() {
@@ -106,9 +107,12 @@ function move(gid: string, direction: -1 | 1) {
   <div class="task-list">
     <div v-if="tasks.queryError" class="list-error" role="alert">
       <span>{{ tasks.queryError }}</span
-      ><NButton @click="tasks.fetchList()">{{ t('task.refresh-list') }}</NButton>
+      ><NButton @click="tasks.fetchList()">{{ t('app.retry') }}</NButton>
     </div>
-    <div v-if="!tasks.queryError && !tasks.taskPagination[tasks.currentList].loaded && !rows.length" class="list-empty">
+    <div
+      v-if="!tasks.queryError && !tasks.taskPagination[tasks.displayedList].loaded && !rows.length"
+      class="list-empty"
+    >
       <NSpin :description="t('about.loading')" />
     </div>
     <NEmpty
@@ -124,7 +128,14 @@ function move(gid: string, direction: -1 | 1) {
         ><NButton v-else @click="view.query = ''">{{ t('workspace.clear') }}</NButton></template
       >
     </NEmpty>
-    <component :is="manual ? Reorder.Group : motion.ul" v-model:values="order" axis="y" class="task-rows" layout-scroll>
+    <component
+      :is="manual ? Reorder.Group : motion.ul"
+      v-model:values="order"
+      axis="y"
+      class="task-rows"
+      layout-scroll
+      :inert="tasks.currentList !== tasks.displayedList || undefined"
+    >
       <AnimatePresence :initial="false" mode="popLayout">
         <TaskRow
           v-for="(task, index) in rows"
@@ -138,7 +149,7 @@ function move(gid: string, direction: -1 | 1) {
             tasks.resubmittingGids.includes(task.gid)
           "
           :heading="
-            !manual && tasks.currentList === 'all' && (index === 0 || group(rows[index - 1]) !== group(task))
+            !manual && tasks.displayedList === 'all' && (index === 0 || group(rows[index - 1]) !== group(task))
               ? groupLabels[group(task)]
               : undefined
           "

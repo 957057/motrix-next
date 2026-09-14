@@ -284,13 +284,20 @@ onMounted(async () => {
         :disabled="preferenceStore.savingChanges"
       >
         <h2 class="settings-section-title">{{ t('preferences.engine-section') }}</h2>
-        <SettingsRow setting-key="preferences.engine-restart-btn" :label="t('preferences.engine-restart-btn')"
-          ><NButton @click="confirmManualRestart">{{ t('preferences.engine-restart-now') }}</NButton></SettingsRow
-        >
+        <SettingsRow setting-key="preferences.engine-maintenance" :label="t('preferences.engine-maintenance')" actions>
+          <div class="settings-action-group">
+            <NButton :disabled="engineStore.isBusy" @click="confirmManualRestart">{{
+              t('preferences.engine-restart-now')
+            }}</NButton>
+            <NButton type="error" ghost :disabled="engineStore.isBusy" @click="handleEngineStateReset">{{
+              t('preferences.reset-engine-state')
+            }}</NButton>
+          </div>
+        </SettingsRow>
         <SettingsRow setting-key="preferences.temp-files-dir" :label="t('preferences.temp-files-dir')">
           <NInputGroup>
             <NInput
-              :input-props="{ 'aria-label': t('preferences.engine-restart-btn') }"
+              :input-props="{ 'aria-label': t('preferences.temp-files-dir') }"
               :value="form.tempFilesDir || defaultTempPath"
               readonly
               class="pref-control-full"
@@ -357,12 +364,6 @@ onMounted(async () => {
             </NButton>
           </NInputGroup>
         </SettingsRow>
-        <SettingsRow label=" ">
-          <NButton type="error" ghost @click="handleEngineStateReset">
-            {{ t('preferences.reset-engine-state') }}
-          </NButton>
-        </SettingsRow>
-
         <h2 class="settings-section-title">{{ t('preferences.log-section') }}</h2>
         <SettingsRow setting-key="preferences.log-path" :label="t('preferences.log-path')">
           <NInputGroup>
@@ -406,9 +407,9 @@ onMounted(async () => {
             </div>
           </div>
         </SettingsRow>
-        <SettingsRow label=" ">
-          <div class="log-action-row">
-            <NButton type="primary" ghost :loading="exportingLogs" @click="handleExportLogs">
+        <SettingsRow :label="t('preferences.log-management')" actions>
+          <div class="settings-action-group">
+            <NButton :loading="exportingLogs" @click="handleExportLogs">
               <template #icon>
                 <NIcon><DownloadOutline /></NIcon>
               </template>
@@ -433,8 +434,8 @@ onMounted(async () => {
           </template>
           <NSwitch v-model:value="form.hardwareRendering" :aria-label="t('preferences.hardware-rendering')" />
         </SettingsRow>
-        <SettingsRow setting-key="preferences.history-section" :label="t('preferences.history-section')">
-          <NSpace>
+        <SettingsRow setting-key="preferences.history-section" :label="t('preferences.history-section')" actions>
+          <div class="settings-action-group">
             <NButton class="db-integrity-check-btn" @click="handleDbIntegrityCheck">
               {{ t('preferences.db-integrity-check') }}
             </NButton>
@@ -444,11 +445,15 @@ onMounted(async () => {
             <NButton type="error" ghost @click="handleDbReset">
               {{ t('preferences.db-reset') }}
             </NButton>
-          </NSpace>
+          </div>
         </SettingsRow>
 
-        <SettingsRow setting-key="preferences.configuration-section" :label="t('preferences.configuration-section')">
-          <NSpace>
+        <SettingsRow
+          setting-key="preferences.configuration-section"
+          :label="t('preferences.configuration-section')"
+          actions
+        >
+          <div class="settings-action-group">
             <NButton class="open-config-folder-btn" @click="handleOpenConfigFolder">
               <template #icon>
                 <NIcon :size="14"><FolderOpenOutline /></NIcon>
@@ -461,24 +466,22 @@ onMounted(async () => {
             <NButton type="error" ghost @click="handleFactoryReset">
               {{ t('preferences.factory-reset') }}
             </NButton>
-          </NSpace>
+          </div>
         </SettingsRow>
-        <SettingsRow setting-key="preferences.settings-backup" :label="t('preferences.settings-backup')">
-          <div class="settings-backup-row">
-            <NSpace>
-              <NButton type="primary" ghost :loading="exportingSettings" @click="handleExportSettings">
-                <template #icon>
-                  <NIcon><CloudDownloadOutline /></NIcon>
-                </template>
-                {{ t('preferences.export-settings') }}
-              </NButton>
-              <NButton type="warning" ghost :loading="importingSettings" @click="handleImportSettings">
-                <template #icon>
-                  <NIcon><CloudUploadOutline /></NIcon>
-                </template>
-                {{ t('preferences.import-settings') }}
-              </NButton>
-            </NSpace>
+        <SettingsRow setting-key="preferences.settings-backup" :label="t('preferences.settings-backup')" actions>
+          <div class="settings-action-group">
+            <NButton :loading="exportingSettings" @click="handleExportSettings">
+              <template #icon>
+                <NIcon><CloudDownloadOutline /></NIcon>
+              </template>
+              {{ t('preferences.export-settings') }}
+            </NButton>
+            <NButton :loading="importingSettings" @click="handleImportSettings">
+              <template #icon>
+                <NIcon><CloudUploadOutline /></NIcon>
+              </template>
+              {{ t('preferences.import-settings') }}
+            </NButton>
           </div>
         </SettingsRow>
 
@@ -493,8 +496,8 @@ onMounted(async () => {
           </template>
           <NSwitch v-model:value="form.clipboardEnable" :aria-label="t('preferences.clipboard-auto-detect')" />
         </SettingsRow>
-        <NCollapseTransition :show="form.clipboardEnable || !!settingsRoute.hash">
-          <SettingsRow label=" ">
+        <NCollapseTransition :show="form.clipboardEnable || !!settingsRoute.hash" class="collapse-indent">
+          <SettingsRow :label="t('preferences.clipboard-types')">
             <PreferenceCheckboxGrid v-model:value="selectedClipboardTypes" :options="clipboardTypeOptions" />
           </SettingsRow>
         </NCollapseTransition>
@@ -560,6 +563,7 @@ onMounted(async () => {
 <style scoped>
 .log-level-row {
   display: flex;
+  justify-content: var(--settings-control-align);
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
@@ -587,20 +591,5 @@ onMounted(async () => {
   color: var(--m3-on-surface);
   font-size: 13px;
   white-space: nowrap;
-}
-.log-action-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-.settings-backup-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-  width: 100%;
 }
 </style>

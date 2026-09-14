@@ -44,6 +44,8 @@ export interface TaskCounts {
 export const useTaskStore = defineStore('task', () => {
   const preferenceStore = usePreferenceStore()
   const currentList = ref<TaskScope>('all')
+  const displayedList = ref<TaskScope>('all')
+  const listPending = ref(false)
   const taskDetailVisible = ref(false)
   const taskDetailClosing = ref(false)
   const currentTaskGid = ref(EMPTY_STRING)
@@ -180,6 +182,7 @@ export const useTaskStore = defineStore('task', () => {
   async function fetchList() {
     if (!apiReady) return
     const requestId = ++listRequestId
+    listPending.value = true
     const scope = currentTaskTab()
     const view = useTaskViewStore()
     const query = view.query.trim()
@@ -202,6 +205,7 @@ export const useTaskStore = defineStore('task', () => {
       )
       const merged = mergeHistoryIntoTasks(result.tasks, result.history)
       const byGid = new Map(merged.map((task) => [task.gid, task]))
+      displayedList.value = scope
       taskList.value = result.gids.map((gid) => byGid.get(gid)).filter((task): task is Aria2Task => !!task)
       Object.assign(taskCounts, result.counts)
       loadAddedAtFromRecords(result.history)
@@ -226,6 +230,8 @@ export const useTaskStore = defineStore('task', () => {
       if (requestId !== listRequestId) return
       queryError.value = error instanceof Error ? error.message : String(error)
       logger.warn('TaskStore.query', queryError.value)
+    } finally {
+      if (requestId === listRequestId) listPending.value = false
     }
   }
 
@@ -279,13 +285,13 @@ export const useTaskStore = defineStore('task', () => {
     await fetchList()
   }
 
-  async function changeCurrentSort(field: ProgressSortField | TerminalSortField | AllSortField) {
+  async function setCurrentSort(field: ProgressSortField | TerminalSortField | AllSortField, direction: SortDirection) {
     const preferenceStore = usePreferenceStore()
     const tab = currentTaskTab()
     const taskSort = preferenceStore.config?.taskSort ?? DEFAULT_TASK_SORT
     const current = taskSort[tab]
-    const direction: SortDirection =
-      field === 'manual' ? 'desc' : current.field === field ? (current.direction === 'desc' ? 'asc' : 'desc') : 'desc'
+    if (field === current.field && (field === 'manual' || direction === current.direction)) return
+    if (field === 'manual') direction = 'desc'
     const nextTaskSort = { ...taskSort, [tab]: { field, direction } }
     const nextConfig =
       field === 'manual'
@@ -298,9 +304,8 @@ export const useTaskStore = defineStore('task', () => {
           }
         : { taskSort: nextTaskSort }
 
-    preferenceStore.updatePreference(nextConfig)
+    if (!(await preferenceStore.updateAndSave(nextConfig))) throw new Error('Could not save task sorting')
     await fetchList()
-    preferenceStore.updateAndSave(nextConfig).catch((e: unknown) => logger.error('TaskStore.changeCurrentSort', e))
   }
 
   async function fetchItem(gid: string) {
@@ -487,6 +492,8 @@ export const useTaskStore = defineStore('task', () => {
     queryError,
     pendingGids,
     currentList,
+    displayedList,
+    listPending,
     taskCounts,
     taskDetailVisible,
     taskDetailClosing,
@@ -510,7 +517,7 @@ export const useTaskStore = defineStore('task', () => {
     setCurrentTaskPage,
     setTaskPageSize,
     clampCurrentTaskPage,
-    changeCurrentSort,
+    setCurrentSort,
     fetchItem,
     showTaskDetail,
     showTaskDetailByGid,
