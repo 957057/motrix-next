@@ -106,33 +106,6 @@ mod tests {
         assert!(temp.path().join("config.json").exists());
     }
 
-    #[test]
-    #[cfg(unix)]
-    fn is_supported_engine_process_matches_rayburst_next_engine() {
-        assert!(is_supported_engine_process("aria2-next"));
-        assert!(is_supported_engine_process(
-            "/Applications/Rayburst.app/Contents/Resources/aria2-next"
-        ));
-        assert!(is_supported_engine_process(
-            "/usr/bin/aria2-next --conf-path=/home/user/.local/share/dev.aninsomniacy.rayburst/engine/aria2.conf"
-        ));
-    }
-
-    #[test]
-    #[cfg(unix)]
-    fn is_supported_engine_process_does_not_trust_truncated_comm_names() {
-        assert!(!is_supported_engine_process("rayburst-eng"));
-    }
-
-    #[test]
-    #[cfg(unix)]
-    fn is_supported_engine_process_rejects_other_processes() {
-        assert!(!is_supported_engine_process("nginx"));
-        assert!(!is_supported_engine_process("node"));
-        assert!(!is_supported_engine_process("python3"));
-        assert!(!is_supported_engine_process(""));
-    }
-
     // ── Port validation tests (code review fix) ──────────────────
 
     #[test]

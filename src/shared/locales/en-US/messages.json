@@ -1,7 +1,6 @@
 {
   "about": {
     "license": "License",
-    "about": "About",
     "release": "Release Notes",
     "support": "Support",
     "description": "A desktop download manager for files, torrents and streams.",

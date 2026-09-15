@@ -1,7 +1,6 @@
 {
   "about": {
     "license": "ライセンス",
-    "about": "について",
     "release": "リリースノート",
     "support": "サポート",
     "description": "ファイル、Torrent、ストリーミングに対応したデスクトップ用ダウンロードマネージャー。",

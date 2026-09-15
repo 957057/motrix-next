@@ -1,7 +1,6 @@
 {
   "about": {
     "license": "Licence",
-    "about": "À propos",
     "release": "Notes de version",
     "support": "Assistance",
     "description": "Un gestionnaire de téléchargements pour les fichiers, les torrents et les flux multimédias.",

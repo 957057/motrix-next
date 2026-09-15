@@ -1,7 +1,6 @@
 {
   "about": {
     "license": "Llicència",
-    "about": "Quant a",
     "release": "Notes de la versió",
     "support": "Suport",
     "description": "Un gestor de baixades d’escriptori per a fitxers, torrents i contingut en streaming.",

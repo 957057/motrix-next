@@ -1,7 +1,6 @@
 {
   "about": {
     "license": "Licencia",
-    "about": "Acerca de",
     "release": "Notas de la versión",
     "support": "Soporte",
     "description": "Un gestor de descargas de escritorio para archivos, torrents y contenido en streaming.",
