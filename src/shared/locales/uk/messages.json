@@ -4,13 +4,16 @@
     "about": "Про програму",
     "release": "Примітки до випуску",
     "support": "Підтримка",
-    "description": "Повнофункціональний менеджер завантажень — перебудований з нуля.",
+    "description": "Менеджер завантажень для файлів, торентів і медіапотоків на комп’ютері.",
     "click-to-copy": "Натисніть, щоб скопіювати",
     "version-copied": "Версію {label} скопійовано",
     "app-version": "Версія Rayburst",
     "aria2-version": "Версія Aria2 Next",
     "loading": "Завантаження…",
-    "unavailable": "Недоступний"
+    "unavailable": "Недоступний",
+    "tagline": "Спіймай промінь, утіль у реальність.",
+    "tech-stack": "Технології",
+    "developed-by": "Розробник: {author}"
   },
   "app": {
     "task-list": "Завдання",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} скопійовано",
     "color-scheme": "Колірна схема",
     "task-card-mode": "Картка завдання",
+    "show-logo-when-empty": "Показувати логотип, коли немає завдань",
     "reduce-motion": "Зменшення руху",
     "sidebar-task-counts": "Лічильники завдань на бічній панелі",
     "task-card-mode-full": "Повна",

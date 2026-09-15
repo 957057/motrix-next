@@ -136,7 +136,7 @@ function openUrl(url: string) {
   >
     <div class="about-glass" :class="{ 'about-enter': animate }">
       <!-- Close button -->
-      <button class="about-close" :aria-label="t('about.about')" @click="emit('close')">
+      <button class="about-close" :aria-label="t('app.close')" @click="emit('close')">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         </svg>
@@ -200,11 +200,11 @@ function openUrl(url: string) {
       </div>
 
       <!-- Description -->
-      <p class="about-desc stagger stagger-3">Seize the ray, forge the real.</p>
+      <p class="about-desc stagger stagger-3">{{ t('about.tagline') }}</p>
       <p class="about-desc stagger stagger-3">{{ t('about.description') }}</p>
 
       <!-- Tech Stack -->
-      <div class="about-section-label stagger stagger-4">Tech Stack</div>
+      <div class="about-section-label stagger stagger-4">{{ t('about.tech-stack') }}</div>
       <div class="about-tags stagger stagger-4">
         <span v-for="tech in techStack" :key="tech.name" class="about-tag" :style="{ '--tag-color': tech.color }">
           <!-- eslint-disable vue/no-v-html -- tech.svg is static local icon markup -->
@@ -235,10 +235,11 @@ function openUrl(url: string) {
 
       <!-- Footer -->
       <div class="about-footer stagger stagger-6">
-        <span>
-          Developed by
-          <a class="about-link" @click="openUrl('https://github.com/AnInsomniacy')">AnInsomniacy</a>
-        </span>
+        <i18n-t keypath="about.developed-by" tag="span" scope="global">
+          <template #author>
+            <a class="about-link" @click="openUrl('https://github.com/AnInsomniacy')">AnInsomniacy</a>
+          </template>
+        </i18n-t>
         <span>&copy; {{ year }} AnInsomniacy</span>
       </div>
     </div>

@@ -4,13 +4,16 @@
     "about": "Over",
     "release": "Releaseopmerkingen",
     "support": "Ondersteuning",
-    "description": "Een volwaardige downloadmanager — helemaal opnieuw opgebouwd.",
+    "description": "Een downloadmanager voor bestanden, torrents en streams op je desktop.",
     "click-to-copy": "Klik om te kopiëren",
     "version-copied": "Versie van {label} gekopieerd",
     "app-version": "Rayburst versie",
     "aria2-version": "Aria2 Next versie",
     "loading": "Laden…",
-    "unavailable": "Niet beschikbaar"
+    "unavailable": "Niet beschikbaar",
+    "tagline": "Vang de straal, vorm de werkelijkheid.",
+    "tech-stack": "Technologieën",
+    "developed-by": "Ontwikkeld door {author}"
   },
   "app": {
     "task-list": "Taken",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} gekopieerd",
     "color-scheme": "Kleurenschema",
     "task-card-mode": "Taakkaart",
+    "show-logo-when-empty": "Logo tonen als er geen taken zijn",
     "reduce-motion": "Verminder beweging",
     "sidebar-task-counts": "Taaktellers in de zijbalk",
     "task-card-mode-full": "Volledig",

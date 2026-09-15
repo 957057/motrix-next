@@ -4,13 +4,16 @@
     "about": "Tentang",
     "release": "Catatan rilis",
     "support": "Dukungan",
-    "description": "Manajer unduhan berfitur lengkap — dibangun ulang dari nol.",
+    "description": "Pengelola unduhan desktop untuk berkas, torrent, dan aliran media.",
     "click-to-copy": "Klik untuk menyalin",
     "version-copied": "Versi {label} disalin",
     "app-version": "Versi Rayburst",
     "aria2-version": "Versi Aria2 Next",
     "loading": "Memuat…",
-    "unavailable": "Tidak tersedia"
+    "unavailable": "Tidak tersedia",
+    "tagline": "Tangkap sinarnya, wujudkan yang maya.",
+    "tech-stack": "Teknologi",
+    "developed-by": "Dikembangkan oleh {author}"
   },
   "app": {
     "task-list": "Tugas",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} disalin",
     "color-scheme": "Skema Warna",
     "task-card-mode": "Kartu tugas",
+    "show-logo-when-empty": "Tampilkan logo saat tidak ada tugas",
     "reduce-motion": "Kurangi gerakan",
     "sidebar-task-counts": "Hitungan tugas bilah samping",
     "task-card-mode-full": "Penuh",

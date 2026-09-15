@@ -4,13 +4,16 @@
     "about": "Über",
     "release": "Versionshinweise",
     "support": "Hilfe",
-    "description": "Ein vollwertiger Download-Manager — von Grund auf neu erstellt.",
+    "description": "Ein Downloadmanager für Dateien, Torrents und Streams auf dem Desktop.",
     "click-to-copy": "Klicken zum Kopieren",
     "version-copied": "Versionsnummer von {label} kopiert",
     "app-version": "Rayburst Version",
     "aria2-version": "Aria2 Next Version",
     "loading": "Laden…",
-    "unavailable": "Nicht verfügbar"
+    "unavailable": "Nicht verfügbar",
+    "tagline": "Fang den Strahl, forme Wirklichkeit.",
+    "tech-stack": "Technologien",
+    "developed-by": "Entwickelt von {author}"
   },
   "app": {
     "task-list": "Aufgaben",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} kopiert",
     "color-scheme": "Farbschema",
     "task-card-mode": "Aufgabenkarte",
+    "show-logo-when-empty": "Logo anzeigen, wenn keine Aufgaben vorhanden sind",
     "reduce-motion": "Bewegungen reduzieren",
     "sidebar-task-counts": "Aufgabenzähler in der Seitenleiste",
     "task-card-mode-full": "Vollständig",

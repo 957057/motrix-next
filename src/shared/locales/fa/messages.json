@@ -4,13 +4,16 @@
     "about": "درباره",
     "release": "یادداشت‌های انتشار",
     "support": "پشتیبانی",
-    "description": "یک مدیر دانلود کامل — از پایه بازسازی شده.",
+    "description": "مدیر دانلود دسکتاپ برای فایل‌ها، تورنت‌ها و جریان‌های رسانه‌ای.",
     "click-to-copy": "برای کپی کلیک کنید",
     "version-copied": "نسخه {label} کپی شد",
     "app-version": "نسخه Rayburst",
     "aria2-version": "نسخه Aria2 Next",
     "loading": "در حال بارگذاری…",
-    "unavailable": "در دسترس نیست"
+    "unavailable": "در دسترس نیست",
+    "tagline": "پرتو را بگیر، واقعیت را بساز.",
+    "tech-stack": "فناوری‌ها",
+    "developed-by": "توسعه‌یافته توسط {author}"
   },
   "app": {
     "task-list": "وظایف",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} کپی شد",
     "color-scheme": "طرح رنگ",
     "task-card-mode": "کارت وظیفه",
+    "show-logo-when-empty": "نمایش نشان وقتی کاری وجود ندارد",
     "reduce-motion": "کاهش حرکت",
     "sidebar-task-counts": "شمارنده‌های وظیفه در نوار کناری",
     "task-card-mode-full": "کامل",

@@ -4,13 +4,16 @@
     "about": "Om",
     "release": "Utgivelsesmerknader",
     "support": "Brukerstøtte",
-    "description": "En fullfunksjons nedlastingsbehandler — gjenoppbygd fra grunnen.",
+    "description": "En nedlastingsbehandler for filer, torrenter og mediestrømmer på skrivebordet.",
     "click-to-copy": "Klikk for å kopiere",
     "version-copied": "{label}-versjon kopiert",
     "app-version": "Rayburst-versjon",
     "aria2-version": "Aria2 Next-versjon",
     "loading": "Laster…",
-    "unavailable": "Utilgjengelig"
+    "unavailable": "Utilgjengelig",
+    "tagline": "Fang strålen, form det virkelige.",
+    "tech-stack": "Teknologier",
+    "developed-by": "Utviklet av {author}"
   },
   "app": {
     "task-list": "Oppgaver",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} kopiert",
     "color-scheme": "Fargevalg",
     "task-card-mode": "Oppgavekort",
+    "show-logo-when-empty": "Vis logo når det ikke finnes oppgaver",
     "reduce-motion": "Reduser bevegelse",
     "sidebar-task-counts": "Oppgavetellere i sidepanelet",
     "task-card-mode-full": "Full",

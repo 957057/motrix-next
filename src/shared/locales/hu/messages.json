@@ -4,13 +4,16 @@
     "about": "Névjegy",
     "release": "Kiadási megjegyzések",
     "support": "Támogatás",
-    "description": "Teljes értékű letöltéskezelő — az alapoktól újraépítve.",
+    "description": "Asztali letöltéskezelő fájlokhoz, torrentekhez és médiafolyamokhoz.",
     "click-to-copy": "Kattintson a másoláshoz",
     "version-copied": "{label} verziószám másolva",
     "app-version": "Rayburst verzió",
     "aria2-version": "Aria2 Next verzió",
     "loading": "Betöltés…",
-    "unavailable": "Nem elérhető"
+    "unavailable": "Nem elérhető",
+    "tagline": "Ragadd meg a fényt, formálj valóságot.",
+    "tech-stack": "Technológiák",
+    "developed-by": "Fejlesztő: {author}"
   },
   "app": {
     "task-list": "Feladatok",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} másolva",
     "color-scheme": "Színséma",
     "task-card-mode": "Feladatkártya",
+    "show-logo-when-empty": "Logó megjelenítése, ha nincsenek feladatok",
     "reduce-motion": "Mozgás csökkentése",
     "sidebar-task-counts": "Oldalsáv feladatszámlálói",
     "task-card-mode-full": "Teljes",

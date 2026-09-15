@@ -4,13 +4,16 @@
     "about": "Sobre",
     "release": "Notas da versão",
     "support": "Suporte",
-    "description": "Um gerenciador de downloads completo — reconstruído do zero.",
+    "description": "Um gerenciador de downloads para arquivos, torrents e fluxos de mídia no computador.",
     "click-to-copy": "Clique para copiar",
     "version-copied": "Versão do {label} copiada",
     "app-version": "Versão do Rayburst",
     "aria2-version": "Versão do Aria2 Next",
     "loading": "Carregando…",
-    "unavailable": "Indisponível"
+    "unavailable": "Indisponível",
+    "tagline": "Capture o raio, forje o real.",
+    "tech-stack": "Tecnologias",
+    "developed-by": "Desenvolvido por {author}"
   },
   "app": {
     "task-list": "Tarefas",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} copiado",
     "color-scheme": "Esquema de cores",
     "task-card-mode": "Cartão da tarefa",
+    "show-logo-when-empty": "Mostrar logotipo quando não houver tarefas",
     "reduce-motion": "Reduzir movimento",
     "sidebar-task-counts": "Contadores de tarefas na barra lateral",
     "task-card-mode-full": "Completo",

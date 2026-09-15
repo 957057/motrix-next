@@ -4,13 +4,16 @@
     "about": "परिचय",
     "release": "रिलीज़ नोट्स",
     "support": "सहायता",
-    "description": "एक पूर्ण डाउनलोड मैनेजर, जिसे शुरू से फिर बनाया गया है।",
+    "description": "फ़ाइलों, टोरेंट और मीडिया स्ट्रीम के लिए डेस्कटॉप डाउनलोड प्रबंधक।",
     "click-to-copy": "कॉपी करने के लिए क्लिक करें",
     "version-copied": "{label} संस्करण कॉपी हो गया",
     "app-version": "Rayburst संस्करण",
     "aria2-version": "Aria2 Next संस्करण",
     "loading": "लोड हो रहा है…",
-    "unavailable": "उपलब्ध नहीं"
+    "unavailable": "उपलब्ध नहीं",
+    "tagline": "किरण पकड़ो, कल्पना को साकार करो।",
+    "tech-stack": "तकनीकें",
+    "developed-by": "{author} द्वारा विकसित"
   },
   "app": {
     "task-list": "कार्य",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} copied",
     "color-scheme": "Color scheme",
     "task-card-mode": "कार्य कार्ड",
+    "show-logo-when-empty": "कोई कार्य न होने पर प्रतीक दिखाएँ",
     "reduce-motion": "गति कम करें",
     "sidebar-task-counts": "साइडबार कार्य गणना",
     "task-card-mode-full": "पूर्ण",

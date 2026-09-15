@@ -4,13 +4,16 @@
     "about": "정보",
     "release": "릴리스 노트",
     "support": "지원",
-    "description": "모든 기능을 갖춘 다운로드 관리자 — 처음부터 다시 구축.",
+    "description": "파일, 토렌트, 스트림을 위한 데스크톱 다운로드 관리자.",
     "click-to-copy": "클릭하여 복사",
     "version-copied": "{label} 버전 복사됨",
     "app-version": "Rayburst 버전",
     "aria2-version": "Aria2 Next 버전",
     "loading": "로딩 중…",
-    "unavailable": "사용 불가"
+    "unavailable": "사용 불가",
+    "tagline": "빛을 붙잡아, 현실로 빚다.",
+    "tech-stack": "사용 기술",
+    "developed-by": "{author} 개발"
   },
   "app": {
     "task-list": "작업 목록",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} 복사됨",
     "color-scheme": "색상 테마",
     "task-card-mode": "작업 카드",
+    "show-logo-when-empty": "작업이 없을 때 로고 표시",
     "reduce-motion": "동작 줄이기",
     "sidebar-task-counts": "사이드바 작업 수",
     "task-card-mode-full": "전체",

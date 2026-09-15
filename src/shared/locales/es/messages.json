@@ -4,13 +4,16 @@
     "about": "Acerca de",
     "release": "Notas de la versión",
     "support": "Soporte",
-    "description": "Un gestor de descargas completo — reconstruido desde cero.",
+    "description": "Un gestor de descargas de escritorio para archivos, torrents y contenido en streaming.",
     "click-to-copy": "Haz clic para copiar",
     "version-copied": "Versión de {label} copiada",
     "app-version": "Versión de Rayburst",
     "aria2-version": "Versión de Aria2 Next",
     "loading": "Cargando…",
-    "unavailable": "No disponible"
+    "unavailable": "No disponible",
+    "tagline": "Atrapa el rayo, forja lo real.",
+    "tech-stack": "Tecnologías",
+    "developed-by": "Desarrollado por {author}"
   },
   "app": {
     "task-list": "Tareas",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} copiado",
     "color-scheme": "Esquema de colores",
     "task-card-mode": "Tarjeta de tarea",
+    "show-logo-when-empty": "Mostrar el logotipo cuando no haya tareas",
     "reduce-motion": "Reducir movimiento",
     "sidebar-task-counts": "Contadores de tareas en la barra lateral",
     "task-card-mode-full": "Completa",

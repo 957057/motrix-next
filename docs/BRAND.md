@@ -8,7 +8,13 @@ Seize the ray, forge the real.
 with the Tauri CLI. The tray uses the same mark; macOS renders its alpha channel as
 a native template image. `docs/brand/banner.png` is the approved English README banner.
 
-The default color seed is `#7B3ED1`. Material Color Utilities produces both themes.
+The default interface seed is `#946ECE`, softened from the original purple while
+preserving its hue. Material Color Utilities generates both themes through the
+standard source palette.
+The original logo artwork retains its purple gradients.
+The empty-list background reuses `public/logo.svg` as a monochrome CSS mask,
+without a wordmark. It follows the rendered list immediately, independent of
+engine startup or database readiness.
 CSS, Naive UI and canvas drawing use semantic roles. Warning, error and success
 colors describe state; they are not aliases for the brand color. Button foregrounds
 must remain readable in normal, hover, focus and pressed states.
@@ -19,3 +25,8 @@ remove unsupported claims and unnecessary adjectives.
 
 The engine remains aria2-next. Its code, protocols and binary contents are independent
 of this branding change. The desktop bundle uses the engine's actual executable name.
+
+Interface slogans use the existing i18n dictionaries in all 27 supported locales.
+The approved Simplified Chinese slogan is “捕光捉影，化虚为实。”
+Use its Traditional Chinese equivalent for zh-TW. Preserve the approved English
+slogan in English interfaces, README banners and promotional artwork.

@@ -4,13 +4,16 @@
     "about": "Quant a",
     "release": "Notes de la versió",
     "support": "Suport",
-    "description": "Un gestor de descàrregues complet — reconstruït des de zero.",
+    "description": "Un gestor de baixades d’escriptori per a fitxers, torrents i contingut en streaming.",
     "click-to-copy": "Feu clic per copiar",
     "version-copied": "Versió de {label} copiada",
     "app-version": "Versió de Rayburst",
     "aria2-version": "Versió d'Aria2 Next",
     "loading": "Carregant…",
-    "unavailable": "No disponible"
+    "unavailable": "No disponible",
+    "tagline": "Captura el raig, forja la realitat.",
+    "tech-stack": "Tecnologies",
+    "developed-by": "Desenvolupat per {author}"
   },
   "app": {
     "task-list": "Tasques",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} copiat",
     "color-scheme": "Esquema de colors",
     "task-card-mode": "Targeta de tasca",
+    "show-logo-when-empty": "Mostra el logotip quan no hi ha tasques",
     "reduce-motion": "Redueix el moviment",
     "sidebar-task-counts": "Comptadors de tasques a la barra lateral",
     "task-card-mode-full": "Complet",

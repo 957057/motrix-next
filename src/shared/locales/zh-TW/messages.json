@@ -4,13 +4,16 @@
     "about": "關於",
     "release": "更新日誌",
     "support": "說明與支援",
-    "description": "全功能下載管理器 — 從零重建。",
+    "description": "支援檔案、種子與串流媒體的桌面下載管理員。",
     "click-to-copy": "點擊複製",
     "version-copied": "已複製 {label} 版本號",
     "app-version": "Rayburst 版本",
     "aria2-version": "Aria2 Next 版本",
     "loading": "載入中…",
-    "unavailable": "不可用"
+    "unavailable": "不可用",
+    "tagline": "捕光捉影，化虛為實。",
+    "tech-stack": "技術堆疊",
+    "developed-by": "由 {author} 開發"
   },
   "app": {
     "task-list": "任務列表",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} 已複製",
     "color-scheme": "配色方案",
     "task-card-mode": "任務卡片",
+    "show-logo-when-empty": "無任務時顯示標誌",
     "reduce-motion": "減少動態效果",
     "sidebar-task-counts": "側邊欄任務計數",
     "task-card-mode-full": "完整",

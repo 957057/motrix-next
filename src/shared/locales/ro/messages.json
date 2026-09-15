@@ -4,13 +4,16 @@
     "about": "Despre",
     "release": "Note de lansare",
     "support": "Asistență",
-    "description": "Un manager de descărcări complet — reconstruit de la zero.",
+    "description": "Un manager de descărcări pentru fișiere, torrente și fluxuri media, pe desktop.",
     "click-to-copy": "Click pentru a copia",
     "version-copied": "Versiunea {label} copiată",
     "app-version": "Versiune Rayburst",
     "aria2-version": "Versiune Aria2 Next",
     "loading": "Se încarcă…",
-    "unavailable": "Indisponibil"
+    "unavailable": "Indisponibil",
+    "tagline": "Prinde raza, făurește realul.",
+    "tech-stack": "Tehnologii",
+    "developed-by": "Dezvoltat de {author}"
   },
   "app": {
     "task-list": "Sarcini",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} copiat",
     "color-scheme": "Schemă de culori",
     "task-card-mode": "Card de sarcină",
+    "show-logo-when-empty": "Afișează sigla când nu există sarcini",
     "reduce-motion": "Reduceți mișcarea",
     "sidebar-task-counts": "Contoare de sarcini în bara laterală",
     "task-card-mode-full": "Complet",

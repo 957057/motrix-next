@@ -421,6 +421,9 @@ onMounted(async () => {
             </NRadioButton>
           </NRadioGroup>
         </NFormItem>
+        <NFormItem :label="t('preferences.show-logo-when-empty')">
+          <NSwitch v-model:value="form.showLogoWhenEmpty" />
+        </NFormItem>
         <NFormItem :label="t('preferences.reduce-motion')">
           <NSwitch v-model:value="form.reduceMotion" />
         </NFormItem>

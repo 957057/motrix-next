@@ -4,13 +4,16 @@
     "about": "Σχετικά",
     "release": "Σημειώσεις έκδοσης",
     "support": "Υποστήριξη",
-    "description": "Ένας πλήρης διαχειριστής λήψεων — ξαναχτισμένος από το μηδέν.",
+    "description": "Εφαρμογή διαχείρισης λήψεων για αρχεία, torrent και ροές πολυμέσων.",
     "click-to-copy": "Κλικ για αντιγραφή",
     "version-copied": "Η έκδοση {label} αντιγράφηκε",
     "app-version": "Έκδοση Rayburst",
     "aria2-version": "Έκδοση Aria2 Next",
     "loading": "Φόρτωση…",
-    "unavailable": "Μη διαθέσιμο"
+    "unavailable": "Μη διαθέσιμο",
+    "tagline": "Πιάσε την ακτίνα, πλάσε την πραγματικότητα.",
+    "tech-stack": "Τεχνολογίες",
+    "developed-by": "Ανάπτυξη από {author}"
   },
   "app": {
     "task-list": "Εργασίες",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} αντιγράφηκε",
     "color-scheme": "Χρωματικό σχήμα",
     "task-card-mode": "Κάρτα εργασίας",
+    "show-logo-when-empty": "Εμφάνιση λογότυπου όταν δεν υπάρχουν εργασίες",
     "reduce-motion": "Μείωση κίνησης",
     "sidebar-task-counts": "Μετρητές εργασιών πλευρικής γραμμής",
     "task-card-mode-full": "Πλήρης",

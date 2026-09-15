@@ -28,6 +28,14 @@ describe('PreferenceStore', () => {
   })
 
   // ─── updatePreference / updateAndSave ───────────────────
+  it('defaults the empty logo on and preserves an explicit opt-out after reload', async () => {
+    expect(store.config.showLogoWhenEmpty).toBe(true)
+    await store.updateAndSave({ showLogoWhenEmpty: false })
+    setActivePinia(createPinia())
+    const reloaded = usePreferenceStore()
+    await reloaded.loadPreference()
+    expect(reloaded.config.showLogoWhenEmpty).toBe(false)
+  })
 
   it('updatePreference merges config without persisting', () => {
     store.updatePreference({ theme: 'light' })

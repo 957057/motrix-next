@@ -4,13 +4,16 @@
     "about": "Hakkında",
     "release": "Sürüm notları",
     "support": "Destek",
-    "description": "Tam özellikli indirme yöneticisi — sıfırdan yeniden inşa edildi.",
+    "description": "Dosyalar, torrentler ve medya akışları için masaüstü indirme yöneticisi.",
     "click-to-copy": "Kopyalamak için tıklayın",
     "version-copied": "{label} sürümü kopyalandı",
     "app-version": "Rayburst Sürümü",
     "aria2-version": "Aria2 Next Sürümü",
     "loading": "Yükleniyor…",
-    "unavailable": "Kullanılamıyor"
+    "unavailable": "Kullanılamıyor",
+    "tagline": "Işığı yakala, gerçeğe dönüştür.",
+    "tech-stack": "Teknolojiler",
+    "developed-by": "Geliştiren: {author}"
   },
   "app": {
     "task-list": "Görevler",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} kopyalandı",
     "color-scheme": "Renk şeması",
     "task-card-mode": "Görev kartı",
+    "show-logo-when-empty": "Görev yokken logoyu göster",
     "reduce-motion": "Hareketi azalt",
     "sidebar-task-counts": "Kenar çubuğu görev sayıları",
     "task-card-mode-full": "Tam",

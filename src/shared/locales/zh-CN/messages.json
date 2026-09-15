@@ -4,13 +4,16 @@
     "about": "关于",
     "release": "更新日志",
     "support": "帮助与支持",
-    "description": "全功能下载管理器 — 从零重建。",
+    "description": "支持文件、种子与流媒体的桌面下载管理器。",
     "click-to-copy": "点击复制",
     "version-copied": "已复制 {label} 版本号",
     "app-version": "Rayburst 版本",
     "aria2-version": "Aria2 Next 版本",
     "loading": "加载中…",
-    "unavailable": "不可用"
+    "unavailable": "不可用",
+    "tagline": "捕光捉影，化虚为实。",
+    "tech-stack": "技术栈",
+    "developed-by": "由 {author} 开发"
   },
   "app": {
     "task-list": "任务列表",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} 已复制",
     "color-scheme": "配色方案",
     "task-card-mode": "任务卡片",
+    "show-logo-when-empty": "无任务时显示标志",
     "reduce-motion": "减弱动态效果",
     "sidebar-task-counts": "侧边栏任务计数",
     "task-card-mode-full": "完整",

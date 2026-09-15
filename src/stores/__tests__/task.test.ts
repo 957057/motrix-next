@@ -112,6 +112,43 @@ describe('TaskStore', () => {
   })
 
   // ─── fetchList ──────────────────────────────────────────
+  it('shows an empty list immediately, including while the database or engine is unavailable', async () => {
+    const { useDatabaseStore } = await import('@/stores/database')
+    useDatabaseStore().phase = 'loading'
+    expect(store.isCurrentListEmpty).toBe(true)
+    mockApi.fetchTaskList.mockRejectedValueOnce(new Error('offline'))
+    await store.fetchList()
+    expect(store.isCurrentListEmpty).toBe(true)
+    store.taskList = [makeMockTask('visible')]
+    expect(store.isCurrentListEmpty).toBe(false)
+    mockApi.fetchTaskList.mockResolvedValue([])
+    const removal = store.removeTask(store.taskList[0])
+    expect(store.isCurrentListEmpty).toBe(true)
+    await removal
+  })
+
+  it('follows the rendered list through scope changes without treating an out-of-range page as empty', async () => {
+    mockApi.fetchTaskList.mockResolvedValue([makeMockTask('active')])
+    await store.changeCurrentList('failed')
+    expect(store.isCurrentListEmpty).toBe(true)
+    const pending = store.changeCurrentList('completed')
+    expect(store.isCurrentListEmpty).toBe(true)
+    await pending
+    await store.changeCurrentList('progress')
+    expect(store.isCurrentListEmpty).toBe(false)
+    store.setCurrentTaskPage(100)
+    expect(store.isCurrentListEmpty).toBe(false)
+  })
+
+  it('updates the empty state when the last task disappears and a new task arrives', async () => {
+    await store.fetchList()
+    mockApi.fetchTaskList.mockResolvedValue([])
+    await store.fetchList()
+    expect(store.isCurrentListEmpty).toBe(true)
+    mockApi.fetchTaskList.mockResolvedValue([makeMockTask('new')])
+    await store.fetchList()
+    expect(store.isCurrentListEmpty).toBe(false)
+  })
 
   it('keeps live tasks and counts available when the database fails', async () => {
     const { useDatabaseStore } = await import('@/stores/database')

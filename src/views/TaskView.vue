@@ -16,6 +16,7 @@ import { useAppMessage } from '@/composables/useAppMessage'
 import TaskList from '@/components/task/TaskList.vue'
 import TaskActions from '@/components/task/TaskActions.vue'
 import TaskDetail from '@/components/task/TaskDetail.vue'
+import TaskEmptyBrand from '@/components/task/TaskEmptyBrand.vue'
 
 const props = withDefaults(defineProps<{ status?: string }>(), { status: 'all' })
 
@@ -23,6 +24,7 @@ const { t } = useI18n()
 const taskStore = useTaskStore()
 const appStore = useAppStore()
 const preferenceStore = usePreferenceStore()
+const showEmptyBrand = computed(() => preferenceStore.config.showLogoWhenEmpty && taskStore.isCurrentListEmpty)
 const dialog = useDialog()
 const message = useAppMessage()
 
@@ -112,8 +114,6 @@ onBeforeUnmount(() => {
   changeRequestId += 1
   stopPolling()
 })
-// Task action handlers are now provided by useTaskActions composable above.
-// Magnet file selection is handled at app-level in MainLayout.vue.
 </script>
 
 <template>
@@ -123,6 +123,7 @@ onBeforeUnmount(() => {
       <TaskActions />
     </header>
     <div class="panel-body">
+      <TaskEmptyBrand :show="showEmptyBrand" />
       <div class="panel-content">
         <TaskList
           @pause="handlePauseTask"

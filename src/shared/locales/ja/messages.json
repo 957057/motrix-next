@@ -4,13 +4,16 @@
     "about": "について",
     "release": "リリースノート",
     "support": "サポート",
-    "description": "フル機能のダウンロードマネージャー — ゼロから再構築。",
+    "description": "ファイル、Torrent、ストリーミングに対応したデスクトップ用ダウンロードマネージャー。",
     "click-to-copy": "クリックしてコピー",
     "version-copied": "{label} のバージョンをコピーしました",
     "app-version": "Rayburst バージョン",
     "aria2-version": "Aria2 Next バージョン",
     "loading": "読み込み中…",
-    "unavailable": "利用不可"
+    "unavailable": "利用不可",
+    "tagline": "光を捉え、かたちにする。",
+    "tech-stack": "使用技術",
+    "developed-by": "{author} が開発"
   },
   "app": {
     "task-list": "タスク一覧",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} をコピーしました",
     "color-scheme": "カラースキーム",
     "task-card-mode": "タスクカード",
+    "show-logo-when-empty": "タスクがないときにロゴを表示",
     "reduce-motion": "モーションを減らす",
     "sidebar-task-counts": "サイドバーのタスク数",
     "task-card-mode-full": "フル",

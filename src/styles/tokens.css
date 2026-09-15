@@ -1,7 +1,7 @@
 /**
  * @fileoverview Design tokens following Material Design 3 tonal surface system.
  *
- * Seed color: #7B3ED1 (Rayburst)
+ * Seed color: #946ECE (Rayburst)
  * Runtime values are generated from the selected seed by Material Color Utilities.
  * These values provide the matching first-paint fallback before Vue mounts.
  */
@@ -26,7 +26,7 @@
   --m3-outline-variant: #cbc4cf;
 
   /* ── M3 Primary (Rayburst purple) ───────────────────────────────────── */
-  --m3-primary: #7739cd;
+  --m3-primary: #704ba8;
   --m3-on-primary: #ffffff;
   --m3-primary-container: #ecdcff;
   --m3-on-primary-container: #280056;
@@ -66,14 +66,14 @@
   --m3-on-inverse-surface: #f5eff4;
 
   /* ── M3 Scrollbar ──────────────────────────────────────────────── */
-  --m3-scrollbar-thumb: color-mix(in srgb, var(--m3-on-surface) 24%, transparent);
-  --m3-scrollbar-thumb-inactive: color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
+  --m3-scrollbar-thumb: color-mix(in srgb, #1d1b1e 24%, transparent);
+  --m3-scrollbar-thumb-inactive: color-mix(in srgb, #1d1b1e 12%, transparent);
 
   /* ── M3 Shadow ─────────────────────────────────────────────────── */
   --m3-shadow: rgba(0, 0, 0, 0.15);
 
   /* ── M3 Status Colors (semantic) ────────────────────────────────── */
-  --m3-status-active: #7739cd;
+  --m3-status-active: #704ba8;
   --m3-status-waiting: #375ba9;
   --m3-status-paused: #7b757f;
   --m3-status-error: #bb0947;
@@ -150,8 +150,8 @@
 
   /* ── M3 Primary (Rayburst purple) ───────────────────────────────────── */
   --m3-primary: #d6baff;
-  --m3-on-primary: #430089;
-  --m3-primary-container: #5e16b4;
+  --m3-on-primary: #401676;
+  --m3-primary-container: #57328e;
   --m3-on-primary-container: #ecdcff;
 
   /* ── M3 Info (harmonized extended color) ──────────────────────── */
@@ -173,7 +173,7 @@
   --m3-on-success-container: #9ef6b0;
 
   /* ── M3 Tertiary (Green-gray — lighter in dark) ─────────────────── */
-  --m3-tertiary: #f1b7c3;
+  --m3-tertiary: #f1b7c2;
   --m3-on-tertiary: #4b252e;
   --m3-tertiary-container: #643b44;
   --m3-on-tertiary-container: #ffd9df;
@@ -189,8 +189,8 @@
   --m3-on-inverse-surface: #322f33;
 
   /* ── M3 Scrollbar ──────────────────────────────────────────────── */
-  --m3-scrollbar-thumb: color-mix(in srgb, var(--m3-on-surface) 24%, transparent);
-  --m3-scrollbar-thumb-inactive: color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
+  --m3-scrollbar-thumb: color-mix(in srgb, #e7e1e6 24%, transparent);
+  --m3-scrollbar-thumb-inactive: color-mix(in srgb, #e7e1e6 12%, transparent);
 
   /* ── M3 Shadow ─────────────────────────────────────────────────── */
   --m3-shadow: rgba(0, 0, 0, 0.5);

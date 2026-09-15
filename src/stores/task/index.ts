@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { canSelectMedia } from '@shared/utils/media'
 import { isPendingMagnetSelectionTask } from '@/composables/useMagnetFlow'
 import { useTaskSelectionStore, type SelectionRequest } from '@/stores/taskSelection'
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { EMPTY_STRING } from '@shared/constants'
 import { checkTaskIsEd2kSearch } from '@shared/utils'
 import { logger } from '@shared/logger'
@@ -70,6 +70,7 @@ export const useTaskStore = defineStore('task', () => {
   const removingGids = ref<string[]>([])
   const resubmittingGids = ref<string[]>([])
   const taskCounts = reactive<TaskCounts>({ all: 0, progress: 0, failed: 0, completed: 0 })
+  const isCurrentListEmpty = computed(() => taskList.value.length === 0)
   const taskPagination = reactive({
     all: { page: 1, total: 0, loaded: false },
     progress: { page: 1, total: 0, loaded: false },
@@ -525,6 +526,7 @@ export const useTaskStore = defineStore('task', () => {
     taskCardKey,
     currentList,
     taskCounts,
+    isCurrentListEmpty,
     taskDetailVisible,
     taskDetailClosing,
     currentTaskGid,

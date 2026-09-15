@@ -4,13 +4,16 @@
     "about": "Giới thiệu",
     "release": "Ghi chú phát hành",
     "support": "Hỗ trợ",
-    "description": "Trình quản lý tải xuống đầy đủ tính năng — xây dựng lại từ đầu.",
+    "description": "Trình quản lý tải xuống trên máy tính cho tệp, torrent và luồng phương tiện.",
     "click-to-copy": "Nhấp để sao chép",
     "version-copied": "Đã sao chép phiên bản {label}",
     "app-version": "Phiên bản Rayburst",
     "aria2-version": "Phiên bản Aria2 Next",
     "loading": "Đang tải…",
-    "unavailable": "Không khả dụng"
+    "unavailable": "Không khả dụng",
+    "tagline": "Nắm bắt tia sáng, biến ảo thành thật.",
+    "tech-stack": "Công nghệ",
+    "developed-by": "Phát triển bởi {author}"
   },
   "app": {
     "task-list": "Tác vụ",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "Đã sao chép {label}",
     "color-scheme": "Bảng màu",
     "task-card-mode": "Thẻ tác vụ",
+    "show-logo-when-empty": "Hiện biểu trưng khi không có tác vụ",
     "reduce-motion": "Giảm chuyển động",
     "sidebar-task-counts": "Bộ đếm tác vụ ở thanh bên",
     "task-card-mode-full": "Đầy đủ",

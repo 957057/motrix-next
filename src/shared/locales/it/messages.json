@@ -4,13 +4,16 @@
     "about": "Informazioni",
     "release": "Note di rilascio",
     "support": "Supporto",
-    "description": "Un gestore download completo — ricostruito da zero.",
+    "description": "Un gestore di download desktop per file, torrent e flussi multimediali.",
     "click-to-copy": "Clicca per copiare",
     "version-copied": "Versione di {label} copiata",
     "app-version": "Versione di Rayburst",
     "aria2-version": "Versione di Aria2 Next",
     "loading": "Caricamento…",
-    "unavailable": "Non disponibile"
+    "unavailable": "Non disponibile",
+    "tagline": "Cattura il raggio, forgia il reale.",
+    "tech-stack": "Tecnologie",
+    "developed-by": "Sviluppato da {author}"
   },
   "app": {
     "task-list": "Attività",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} copiato",
     "color-scheme": "Schema colori",
     "task-card-mode": "Scheda attività",
+    "show-logo-when-empty": "Mostra il logo quando non ci sono attività",
     "reduce-motion": "Riduci movimento",
     "sidebar-task-counts": "Conteggi attività nella barra laterale",
     "task-card-mode-full": "Completa",

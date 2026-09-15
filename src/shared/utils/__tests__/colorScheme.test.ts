@@ -11,7 +11,7 @@ describe('Rayburst theme', () => {
   it('uses purple for new and invalid preferences', () => {
     expect(hydrateAppConfig().config.colorScheme).toBe('rayburst')
     expect(hydrateAppConfig({ colorScheme: 'unknown' }).config.colorScheme).toBe('rayburst')
-    expect(resolveColorScheme(undefined, undefined).seed).toBe('#7B3ED1')
+    expect(resolveColorScheme(undefined, undefined).seed).toBe('#946ECE')
   })
   it('keeps semantic button labels readable through interaction states', () => {
     const theme = buildColorSchemeTheme(resolveColorScheme('rayburst', undefined))

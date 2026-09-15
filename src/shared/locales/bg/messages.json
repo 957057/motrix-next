@@ -4,13 +4,16 @@
     "about": "Относно",
     "release": "Бележки към изданието",
     "support": "Поддръжка",
-    "description": "Пълнофункционален мениджър за изтегляне — изграден отново от нулата.",
+    "description": "Настолен мениджър за изтегляне на файлове, торенти и поточно съдържание.",
     "click-to-copy": "Щракнете за копиране",
     "version-copied": "Версията на {label} е копирана",
     "app-version": "Версия на Rayburst",
     "aria2-version": "Версия на Aria2 Next",
     "loading": "Зареждане…",
-    "unavailable": "Недостъпен"
+    "unavailable": "Недостъпен",
+    "tagline": "Улови лъча, изкови реалността.",
+    "tech-stack": "Технологии",
+    "developed-by": "Разработено от {author}"
   },
   "app": {
     "task-list": "Задачи",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} копирано",
     "color-scheme": "Цветова схема",
     "task-card-mode": "Карта на задачата",
+    "show-logo-when-empty": "Показване на знака при липса на задачи",
     "reduce-motion": "Намаляване на движенията",
     "sidebar-task-counts": "Броячи на задачите в страничната лента",
     "task-card-mode-full": "Пълен",

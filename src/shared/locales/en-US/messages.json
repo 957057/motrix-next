@@ -10,7 +10,10 @@
     "app-version": "Rayburst Version",
     "aria2-version": "Aria2 Next Version",
     "loading": "Loading…",
-    "unavailable": "Unavailable"
+    "unavailable": "Unavailable",
+    "tagline": "Seize the ray, forge the real.",
+    "tech-stack": "Tech Stack",
+    "developed-by": "Developed by {author}"
   },
   "app": {
     "task-list": "Tasks",
@@ -439,6 +442,7 @@
     "copied-to-clipboard": "{label} copied",
     "color-scheme": "Color Scheme",
     "task-card-mode": "Task Card",
+    "show-logo-when-empty": "Show logo when no tasks",
     "reduce-motion": "Reduce motion",
     "sidebar-task-counts": "Sidebar task counts",
     "task-card-mode-full": "Full",

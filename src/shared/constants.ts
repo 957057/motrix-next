@@ -24,7 +24,7 @@ export interface ColorSchemeDefinition {
 
 /** Rayburst defaults and optional user-selected color seeds. */
 export const DEFAULT_COLOR_SCHEME_ID = 'rayburst'
-export const BRAND_COLOR = '#7B3ED1'
+export const BRAND_COLOR = '#946ECE'
 
 export const COLOR_SCHEMES: ColorSchemeDefinition[] = [
   { id: DEFAULT_COLOR_SCHEME_ID, labelKey: 'preferences.color-scheme-rayburst', seed: BRAND_COLOR },
@@ -207,6 +207,7 @@ export const DEFAULT_APP_CONFIG = {
   colorScheme: DEFAULT_COLOR_SCHEME_ID,
   customColorScheme: DEFAULT_CUSTOM_COLOR_SCHEME,
   taskCardMode: 'full' as const,
+  showLogoWhenEmpty: true,
   reduceMotion: false,
   sidebarTaskCounts: true,
   taskPageSize: 20,
