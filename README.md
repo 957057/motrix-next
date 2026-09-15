@@ -8,7 +8,7 @@
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue.svg)
 
 [![Website](https://img.shields.io/badge/Website-7B3ED1?style=for-the-badge&logo=safari&logoColor=white)](https://motrix-next.pages.dev)
-[![Browser Extension](https://img.shields.io/badge/Browser%20Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/AnInsomniacy/motrix-next-extension)
+[![Extension](https://img.shields.io/badge/Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/AnInsomniacy/motrix-next-extension)
 
 </div>
 
