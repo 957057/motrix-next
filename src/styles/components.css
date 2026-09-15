@@ -1,0 +1,591 @@
+/* Shared surface, settings and dialog structure. Components add only what is
+   specific to them. */
+
+/* ── Grouped card: a run of rows on one raised surface ─────────── */
+.rb-card {
+  background: var(--rb-raised);
+  border-radius: var(--rb-radius-card);
+  box-shadow: var(--rb-shadow-raised);
+}
+
+.rb-card > .rb-row + .rb-row {
+  border-top: 1px solid var(--rb-hairline);
+}
+
+/* ── Section title above a card ────────────────────────────────── */
+.rb-section-title {
+  margin: 0 0 8px 4px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--rb-text-muted);
+}
+
+.rb-section + .rb-section {
+  margin-top: 28px;
+}
+
+/* ── Page header shared by workspace and settings ──────────────── */
+.rb-page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 44px;
+  padding: 10px var(--rb-page-inline) 18px;
+}
+
+.rb-page-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+/* ── Status pill ───────────────────────────────────────────────── */
+.rb-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--rb-text-muted);
+  background: var(--rb-fill);
+  white-space: nowrap;
+}
+
+.rb-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.rb-pill[data-tone='active'] {
+  color: var(--rb-accent-text);
+  background: var(--rb-accent-soft);
+}
+
+.rb-pill[data-tone='success'] {
+  color: var(--rb-success);
+  background: var(--rb-success-soft);
+}
+
+.rb-pill[data-tone='warning'] {
+  color: var(--rb-warning);
+  background: var(--rb-warning-soft);
+}
+
+.rb-pill[data-tone='error'] {
+  color: var(--rb-danger);
+  background: var(--rb-danger-soft);
+}
+
+.rb-pill[data-tone='info'] {
+  color: var(--rb-info);
+  background: var(--rb-info-soft);
+}
+
+/* ── Segmented control (tabs with a sliding indicator) ─────────── */
+.rb-segments {
+  position: relative;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  max-width: 100%;
+  border-radius: var(--rb-radius-control);
+  background: var(--rb-fill);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.rb-segments::-webkit-scrollbar {
+  display: none;
+}
+
+.rb-segment {
+  position: relative;
+  flex: none;
+  min-height: 30px;
+  padding: 0 14px;
+  border-radius: calc(var(--rb-radius-control) - 2px);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--rb-text-muted);
+  white-space: nowrap;
+  transition: color var(--rb-motion-feedback) var(--rb-ease);
+  -webkit-app-region: no-drag;
+}
+
+.rb-segment:hover {
+  color: var(--rb-text);
+}
+
+.rb-segment.is-active {
+  color: var(--rb-text);
+}
+
+.rb-segment__indicator {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: var(--rb-raised);
+  box-shadow: var(--rb-shadow-raised);
+}
+
+.rb-segment > span {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Settings ──────────────────────────────────────────────────── */
+.preference-form-wrapper {
+  position: relative;
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.preference-form-scroll {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.form-preference {
+  container-type: inline-size;
+  width: 100%;
+  max-width: 880px;
+  --settings-control-align: flex-end;
+  padding: 4px var(--rb-page-inline) 96px;
+}
+
+.settings-section-title {
+  margin: 30px 0 8px 4px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--rb-text-muted);
+}
+
+.settings-section-title:first-child {
+  margin-top: 8px;
+}
+
+.settings-section-hint {
+  margin: -2px 4px 10px;
+  color: var(--rb-text-muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* Rows that follow a section title form one card. Collapse wrappers are members too. */
+.form-preference > .setting-row,
+.form-preference > .collapse-indent,
+.form-preference > div:not([class]) {
+  background: var(--rb-raised);
+  box-shadow: var(--rb-shadow-raised);
+}
+
+.form-preference > .settings-section-title + :is(.setting-row, .collapse-indent, div:not([class])),
+.form-preference > .settings-section-hint + :is(.setting-row, .collapse-indent, div:not([class])),
+.form-preference > :is(.setting-row, .collapse-indent, div:not([class])):first-child {
+  border-start-start-radius: var(--rb-radius-card);
+  border-start-end-radius: var(--rb-radius-card);
+}
+
+.form-preference > :is(.setting-row, .collapse-indent, div:not([class])):last-child,
+.form-preference > :is(.setting-row, .collapse-indent, div:not([class])):has(+ .settings-section-title),
+.form-preference > :is(.setting-row, .collapse-indent, div:not([class])):has(+ .settings-section-hint) {
+  border-end-start-radius: var(--rb-radius-card);
+  border-end-end-radius: var(--rb-radius-card);
+}
+
+.form-preference .setting-row.n-form-item {
+  display: grid;
+  grid-template-areas: none;
+  grid-template-rows: auto;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 44cqw);
+  column-gap: 24px;
+  padding: 10px 16px;
+  min-height: 54px;
+  align-items: center;
+  position: relative;
+}
+
+.form-preference .setting-row.n-form-item::before {
+  content: '';
+  position: absolute;
+  inset-inline: 16px;
+  top: 0;
+  height: 1px;
+  background: var(--rb-hairline);
+}
+
+.form-preference > .settings-section-title + .setting-row::before,
+.form-preference > .settings-section-hint + .setting-row::before,
+.form-preference > .setting-row:first-child::before,
+.form-preference > .collapse-indent > .setting-row:first-child::before,
+.form-preference > .collapse-indent > div > .setting-row:first-child::before {
+  display: none;
+}
+
+.form-preference > .settings-section-title + .collapse-indent .setting-row:first-child::before {
+  display: none;
+}
+
+.form-preference .setting-row .n-form-item-label {
+  grid-area: 1 / 1;
+  height: auto;
+  padding: 0;
+  padding-inline-start: var(--settings-label-indent, 0px);
+  min-width: 0;
+  line-height: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: normal;
+  flex-direction: column;
+  align-items: flex-start;
+  color: var(--rb-text);
+}
+
+.form-preference .setting-row .n-form-item-blank {
+  grid-area: 1 / 2;
+  min-width: 0;
+  justify-content: var(--settings-control-align);
+}
+
+.form-preference .setting-row .n-form-item-feedback-wrapper {
+  grid-area: 2 / 2;
+  min-height: 0;
+}
+
+.form-preference .setting-row .n-form-item-feedback-wrapper:empty {
+  display: none;
+}
+
+.form-preference .setting-row--wide.n-form-item {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.form-preference .setting-row--wide .n-form-item-blank {
+  grid-area: 1 / 1;
+  justify-content: flex-start;
+}
+
+.form-preference .setting-row--wide .n-form-item-feedback-wrapper {
+  grid-area: 2 / 1;
+}
+
+.setting-label,
+.setting-hint {
+  display: block;
+}
+
+.setting-hint {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+  color: var(--rb-text-muted);
+}
+
+.form-preference .setting-row:target {
+  background: var(--rb-selected);
+}
+
+.form-preference .collapse-indent {
+  --settings-label-indent: 14px;
+}
+
+.form-preference .collapse-indent .collapse-indent {
+  --settings-label-indent: 28px;
+}
+
+.form-preference .collapse-indent .setting-row .n-form-item-label::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 16px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--rb-accent-soft);
+}
+
+.form-preference .n-input-group {
+  max-width: 480px;
+}
+
+.form-preference .n-radio-group {
+  flex-shrink: 0;
+}
+
+.form-preference .n-input-group > .pref-control-auto {
+  min-width: 80px;
+}
+
+.form-preference .n-input-group > .n-button {
+  min-width: 0;
+  height: 34px;
+  align-self: flex-start;
+}
+
+@container (max-width: 560px) {
+  .form-preference .setting-row {
+    --settings-control-align: flex-start;
+  }
+
+  .form-preference .setting-row.n-form-item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .form-preference .setting-row .n-form-item-label {
+    grid-area: 1 / 1;
+  }
+
+  .form-preference .setting-row .n-form-item-blank {
+    grid-area: 2 / 1;
+    justify-content: flex-start;
+  }
+
+  .form-preference .setting-row .n-form-item-feedback-wrapper {
+    grid-area: 3 / 1;
+  }
+
+  .form-preference .setting-row--wide .n-form-item-blank {
+    grid-area: 1 / 1;
+  }
+
+  .form-preference .setting-row--wide .n-form-item-feedback-wrapper {
+    grid-area: 2 / 1;
+  }
+
+  .form-preference .setting-row--actions.n-form-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 719px) {
+  .form-preference {
+    padding-inline: 16px;
+  }
+}
+
+.pref-control-auto,
+.pref-number,
+.pref-port {
+  flex: 0 1 auto;
+}
+
+.pref-control-auto {
+  width: fit-content;
+  min-width: 180px;
+  max-width: 100%;
+}
+
+.pref-number {
+  width: 120px;
+}
+
+.pref-port {
+  width: 160px;
+}
+
+.pref-control-full {
+  width: 100%;
+  min-width: 0;
+}
+
+.pref-action-button {
+  width: fit-content;
+  min-width: 180px;
+  max-width: 100%;
+}
+
+.pref-action-button--compact {
+  min-width: fit-content;
+}
+
+.pref-icon-button {
+  padding: 0 10px;
+}
+
+.pref-icon-button-sm {
+  padding: 0 8px;
+}
+
+.pref-input-group-action {
+  flex-shrink: 0;
+}
+
+.pref-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 34px;
+  min-width: 0;
+}
+
+.pref-inline-row__meta {
+  color: var(--rb-text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+.pref-inline-note {
+  margin-inline-start: 8px;
+  color: var(--rb-text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.pref-inline-note--warning {
+  color: var(--rb-warning);
+}
+
+.pref-meta-link {
+  margin-inline-start: 8px;
+}
+
+.form-preference .setting-row--actions.n-form-item {
+  grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr);
+}
+
+.setting-field {
+  width: 100%;
+  min-width: 0;
+}
+
+.setting-field-hint {
+  color: var(--rb-text-muted);
+  font-size: 12px;
+  line-height: 18px;
+  margin-block-start: 4px;
+}
+
+.settings-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: var(--settings-control-align);
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+/* ── Dialog ───────────────────────────────────────────────────── */
+.n-modal {
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+}
+
+.n-dialog.n-modal {
+  width: min(440px, calc(100vw - 48px));
+}
+
+.n-dialog .n-dialog__title {
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.n-dialog .n-dialog__content {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--rb-text-muted);
+}
+
+.removal-task-list {
+  list-style: none;
+  max-height: 200px;
+  overflow: auto;
+  margin-bottom: 16px;
+  padding: 4px 12px;
+  border-radius: var(--rb-radius-control);
+  background: var(--rb-fill);
+  color: var(--rb-text);
+}
+
+.removal-task-list li {
+  padding: 8px 0;
+  overflow-wrap: anywhere;
+}
+
+.removal-task-list li + li {
+  border-top: 1px solid var(--rb-hairline);
+}
+
+/* ── Selection dialogs (BT files, media tracks) ────────────────── */
+.selection-summary {
+  min-height: 48px;
+  margin-bottom: 14px;
+}
+
+.selection-name {
+  min-height: 22px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.selection-meta {
+  min-height: 18px;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--rb-text-muted);
+}
+
+.selection-loading {
+  min-height: min(200px, 30dvh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--rb-text-muted);
+}
+
+.selection-error {
+  margin-bottom: 16px;
+}
+
+.selection-stage {
+  position: relative;
+  min-height: min(200px, 30dvh);
+}
+
+.selection-content-enter-active {
+  transition: opacity var(--rb-motion-view) var(--rb-ease);
+}
+
+.selection-content-leave-active {
+  transition: opacity var(--rb-motion-exit) var(--rb-ease);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.selection-content-enter-from,
+.selection-content-leave-to {
+  opacity: 0;
+}

@@ -12,7 +12,7 @@ import {
   NSelect,
   NCollapseTransition,
 } from 'naive-ui'
-import { ChevronDownOutline } from '@vicons/ionicons5'
+import { SlidersHorizontal } from '@lucide/vue'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceStore } from '@/stores/preference'
 import { useAppMessage } from '@/composables/useAppMessage'
@@ -80,8 +80,10 @@ function setDirection(direction: SortDirection) {
   <NPopover v-model:show="show" trigger="click" placement="bottom-end" :show-arrow="false">
     <template #trigger>
       <NButton quaternary :aria-label="t('workspace.view')" :aria-expanded="show">
-        {{ t('workspace.view')
-        }}<NIcon :size="14" class="view-chevron" aria-hidden="true"><ChevronDownOutline /></NIcon>
+        <template #icon
+          ><NIcon :size="15"><SlidersHorizontal /></NIcon
+        ></template>
+        {{ t('workspace.view') }}
       </NButton>
     </template>
     <NForm class="view-options" label-placement="top" :show-feedback="false" :disabled="busy">
@@ -114,9 +116,6 @@ function setDirection(direction: SortDirection) {
 </template>
 
 <style scoped>
-.view-chevron {
-  margin-inline-start: 6px;
-}
 .view-options {
   width: min(240px, calc(100vw - 64px));
   max-height: calc(100dvh - 120px);

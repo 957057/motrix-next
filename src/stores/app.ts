@@ -33,6 +33,8 @@ function normalizeFileUriPath(url: string): string {
   return /^\/[A-Za-z]:[\\/]/.test(decodedPath) ? decodedPath.slice(1) : decodedPath
 }
 
+const SPEED_HISTORY_LENGTH = 90
+
 export const useAppStore = defineStore('app', () => {
   const systemTheme = ref('light')
   const trayFocused = ref(false)
@@ -45,6 +47,8 @@ export const useAppStore = defineStore('app', () => {
     numStopped: 0,
     numStoppedTotal: 0,
   })
+  /** Recent transfer samples, newest last, for the status bar sparkline. */
+  const speedHistory = ref<{ down: number[]; up: number[] }>({ down: [], up: [] })
   const addTaskVisible = ref(false)
   const pendingBatch = ref<BatchItem[]>([])
   const addTaskOptions = ref<Aria2EngineOptions>({})
@@ -143,6 +147,11 @@ export const useAppStore = defineStore('app', () => {
   function applyTransferSnapshot(snapshot: TransferSnapshot) {
     if (!useTaskStore().applyTransferSnapshot(snapshot)) return
     stat.value = snapshot.stat
+    const history = speedHistory.value
+    speedHistory.value = {
+      down: [...history.down.slice(-(SPEED_HISTORY_LENGTH - 1)), snapshot.stat.downloadSpeed],
+      up: [...history.up.slice(-(SPEED_HISTORY_LENGTH - 1)), snapshot.stat.uploadSpeed],
+    }
   }
 
   async function subscribeTransfers(): Promise<() => void> {
@@ -420,6 +429,7 @@ export const useAppStore = defineStore('app', () => {
     trayFocused,
     aboutPanelVisible,
     stat,
+    speedHistory,
     addTaskVisible,
     pendingBatch,
     addTaskOptions,

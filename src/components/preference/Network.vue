@@ -8,7 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
 import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
-import { useAppColorTokens } from '@/composables/useColorScheme'
+import { useThemeTokens } from '@/composables/useAppTheme'
 import { usePlatform } from '@/composables/usePlatform'
 import { useSystemProxyDetect } from '@/composables/useSystemProxyDetect'
 import { logger } from '@shared/logger'
@@ -44,7 +44,7 @@ import PreferenceActionBar from './PreferenceActionBar.vue'
 import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 import UserAgentManager from './UserAgentManager.vue'
-import { SearchOutline } from '@vicons/ionicons5'
+import { Search } from '@lucide/vue'
 
 const settingsRoute = useRoute()
 const { t } = useI18n()
@@ -60,33 +60,33 @@ const proxyScopeOptions = computed(() =>
     value,
   })),
 )
-const colorTokens = useAppColorTokens()
+const colorTokens = useThemeTokens()
 const proxyScopeTheme = computed(() => {
   const tokens = colorTokens.value
   return {
     Tag: {
       border: 'none',
-      borderRadius: '4px',
-      color: tokens.surfaceContainer,
-      colorBordered: tokens.surfaceContainer,
-      textColor: tokens.onSurface,
+      borderRadius: '6px',
+      color: tokens.fill,
+      colorBordered: tokens.fill,
+      textColor: tokens.text,
     },
     Select: {
       peers: {
         InternalSelection: {
           paddingMultiple: '6px 28px 6px 8px',
-          color: tokens.surfaceContainerLow,
-          colorActive: tokens.surfaceContainerLow,
+          color: tokens.raised,
+          colorActive: tokens.raised,
           boxShadowHover: 'none',
           boxShadowActive: 'none',
           boxShadowFocus: 'none',
-          borderFocus: `2px solid ${tokens.primary.color}`,
+          borderFocus: `2px solid ${tokens.accent}`,
         },
         InternalSelectMenu: {
-          color: tokens.surfaceContainerLow,
+          color: tokens.raised,
           optionColorActive: 'transparent',
-          optionColorPending: tokens.surfaceContainer,
-          optionColorActivePending: tokens.surfaceContainer,
+          optionColorPending: tokens.fill,
+          optionColorActivePending: tokens.fill,
           optionHeightMedium: '36px',
           paddingMedium: '6px',
         },
@@ -288,7 +288,7 @@ onMounted(() => {
                   @click="detectProxy"
                 >
                   <template #icon>
-                    <NIcon><SearchOutline /></NIcon>
+                    <NIcon><Search /></NIcon>
                   </template>
                   {{ t('preferences.detect-system-proxy') }}
                 </NButton>
@@ -509,7 +509,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   padding: 0 8px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   font-size: 12px;
   line-height: 1;
 }

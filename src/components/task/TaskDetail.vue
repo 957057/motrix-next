@@ -21,16 +21,7 @@ import {
   NFormItem,
   NCollapseTransition,
 } from 'naive-ui'
-import {
-  ArrowBackOutline,
-  InformationCircleOutline,
-  PulseOutline,
-  DocumentOutline,
-  PeopleOutline,
-  ServerOutline,
-  SettingsOutline,
-  SearchOutline,
-} from '@vicons/ionicons5'
+import { ArrowLeft, Search } from '@lucide/vue'
 import { useTaskDetailOptions } from '@/composables/useTaskDetailOptions'
 import {
   buildBtHealthSummary,
@@ -186,21 +177,20 @@ const activeTab = ref('general')
 interface TabDef {
   key: string
   labelKey: I18nKey
-  icon: typeof InformationCircleOutline
   btOnly?: boolean
   protocolOnly?: boolean
   uriOnly?: boolean
   liveOnly?: boolean
 }
 const allTabs: TabDef[] = [
-  { key: 'general', labelKey: 'task.task-tab-general', icon: InformationCircleOutline },
-  { key: 'activity', labelKey: 'task.task-tab-activity', icon: PulseOutline, liveOnly: true },
-  { key: 'files', labelKey: 'task.task-tab-files', icon: DocumentOutline },
-  { key: 'options', labelKey: 'task.task-tab-options', icon: SettingsOutline, uriOnly: true, liveOnly: true },
-  { key: 'sources', labelKey: 'task.task-tab-sources', icon: ServerOutline, uriOnly: true },
-  { key: 'status', labelKey: 'task.task-tab-status', icon: PulseOutline, protocolOnly: true, liveOnly: true },
-  { key: 'peers', labelKey: 'task.task-tab-peers', icon: PeopleOutline, btOnly: true, liveOnly: true },
-  { key: 'trackers', labelKey: 'task.task-tab-trackers', icon: ServerOutline, btOnly: true, liveOnly: true },
+  { key: 'general', labelKey: 'task.task-tab-general' },
+  { key: 'activity', labelKey: 'task.task-tab-activity', liveOnly: true },
+  { key: 'files', labelKey: 'task.task-tab-files' },
+  { key: 'options', labelKey: 'task.task-tab-options', uriOnly: true, liveOnly: true },
+  { key: 'sources', labelKey: 'task.task-tab-sources', uriOnly: true },
+  { key: 'status', labelKey: 'task.task-tab-status', protocolOnly: true, liveOnly: true },
+  { key: 'peers', labelKey: 'task.task-tab-peers', btOnly: true, liveOnly: true },
+  { key: 'trackers', labelKey: 'task.task-tab-trackers', btOnly: true, liveOnly: true },
 ]
 
 const isTerminal = computed(() => ['complete', 'error', 'removed'].includes(props.task?.status ?? ''))
@@ -333,9 +323,9 @@ function handleClose() {
 <template>
   <section class="task-detail-pane">
     <header class="detail-header">
-      <NButton id="task-detail-back" quaternary @click="handleClose"
+      <NButton id="task-detail-back" quaternary size="small" class="back-button" @click="handleClose"
         ><template #icon
-          ><NIcon><ArrowBackOutline /></NIcon></template
+          ><NIcon><ArrowLeft /></NIcon></template
         >{{ t('workspace.back') }}</NButton
       >
     </header>
@@ -356,7 +346,7 @@ function handleClose() {
       @open-file="emit('open-file', $event)"
       @select-files="emit('select-files', $event)"
     />
-    <NTabs :value="activeTab" type="line" class="detail-tabs" @update:value="switchTab">
+    <NTabs :value="activeTab" type="segment" size="small" class="detail-tabs" @update:value="switchTab">
       <NTab v-for="tab in visibleTabs" :key="tab.key" :name="tab.key">{{ t(tab.labelKey) }}</NTab>
     </NTabs>
 
@@ -627,7 +617,7 @@ function handleClose() {
                     />
                     <NButton :loading="detectingProxy" :disabled="!optCanModify" size="small" @click="detectProxy">
                       <template #icon>
-                        <NIcon><SearchOutline /></NIcon>
+                        <NIcon><Search /></NIcon>
                       </template>
                       {{ t('preferences.detect-system-proxy') }}
                     </NButton>
@@ -755,51 +745,54 @@ function handleClose() {
 .task-detail-pane {
   position: absolute;
   inset: 0;
-  background: var(--main-bg);
+  background: var(--rb-canvas);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  padding: 16px 24px 0;
-  box-sizing: border-box;
+  padding: 4px var(--rb-page-inline) 32px;
 }
+
 .detail-header {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 12px;
-}
-.detail-header h1 {
-  font-size: 20px;
-  line-height: 28px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin: 0;
-}
-.tab-content-wrapper {
-  position: relative;
+  margin-bottom: 10px;
 }
 
-.detail-status-value {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+.back-button {
+  margin-inline-start: -8px;
 }
+
 .detail-tabs {
   flex-shrink: 0;
+  align-self: flex-start;
+  max-width: 100%;
 }
+
 .tab-content-wrapper {
   flex: 1;
   min-height: 0;
   overflow: visible;
   flex-shrink: 0;
   position: relative;
+  margin-top: 14px;
 }
 
 .tab-content {
-  padding: 16px 0;
+  padding: 16px 18px;
+  border-radius: var(--rb-radius-card);
+  background: var(--rb-raised);
+  box-shadow: var(--rb-shadow-raised);
+}
+
+.tab-content :deep(.n-descriptions-table-header),
+.tab-content :deep(.n-descriptions-table-content) {
+  font-size: 13px;
+}
+
+.tab-content :deep(.n-descriptions-table-header) {
+  color: var(--rb-text-muted);
+  padding-inline-end: 24px;
 }
 
 :deep(.detail-copyable-value) {
@@ -816,6 +809,8 @@ function handleClose() {
   min-width: 0;
   max-width: 100%;
   line-height: 1.45;
+  font-family: var(--rb-font-mono);
+  font-size: 12px;
 }
 
 :deep(.detail-copy-button) {
@@ -824,21 +819,21 @@ function handleClose() {
   height: 22px;
   opacity: 0.58;
   transition:
-    opacity 0.16s cubic-bezier(0.2, 0, 0, 1),
-    color 0.16s cubic-bezier(0.2, 0, 0, 1);
+    opacity var(--rb-motion-feedback) var(--rb-ease),
+    color var(--rb-motion-feedback) var(--rb-ease);
 }
 
 :deep(.detail-copy-button:hover) {
   opacity: 1;
-  color: var(--m3-primary);
+  color: var(--rb-accent-text);
 }
 
 .section-divider {
-  margin: 20px 0 12px;
-  font-size: 13px;
+  margin: 20px 0 10px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--m3-primary);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.02em;
+  color: var(--rb-accent-text);
 }
 
 :deep(.progress-row) {
@@ -850,33 +845,26 @@ function handleClose() {
 :deep(.progress-pct) {
   white-space: nowrap;
   font-size: 12px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   min-width: 45px;
   text-align: right;
 }
 
 :deep(.remaining-text) {
   margin-left: 12px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   font-size: 12px;
 }
+
 .muted-inline {
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   font-size: inherit;
   line-height: inherit;
   vertical-align: baseline;
 }
+
 :deep(.source-table) {
   margin-top: 12px;
-}
-
-.detail-footer {
-  display: flex;
-  justify-content: center;
-}
-
-.detail-footer :deep(.task-item-actions) {
-  direction: ltr;
 }
 
 .status-actions {
@@ -885,52 +873,50 @@ function handleClose() {
   margin-top: 16px;
 }
 
-/* ── Options tab ─────────────────────────────────────────────────── */
 .options-form {
   max-width: 680px;
   padding: 4px 0;
 }
+
 .detail-ua-row {
   display: flex;
   align-items: stretch;
   width: 100%;
 }
+
 .detail-ua-row :deep(.n-input) {
   flex: 1;
 }
+
 .options-apply-bar {
   display: flex;
   justify-content: flex-end;
   padding-top: 8px;
 }
-.apply-btn {
-  transition:
-    background-color 0.25s cubic-bezier(0.2, 0, 0, 1),
-    border-color 0.25s cubic-bezier(0.2, 0, 0, 1),
-    color 0.25s cubic-bezier(0.2, 0, 0, 1),
-    opacity 0.25s cubic-bezier(0.2, 0, 0, 1);
-}
+
 .proxy-radio-group {
   display: flex;
   flex-direction: column;
   width: 100%;
 }
+
 .custom-proxy-input {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
+
 .custom-proxy-input .n-button {
   align-self: flex-start;
 }
+
 .http-auth-fields {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
 }
-/* Allow table header text to wrap instead of truncating with "…"
-   when the column is too narrow for the translated label. */
+
 :deep(.n-data-table-th__title) {
   white-space: normal;
   overflow-wrap: normal;

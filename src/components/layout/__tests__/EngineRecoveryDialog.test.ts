@@ -8,9 +8,9 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (key: string) => key }) }))
 vi.mock('@/composables/useAppMessage', () => ({
   useAppMessage: () => ({ error: vi.fn() }),
 }))
-vi.mock('@vicons/ionicons5', () => {
+vi.mock('@lucide/vue', () => {
   const icon = { template: '<i />' }
-  return { CheckmarkCircleOutline: icon, CheckmarkOutline: icon, CloseCircleOutline: icon }
+  return { CircleCheck: icon, CheckmarkOutline: icon, CircleX: icon }
 })
 vi.mock('naive-ui', () => ({
   NModal: {

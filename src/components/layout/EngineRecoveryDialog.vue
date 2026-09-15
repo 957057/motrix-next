@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NButton, NCollapseTransition, NIcon, NModal, NSpin } from 'naive-ui'
-import { CheckmarkCircleOutline, CloseCircleOutline } from '@vicons/ionicons5'
+import { CircleCheck, CircleX } from '@lucide/vue'
 import { useEngineStore, type EnginePhase } from '@/stores/engine'
 import { useAppMessage } from '@/composables/useAppMessage'
 import { getErrorMessage } from '@shared/utils/errorMessage'
@@ -194,7 +194,7 @@ async function cleanupAndRetry() {
                 </div>
                 <span class="engine-heading-icon" aria-hidden="true">
                   <Transition name="engine-status">
-                    <NIcon v-if="completed" key="complete" :size="28"><CheckmarkCircleOutline /></NIcon>
+                    <NIcon v-if="completed" key="complete" :size="28"><CircleCheck /></NIcon>
                     <NSpin v-else key="loading" :size="28" />
                   </Transition>
                 </span>
@@ -212,7 +212,7 @@ async function cleanupAndRetry() {
                       <span class="engine-stage-marker">
                         <span class="engine-stage-dot" />
                         <NIcon class="engine-stage-check" :size="22">
-                          <CheckmarkCircleOutline />
+                          <CircleCheck />
                         </NIcon>
                       </span>
                       <span class="engine-stage-label">{{ stage.label }}</span>
@@ -251,7 +251,7 @@ async function cleanupAndRetry() {
                   <p class="engine-attempt">{{ t('app.engine-attempt') }} {{ attemptText }}</p>
                 </div>
                 <span class="engine-heading-icon" aria-hidden="true">
-                  <NIcon :size="28"><CloseCircleOutline /></NIcon>
+                  <NIcon :size="28"><CircleX /></NIcon>
                 </span>
               </div>
 
@@ -314,9 +314,9 @@ async function cleanupAndRetry() {
   max-height: calc(100dvh - 48px);
   overflow: auto;
   padding: 24px;
-  border-radius: 12px;
-  background: var(--main-bg);
-  box-shadow: 0 12px 40px var(--m3-shadow);
+  border-radius: var(--rb-radius-dialog);
+  background: var(--rb-overlay);
+  box-shadow: var(--rb-shadow-overlay);
 }
 .engine-panel-viewport {
   position: relative;
@@ -335,7 +335,7 @@ h2 {
 .engine-heading-row p,
 .engine-description,
 .engine-attempt {
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   font-size: 13px;
   line-height: 20px;
   margin-top: 8px;
@@ -352,7 +352,7 @@ h2 {
   flex-direction: column;
   gap: 8px;
   font-size: 13px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   transition: color 160ms ease;
 }
 .engine-stage-marker {
@@ -372,22 +372,22 @@ h2 {
 .engine-stage-dot {
   width: 10px;
   height: 10px;
-  border: 1px solid var(--m3-outline);
+  border: 1px solid var(--rb-border);
   border-radius: 50%;
 }
 .engine-stage-check {
   opacity: 0;
 }
 .engine-recovery-stage[data-state='active'] {
-  color: var(--m3-primary);
+  color: var(--rb-accent);
 }
 .engine-recovery-stage[data-state='active'] .engine-stage-dot {
-  border-color: var(--m3-primary);
-  background: var(--m3-primary);
+  border-color: var(--rb-accent);
+  background: var(--rb-accent);
 }
 .engine-recovery-stage[data-state='complete'] .engine-stage-check {
   opacity: 1;
-  color: var(--m3-primary);
+  color: var(--rb-accent);
 }
 .engine-recovery-stage[data-state='complete'] .engine-stage-dot {
   opacity: 0;
@@ -396,7 +396,7 @@ h2 {
   flex: 1;
   min-width: 12px;
   height: 1px;
-  background: var(--divider);
+  background: var(--rb-hairline);
 }
 .engine-error-block {
   margin-block: 20px;
@@ -408,7 +408,7 @@ h2 {
 .engine-error-block code {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  color: var(--m3-error);
+  color: var(--rb-danger);
 }
 .engine-cleanup-warning {
   margin-block: 16px;
@@ -421,7 +421,7 @@ h2 {
   min-height: 53px;
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid var(--divider);
+  border-top: 1px solid var(--rb-hairline);
 }
 .engine-footer-state {
   grid-area: 1 / 1;
@@ -443,7 +443,7 @@ h2 {
   flex: none;
   display: grid;
   place-items: center;
-  color: var(--m3-primary);
+  color: var(--rb-accent);
 }
 .engine-heading-icon > * {
   grid-area: 1 / 1;
@@ -467,9 +467,9 @@ h2 {
   transition: background-color 160ms ease;
 }
 .engine-stage-connector[data-complete='true'] {
-  background: var(--m3-primary);
+  background: var(--rb-accent);
 }
 .engine-heading-row--error {
-  color: var(--m3-error);
+  color: var(--rb-danger);
 }
 </style>

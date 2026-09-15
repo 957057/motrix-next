@@ -1,7 +1,6 @@
 /** @fileoverview Application-wide constants: themes, intervals, suffixes, limits. */
 import { DEFAULT_TASK_MANUAL_ORDER, DEFAULT_TASK_SORT } from '@/composables/useTaskSort'
 import type { AppLogLevel, Aria2LogLevel } from '@shared/types'
-import type { I18nKey } from '@shared/i18nTypes'
 export const EMPTY_STRING = ''
 
 export const APP_THEME = {
@@ -9,35 +8,6 @@ export const APP_THEME = {
   LIGHT: 'light',
   DARK: 'dark',
 }
-
-/** Color scheme definition for the preset palette picker. */
-export interface ColorSchemeDefinition {
-  /** Unique identifier stored in config (kebab-case). */
-  id: string
-  /** i18n key suffix: `preferences.color-scheme-{id}` */
-  labelKey: I18nKey
-  /** Seed hex fed to MCU `themeFromSourceColor` to generate the full M3 tonal palette. */
-  seed: string
-  /** Palette generation mode. Content keeps low-chroma colors visually neutral. */
-  variant?: 'source' | 'content'
-}
-
-/** Material palette seeds. Electric Purple is the Rayburst default. */
-export const COLOR_SCHEMES: ColorSchemeDefinition[] = [
-  { id: 'electric', labelKey: 'preferences.color-scheme-electric', seed: '#7B3ED1' },
-  { id: 'space', labelKey: 'preferences.color-scheme-space', seed: '#4A6CF7' },
-  { id: 'mint', labelKey: 'preferences.color-scheme-mint', seed: '#10B981' },
-  { id: 'rose', labelKey: 'preferences.color-scheme-rose', seed: '#F43F5E' },
-  { id: 'aurora', labelKey: 'preferences.color-scheme-aurora', seed: '#8B5CF6' },
-  { id: 'coral', labelKey: 'preferences.color-scheme-coral', seed: '#F97316' },
-  { id: 'glacier', labelKey: 'preferences.color-scheme-glacier', seed: '#06B6D4' },
-  { id: 'evergreen', labelKey: 'preferences.color-scheme-evergreen', seed: '#15803D' },
-  { id: 'graphite', labelKey: 'preferences.color-scheme-graphite', seed: '#737373', variant: 'content' },
-  { id: 'sakura', labelKey: 'preferences.color-scheme-sakura', seed: '#EC4899' },
-]
-
-export const CUSTOM_COLOR_SCHEME_ID = 'custom'
-export const DEFAULT_CUSTOM_COLOR_SCHEME = '#737373'
 
 export const ADD_TASK_TYPE = {
   URI: 'uri',
@@ -202,7 +172,7 @@ export const DEFAULT_APP_CONFIG = {
   // ── Appearance ──────────────────────────────────────────────────
   theme: 'auto' as const,
   colorScheme: 'electric',
-  customColorScheme: DEFAULT_CUSTOM_COLOR_SCHEME,
+  customColorScheme: '#737373',
   taskCardMode: 'full' as const,
   reduceMotion: false,
   sidebarTaskCounts: true,

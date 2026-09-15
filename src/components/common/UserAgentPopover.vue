@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NPopover, NButton, NIcon, NEllipsis, NEmpty } from 'naive-ui'
-import { TimeOutline } from '@vicons/ionicons5'
+import { Clock } from '@lucide/vue'
 import { buildUserAgentSelectionItems } from '@shared/utils/userAgentPolicy'
 import type { UserAgentProfile, UserAgentRule } from '@shared/types'
 
@@ -62,7 +62,7 @@ function selectProfile(profile: UserAgentProfile) {
     <template #trigger>
       <NButton :disabled="disabled" class="ua-popover-trigger">
         <template #icon>
-          <NIcon><TimeOutline /></NIcon>
+          <NIcon><Clock /></NIcon>
         </template>
       </NButton>
     </template>
@@ -129,26 +129,26 @@ function selectProfile(profile: UserAgentProfile) {
 }
 .ua-popover-heading {
   padding: 4px 8px 2px;
-  color: var(--n-text-color-3);
-  font-size: var(--font-size-sm);
+  color: var(--rb-text-muted);
+  font-size: 12px;
   font-weight: 600;
 }
 .ua-popover-heading--spaced {
   margin-top: 6px;
   padding-top: 8px;
-  border-top: 1px solid var(--m3-outline-variant);
+  border-top: 1px solid var(--rb-hairline);
 }
 .ua-popover-item {
   display: flex;
   align-items: center;
   min-height: 32px;
   padding: 5px 8px;
-  border-radius: var(--border-radius);
+  border-radius: var(--rb-radius-control);
   cursor: pointer;
   transition: background-color 0.15s;
 }
 .ua-popover-item:hover {
-  background: var(--m3-surface-container-high);
+  background: var(--rb-hover);
 }
 .ua-popover-label {
   min-width: 0;

@@ -26,7 +26,7 @@ defineProps<{
   overflow-wrap: anywhere;
 }
 .preference-hint-label__hint {
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   font-size: 13px;
   font-weight: 400;
 }

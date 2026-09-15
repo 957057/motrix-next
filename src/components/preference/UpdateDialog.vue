@@ -13,13 +13,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { getVersion } from '@tauri-apps/api/app'
-import {
-  CheckmarkCircleOutline,
-  CloseCircleOutline,
-  ArrowUpCircleOutline,
-  ArrowDownCircleOutline,
-  CloudDownloadOutline,
-} from '@vicons/ionicons5'
+import { CircleCheck, CircleX, CircleArrowUp, CircleArrowDown, CloudDownload } from '@lucide/vue'
 import { usePreferenceStore } from '@/stores/preference'
 import { logger } from '@shared/logger'
 import type { ResolvedUpdateChannel, TauriUpdate, UpdateChannel } from '@shared/types'
@@ -296,7 +290,7 @@ defineExpose({ open, present })
 
           <div v-else-if="phase === 'up-to-date'" key="up-to-date" class="update-panel update-panel--centered">
             <div class="update-status-icon update-status-icon--success">
-              <NIcon :size="38"><CheckmarkCircleOutline /></NIcon>
+              <NIcon :size="38"><CircleCheck /></NIcon>
             </div>
             <div class="update-copy">
               <h2>{{ t('preferences.is-latest-version') }}</h2>
@@ -311,8 +305,8 @@ defineExpose({ open, present })
                 :class="isRollback ? 'update-status-icon--warning' : 'update-status-icon--primary'"
               >
                 <NIcon :size="30">
-                  <ArrowDownCircleOutline v-if="isRollback" />
-                  <ArrowUpCircleOutline v-else />
+                  <CircleArrowDown v-if="isRollback" />
+                  <CircleArrowUp v-else />
                 </NIcon>
               </div>
               <div class="update-copy update-copy--left">
@@ -333,7 +327,7 @@ defineExpose({ open, present })
 
           <div v-else-if="phase === 'downloading'" key="downloading" class="update-panel update-panel--centered">
             <div class="update-status-icon update-status-icon--primary">
-              <NIcon :size="34"><CloudDownloadOutline /></NIcon>
+              <NIcon :size="34"><CloudDownload /></NIcon>
             </div>
             <div class="update-copy">
               <h2>{{ t('preferences.download-update') }}</h2>
@@ -350,7 +344,7 @@ defineExpose({ open, present })
 
           <div v-else-if="phase === 'ready'" key="ready" class="update-panel update-panel--centered">
             <div class="update-status-icon update-status-icon--success">
-              <NIcon :size="38"><CheckmarkCircleOutline /></NIcon>
+              <NIcon :size="38"><CircleCheck /></NIcon>
             </div>
             <div class="update-copy">
               <h2>{{ t('preferences.update-download-complete') }}</h2>
@@ -369,7 +363,7 @@ defineExpose({ open, present })
           <div v-else key="error" class="update-panel update-panel--document">
             <div class="update-summary">
               <div class="update-status-icon update-status-icon--error">
-                <NIcon :size="30"><CloseCircleOutline /></NIcon>
+                <NIcon :size="30"><CircleX /></NIcon>
               </div>
               <div class="update-copy update-copy--left">
                 <h2>{{ t('preferences.check-update-failed') }}</h2>
@@ -400,9 +394,9 @@ defineExpose({ open, present })
   max-height: calc(100dvh - 48px);
   display: flex;
   flex-direction: column;
-  background: var(--main-bg);
-  border-radius: 12px;
-  box-shadow: 0 12px 40px var(--m3-shadow);
+  background: var(--rb-canvas);
+  border-radius: var(--rb-radius-dialog);
+  box-shadow: var(--rb-shadow-overlay);
   overflow: hidden;
 }
 .update-dialog-header {
@@ -423,9 +417,9 @@ defineExpose({ open, present })
 .update-dialog-close {
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: var(--rb-radius-control);
   font-size: 22px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
 }
 .update-dialog-viewport {
   position: relative;
@@ -457,13 +451,13 @@ defineExpose({ open, present })
   align-items: center;
 }
 .update-status-icon {
-  color: var(--m3-primary);
+  color: var(--rb-accent);
 }
 .update-status-icon--error {
-  color: var(--m3-error);
+  color: var(--rb-danger);
 }
 .update-status-icon--warning {
-  color: var(--m3-warning);
+  color: var(--rb-warning);
 }
 .update-copy h2 {
   font-size: 18px;
@@ -473,7 +467,7 @@ defineExpose({ open, present })
 .update-copy p,
 .update-version-flow {
   margin-top: 8px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   font-size: 13px;
 }
 .update-version-flow {
@@ -496,7 +490,7 @@ defineExpose({ open, present })
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 24px 20px;
-  border-top: 1px solid var(--divider);
+  border-top: 1px solid var(--rb-hairline);
 }
 .action-btn {
   min-width: 120px;
@@ -504,11 +498,11 @@ defineExpose({ open, present })
 .update-notes-text {
   font-size: 13px;
   line-height: 1.65;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
 }
 .update-notes-text :deep(h2) {
   margin: 18px 0 8px;
-  color: var(--m3-on-surface);
+  color: var(--rb-text);
   font-size: 15px;
   font-weight: 650;
 }
@@ -517,7 +511,7 @@ defineExpose({ open, present })
 }
 .update-notes-text :deep(h3) {
   margin: 14px 0 6px;
-  color: var(--m3-on-surface);
+  color: var(--rb-text);
   font-size: 14px;
   font-weight: 650;
 }
@@ -543,23 +537,23 @@ defineExpose({ open, present })
 .update-notes-text :deep(th),
 .update-notes-text :deep(td) {
   padding: 4px 8px;
-  border: 1px solid color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--rb-text) 12%, transparent);
   text-align: left;
 }
 .update-notes-text :deep(th) {
   font-weight: 600;
-  background: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
+  background: color-mix(in srgb, var(--rb-text) 8%, transparent);
 }
 .update-notes-text :deep(tr:nth-child(even)) {
-  background: color-mix(in srgb, var(--m3-on-surface) 4%, transparent);
+  background: color-mix(in srgb, var(--rb-text) 4%, transparent);
 }
 
 /* ── Blockquote ────────────────────────────────────────────────────── */
 .update-notes-text :deep(blockquote) {
   margin: 6px 0;
   padding: 6px 12px;
-  border-left: 3px solid color-mix(in srgb, var(--m3-primary) 50%, transparent);
-  background: color-mix(in srgb, var(--m3-on-surface) 4%, transparent);
+  border-left: 3px solid color-mix(in srgb, var(--rb-accent) 50%, transparent);
+  background: color-mix(in srgb, var(--rb-text) 4%, transparent);
   border-radius: 0 4px 4px 0;
 }
 .update-notes-text :deep(blockquote p) {
@@ -591,14 +585,14 @@ defineExpose({ open, present })
   margin: 2px 0;
 }
 .update-notes-text :deep(.markdown-alert-note) {
-  border-left-color: var(--m3-primary);
-  background: var(--m3-primary-container);
-  color: var(--m3-on-primary-container);
+  border-left-color: var(--rb-accent);
+  background: var(--rb-accent-soft);
+  color: var(--rb-accent-text);
 }
 .update-notes-text :deep(.markdown-alert-tip) {
-  border-left-color: var(--m3-success);
-  background: var(--m3-success-container);
-  color: var(--m3-on-success-container);
+  border-left-color: var(--rb-success);
+  background: var(--rb-success-soft);
+  color: var(--rb-success);
 }
 .update-notes-text :deep(.markdown-alert-important) {
   border-left-color: var(--m3-tertiary);
@@ -606,24 +600,24 @@ defineExpose({ open, present })
   color: var(--m3-on-tertiary-container);
 }
 .update-notes-text :deep(.markdown-alert-warning) {
-  border-left-color: var(--m3-warning);
-  background: var(--m3-warning-container);
-  color: var(--m3-on-warning-container);
+  border-left-color: var(--rb-warning);
+  background: var(--rb-warning-soft);
+  color: var(--rb-warning);
 }
 .update-notes-text :deep(.markdown-alert-caution) {
-  border-left-color: var(--m3-error);
-  background: var(--m3-error-container);
-  color: var(--m3-on-error-container);
+  border-left-color: var(--rb-danger);
+  background: var(--rb-danger-soft);
+  color: var(--rb-danger);
 }
 .update-notes-text :deep(.markdown-alert p:not(.markdown-alert-title)) {
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
 }
 
 /* ── Horizontal rule ───────────────────────────────────────────────── */
 .update-notes-text :deep(hr) {
   border: none;
   height: 1px;
-  background: color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
+  background: color-mix(in srgb, var(--rb-text) 10%, transparent);
   margin: 8px 0;
 }
 
@@ -632,14 +626,14 @@ defineExpose({ open, present })
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-size: 0.9em;
   padding: 1px 5px;
-  background: color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
-  border-radius: 4px;
+  background: color-mix(in srgb, var(--rb-text) 10%, transparent);
+  border-radius: 6px;
 }
 .update-notes-text :deep(pre) {
   margin: 6px 0;
   padding: 8px 10px;
-  background: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
-  border-radius: 6px;
+  background: color-mix(in srgb, var(--rb-text) 8%, transparent);
+  border-radius: var(--rb-radius-control);
   overflow-x: auto;
 }
 .update-notes-text :deep(pre code) {
@@ -649,7 +643,7 @@ defineExpose({ open, present })
 
 /* ── Links ─────────────────────────────────────────────────────────── */
 .update-notes-text :deep(a) {
-  color: var(--m3-primary);
+  color: var(--rb-accent);
   text-decoration: none;
 }
 .update-notes-text :deep(a:hover) {
@@ -659,14 +653,14 @@ defineExpose({ open, present })
 /* ── Emphasis ──────────────────────────────────────────────────────── */
 .update-notes-text :deep(strong) {
   font-weight: 600;
-  color: var(--m3-on-surface);
+  color: var(--rb-text);
 }
 
 .update-error-detail {
   box-sizing: border-box;
-  border-color: color-mix(in srgb, var(--m3-error) 32%, var(--m3-outline-variant));
-  background: color-mix(in srgb, var(--m3-error) 7%, var(--m3-surface-container));
-  color: var(--m3-on-surface);
+  border-color: color-mix(in srgb, var(--rb-danger) 32%, var(--rb-hairline));
+  background: color-mix(in srgb, var(--rb-danger) 7%, var(--rb-raised));
+  color: var(--rb-text);
   white-space: pre-wrap;
 }
 .update-error-detail code {

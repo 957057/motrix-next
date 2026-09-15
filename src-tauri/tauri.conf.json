@@ -16,8 +16,8 @@
       {
         "label": "main",
         "title": "Rayburst",
-        "width": 1068,
-        "height": 680,
+        "width": 1180,
+        "height": 740,
         "minWidth": 373,
         "minHeight": 240,
         "transparent": false,
@@ -36,9 +36,12 @@
     "active": true,
     "targets": "all",
     "publisher": "AnInsomniacy",
-    "copyright": "Copyright © 2025–present AnInsomniacy",
+    "copyright": "Copyright \u00a9 2025\u2013present AnInsomniacy",
     "createUpdaterArtifacts": false,
-    "externalBin": ["binaries/rayburst-engine", "generated-binaries/rayburst-browser-launcher"],
+    "externalBin": [
+      "binaries/rayburst-engine",
+      "generated-binaries/rayburst-browser-launcher"
+    ],
     "resources": [
       "data/ed2k-bootstrap/server.met",
       "data/ed2k-bootstrap/nodes.dat",
@@ -57,7 +60,9 @@
     ],
     "fileAssociations": [
       {
-        "ext": ["torrent"],
+        "ext": [
+          "torrent"
+        ],
         "name": "BitTorrent",
         "mimeType": "application/x-bittorrent",
         "description": "BitTorrent File",
@@ -134,7 +139,12 @@
     },
     "deep-link": {
       "desktop": {
-        "schemes": ["magnet", "ed2k", "thunder", "rayburst"]
+        "schemes": [
+          "magnet",
+          "ed2k",
+          "thunder",
+          "rayburst"
+        ]
       }
     }
   }

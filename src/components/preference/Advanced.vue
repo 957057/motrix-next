@@ -36,14 +36,7 @@ import {
   useDialog,
 } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
-import {
-  CloudDownloadOutline,
-  CloudUploadOutline,
-  DownloadOutline,
-  FolderOpenOutline,
-  TrashOutline,
-  CopyOutline,
-} from '@vicons/ionicons5'
+import { CloudDownload, CloudUpload, Download, FolderOpen, Trash2, Copy } from '@lucide/vue'
 import { logger } from '@shared/logger'
 import PreferenceActionBar from './PreferenceActionBar.vue'
 import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
@@ -308,12 +301,12 @@ onMounted(async () => {
               @click="copyToClipboard(form.tempFilesDir || defaultTempPath, t('preferences.temp-files-dir'))"
             >
               <template #icon>
-                <NIcon :size="14"><CopyOutline /></NIcon>
+                <NIcon :size="14"><Copy /></NIcon>
               </template>
             </NButton>
             <NButton class="pref-icon-button" @click="handleSelectTempDir">
               <template #icon>
-                <NIcon :size="14"><FolderOpenOutline /></NIcon>
+                <NIcon :size="14"><FolderOpen /></NIcon>
               </template>
             </NButton>
             <NButton v-if="form.tempFilesDir" quaternary class="pref-icon-button" @click="handleClearTempDir">
@@ -331,12 +324,12 @@ onMounted(async () => {
             />
             <NButton class="pref-icon-button" @click="copyToClipboard(aria2ConfPath, t('preferences.aria2-conf-path'))">
               <template #icon>
-                <NIcon :size="14"><CopyOutline /></NIcon>
+                <NIcon :size="14"><Copy /></NIcon>
               </template>
             </NButton>
             <NButton class="pref-icon-button" @click="handleRevealPath(aria2ConfPath)">
               <template #icon>
-                <NIcon :size="14"><FolderOpenOutline /></NIcon>
+                <NIcon :size="14"><FolderOpen /></NIcon>
               </template>
             </NButton>
           </NInputGroup>
@@ -354,12 +347,12 @@ onMounted(async () => {
               @click="copyToClipboard(engineStatePath, t('preferences.engine-state-path'))"
             >
               <template #icon>
-                <NIcon :size="14"><CopyOutline /></NIcon>
+                <NIcon :size="14"><Copy /></NIcon>
               </template>
             </NButton>
             <NButton class="pref-icon-button" @click="handleRevealPath(engineStatePath)">
               <template #icon>
-                <NIcon :size="14"><FolderOpenOutline /></NIcon>
+                <NIcon :size="14"><FolderOpen /></NIcon>
               </template>
             </NButton>
           </NInputGroup>
@@ -375,12 +368,12 @@ onMounted(async () => {
             />
             <NButton class="pref-icon-button" @click="copyToClipboard(logPath, t('preferences.log-path'))">
               <template #icon>
-                <NIcon :size="14"><CopyOutline /></NIcon>
+                <NIcon :size="14"><Copy /></NIcon>
               </template>
             </NButton>
             <NButton class="pref-icon-button" @click="handleRevealPath(logPath)">
               <template #icon>
-                <NIcon :size="14"><FolderOpenOutline /></NIcon>
+                <NIcon :size="14"><FolderOpen /></NIcon>
               </template>
             </NButton>
           </NInputGroup>
@@ -411,13 +404,13 @@ onMounted(async () => {
           <div class="settings-action-group">
             <NButton :loading="exportingLogs" @click="handleExportLogs">
               <template #icon>
-                <NIcon><DownloadOutline /></NIcon>
+                <NIcon><Download /></NIcon>
               </template>
               {{ t('preferences.export-diagnostic-logs') }}
             </NButton>
             <NButton type="error" ghost @click="handleClearLog">
               <template #icon>
-                <NIcon><TrashOutline /></NIcon>
+                <NIcon><Trash2 /></NIcon>
               </template>
               {{ t('preferences.clear-log') }}
             </NButton>
@@ -456,7 +449,7 @@ onMounted(async () => {
           <div class="settings-action-group">
             <NButton class="open-config-folder-btn" @click="handleOpenConfigFolder">
               <template #icon>
-                <NIcon :size="14"><FolderOpenOutline /></NIcon>
+                <NIcon :size="14"><FolderOpen /></NIcon>
               </template>
               {{ t('preferences.open-config-folder') }}
             </NButton>
@@ -472,13 +465,13 @@ onMounted(async () => {
           <div class="settings-action-group">
             <NButton :loading="exportingSettings" @click="handleExportSettings">
               <template #icon>
-                <NIcon><CloudDownloadOutline /></NIcon>
+                <NIcon><CloudDownload /></NIcon>
               </template>
               {{ t('preferences.export-settings') }}
             </NButton>
             <NButton :loading="importingSettings" @click="handleImportSettings">
               <template #icon>
-                <NIcon><CloudUploadOutline /></NIcon>
+                <NIcon><CloudUpload /></NIcon>
               </template>
               {{ t('preferences.import-settings') }}
             </NButton>
@@ -588,7 +581,7 @@ onMounted(async () => {
   min-width: 100px;
 }
 .log-level-control__label {
-  color: var(--m3-on-surface);
+  color: var(--rb-text);
   font-size: 13px;
   white-space: nowrap;
 }

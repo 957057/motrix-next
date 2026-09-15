@@ -7,9 +7,7 @@ import { useI18n } from 'vue-i18n'
 import { useTaskStore } from '@/stores/task'
 import { useTaskSelectionStore } from '@/stores/taskSelection'
 import { usePreferenceStore } from '@/stores/preference'
-
 import { useTaskActions } from '@/composables/useTaskActions'
-
 import { useTaskViewStore } from '@/stores/taskView'
 import { useDialog } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
@@ -53,10 +51,10 @@ const {
 })
 
 const subnavs = computed(() => [
-  { key: 'all', title: t('task.scope-all') || 'All' },
-  { key: 'progress', title: t('task.scope-progress') || 'In Progress' },
+  { key: 'all', title: t('task.scope-all') },
+  { key: 'progress', title: t('task.scope-progress') },
   { key: 'failed', title: t('workspace.needs-action') },
-  { key: 'completed', title: t('task.scope-completed') || 'Completed' },
+  { key: 'completed', title: t('task.scope-completed') },
 ])
 
 const title = computed(() => {
@@ -107,8 +105,6 @@ onBeforeUnmount(() => {
   isUnmounted = true
   taskStore.hideTaskDetail()
 })
-// Task action handlers are now provided by useTaskActions composable above.
-// Magnet file selection is handled at app-level in MainLayout.vue.
 </script>
 
 <template>
@@ -118,8 +114,8 @@ onBeforeUnmount(() => {
       :aria-hidden="taskStore.taskDetailVisible || undefined"
       class="list-view"
     >
-      <header class="panel-header">
-        <h1 class="task-title">
+      <header class="rb-page-header">
+        <h1 class="rb-page-title task-title">
           <TransitionText
             :text="view.selecting ? t('workspace.selected-count', { count: view.selected.length }) : title"
           />
@@ -146,7 +142,7 @@ onBeforeUnmount(() => {
         />
       </motion.div>
     </div>
-    <Transition name="view" @after-leave="finishDetailClose">
+    <Transition name="push" @after-leave="finishDetailClose">
       <TaskDetail
         v-if="taskStore.taskDetailVisible"
         :show="taskStore.taskDetailVisible"
@@ -175,42 +171,34 @@ onBeforeUnmount(() => {
   height: 100%;
   position: relative;
 }
+
 .list-view {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
-.panel-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 24px 20px;
-  min-height: 40px;
-}
+
 .task-title {
-  flex: 0 1 auto;
-  min-width: 0;
-  max-width: 30%;
+  max-width: 34%;
   display: flex;
   align-items: center;
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 32px;
-  margin: 0;
-  white-space: nowrap;
 }
-.toolbar-region {
-  min-width: 0;
-  flex: 1;
-}
+
 .task-title :deep(.transition-text) {
   min-width: 0;
   overflow: hidden;
 }
+
 .task-title :deep(.transition-text > span) {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.toolbar-region {
+  min-width: 0;
+  flex: 1;
+}
+
 .panel-content {
   display: flex;
   flex-direction: column;
@@ -219,15 +207,18 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+
 @media (max-width: 959px) {
-  .panel-header {
+  .rb-page-header {
     gap: 8px;
   }
 }
+
 @media (max-width: 719px) {
-  .panel-header {
-    padding: 8px 16px 16px;
+  .rb-page-header {
+    padding: 4px 16px 14px;
   }
+
   .task-title {
     font-size: 20px;
   }

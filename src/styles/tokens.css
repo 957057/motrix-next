@@ -1,182 +1,130 @@
 /**
- * @fileoverview Design tokens following Material Design 3 tonal surface system.
- *
- * Seed color: #7B3ED1 (Electric Purple)
- * Runtime values are generated from the selected seed by Material Color Utilities.
- * These values provide the matching first-paint fallback before Vue mounts.
+ * Design tokens. Color values here are first-paint defaults for the Electric
+ * scheme; the theme engine (src/shared/theme) overwrites them on the root
+ * element as soon as preferences are hydrated, so cold start and runtime agree.
  */
-
-/* ── Light Theme (default) ─────────────────────────────────────────── */
 :root {
-  /* ── M3 Surface Tonal System ───────────────────────────────────── */
-  --m3-surface: #fffbff;
-  --m3-surface-dim: #f1f1f1;
-  --m3-surface-container-lowest: #ffffff;
-  --m3-surface-container-low: #ffffff;
-  --m3-surface-container: #f6f6f6;
-  --m3-surface-container-high: #ffffff;
-  --m3-surface-container-highest: #eeeeee;
+  /* Surfaces */
+  --rb-canvas: #faf9ff;
+  --rb-sidebar: #f4f2fb;
+  --rb-raised: #ffffff;
+  --rb-overlay: #ffffff;
+  --rb-fill: #f1eff7;
+  --rb-fill-strong: #e5e3ec;
 
-  /* ── M3 On-Surface / Text ──────────────────────────────────────── */
-  --m3-on-surface: #1d1b1e;
-  --m3-on-surface-variant: #4a454e;
+  /* Text */
+  --rb-text: #1b1921;
+  --rb-text-muted: #64616b;
+  --rb-text-faint: #8d8b93;
 
-  /* ── M3 Outline / Borders ──────────────────────────────────────── */
-  --m3-outline: #7b757f;
-  --m3-outline-variant: #cbc4cf;
+  /* Lines and states */
+  --rb-hairline: #e0dee7;
+  --rb-border: #cbc9d2;
+  --rb-border-strong: #a5a3ab;
+  --rb-hover: #1615190b;
+  --rb-pressed: #16151914;
+  --rb-selected: #834ad81a;
 
-  /* ── M3 Primary (Electric Purple) ───────────────────────────────────── */
-  --m3-primary: #7739cd;
-  --m3-on-primary: #ffffff;
-  --m3-primary-container: #ecdcff;
-  --m3-on-primary-container: #280056;
+  /* Accent: the only saturated family on screen */
+  --rb-accent: #7945c8;
+  --rb-accent-strong: #623aa1;
+  --rb-accent-bright: #a580ef;
+  --rb-accent-text: #653ba7;
+  --rb-accent-soft: #f0ebff;
+  --rb-on-accent: #ffffff;
+  --rb-glow: #7945c847;
+  --rb-gradient: linear-gradient(135deg, #a580ef 0%, #7945c8 100%);
 
-  /* ── M3 Info (harmonized extended color) ──────────────────────── */
-  --m3-info: #375ba9;
-  --m3-on-info: #ffffff;
-  --m3-info-container: #d9e2ff;
-  --m3-on-info-container: #001946;
+  /* Semantic */
+  --rb-success: #008c46;
+  --rb-success-soft: #d7f9de;
+  --rb-warning: #af7100;
+  --rb-warning-soft: #ffebd3;
+  --rb-danger: #d02a3a;
+  --rb-danger-soft: #ffe8e7;
+  --rb-info: #0f74c5;
+  --rb-info-soft: #e3f0ff;
+  --rb-inverse: #201e26;
+  --rb-on-inverse: #f5f4fa;
+  --rb-scrollbar: #16151938;
 
-  /* ── M3 Error (theme-weighted extended color) ─────────────────── */
-  --m3-error: #bb0947;
-  --m3-on-error: #ffffff;
-  --m3-error-container: #ffd9dd;
-  --m3-on-error-container: #400012;
+  /* Derived */
+  --rb-track: var(--rb-fill-strong);
+  --rb-backdrop: rgb(16 10 30 / 34%);
+  --rb-shadow-color: rgb(24 12 48 / 12%);
+  --rb-shadow-raised: 0 0 0 1px var(--rb-hairline), 0 1px 2px rgb(24 12 48 / 4%), 0 8px 24px -12px rgb(24 12 48 / 16%);
+  --rb-shadow-overlay:
+    0 0 0 1px var(--rb-hairline), 0 2px 6px rgb(24 12 48 / 8%), 0 28px 72px -16px rgb(24 12 48 / 30%);
 
-  /* ── M3 Success (Extended) ─────────────────────────────────────── */
-  --m3-success: #0a6d36;
-  --m3-on-success: #ffffff;
-  --m3-success-container: #9ef6b0;
-  --m3-on-success-container: #00210b;
+  /* Typography */
+  --rb-font-sans:
+    'Geist Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+  --rb-font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --rb-text-body: 13px;
 
-  /* ── M3 Tertiary (Theme accent — special operations) ──────────────── */
-  --m3-tertiary: #7f525b;
-  --m3-on-tertiary: #ffffff;
-  --m3-tertiary-container: #ffd9df;
-  --m3-on-tertiary-container: #321019;
+  /* Shape */
+  --rb-radius-control: 9px;
+  --rb-radius-card: 14px;
+  --rb-radius-dialog: 18px;
+  --rb-radius-tile: 10px;
 
-  /* ── M3 Warning (harmonized extended color) ───────────────────── */
-  --m3-warning: #885200;
-  --m3-on-warning: #ffffff;
-  --m3-warning-container: #ffddbb;
-  --m3-on-warning-container: #2b1700;
+  /* Layout */
+  --rb-sidebar-width: 224px;
+  --rb-rail-width: 64px;
+  --rb-page-inline: 28px;
+  --rb-titlebar-height: 52px;
 
-  /* ── M3 Inverse ────────────────────────────────────────────────── */
-  --m3-inverse-surface: #322f33;
-  --m3-on-inverse-surface: #f5eff4;
-
-  /* ── M3 Scrollbar ──────────────────────────────────────────────── */
-  --m3-scrollbar-thumb: color-mix(in srgb, var(--m3-on-surface) 24%, transparent);
-  --m3-scrollbar-thumb-inactive: color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
-
-  /* ── M3 Shadow ─────────────────────────────────────────────────── */
-  --m3-shadow: rgba(0, 0, 0, 0.15);
-
-  /* ── M3 Status Colors (semantic) ────────────────────────────────── */
-  --m3-status-active: #7739cd;
-  --m3-status-waiting: #375ba9;
-  --m3-status-paused: #7b757f;
-  --m3-status-error: #bb0947;
-  --m3-status-success: #0a6d36;
-
-  /* ── M3 Drop Zone ──────────────────────────────────────────────── */
-  --m3-drop-zone-border: var(--m3-outline-variant);
-
-  --main-bg: var(--m3-surface-container-low);
-  --sidebar-bg: var(--m3-surface-container);
-  --divider: color-mix(in srgb, var(--m3-on-surface) 9%, transparent);
-  --interaction-hover: color-mix(in srgb, var(--m3-on-surface) 3%, transparent);
-  --selection-bg: color-mix(in srgb, var(--m3-primary) 7%, transparent);
-  --progress-track: color-mix(in srgb, var(--m3-on-surface) 9%, transparent);
-  --panel-title: var(--m3-on-surface);
-  --panel-border: var(--m3-outline-variant);
-
-  /* ── Typography ────────────────────────────────────────────────── */
-  --font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    'Helvetica Neue', Helvetica, Arial, sans-serif;
-  --font-size-base: 14px;
-  --font-size-sm: 13px;
-  --font-size-xs: 12px;
-  --border-radius: 6px;
-  --task-motion-enter: 200ms;
-  --task-motion-leave: 150ms;
-  --task-motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* Motion */
+  --rb-motion-feedback: 120ms;
+  --rb-motion-view: 200ms;
+  --rb-motion-exit: 150ms;
+  --rb-motion-push: 280ms;
+  --rb-motion-dialog: 240ms;
+  --rb-motion-layout: 240ms;
+  --rb-motion-progress: 400ms;
+  --rb-ease: cubic-bezier(0.2, 0, 0, 1);
+  --rb-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --rb-ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
 }
 
-/* ── Dark Theme ────────────────────────────────────────────────────── */
 .dark {
-  /* ── M3 Surface Tonal System ───────────────────────────────────── */
-  --m3-surface: #1d1b1e;
-  --m3-surface-dim: #141316;
-  --m3-surface-container-lowest: #0e0e0e;
-  --m3-surface-container-low: #1b1b1b;
-  --m3-surface-container: #1f1f1f;
-  --m3-surface-container-high: #2a2a2a;
-  --m3-surface-container-highest: #353535;
-
-  /* ── M3 On-Surface / Text ──────────────────────────────────────── */
-  --m3-on-surface: #e7e1e6;
-  --m3-on-surface-variant: #cbc4cf;
-
-  /* ── M3 Outline / Borders ──────────────────────────────────────── */
-  --m3-outline: #958e99;
-  --m3-outline-variant: #4a454e;
-
-  /* ── M3 Primary (Electric Purple — lighter in dark) ─────────────────── */
-  --m3-primary: #d6baff;
-  --m3-on-primary: #430089;
-  --m3-primary-container: #5e16b4;
-  --m3-on-primary-container: #ecdcff;
-
-  /* ── M3 Info (harmonized extended color) ──────────────────────── */
-  --m3-info: #b1c5ff;
-  --m3-on-info: #002c70;
-  --m3-info-container: #1a4390;
-  --m3-on-info-container: #d9e2ff;
-
-  /* ── M3 Error (theme-weighted extended color) ─────────────────── */
-  --m3-error: #ffb2bc;
-  --m3-on-error: #670023;
-  --m3-error-container: #910034;
-  --m3-on-error-container: #ffd9dd;
-
-  /* ── M3 Success (Extended — lighter in dark) ────────────────────── */
-  --m3-success: #82d996;
-  --m3-on-success: #003918;
-  --m3-success-container: #005226;
-  --m3-on-success-container: #9ef6b0;
-
-  /* ── M3 Tertiary (Green-gray — lighter in dark) ─────────────────── */
-  --m3-tertiary: #f1b7c3;
-  --m3-on-tertiary: #4b252e;
-  --m3-tertiary-container: #643b44;
-  --m3-on-tertiary-container: #ffd9df;
-
-  /* ── M3 Warning ────────────────────────────────────────────────── */
-  --m3-warning: #ffb869;
-  --m3-on-warning: #482900;
-  --m3-warning-container: #673d00;
-  --m3-on-warning-container: #ffddbb;
-
-  /* ── M3 Inverse ────────────────────────────────────────────────── */
-  --m3-inverse-surface: #e7e1e6;
-  --m3-on-inverse-surface: #322f33;
-
-  /* ── M3 Scrollbar ──────────────────────────────────────────────── */
-  --m3-scrollbar-thumb: color-mix(in srgb, var(--m3-on-surface) 24%, transparent);
-  --m3-scrollbar-thumb-inactive: color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
-
-  /* ── M3 Shadow ─────────────────────────────────────────────────── */
-  --m3-shadow: rgba(0, 0, 0, 0.5);
-
-  /* ── M3 Status Colors (semantic — lighter in dark) ──────────────── */
-  --m3-status-active: #d6baff;
-  --m3-status-waiting: #b1c5ff;
-  --m3-status-paused: #958e99;
-  --m3-status-error: #ffb2bc;
-  --m3-status-success: #82d996;
-
-  /* Dark workspace surface. */
-  --main-bg: var(--m3-surface-container-low);
+  --rb-canvas: #100e17;
+  --rb-sidebar: #0b0812;
+  --rb-raised: #1a1821;
+  --rb-overlay: #24212a;
+  --rb-fill: #25222b;
+  --rb-fill-strong: #312f38;
+  --rb-text: #eceaf1;
+  --rb-text-muted: #9f9ca7;
+  --rb-text-faint: #72707a;
+  --rb-hairline: #27252f;
+  --rb-border: #393641;
+  --rb-border-strong: #595662;
+  --rb-hover: #efecf80f;
+  --rb-pressed: #efecf81a;
+  --rb-selected: #a989ec29;
+  --rb-accent: #b499f0;
+  --rb-accent-strong: #c4b1f5;
+  --rb-accent-bright: #c8b3fd;
+  --rb-accent-text: #c4b1f5;
+  --rb-accent-soft: #362c4d;
+  --rb-on-accent: #0f091b;
+  --rb-glow: #b499f052;
+  --rb-gradient: linear-gradient(135deg, #c8b3fd 0%, #b499f0 100%);
+  --rb-success: #62d286;
+  --rb-success-soft: #12361e;
+  --rb-warning: #ffb346;
+  --rb-warning-soft: #402804;
+  --rb-danger: #ff8987;
+  --rb-danger-soft: #472020;
+  --rb-info: #7cbdff;
+  --rb-info-soft: #142f4b;
+  --rb-inverse: #efedf4;
+  --rb-on-inverse: #17151c;
+  --rb-scrollbar: #efecf838;
+  --rb-backdrop: rgb(0 0 0 / 52%);
+  --rb-shadow-color: rgb(0 0 0 / 45%);
+  --rb-shadow-raised: 0 0 0 1px var(--rb-hairline), 0 8px 24px -12px rgb(0 0 0 / 50%);
+  --rb-shadow-overlay: 0 0 0 1px var(--rb-border), 0 28px 72px -16px rgb(0 0 0 / 70%);
 }

@@ -127,5 +127,3 @@ function dismiss() {
     </template>
   </AppDialog>
 </template>
-
-<style src="@/styles/selection-dialog.css" scoped></style>

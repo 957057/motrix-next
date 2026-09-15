@@ -18,7 +18,7 @@ import {
 import { hasUnsafeHeaderChars, sanitizeHeaderValue } from '@shared/utils/headerSanitize'
 import { useSystemProxyDetect } from '@/composables/useSystemProxyDetect'
 import { useAppMessage } from '@/composables/useAppMessage'
-import { SearchOutline } from '@vicons/ionicons5'
+import { Search } from '@lucide/vue'
 import type { TaskProxyMode } from '@shared/utils/proxy'
 import UserAgentPopover from '@/components/common/UserAgentPopover.vue'
 import type { UserAgentProfile, UserAgentRule } from '@shared/types'
@@ -223,7 +223,7 @@ const { detecting: detectingProxy, detect: detectProxy } = useSystemProxyDetect(
             />
             <NButton :loading="detectingProxy" size="small" @click="detectProxy">
               <template #icon>
-                <NIcon><SearchOutline /></NIcon>
+                <NIcon><Search /></NIcon>
               </template>
               {{ t('preferences.detect-system-proxy') }}
             </NButton>
@@ -244,12 +244,12 @@ const { detecting: detectingProxy, detect: detectProxy } = useSystemProxyDetect(
   gap: 12px;
 }
 .field-hint {
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   font-size: 13px;
   line-height: 20px;
 }
 .field-warning {
-  color: var(--m3-error);
+  color: var(--rb-danger);
   display: flex;
   align-items: center;
   justify-content: space-between;

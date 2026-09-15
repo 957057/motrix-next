@@ -2,7 +2,7 @@
 /** @fileoverview Visual bitfield progress graphic for download pieces. */
 import { computed, ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useAppColorTokens } from '@/composables/useColorScheme'
+import { useThemeTokens } from '@/composables/useAppTheme'
 
 const props = withDefaults(
   defineProps<{
@@ -25,7 +25,7 @@ const { t } = useI18n()
 const container = ref<HTMLElement>()
 const canvas = ref<HTMLCanvasElement>()
 const containerWidth = ref(300)
-const colorTokens = useAppColorTokens()
+const colorTokens = useThemeTokens()
 
 function updateWidth() {
   if (container.value) containerWidth.value = container.value.clientWidth
@@ -94,7 +94,7 @@ function draw() {
     const y = row * ahg
     const status = Math.floor(parseInt(bf[i], 16) / 4)
 
-    ctx.fillStyle = status > 0 ? colorTokens.value.primary.color : colorTokens.value.surfaceContainerHighest
+    ctx.fillStyle = status > 0 ? colorTokens.value.accent : colorTokens.value.fillStrong
     ctx.globalAlpha = status > 0 ? status / 3 : 1
     ctx.beginPath()
     ctx.roundRect(x, y, aw, ah, r)
@@ -130,7 +130,7 @@ onMounted(() => nextTick(draw))
   display: block;
 }
 .no-bitfield {
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   font-size: 12px;
   padding: 8px 0;
 }

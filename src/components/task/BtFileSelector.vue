@@ -113,17 +113,17 @@ function updateSelection(keys: DataTableRowKey[]) {
   align-items: baseline;
   gap: 6px;
   min-height: 20px;
-  color: var(--m3-on-surface-variant);
-  font-size: var(--font-size-sm);
+  color: var(--rb-text-muted);
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
 .summary-value {
-  color: var(--m3-on-surface);
+  color: var(--rb-text);
   font-weight: 600;
 }
 
 .summary-divider {
-  color: var(--m3-outline);
+  color: var(--rb-border);
 }
 </style>

@@ -14,7 +14,7 @@ import {
   type NumericConfigKey,
   isNumericValueValid,
 } from '@shared/configConstraints'
-import { getAllowedColorSchemeIds, normalizeCustomColorScheme } from '@shared/utils/colorSchemeConfig'
+import { getAllowedColorSchemeIds, normalizeCustomColorScheme } from '@shared/theme/schemes'
 import { normalizeProxyMode } from '@shared/utils/proxy'
 import type { AppConfig, ClipboardConfig, PortConflictRecoveryConfig, ProxyConfig } from '@shared/types'
 import { normalizeFileCategory } from '@shared/utils/fileCategory'

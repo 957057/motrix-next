@@ -1,7 +1,6 @@
 /** @fileoverview Tests for centralized AppConfig hydration. */
 import { describe, expect, it } from 'vitest'
 import {
-  COLOR_SCHEMES,
   DEFAULT_APP_CONFIG,
   FILE_ALLOCATION_OPTIONS,
   APP_LOG_LEVELS,
@@ -9,6 +8,7 @@ import {
   PROXY_SCOPE_OPTIONS,
   UPDATE_CHANNELS,
 } from '@shared/constants'
+import { COLOR_SCHEMES } from '@shared/theme/schemes'
 import { hydrateAppConfig } from '@shared/utils/configHydration'
 import { NUMERIC_CONFIG_CONSTRAINTS } from '@shared/configConstraints'
 import type { AppConfig } from '@shared/types'

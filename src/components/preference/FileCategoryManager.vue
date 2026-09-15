@@ -21,7 +21,7 @@ import {
   NSpace,
   NText,
 } from 'naive-ui'
-import { FolderOpenOutline, ReorderTwoOutline } from '@vicons/ionicons5'
+import { FolderOpen, GripVertical } from '@lucide/vue'
 
 const props = defineProps<{
   show: boolean
@@ -279,7 +279,7 @@ watch(
                 @keydown.up.stop.prevent="moveCategory(index, Math.max(0, index - 1))"
                 @keydown.down.stop.prevent="moveCategory(index, Math.min(draft.length - 1, index + 1))"
               >
-                <NIcon :size="18"><ReorderTwoOutline /></NIcon>
+                <NIcon :size="18"><GripVertical /></NIcon>
               </span>
               <span class="category-manager-list-copy">
                 <span class="category-manager-list-title">{{ categoryTitle(category) }}</span>
@@ -367,7 +367,7 @@ watch(
                 />
                 <NButton size="small" class="pref-icon-button-sm" @click="handleSelectCategoryDir">
                   <template #icon>
-                    <NIcon :size="14"><FolderOpenOutline /></NIcon>
+                    <NIcon :size="14"><FolderOpen /></NIcon>
                   </template>
                 </NButton>
               </NInputGroup>
@@ -411,7 +411,7 @@ watch(
 }
 .category-manager-priority-hint {
   font-size: 13px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   margin-bottom: 12px;
 }
 .category-manager-list-items {
@@ -424,11 +424,11 @@ watch(
   align-items: center;
   gap: 12px;
   padding: 14px 8px;
-  border-bottom: 1px solid var(--divider);
+  border-bottom: 1px solid var(--rb-hairline);
   cursor: pointer;
 }
 .category-manager-list-item--active {
-  background: var(--selection-bg);
+  background: var(--rb-selected);
 }
 .category-manager-list-copy {
   flex: 1;
@@ -443,7 +443,7 @@ watch(
 }
 .category-manager-list-meta {
   font-size: 13px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   overflow-wrap: anywhere;
 }
 .category-manager-drag-handle {
@@ -460,7 +460,7 @@ watch(
   margin-top: 12px;
 }
 .category-manager-editor {
-  border-top: 1px solid var(--divider);
+  border-top: 1px solid var(--rb-hairline);
   padding-top: 24px;
 }
 .category-manager-editor-content {
@@ -480,7 +480,7 @@ watch(
 .category-manager-field .n-text {
   font-size: 13px;
   line-height: 20px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
 }
 .category-manager-rule-mode {
   display: flex;

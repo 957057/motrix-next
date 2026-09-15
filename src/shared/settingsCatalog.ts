@@ -14,10 +14,6 @@ export const settingsCatalog: ReadonlyArray<{
     category: 'general',
   },
   {
-    key: 'preferences.custom-color-scheme',
-    category: 'general',
-  },
-  {
     key: 'preferences.task-card-mode',
     category: 'general',
   },

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NIcon, NModal, NButton, NCheckbox, NProgress } from 'naive-ui'
-import { MenuOutline } from '@vicons/ionicons5'
+import { Menu } from '@lucide/vue'
 import { useDesktopRuntime } from '@/composables/useDesktopRuntime'
 import { useTaskViewStore } from '@/stores/taskView'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
@@ -38,9 +38,8 @@ const {
 
 <template>
   <div id="container" :class="{ 'native-frame': isMac }">
-    <!-- Minimal progress bar during engine initialization / restart -->
-    <Transition name="engine-slide">
-      <div v-if="engineStore.isBusy" class="engine-banner">
+    <Transition name="fade">
+      <div v-if="engineStore.isBusy" class="engine-banner" aria-hidden="true">
         <div class="engine-progress" />
       </div>
     </Transition>
@@ -52,7 +51,7 @@ const {
           :aria-label="t('app.task-list')"
           @click="taskView.navigationOpen = true"
         >
-          <NIcon :size="20"><MenuOutline /></NIcon>
+          <NIcon :size="20"><Menu /></NIcon>
         </button>
       </div>
       <main class="content">
@@ -89,7 +88,6 @@ const {
       :blocked="appStore.addTaskVisible || addTaskClosing || showAbout || showExitDialog || engineStore.isBusy"
     />
 
-    <!-- Close action dialog: minimize-to-tray / quit / cancel -->
     <NModal
       :show="showExitDialog"
       preset="dialog"
@@ -97,7 +95,7 @@ const {
       :title="t('app.close-action-title')"
       :closable="true"
       :mask-closable="true"
-      style="width: 480px"
+      :show-icon="false"
       transform-origin="center"
       @after-leave="onExitDialogAfterLeave"
       @update:show="
@@ -108,20 +106,12 @@ const {
     >
       <span>{{ t('app.close-action-message') }}</span>
       <div class="remember-choice">
-        <NCheckbox v-model:checked="rememberChoice">
-          {{ t('app.remember-close-choice') }}
-        </NCheckbox>
+        <NCheckbox v-model:checked="rememberChoice">{{ t('app.remember-close-choice') }}</NCheckbox>
       </div>
       <template #action>
-        <NButton class="exit-btn" @click="handleExitCancel">
-          {{ t('app.cancel') }}
-        </NButton>
-        <NButton class="exit-btn" @click="handleMinimizeToTray">
-          {{ t('app.minimize-to-tray') }}
-        </NButton>
-        <NButton class="exit-btn" type="primary" @click="handleExitConfirm">
-          {{ t('app.quit-app') }}
-        </NButton>
+        <NButton quaternary @click="handleExitCancel">{{ t('app.cancel') }}</NButton>
+        <NButton @click="handleMinimizeToTray">{{ t('app.minimize-to-tray') }}</NButton>
+        <NButton type="primary" @click="handleExitConfirm">{{ t('app.quit-app') }}</NButton>
       </template>
     </NModal>
 
@@ -132,7 +122,6 @@ const {
       :title="t('app.shutdown-countdown-title')"
       :closable="false"
       :mask-closable="false"
-      style="width: 480px"
       transform-origin="center"
       :positive-text="t('app.shutdown-skip-once')"
       :negative-text="t('app.shutdown-disable')"
@@ -144,7 +133,7 @@ const {
         type="line"
         :percentage="(shutdownCountdown / 60) * 100"
         :show-indicator="false"
-        style="margin-top: 12px"
+        style="margin-top: 14px"
       />
     </NModal>
   </div>
@@ -156,26 +145,32 @@ const {
   height: 100dvh;
   position: relative;
   overflow: hidden;
-  background: var(--main-bg);
+  background: var(--rb-sidebar);
 }
+
 .workspace {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-width: 0;
   min-height: 0;
+  background: var(--rb-canvas);
+  border-inline-start: 1px solid var(--rb-hairline);
 }
+
 .window-drag-area {
   height: 28px;
   flex-shrink: 0;
 }
+
 .navigation-toggle {
   display: none;
   position: absolute;
-  top: 2px;
+  top: 6px;
   inset-inline-start: 12px;
   z-index: 10;
 }
+
 .content {
   position: relative;
   flex: 1;
@@ -183,15 +178,15 @@ const {
   min-width: 0;
   overflow: hidden;
 }
+
 .window-controls {
   z-index: 100;
 }
+
 .remember-choice {
-  margin-block: 16px 8px;
+  margin-block: 14px 4px;
 }
-.exit-btn {
-  min-width: 72px;
-}
+
 .engine-banner {
   position: absolute;
   top: 0;
@@ -199,26 +194,37 @@ const {
   height: 2px;
   z-index: 200;
   pointer-events: none;
+  overflow: hidden;
 }
+
 .engine-progress {
   height: 100%;
-  background: var(--m3-primary);
-  opacity: 0.7;
+  width: 40%;
+  background: var(--rb-gradient);
+  border-radius: 999px;
+  animation: engine-sweep 1.6s var(--rb-ease) infinite;
 }
-.engine-slide-enter-active,
-.engine-slide-leave-active {
-  transition: opacity 160ms ease;
+
+@keyframes engine-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(350%);
+  }
 }
-.engine-slide-enter-from,
-.engine-slide-leave-to {
-  opacity: 0;
-}
+
 @media (max-width: 719px) {
   .navigation-toggle {
     display: inline-flex;
   }
+
   .window-drag-area {
-    height: 36px;
+    height: 44px;
+  }
+
+  .workspace {
+    border-inline-start: 0;
   }
 }
 </style>

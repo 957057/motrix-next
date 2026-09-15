@@ -19,7 +19,7 @@ import {
   NTabs,
   NText,
 } from 'naive-ui'
-import { AddOutline, ArrowForwardOutline, ReorderThreeOutline } from '@vicons/ionicons5'
+import { Plus, ArrowRight, GripVertical } from '@lucide/vue'
 import { useAppMessage } from '@/composables/useAppMessage'
 import { Reorder, AnimatePresence } from 'motion-v'
 import ReorderItem from '@/components/common/ReorderItem.vue'
@@ -165,7 +165,7 @@ watch(
               <template #extra>
                 <NButton type="primary" :disabled="!manager.canAddProfile.value" @click="addProfile">
                   <template #icon
-                    ><NIcon><AddOutline /></NIcon
+                    ><NIcon><Plus /></NIcon
                   ></template>
                   {{ t('preferences.ua-add-profile') }}
                 </NButton>
@@ -179,7 +179,7 @@ watch(
                 <NText depth="3">{{ t('preferences.ua-saved') }}</NText>
                 <NButton size="small" secondary :disabled="!manager.canAddProfile.value" @click="addProfile">
                   <template #icon
-                    ><NIcon><AddOutline /></NIcon
+                    ><NIcon><Plus /></NIcon
                   ></template>
                   {{ t('preferences.ua-add-profile') }}
                 </NButton>
@@ -244,7 +244,7 @@ watch(
               <template #extra>
                 <NButton type="primary" @click="openProfileSetup">
                   <template #icon
-                    ><NIcon><AddOutline /></NIcon
+                    ><NIcon><Plus /></NIcon
                   ></template>
                   {{ t('preferences.ua-add-profile') }}
                 </NButton>
@@ -257,7 +257,7 @@ watch(
               <template #extra>
                 <NButton type="primary" :disabled="!manager.canAddRule.value" @click="addRule">
                   <template #icon
-                    ><NIcon><AddOutline /></NIcon
+                    ><NIcon><Plus /></NIcon
                   ></template>
                   {{ t('preferences.ua-add-rule') }}
                 </NButton>
@@ -271,7 +271,7 @@ watch(
                 <NText depth="3">{{ t('preferences.ua-rule-order-hint') }}</NText>
                 <NButton size="small" secondary :disabled="!manager.canAddRule.value" @click="addRule">
                   <template #icon
-                    ><NIcon><AddOutline /></NIcon
+                    ><NIcon><Plus /></NIcon
                   ></template>
                   {{ t('preferences.ua-add-rule') }}
                 </NButton>
@@ -315,7 +315,7 @@ watch(
                         manager.moveRule(index, Math.min(manager.rules.value.length - 1, index + 1))
                       "
                     >
-                      <NIcon aria-hidden="true"><ReorderThreeOutline /></NIcon>
+                      <NIcon aria-hidden="true"><GripVertical /></NIcon>
                     </span>
                     <span class="ua-manager-list-copy">
                       <span class="ua-manager-list-title">{{ rule.hostPattern || t('preferences.ua-new-rule') }}</span>
@@ -366,7 +366,7 @@ watch(
                   <div class="ua-manager-rule-preview">
                     <div class="ua-manager-rule-flow">
                       <strong>{{ manager.selectedRule.value.hostPattern || '*.example.com' }}</strong>
-                      <NIcon aria-hidden="true"><ArrowForwardOutline /></NIcon>
+                      <NIcon aria-hidden="true"><ArrowRight /></NIcon>
                       <strong>{{ selectedRuleProfileName }}</strong>
                     </div>
                     <NText depth="3">
@@ -406,7 +406,7 @@ watch(
 <style scoped>
 .manager-description {
   margin-bottom: 16px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   font-size: 13px;
 }
 .ua-manager-content-stage {
@@ -443,7 +443,7 @@ watch(
   min-height: 56px;
   padding: 12px;
   justify-content: flex-start;
-  border-bottom: 1px solid var(--divider);
+  border-bottom: 1px solid var(--rb-hairline);
   border-radius: 0;
 }
 .ua-manager-list-copy {
@@ -459,14 +459,14 @@ watch(
 }
 .ua-manager-list-meta {
   font-size: 13px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   white-space: normal;
   overflow-wrap: anywhere;
 }
 .ua-manager-editor {
   position: relative;
   padding-top: 20px;
-  border-top: 1px solid var(--divider);
+  border-top: 1px solid var(--rb-hairline);
 }
 .ua-manager-editor > .view-leave-active {
   inset-block-start: 20px;
@@ -486,7 +486,7 @@ watch(
   align-items: center;
   gap: 12px;
   padding: 12px;
-  border-bottom: 1px solid var(--divider);
+  border-bottom: 1px solid var(--rb-hairline);
 }
 .ua-rule-copy {
   display: flex;
@@ -502,6 +502,6 @@ watch(
   min-height: 32px;
 }
 .ua-manager-rule-row--active {
-  background: var(--selection-bg);
+  background: var(--rb-selected);
 }
 </style>

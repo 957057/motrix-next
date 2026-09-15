@@ -42,7 +42,7 @@ import {
 } from 'naive-ui'
 import PreferenceActionBar from './PreferenceActionBar.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
-import { SyncOutline, AddCircleOutline, CloseCircleOutline, DiceOutline } from '@vicons/ionicons5'
+import { RefreshCw, CirclePlus, CircleX, Dices } from '@lucide/vue'
 
 const settingsRoute = useRoute()
 const { t, locale } = useI18n()
@@ -147,7 +147,7 @@ function renderCustomOption(info: {
         class: 'custom-tracker-option__delete',
         onClick: (e: Event) => onDeleteCustomTracker(url, e),
       },
-      [h(NIcon, { size: 18 }, { default: () => h(CloseCircleOutline) })],
+      [h(NIcon, { size: 18 }, { default: () => h(CircleX) })],
     ),
   ])
 }
@@ -548,7 +548,7 @@ onMounted(() => {
             />
             <NButton secondary class="pref-action-button pref-action-button--compact" @click="onBtPortDice">
               <template #icon>
-                <NIcon><DiceOutline /></NIcon>
+                <NIcon><Dices /></NIcon>
               </template>
               {{ t('preferences.random-port') }}
             </NButton>
@@ -690,7 +690,7 @@ onMounted(() => {
                 @click="handleSyncBlocklist"
               >
                 <template #icon>
-                  <NIcon><SyncOutline /></NIcon>
+                  <NIcon><RefreshCw /></NIcon>
                 </template>
                 {{ t('preferences.bt-peer-blocklist-update') }}
               </NButton>
@@ -760,7 +760,7 @@ onMounted(() => {
               />
               <NButton class="pref-input-group-action" :aria-label="t('app.add')" @click="onAddCustomTracker">
                 <template #icon>
-                  <NIcon><AddCircleOutline /></NIcon>
+                  <NIcon><CirclePlus /></NIcon>
                 </template>
                 {{ t('app.add') }}
               </NButton>
@@ -788,7 +788,7 @@ onMounted(() => {
             @click="handleSyncTracker"
           >
             <template #icon>
-              <NIcon><SyncOutline /></NIcon>
+              <NIcon><RefreshCw /></NIcon>
             </template>
             {{ t('preferences.bt-tracker-sync') }}
           </NButton>
@@ -846,7 +846,7 @@ onMounted(() => {
   right: 8px;
   display: flex;
   align-items: center;
-  color: var(--m3-error);
+  color: var(--rb-danger);
   cursor: pointer;
 }
 :global(.tracker-sync-failures) {
@@ -855,7 +855,7 @@ onMounted(() => {
 }
 :global(.tracker-sync-failures__summary) {
   margin: 0 0 8px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
 }
 :global(.tracker-sync-failures__heading) {
   margin: 0 0 8px;
@@ -864,9 +864,9 @@ onMounted(() => {
 :global(.tracker-sync-failure) {
   margin: 6px 0;
   padding: 6px 8px;
-  border-radius: 4px;
-  background: var(--m3-error-container);
-  color: var(--m3-on-error-container);
+  border-radius: 6px;
+  background: var(--rb-danger-soft);
+  color: var(--rb-danger);
 }
 :global(.tracker-sync-failure__url) {
   font-size: 12px;
@@ -913,12 +913,12 @@ onMounted(() => {
   overflow-wrap: anywhere;
 }
 .tracker-source-option__owner {
-  color: var(--m3-on-surface);
+  color: var(--rb-text);
   font-size: 13px;
   font-weight: 600;
 }
 .tracker-source-option__repository {
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   font-size: 12px;
 }
 .bt-blocklist-update-button {
@@ -936,7 +936,7 @@ onMounted(() => {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--m3-primary);
+  color: var(--rb-accent);
   cursor: pointer;
   text-decoration: none;
   font-size: 12px;

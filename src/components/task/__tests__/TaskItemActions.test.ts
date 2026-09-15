@@ -13,21 +13,21 @@ vi.mock('naive-ui', () => ({
   NIcon: { template: '<span><slot /></span>' },
   NTooltip: { template: '<span><slot name="trigger" /><slot /></span>' },
 }))
-vi.mock('@vicons/ionicons5', () => {
+vi.mock('@lucide/vue', () => {
   const icon = { template: '<i />' }
   return {
-    EllipsisHorizontalOutline: icon,
-    PauseOutline: icon,
-    PlayOutline: icon,
-    StopCircleOutline: icon,
-    RefreshOutline: icon,
-    CloseOutline: icon,
-    TrashOutline: icon,
-    LinkOutline: icon,
-    InformationCircleOutline: icon,
-    FolderOpenOutline: icon,
-    OpenOutline: icon,
-    ListOutline: icon,
+    Ellipsis: icon,
+    Pause: icon,
+    Play: icon,
+    CircleStop: icon,
+    RefreshCw: icon,
+    X: icon,
+    Trash2: icon,
+    Link: icon,
+    Info: icon,
+    FolderOpen: icon,
+    ExternalLink: icon,
+    List: icon,
   }
 })
 

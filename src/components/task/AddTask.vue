@@ -65,7 +65,7 @@ import {
 } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
 import type { BatchItem, BatchItemKind, BtFileSelectionItem, UserAgentProfile } from '@shared/types'
-import { DocumentOutline, CloseOutline, FolderOpenOutline, CloudUploadOutline, RefreshOutline } from '@vicons/ionicons5'
+import { File, X, FolderOpen, CloudUpload, RefreshCw } from '@lucide/vue'
 import { defaultMediaOptions, mediaOutputHint } from '@shared/utils/media'
 import AdvancedOptions from './addtask/AdvancedOptions.vue'
 import DirectoryPopover from '@/components/common/DirectoryPopover.vue'
@@ -710,7 +710,8 @@ async function handleSubmit() {
     <NForm :show-feedback="false" label-placement="top" :disabled="submitting" class="download-form">
       <NTabs
         :value="activeTab"
-        type="line"
+        type="segment"
+        size="small"
         animated
         pane-wrapper-class="task-source-panes"
         :pane-wrapper-style="{ '--task-source-direction': sourceDirection }"
@@ -774,7 +775,7 @@ async function handleSubmit() {
                     :title="item.displayName"
                     @click="selectedBatchIndex = idx"
                   >
-                    <NIcon :size="18"><DocumentOutline /></NIcon>
+                    <NIcon :size="18"><File /></NIcon>
                     <span class="batch-item-copy">
                       <span class="batch-item-name">{{ item.displayName }}</span>
                       <span v-if="item.inspectionState === 'failed'" class="batch-item-error">{{ item.error }}</span>
@@ -808,7 +809,7 @@ async function handleSubmit() {
                         @click="retryTorrent(item)"
                       >
                         <template #icon
-                          ><NIcon :size="16"><RefreshOutline /></NIcon
+                          ><NIcon :size="16"><RefreshCw /></NIcon
                         ></template>
                       </NButton>
                     </Transition>
@@ -821,7 +822,7 @@ async function handleSubmit() {
                     @click="removeBatchItem(item)"
                   >
                     <template #icon
-                      ><NIcon :size="16"><CloseOutline /></NIcon
+                      ><NIcon :size="16"><X /></NIcon
                     ></template>
                   </NButton>
                 </div>
@@ -830,7 +831,7 @@ async function handleSubmit() {
               <!-- Add more files button -->
               <NButton size="small" quaternary class="add-torrent-button" @click="chooseTorrentFile">
                 <template #icon>
-                  <NIcon><CloudUploadOutline /></NIcon>
+                  <NIcon><CloudUpload /></NIcon>
                 </template>
                 {{ t('task.add-torrent') }}
               </NButton>
@@ -859,7 +860,7 @@ async function handleSubmit() {
 
             <!-- Upload zone: shown when no torrents loaded -->
             <button v-if="fileItems.length === 0" type="button" class="torrent-upload-zone" @click="chooseTorrentFile">
-              <NIcon :size="36" :depth="3"><CloudUploadOutline /></NIcon>
+              <NIcon :size="36" :depth="3"><CloudUpload /></NIcon>
               <span class="torrent-upload-text">
                 {{ t('task.select-torrent') }}
               </span>
@@ -881,7 +882,7 @@ async function handleSubmit() {
               />
               <NButton :aria-label="t('task.choose-folder')" @click="chooseDirectory">
                 <template #icon>
-                  <NIcon><FolderOpenOutline /></NIcon>
+                  <NIcon><FolderOpen /></NIcon>
                 </template>
               </NButton>
               <DirectoryPopover @select="onDirectorySelect" />
@@ -1000,7 +1001,7 @@ async function handleSubmit() {
 }
 .field-hint {
   font-size: 13px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
   line-height: 20px;
   margin-top: 8px;
 }
@@ -1021,11 +1022,11 @@ async function handleSubmit() {
   gap: 4px;
   min-width: 0;
   padding-inline-end: 4px;
-  border-radius: 6px;
+  border-radius: var(--rb-radius-control);
   transition: background-color 120ms ease;
 }
 .batch-item-selected {
-  background: var(--selection-bg);
+  background: var(--rb-selected);
 }
 .batch-item-select {
   display: flex;
@@ -1036,9 +1037,9 @@ async function handleSubmit() {
   min-height: 40px;
   padding: 8px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--rb-radius-control);
   background: transparent;
-  color: var(--m3-on-surface);
+  color: var(--rb-text);
   text-align: start;
   cursor: pointer;
 }
@@ -1053,7 +1054,7 @@ async function handleSubmit() {
   white-space: nowrap;
 }
 .batch-item-error {
-  color: var(--m3-error);
+  color: var(--rb-danger);
   font-size: 12px;
   line-height: 18px;
   overflow-wrap: anywhere;
@@ -1123,13 +1124,20 @@ async function handleSubmit() {
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 138px;
-  border: 1px dashed var(--m3-outline-variant);
-  border-radius: 6px;
-  color: var(--m3-on-surface-variant);
+  min-height: 150px;
+  border: 1.5px dashed var(--rb-border);
+  border-radius: var(--rb-radius-card);
+  background: var(--rb-fill);
+  color: var(--rb-text-muted);
+  transition:
+    border-color var(--rb-motion-feedback) var(--rb-ease),
+    background-color var(--rb-motion-feedback) var(--rb-ease),
+    color var(--rb-motion-feedback) var(--rb-ease);
 }
 .torrent-upload-zone:hover {
-  border-color: var(--m3-primary);
+  border-color: var(--rb-accent);
+  background: var(--rb-accent-soft);
+  color: var(--rb-accent-text);
 }
 .download-settings {
   padding-top: 20px;
@@ -1140,6 +1148,7 @@ async function handleSubmit() {
 .download-form :deep(.n-form-item-label) {
   font-weight: 500;
   padding-block: 0 6px;
+  color: var(--rb-text-muted);
 }
 .download-form :deep(.n-form-item-feedback-wrapper) {
   min-height: 0;

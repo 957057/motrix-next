@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest'
 import { h, ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { darkTheme, NConfigProvider } from 'naive-ui'
-import { buildNaiveTheme } from '@/composables/useColorScheme'
-import { buildAppColorTokens, buildColorSchemeTheme } from '@shared/utils/colorScheme'
-import { COLOR_SCHEMES } from '@shared/constants'
+import { buildNaiveOverrides } from '@shared/theme/naive'
+import { buildThemeTokens } from '@shared/theme/palette'
+import { COLOR_SCHEMES } from '@shared/theme/schemes'
 import BtFileSelector from '../BtFileSelector.vue'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (key: string) => key }) }))
@@ -34,9 +34,9 @@ describe('Torrent selection with the application theme', () => {
   for (const dark of [false, true]) {
     it(`renders actual table rows and preserves hidden selections (${dark ? 'dark' : 'light'})`, async () => {
       const selected = ref([1, 2])
-      const tokens = buildAppColorTokens(buildColorSchemeTheme(COLOR_SCHEMES[0]), dark)
+      const tokens = buildThemeTokens({ seed: COLOR_SCHEMES[0].seed, dark })
       const wrapper = mount(NConfigProvider, {
-        props: { theme: dark ? darkTheme : null, themeOverrides: buildNaiveTheme(tokens) },
+        props: { theme: dark ? darkTheme : null, themeOverrides: buildNaiveOverrides(tokens) },
         slots: {
           default: () =>
             h(BtFileSelector, {

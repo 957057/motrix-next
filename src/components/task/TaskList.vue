@@ -10,6 +10,7 @@ import { getBtLifecycleState } from '@/composables/useBtLifecycle'
 import { isPendingMagnetSelectionTask } from '@/composables/useMagnetFlow'
 import { logger } from '@shared/logger'
 import TaskRow from './TaskRow.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import type { Aria2Task } from '@shared/types'
 
 const emit = defineEmits<{
@@ -103,25 +104,34 @@ function move(gid: string, direction: -1 | 1) {
   order.value = ids
   void saveOrder()
 }
+function headingFor(index: number, task: Aria2Task): string | undefined {
+  if (manual.value || tasks.displayedList !== 'all') return undefined
+  return index === 0 || group(rows.value[index - 1]) !== group(task) ? groupLabels.value[group(task)] : undefined
+}
 </script>
 <template>
   <div class="task-list">
-    <div v-if="tasks.queryError" class="list-error" role="alert">
-      <span>{{ tasks.queryError }}</span
-      ><NButton :loading="tasks.listPending" @click="tasks.fetchList()">{{ t('app.retry') }}</NButton>
+    <div v-if="tasks.queryError" class="list-error rb-card" role="alert">
+      <span>{{ tasks.queryError }}</span>
+      <NButton size="small" :loading="tasks.listPending" @click="tasks.fetchList()">{{ t('app.retry') }}</NButton>
     </div>
     <Transition
-      name="empty"
+      name="fade"
       @before-leave="(element) => element.setAttribute('inert', '')"
       @before-enter="(element) => element.removeAttribute('inert')"
       @leave-cancelled="(element) => element.removeAttribute('inert')"
     >
-      <div v-if="showEmpty" class="list-empty" role="status">
-        <h2 class="empty-title">{{ hasSearch ? t('workspace.no-results') : t('workspace.empty-tasks') }}</h2>
-        <p v-if="!hasSearch && tasks.displayedList === 'all'" class="empty-hint">
-          {{ t('workspace.empty-tasks-hint', { action: t('task.new-task') }) }}
-        </p>
-        <NButton v-if="hasSearch" quaternary @click="view.query = ''">{{ t('workspace.clear') }}</NButton>
+      <div v-if="showEmpty" class="list-empty">
+        <EmptyState
+          :title="hasSearch ? t('workspace.no-results') : t('workspace.empty-tasks')"
+          :hint="
+            !hasSearch && tasks.displayedList === 'all'
+              ? t('workspace.empty-tasks-hint', { action: t('task.new-task') })
+              : undefined
+          "
+        >
+          <NButton v-if="hasSearch" secondary size="small" @click="view.query = ''">{{ t('workspace.clear') }}</NButton>
+        </EmptyState>
       </div>
     </Transition>
     <component
@@ -129,6 +139,7 @@ function move(gid: string, direction: -1 | 1) {
       v-model:values="order"
       axis="y"
       class="task-rows"
+      :class="{ 'task-rows--single': manual || tasks.displayedList !== 'all' }"
       layout-scroll
       :inert="tasks.currentList !== tasks.displayedList || undefined"
     >
@@ -144,11 +155,7 @@ function move(gid: string, direction: -1 | 1) {
             tasks.removingGids.includes(task.gid) ||
             tasks.resubmittingGids.includes(task.gid)
           "
-          :heading="
-            !manual && tasks.displayedList === 'all' && (index === 0 || group(rows[index - 1]) !== group(task))
-              ? groupLabels[group(task)]
-              : undefined
-          "
+          :heading="headingFor(index, task)"
           @pause="emit('pause', $event)"
           @resume="emit('resume', $event)"
           @retry="emit('retry', $event)"
@@ -171,61 +178,40 @@ function move(gid: string, direction: -1 | 1) {
   </div>
 </template>
 <style scoped>
-.list-error {
-  padding-block: 16px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  overflow-wrap: anywhere;
-}
 .task-list {
-  padding: 0 24px 24px;
+  padding: 0 var(--rb-page-inline) 28px;
   position: relative;
   flex: 1 0 auto;
-  min-height: 180px;
+  min-height: 200px;
 }
+
+.list-error {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  overflow-wrap: anywhere;
+  color: var(--rb-danger);
+}
+
 .task-rows {
   margin: 0;
   padding: 0;
   list-style: none;
   position: relative;
 }
+
 .list-empty {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  gap: 8px;
-  text-align: center;
   padding: 24px;
 }
-.empty-title {
-  margin: 0;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 500;
-  color: var(--m3-on-surface);
-}
-.empty-hint {
-  max-inline-size: 360px;
-  margin: 0;
-  font-size: 13px;
-  line-height: 20px;
-  color: var(--m3-on-surface-variant);
-}
-.empty-enter-active {
-  transition: opacity 120ms ease;
-}
-.empty-leave-active {
-  transition: opacity 90ms ease;
-  pointer-events: none;
-}
-.empty-enter-from,
-.empty-leave-to {
-  opacity: 0;
-}
+
 @media (max-width: 719px) {
   .task-list {
     padding-inline: 16px;

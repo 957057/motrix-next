@@ -17,7 +17,7 @@ import { NButton, NIcon, NCheckbox, NDropdown, NInput, NPopover, useDialog } fro
 import { useTaskViewStore } from '@/stores/taskView'
 import { useAppMessage } from '@/composables/useAppMessage'
 import { usePreferenceStore } from '@/stores/preference'
-import { AddOutline, ChevronDownOutline, SearchOutline } from '@vicons/ionicons5'
+import { Plus, ChevronDown, Search } from '@lucide/vue'
 import TaskViewOptions from './TaskViewOptions.vue'
 
 const { t } = useI18n()
@@ -383,7 +383,7 @@ function retireSelectionAction(element: Element) {
           v-if="resumableTasks.length"
           key="resume"
           class="selection-secondary"
-          quaternary
+          secondary
           :disabled="batchPending"
           :aria-label="t('task.resume-task')"
           @click="runSelected('resume')"
@@ -395,7 +395,7 @@ function retireSelectionAction(element: Element) {
           v-if="pausableTasks.length"
           key="pause"
           class="selection-secondary"
-          quaternary
+          secondary
           :disabled="batchPending"
           :aria-label="t('task.pause-task')"
           @click="runSelected('pause')"
@@ -408,7 +408,7 @@ function retireSelectionAction(element: Element) {
           key="sharing"
           class="selection-primary"
           :title="sharingLabel"
-          quaternary
+          secondary
           :disabled="batchPending"
           :aria-label="sharingLabel"
           @click="finishSelectedSharing"
@@ -420,7 +420,7 @@ function retireSelectionAction(element: Element) {
           v-if="recordingGids.length"
           key="recording"
           class="selection-secondary"
-          quaternary
+          secondary
           :disabled="batchPending"
           :loading="finishingMedia"
           @click="finishRecordings"
@@ -430,7 +430,8 @@ function retireSelectionAction(element: Element) {
           v-if="availableTasks.length"
           key="delete"
           class="selection-secondary"
-          quaternary
+          secondary
+          type="error"
           :disabled="batchPending"
           :aria-label="t('task.delete-task')"
           @click="removeSelectedTasks"
@@ -440,17 +441,17 @@ function retireSelectionAction(element: Element) {
           <NDropdown trigger="click" :options="overflowOptions" @select="handleOverflow">
             <NButton
               class="selection-overflow"
-              quaternary
+              secondary
               :disabled="batchPending"
               :aria-label="t('workspace.more-actions')"
-              >{{ t('workspace.more-actions') }}<NIcon :size="14"><ChevronDownOutline /></NIcon
+              >{{ t('workspace.more-actions') }}<NIcon :size="14" class="toolbar-chevron"><ChevronDown /></NIcon
             ></NButton>
           </NDropdown>
         </div>
         <NButton
           key="done"
           data-selection-done
-          quaternary
+          type="primary"
           :disabled="batchPending"
           :aria-label="t('workspace.done')"
           @click="view.clearSelection()"
@@ -461,19 +462,20 @@ function retireSelectionAction(element: Element) {
         <NInput
           v-model:value="view.query"
           class="toolbar-search"
+          round
           clearable
           :placeholder="t('workspace.search-tasks')"
           :input-props="{ 'aria-label': t('workspace.search-tasks') }"
         >
           <template #prefix
-            ><NIcon><SearchOutline /></NIcon
+            ><NIcon :size="15" class="search-icon"><Search /></NIcon
           ></template>
         </NInput>
         <NPopover trigger="click" placement="bottom-end" :show-arrow="false">
           <template #trigger
-            ><NButton class="search-popover-trigger" quaternary :aria-label="t('workspace.search-tasks')"
+            ><NButton class="search-popover-trigger" quaternary circle :aria-label="t('workspace.search-tasks')"
               ><template #icon
-                ><NIcon><SearchOutline /></NIcon></template></NButton
+                ><NIcon><Search /></NIcon></template></NButton
           ></template>
           <NInput
             v-model:value="view.query"
@@ -491,16 +493,16 @@ function retireSelectionAction(element: Element) {
           @select="handleQueue"
         >
           <NButton quaternary :aria-label="t('workspace.queue')"
-            >{{ t('workspace.queue') }}<NIcon :size="14" class="toolbar-chevron"><ChevronDownOutline /></NIcon
+            >{{ t('workspace.queue') }}<NIcon :size="14" class="toolbar-chevron"><ChevronDown /></NIcon
           ></NButton>
         </NDropdown>
         <TaskViewOptions />
         <NButton quaternary :aria-label="t('workspace.select-tasks')" @click="view.selecting = true">{{
           t('workspace.select-tasks')
         }}</NButton>
-        <NButton type="primary" :aria-label="t('task.new-task')" @click="showAddTask"
+        <NButton type="primary" class="new-task" :aria-label="t('task.new-task')" @click="showAddTask"
           ><template #icon
-            ><NIcon><AddOutline /></NIcon></template
+            ><NIcon><Plus /></NIcon></template
           >{{ t('task.new-task') }}</NButton
         >
       </div>
@@ -514,6 +516,7 @@ function retireSelectionAction(element: Element) {
   width: 100%;
   container-type: inline-size;
 }
+
 .toolbar-content {
   position: relative;
   display: flex;
@@ -525,85 +528,118 @@ function retireSelectionAction(element: Element) {
   min-width: 0;
   white-space: nowrap;
 }
+
 .toolbar-content > .n-button {
   flex-shrink: 0;
 }
+
+.new-task {
+  margin-inline-start: 6px;
+}
+
 .selection-item-move,
 .selection-item-enter-active,
 .selection-item-leave-active {
   transition:
-    transform 180ms ease,
-    opacity 140ms ease;
+    transform var(--rb-motion-view) var(--rb-ease),
+    opacity var(--rb-motion-exit) var(--rb-ease);
 }
+
 .selection-item-enter-from,
 .selection-item-leave-to {
   opacity: 0;
 }
+
 .selection-item-leave-active {
   position: absolute;
   pointer-events: none;
 }
+
 .toolbar-search {
   flex: 1;
   min-width: 80px;
-  max-width: 200px;
+  max-width: 220px;
 }
+
+.search-icon {
+  color: var(--rb-text-faint);
+}
+
 .search-popover-trigger.n-button,
 .selection-overflow-control {
   display: none;
 }
+
 .selection-primary.n-button {
   flex-shrink: 1;
   min-width: 0;
 }
+
 .selection-primary :deep(.n-button__content) {
   min-width: 0;
 }
+
 .action-label {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .toolbar-chevron {
   margin-inline-start: 6px;
 }
+
 .action-count {
   margin-inline-start: 6px;
-  opacity: 0.7;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 18px;
+  background: var(--rb-fill-strong);
+  color: var(--rb-text-muted);
   font-variant-numeric: tabular-nums;
 }
+
 .toolbar-enter-active,
 .toolbar-leave-active {
-  transition: opacity 160ms ease;
+  transition: opacity var(--rb-motion-view) var(--rb-ease);
 }
+
 .toolbar-enter-from,
 .toolbar-leave-to {
   opacity: 0;
 }
+
 .toolbar-leave-active {
   pointer-events: none;
 }
+
 @container (max-width: 620px) {
   .selection-secondary.n-button {
     display: none;
   }
+
   .selection-overflow-control {
     display: inline-flex;
   }
 }
+
 @container (max-width: 560px) {
   .toolbar-search,
   .select-page-label {
     display: none;
   }
+
   .search-popover-trigger.n-button {
     display: inline-flex;
   }
 }
+
 @container (max-width: 360px) {
   .toolbar-content {
     gap: 2px;
   }
+
   .toolbar-content > .n-button {
     padding-inline: 6px;
   }

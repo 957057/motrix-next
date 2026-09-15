@@ -43,7 +43,7 @@ import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 import DirectoryPopover from '@/components/common/DirectoryPopover.vue'
 import FileCategoryManager from './FileCategoryManager.vue'
-import { FolderOpenOutline } from '@vicons/ionicons5'
+import { FolderOpen } from '@lucide/vue'
 
 const settingsRoute = useRoute()
 const { t } = useI18n()
@@ -289,7 +289,7 @@ onMounted(async () => {
             />
             <NButton class="pref-icon-button" @click="handleSelectDir">
               <template #icon>
-                <NIcon :size="16"><FolderOpenOutline /></NIcon>
+                <NIcon :size="16"><FolderOpen /></NIcon>
               </template>
             </NButton>
             <DirectoryPopover @select="handleRecentDirSelect" />

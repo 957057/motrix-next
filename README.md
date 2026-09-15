@@ -168,8 +168,9 @@ the engine and extension are maintained in their own repositories.
 | `pnpm brand:assets`                                                          | Generate desktop and tray icons from the SVG source. |
 
 The desktop logo lives in `src/assets/rayburst.svg`; the README banner is a separate
-asset in `docs/media/`. UI colors use the existing Material Color Utilities theme
-system. The website remains outside this branding change.
+asset in `docs/media/`. The visual language, color engine and motion tokens are
+documented in [docs/DESIGN.md](docs/DESIGN.md). The website remains outside this
+branding change.
 
 Tests and builds belong to this repository. Browser-to-desktop acceptance is performed
 manually with independently built applications. Full checks, contribution rules and

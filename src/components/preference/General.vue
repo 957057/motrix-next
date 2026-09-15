@@ -16,8 +16,7 @@ import { loadLocale } from '@/composables/useLocale'
 import { isSupportedLocale, LOCALE_CATALOG, SUPPORTED_LOCALES } from '@shared/localeCatalog'
 import { logger } from '@shared/logger'
 import { buildGeneralForm } from '@/composables/useGeneralPreference'
-import { COLOR_SCHEMES, CUSTOM_COLOR_SCHEME_ID } from '@shared/constants'
-import { normalizeCustomColorScheme } from '@shared/utils/colorSchemeConfig'
+import { COLOR_SCHEMES, CUSTOM_COLOR_SCHEME_ID, normalizeCustomColorScheme } from '@shared/theme/schemes'
 import { useAppMessage } from '@/composables/useAppMessage'
 import {
   NForm,
@@ -28,12 +27,13 @@ import {
   NCollapseTransition,
   NRadioGroup,
   NRadioButton,
+  NRadio,
   NColorPicker,
   NIcon,
   useDialog,
 } from 'naive-ui'
 import PreferenceActionBar from './PreferenceActionBar.vue'
-import { CloudDownloadOutline } from '@vicons/ionicons5'
+import { CloudDownload, Sun, Moon, Monitor, Check, Plus } from '@lucide/vue'
 import type { UpdateChannel } from '@shared/types'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 
@@ -119,7 +119,9 @@ async function saveAppearance(patch: Partial<ReturnType<typeof buildGeneralForm>
     preferenceStore.savingChanges = false
   }
 }
-const colorOptions = computed(() => COLOR_SCHEMES.map((scheme) => ({ label: t(scheme.labelKey), value: scheme.id })))
+const colorSwatches = computed(() =>
+  COLOR_SCHEMES.map((scheme) => ({ id: scheme.id, seed: scheme.seed, label: t(scheme.labelKey) })),
+)
 
 // ── Lightweight mode ↔ Minimize-to-tray linkage ─────────────────────
 watch(
@@ -144,9 +146,9 @@ const localeOptions = LOCALE_CATALOG.map(({ code, label }) => ({ label: label.sp
 const fullLocaleOptions = computed(() => [{ label: t('preferences.follow-system'), value: 'auto' }, ...localeOptions])
 
 const themeOptions = computed(() => [
-  { label: t('preferences.theme-auto'), value: 'auto' as const },
-  { label: t('preferences.theme-light'), value: 'light' as const },
-  { label: t('preferences.theme-dark'), value: 'dark' as const },
+  { label: t('preferences.theme-auto'), value: 'auto' as const, icon: Monitor },
+  { label: t('preferences.theme-light'), value: 'light' as const, icon: Sun },
+  { label: t('preferences.theme-dark'), value: 'dark' as const, icon: Moon },
 ])
 
 const taskCardModeOptions = computed(() => [
@@ -188,24 +190,36 @@ onMounted(async () => {
           <NRadioGroup
             :aria-label="t('preferences.appearance')"
             :value="form.theme"
+            class="theme-picker"
             @update:value="(value) => saveAppearance({ theme: value })"
           >
-            <NRadioButton v-for="option in themeOptions" :key="option.value" :value="option.value">{{
-              option.label
-            }}</NRadioButton>
+            <NRadio v-for="option in themeOptions" :key="option.value" :value="option.value" class="theme-option">
+              <span class="theme-card" :data-theme="option.value" aria-hidden="true">
+                <span class="theme-card__bar" /><span class="theme-card__row" /><span class="theme-card__row short" />
+              </span>
+              <span class="theme-option__label"
+                ><NIcon :size="13"><component :is="option.icon" /></NIcon>{{ option.label }}</span
+              >
+            </NRadio>
           </NRadioGroup>
         </SettingsRow>
         <SettingsRow setting-key="preferences.color-scheme" :label="t('preferences.color-scheme')">
-          <NSelect
-            :aria-label="t('preferences.color-scheme')"
-            :value="form.colorScheme"
-            :options="colorOptions"
-            class="pref-control-auto"
-            @update:value="(value) => saveAppearance({ colorScheme: value })"
-          />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.custom-color-scheme" :label="t('preferences.custom-color-scheme')">
-          <div class="custom-color-picker-wrap">
+          <div class="swatch-row" role="radiogroup" :aria-label="t('preferences.color-scheme')">
+            <button
+              v-for="swatch in colorSwatches"
+              :key="swatch.id"
+              type="button"
+              class="swatch"
+              :class="{ 'is-active': form.colorScheme === swatch.id }"
+              :style="{ '--swatch': swatch.seed }"
+              role="radio"
+              :aria-checked="form.colorScheme === swatch.id"
+              :aria-label="swatch.label"
+              :title="swatch.label"
+              @click="saveAppearance({ colorScheme: swatch.id })"
+            >
+              <NIcon v-if="form.colorScheme === swatch.id" :size="13"><Check :stroke-width="3" /></NIcon>
+            </button>
             <NColorPicker
               :value="form.customColorScheme"
               :modes="['hex']"
@@ -219,7 +233,27 @@ onMounted(async () => {
                     colorScheme: CUSTOM_COLOR_SCHEME_ID,
                   })
               "
-            />
+            >
+              <template #trigger="{ onClick, ref: triggerRef }">
+                <button
+                  :ref="triggerRef"
+                  type="button"
+                  class="swatch swatch--custom"
+                  :class="{ 'is-active': form.colorScheme === CUSTOM_COLOR_SCHEME_ID }"
+                  :style="{ '--swatch': form.customColorScheme }"
+                  role="radio"
+                  :aria-checked="form.colorScheme === CUSTOM_COLOR_SCHEME_ID"
+                  :aria-label="t('preferences.custom-color-scheme')"
+                  :title="t('preferences.custom-color-scheme')"
+                  @click="onClick"
+                >
+                  <NIcon :size="13">
+                    <Check v-if="form.colorScheme === CUSTOM_COLOR_SCHEME_ID" :stroke-width="3" />
+                    <Plus v-else :stroke-width="2.5" />
+                  </NIcon>
+                </button>
+              </template>
+            </NColorPicker>
           </div>
         </SettingsRow>
         <SettingsRow
@@ -363,7 +397,7 @@ onMounted(async () => {
             <div class="pref-inline-row">
               <NButton size="small" @click="handleCheckUpdate">
                 <template #icon>
-                  <NIcon :size="14"><CloudDownloadOutline /></NIcon>
+                  <NIcon :size="14"><CloudDownload /></NIcon>
                 </template>
                 {{ t('app.check-updates-now') }}
               </NButton>
@@ -386,7 +420,135 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.custom-color-picker-wrap {
-  width: 160px;
+.theme-picker {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.theme-option {
+  --n-box-shadow: none;
+  --n-box-shadow-active: none;
+  --n-box-shadow-focus: none;
+  --n-box-shadow-hover: none;
+  --n-box-shadow-disabled: none;
+  margin: 0;
+  align-items: flex-start;
+}
+
+.theme-option :deep(.n-radio__dot-wrapper) {
+  display: none;
+}
+
+.theme-option :deep(.n-radio__label) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.theme-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 78px;
+  height: 52px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px var(--rb-border);
+  transition: box-shadow var(--rb-motion-feedback) var(--rb-ease);
+}
+
+.theme-card[data-theme='light'] {
+  background: #f7f6fc;
+}
+
+.theme-card[data-theme='dark'] {
+  background: #14111d;
+}
+
+.theme-card[data-theme='auto'] {
+  background: linear-gradient(110deg, #f7f6fc 50%, #14111d 50%);
+}
+
+.theme-card__bar {
+  width: 22px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--rb-gradient);
+}
+
+.theme-card__row {
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: rgb(127 127 127 / 35%);
+}
+
+.theme-card__row.short {
+  width: 60%;
+}
+
+.theme-option.n-radio--checked .theme-card {
+  box-shadow:
+    inset 0 0 0 2px var(--rb-accent),
+    0 0 0 3px var(--rb-glow);
+}
+
+.theme-option__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--rb-text-muted);
+}
+
+.theme-option.n-radio--checked .theme-option__label {
+  color: var(--rb-text);
+  font-weight: 500;
+}
+
+.swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: var(--settings-control-align);
+}
+
+.swatch {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--swatch);
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 12%);
+  transition:
+    transform var(--rb-motion-feedback) var(--rb-ease),
+    box-shadow var(--rb-motion-feedback) var(--rb-ease);
+}
+
+.swatch:hover {
+  transform: scale(1.1);
+}
+
+.swatch.is-active {
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 12%),
+    0 0 0 2px var(--rb-raised),
+    0 0 0 4px var(--swatch);
+}
+
+.swatch--custom {
+  background: conic-gradient(from 180deg, #ff6b6b, #ffd166, #06d6a0, #4cc9f0, #b388ff, #ff6b6b);
+  color: #ffffff;
+}
+
+.swatch--custom.is-active {
+  background: var(--swatch);
 }
 </style>

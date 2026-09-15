@@ -7,7 +7,8 @@ and TypeScript provide the interface; Rust owns native behavior. Aria2 Next
 remains a separate engine with its aria2-compatible interface.
 
 - `src/components/`, `src/composables/`, `src/stores/`: interface and user intent.
-- `src/shared/constants.ts`: current defaults and theme presets.
+- `src/shared/constants.ts`: current defaults.
+- `src/shared/theme/`: accent schemes, the OKLCH color engine and Naive UI overrides.
 - `src/shared/utils/configHydration.ts`: current-field hydration and validation.
 - `src-tauri/src/services/downloads/`: ordinary submissions and receipts.
 - `src-tauri/src/services/media/`: media inspection and selection.
@@ -37,10 +38,14 @@ only an explicit user reset does. See docs/DOWNLOADS.md and docs/MEDIA.md.
 Tauri for platform formats and Sharp for native tray images. UI uses SVG directly;
 macOS tray images are templates. Native installer layouts use the application icon.
 
-Electric Purple (`#7B3ED1`) feeds the existing Material Color Utilities system.
-`colorScheme.ts` generates roles; `useColorScheme.ts` maps them to CSS, Naive UI
-and Canvas. Components consume semantic colors. `src/styles/tokens.css` holds
-matching first-paint defaults only. Do not create another palette generator.
+Electric Purple (`#7B3ED1`) is the default accent seed. `src/shared/theme/palette.ts`
+derives every color role from the seed in OKLCH through culori; `naive.ts` maps
+those roles onto Naive UI and `useAppTheme.ts` applies them as `--rb-*` custom
+properties. `src/styles/tokens.css` holds matching first-paint defaults, shape,
+typography and motion tokens. Components consume tokens only; never hard-code
+colors or add a second palette. Geist is bundled through fontsource, icons come
+from `@lucide/vue`, and Motion for Vue owns layout, presence and reordering.
+See docs/DESIGN.md for the visual language.
 
 ## Localization
 

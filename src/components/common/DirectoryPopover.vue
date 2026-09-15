@@ -4,7 +4,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { NPopover, NButton, NIcon, NEllipsis, NEmpty } from 'naive-ui'
-import { TimeOutline, StarOutline, Star, TrashOutline } from '@vicons/ionicons5'
+import { Clock, Star, Trash2 } from '@lucide/vue'
 
 const emit = defineEmits<{ select: [dir: string] }>()
 
@@ -50,7 +50,7 @@ function shortLabel(dir: string): string {
     <template #trigger>
       <NButton :aria-label="t('task.recent-folders')">
         <template #icon>
-          <NIcon><TimeOutline /></NIcon>
+          <NIcon><Clock /></NIcon>
         </template>
       </NButton>
     </template>
@@ -83,7 +83,7 @@ function shortLabel(dir: string): string {
               @click.stop="onToggleFavorite(dir, true)"
             >
               <template #icon>
-                <NIcon color="var(--m3-primary)"><Star /></NIcon>
+                <NIcon color="var(--rb-accent)"><Star fill="currentColor" /></NIcon>
               </template>
             </NButton>
             <NButton
@@ -94,7 +94,7 @@ function shortLabel(dir: string): string {
               @click.stop="onRemove(dir)"
             >
               <template #icon>
-                <NIcon><TrashOutline /></NIcon>
+                <NIcon><Trash2 /></NIcon>
               </template>
             </NButton>
           </div>
@@ -133,7 +133,7 @@ function shortLabel(dir: string): string {
               @click.stop="onToggleFavorite(dir, false)"
             >
               <template #icon>
-                <NIcon><StarOutline /></NIcon>
+                <NIcon><Star /></NIcon>
               </template>
             </NButton>
             <NButton
@@ -144,7 +144,7 @@ function shortLabel(dir: string): string {
               @click.stop="onRemove(dir)"
             >
               <template #icon>
-                <NIcon><TrashOutline /></NIcon>
+                <NIcon><Trash2 /></NIcon>
               </template>
             </NButton>
           </div>
@@ -160,16 +160,17 @@ function shortLabel(dir: string): string {
   position: relative;
 }
 .dir-popover-heading {
-  font-size: var(--font-size-sm);
+  font-size: 11px;
   font-weight: 600;
-  color: var(--n-text-color-3);
-  padding: 4px 8px 2px;
+  letter-spacing: 0.02em;
+  color: var(--rb-text-muted);
+  padding: 4px 8px 4px;
   user-select: none;
 }
 .dir-popover-heading--spaced {
   margin-top: 6px;
   padding-top: 8px;
-  border-top: 1px solid var(--m3-outline-variant);
+  border-top: 1px solid var(--rb-hairline);
 }
 
 .dir-popover-item {
@@ -178,12 +179,12 @@ function shortLabel(dir: string): string {
   justify-content: space-between;
   gap: 4px;
   padding: 5px 8px;
-  border-radius: var(--border-radius);
+  border-radius: var(--rb-radius-control);
   cursor: pointer;
   transition: background-color 0.15s;
 }
 .dir-popover-item:hover {
-  background: var(--m3-surface-container-high);
+  background: var(--rb-hover);
 }
 
 .dir-popover-label {

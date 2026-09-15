@@ -180,7 +180,7 @@ const durationOptions = computed(() => [
   margin: 0;
   padding: 14px 0;
   width: 100%;
-  border-bottom: 1px solid var(--divider);
+  border-bottom: 1px solid var(--rb-hairline);
 }
 .media-duration {
   display: flex;
@@ -202,6 +202,6 @@ const durationOptions = computed(() => [
 .video-choice small {
   font-size: 13px;
   line-height: 20px;
-  color: var(--m3-on-surface-variant);
+  color: var(--rb-text-muted);
 }
 </style>

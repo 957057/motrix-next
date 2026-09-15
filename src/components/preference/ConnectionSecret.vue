@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NInput, NInputGroup, NButton, NIcon } from 'naive-ui'
-import { CopyOutline, RefreshOutline, EyeOutline, EyeOffOutline } from '@vicons/ionicons5'
+import { Copy, RefreshCw, Eye, EyeOff } from '@lucide/vue'
 import { useAppMessage } from '@/composables/useAppMessage'
 import { generateConfigSecret } from '@shared/utils/configHydration'
 import { writeAppClipboardText } from '@shared/utils'
@@ -35,12 +35,12 @@ async function copy() {
       @click="revealed = !revealed"
     >
       <template #icon
-        ><NIcon><component :is="revealed ? EyeOffOutline : EyeOutline" /></NIcon
+        ><NIcon><component :is="revealed ? EyeOff : Eye" /></NIcon
       ></template>
     </NButton>
     <NButton :disabled="disabled || !value" :aria-label="t('app.menu-copy')" :title="t('app.menu-copy')" @click="copy">
       <template #icon
-        ><NIcon><CopyOutline /></NIcon
+        ><NIcon><Copy /></NIcon
       ></template>
     </NButton>
     <NButton
@@ -50,7 +50,7 @@ async function copy() {
       @click="value = generateConfigSecret()"
     >
       <template #icon
-        ><NIcon><RefreshOutline /></NIcon
+        ><NIcon><RefreshCw /></NIcon
       ></template>
     </NButton>
   </NInputGroup>

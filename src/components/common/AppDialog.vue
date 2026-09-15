@@ -48,54 +48,75 @@ const emit = defineEmits<{ close: []; afterLeave: [] }>()
 
 <style>
 .app-dialog.n-card {
-  border-radius: 12px;
-  box-shadow: 0 12px 40px var(--m3-shadow);
+  border-radius: var(--rb-radius-dialog);
+  box-shadow: var(--rb-shadow-overlay);
   width: min(560px, calc(100vw - 48px));
   max-height: calc(100dvh - 48px);
   display: flex;
   flex-direction: column;
+  background: var(--rb-overlay);
 }
+
 .app-dialog--small.n-card {
-  width: min(400px, calc(100vw - 48px));
+  width: min(420px, calc(100vw - 48px));
 }
+
 .app-dialog--wide.n-card {
-  width: min(760px, calc(100vw - 48px));
+  width: min(780px, calc(100vw - 48px));
 }
+
 .app-dialog.n-card > .n-card-header {
-  padding: 24px 24px 16px;
+  padding: 22px 24px 14px;
   flex: none;
 }
+
+.app-dialog.n-card > .n-card-header .n-card-header__main {
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
 .app-dialog.n-card > .app-dialog-content {
-  padding: 0 24px 24px;
+  padding: 4px 24px 24px;
   min-height: 0;
   overflow: auto;
 }
+
 .app-dialog--fixed.n-card > .app-dialog-content {
   scrollbar-gutter: stable;
   overflow-anchor: none;
 }
+
 .app-dialog.n-card > .n-card__footer {
-  padding: 16px 24px 20px;
+  padding: 14px 24px 18px;
   flex: none;
-  border-top: 1px solid var(--divider);
+  border-top: 1px solid var(--rb-hairline);
+  background: var(--rb-canvas);
+  border-end-start-radius: var(--rb-radius-dialog);
+  border-end-end-radius: var(--rb-radius-dialog);
 }
+
 .dialog-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 }
+
 .dialog-actions > .n-space {
   width: 100%;
 }
+
 .app-dialog .n-form-item-label {
   font-weight: 500;
 }
+
 @media (max-height: 400px) {
   .app-dialog.n-card > .n-card-header {
     padding-block: 12px;
   }
+
   .app-dialog.n-card > .n-card__footer {
     padding-block: 12px;
   }

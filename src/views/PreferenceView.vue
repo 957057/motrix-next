@@ -9,7 +9,8 @@ import {
 } from 'vue-router'
 import { computed, onScopeDispose, shallowRef } from 'vue'
 import { NSelect, NIcon } from 'naive-ui'
-import { SearchOutline } from '@vicons/ionicons5'
+import { LayoutGroup, motion } from 'motion-v'
+import { Search } from '@lucide/vue'
 import { settingsCatalog } from '@shared/settingsCatalog'
 import { usePlatform } from '@/composables/usePlatform'
 import { useAppStore } from '@/stores/app'
@@ -32,6 +33,9 @@ function goToSetting(key: string | null) {
 const categories = ['general', 'downloads', 'network', 'bt', 'ed2k', 'connections', 'advanced']
 const pendingNavigation = shallowRef<RouteLocationNormalized | null>(null)
 const activePath = computed(() => pendingNavigation.value?.path ?? route.path)
+function isActive(category: string) {
+  return activePath.value.endsWith(category) || (category === 'general' && activePath.value === '/preference')
+}
 
 const removeBeforeGuard = router.beforeEach(async (to, from) => {
   if (to.path === from.path || !to.path.startsWith('/preference/')) return
@@ -55,8 +59,8 @@ onScopeDispose(() => {
 </script>
 <template>
   <section class="preference-view">
-    <header class="settings-header">
-      <h1>{{ t('app.preferences') }}</h1>
+    <header class="rb-page-header settings-header">
+      <h1 class="rb-page-title">{{ t('app.preferences') }}</h1>
       <NSelect
         class="settings-search"
         :value="null"
@@ -67,21 +71,29 @@ onScopeDispose(() => {
         :aria-label="t('preferences.search-settings')"
         @update:value="goToSetting"
         ><template #arrow
-          ><NIcon><SearchOutline /></NIcon></template
+          ><NIcon :size="15"><Search /></NIcon></template
       ></NSelect>
     </header>
-    <nav class="settings-tabs" :aria-label="t('app.preferences')">
-      <RouterLink
-        v-for="category in categories"
-        :key="category"
-        :to="`/preference/${category}`"
-        :class="{
-          'is-active': activePath.endsWith(category) || (category === 'general' && activePath === '/preference'),
-        }"
-        :aria-current="route.path.endsWith(category) ? 'page' : undefined"
-        >{{ t(`preferences.${category}`) }}</RouterLink
-      >
-    </nav>
+    <LayoutGroup id="settings-tabs">
+      <nav class="settings-tabs rb-segments" :aria-label="t('app.preferences')">
+        <RouterLink
+          v-for="category in categories"
+          :key="category"
+          :to="`/preference/${category}`"
+          class="rb-segment"
+          :class="{ 'is-active': isActive(category) }"
+          :aria-current="route.path.endsWith(category) ? 'page' : undefined"
+        >
+          <motion.span
+            v-if="isActive(category)"
+            layout-id="settings-tab"
+            class="rb-segment__indicator"
+            aria-hidden="true"
+          />
+          <span>{{ t(`preferences.${category}`) }}</span>
+        </RouterLink>
+      </nav>
+    </LayoutGroup>
     <div class="panel-body" :aria-busy="!!pendingNavigation" :inert="!!pendingNavigation">
       <router-view v-slot="{ Component }"
         ><Transition
@@ -100,54 +112,43 @@ onScopeDispose(() => {
   display: flex;
   flex-direction: column;
 }
-.settings-search {
-  width: min(360px, 48%);
-}
+
 .settings-header {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 16px 24px 20px;
 }
-h1 {
-  margin: 0;
-  font-size: 24px;
-  line-height: 32px;
-  font-weight: 600;
+
+.settings-search {
+  width: min(340px, 48%);
 }
+
 .settings-tabs {
-  display: flex;
-  gap: 24px;
-  margin-inline: 24px;
-  border-bottom: 1px solid var(--divider);
-  overflow-x: auto;
+  margin: 0 var(--rb-page-inline) 6px;
   flex-shrink: 0;
+  align-self: flex-start;
+  max-width: calc(100% - var(--rb-page-inline) * 2);
 }
+
 .settings-tabs a {
-  padding-block: 8px 12px;
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
-  color: var(--m3-on-surface-variant);
-  border-bottom: 2px solid transparent;
 }
-.settings-tabs a.is-active {
-  color: var(--m3-primary);
-  border-bottom-color: var(--m3-primary);
-}
+
 .panel-body {
   position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
+
 @media (max-width: 719px) {
   .settings-header {
-    padding: 8px 16px 16px;
+    padding: 4px 16px 14px;
   }
+
   .settings-tabs {
     margin-inline: 16px;
-    gap: 16px;
+    max-width: calc(100% - 32px);
   }
 }
 </style>

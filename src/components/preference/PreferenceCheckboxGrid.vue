@@ -42,7 +42,7 @@ const emit = defineEmits<{
 }
 
 .preference-checkbox-grid :deep(.n-checkbox__label) {
-  color: var(--m3-on-surface);
+  color: var(--rb-text);
   font-size: 13px;
   line-height: 1.35;
 }

@@ -19,7 +19,7 @@ import {
   NSwitch,
   NText,
 } from 'naive-ui'
-import { DiceOutline, DownloadOutline, RefreshOutline, SearchOutline } from '@vicons/ionicons5'
+import { Dices, Download, RefreshCw, Search } from '@lucide/vue'
 import { usePreferenceStore } from '@/stores/preference'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
@@ -288,7 +288,7 @@ const resultColumns = computed(() => [
             NButton,
             { size: 'tiny', quaternary: true, onClick: () => handleDownload(row) },
             {
-              icon: () => h(NIcon, null, { default: () => h(DownloadOutline) }),
+              icon: () => h(NIcon, null, { default: () => h(Download) }),
             },
           )
         : null
@@ -329,7 +329,7 @@ onMounted(() => {
             @click="handleSearch"
           >
             <template #icon>
-              <NIcon><SearchOutline /></NIcon>
+              <NIcon><Search /></NIcon>
             </template>
 
             <span :key="searchButtonText">{{ searchButtonText }}</span>
@@ -396,7 +396,7 @@ onMounted(() => {
             />
             <NButton secondary class="pref-action-button pref-action-button--compact" @click="onPortDice">
               <template #icon>
-                <NIcon><DiceOutline /></NIcon>
+                <NIcon><Dices /></NIcon>
               </template>
               {{ t('preferences.random-port') }}
             </NButton>
@@ -417,7 +417,7 @@ onMounted(() => {
             />
             <NButton secondary class="pref-action-button pref-action-button--compact" @click="onUdpPortDice">
               <template #icon>
-                <NIcon><DiceOutline /></NIcon>
+                <NIcon><Dices /></NIcon>
               </template>
               {{ t('preferences.random-port') }}
             </NButton>
@@ -511,7 +511,7 @@ onMounted(() => {
             @click="handleSyncBootstrapFiles"
           >
             <template #icon>
-              <NIcon><RefreshOutline /></NIcon>
+              <NIcon><RefreshCw /></NIcon>
             </template>
             {{ t('preferences.ed2k-bootstrap-sync') }}
           </NButton>
