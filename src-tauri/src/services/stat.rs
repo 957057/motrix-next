@@ -171,7 +171,7 @@ pub(crate) fn set_dock_badge(label: Option<&str>) {
 /// capture a bitmap snapshot, but `NSProgressIndicator`'s `drawRect:` relies on
 /// the window compositor's CALayer tree which doesn't exist for dock tiles.
 ///
-/// The fix: register a custom `NSProgressIndicator` subclass (`MotrixProgressIndicator`)
+/// The fix: register a custom `NSProgressIndicator` subclass (`RayburstProgressIndicator`)
 /// with a `drawRect:` override that manually paints using `NSBezierPath`.  This is
 /// the same approach used by tao's `TaoProgressIndicator` — the industry-standard
 /// workaround for dock tile progress rendering.
@@ -216,7 +216,7 @@ pub(crate) fn set_dock_progress(progress: Option<u64>) {
 }
 
 /// Finds an existing `NSProgressIndicator` subclass in the dock tile's content view,
-/// or creates a new `MotrixProgressIndicator` (custom subclass with `drawRect:` override).
+/// or creates a new `RayburstProgressIndicator` (custom subclass with `drawRect:` override).
 ///
 /// A plain `NSProgressIndicator` is invisible in dock tiles because `NSDockTile.display()`
 /// captures a bitmap by calling `drawRect:` on the content view hierarchy, and the stock
@@ -270,7 +270,7 @@ unsafe fn get_or_create_progress_indicator(
     indicator
 }
 
-/// Registers the `MotrixProgressIndicator` ObjC class (once) — a custom
+/// Registers the `RayburstProgressIndicator` ObjC class (once) — a custom
 /// `NSProgressIndicator` subclass with a `drawRect:` override for dock tile rendering.
 ///
 /// The class draws a rounded progress bar using `NSBezierPath`:
@@ -288,8 +288,8 @@ fn register_progress_indicator_class() -> *const objc2::runtime::AnyClass {
 
     INIT.call_once(|| unsafe {
         let superclass = objc2::class!(NSProgressIndicator);
-        let mut decl = ClassBuilder::new(c"MotrixProgressIndicator", superclass)
-            .expect("Failed to create MotrixProgressIndicator class");
+        let mut decl = ClassBuilder::new(c"RayburstProgressIndicator", superclass)
+            .expect("Failed to create RayburstProgressIndicator class");
 
         // Register the custom drawRect: method.
         // Uses raw pointer (*mut AnyObject) to satisfy the HRTB lifetime
@@ -541,7 +541,7 @@ async fn stat_loop(
             }
 
             // ── Tray title (macOS menu bar / Linux appindicator label) ──
-            if let Some(tray) = app.tray_by_id("motrix-next") {
+            if let Some(tray) = app.tray_by_id("rayburst") {
                 let next_title =
                     tray_title_for_speed(cfg.tray_speedometer, download_speed, upload_speed);
                 if tray_title_needs_update(&last_tray_title, &next_title) {

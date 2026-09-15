@@ -9,7 +9,7 @@ use crate::log_policy::{managed_log_source, LogSource};
 use crate::services::tasks::TaskServiceState;
 
 pub(crate) struct DiagnosticLogs {
-    pub motrix: Vec<u8>,
+    pub rayburst: Vec<u8>,
     pub aria2: Vec<u8>,
 }
 
@@ -52,12 +52,12 @@ pub(crate) fn collect_logs(log_dir: &Path) -> Result<DiagnosticLogs, AppError> {
     });
 
     let mut logs = DiagnosticLogs {
-        motrix: Vec::new(),
+        rayburst: Vec::new(),
         aria2: Vec::new(),
     };
     for (path, source) in files {
         match source {
-            LogSource::Motrix => append_file(&mut logs.motrix, &path)?,
+            LogSource::Rayburst => append_file(&mut logs.rayburst, &path)?,
             LogSource::Aria2 => append_file(&mut logs.aria2, &path)?,
         }
     }
@@ -218,7 +218,7 @@ pub(crate) fn write_archive(
 
     for (name, content) in [
         ("diagnostics.json", diagnostics.as_slice()),
-        ("logs/motrix-next.log", logs.motrix.as_slice()),
+        ("logs/rayburst.log", logs.rayburst.as_slice()),
         ("logs/aria2-next.log", logs.aria2.as_slice()),
     ] {
         archive
@@ -243,7 +243,7 @@ mod tests {
     #[test]
     fn exports_three_file_diagnostic_bundle() {
         let directory = tempfile::tempdir().expect("tempdir");
-        std::fs::write(directory.path().join("motrix-next.log"), "app\n").expect("app log");
+        std::fs::write(directory.path().join("rayburst.log"), "app\n").expect("app log");
         std::fs::write(directory.path().join("aria2-next.log"), "engine\n").expect("engine log");
         let logs = collect_logs(directory.path()).expect("logs");
         let diagnostics = serde_json::json!({
@@ -257,7 +257,7 @@ mod tests {
         let file = std::fs::File::open(output).expect("archive file");
         let mut archive = zip::ZipArchive::new(file).expect("valid zip");
         assert_eq!(archive.len(), 3);
-        assert!(archive.by_name("logs/motrix-next.log").is_ok());
+        assert!(archive.by_name("logs/rayburst.log").is_ok());
         assert!(archive.by_name("logs/aria2-next.log").is_ok());
         let mut snapshot = String::new();
         archive

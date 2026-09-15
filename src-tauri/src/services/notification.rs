@@ -155,9 +155,9 @@ enum NotificationDispatchResult {
 #[cfg(target_os = "linux")]
 pub fn linux_notification_identity() -> LinuxNotificationIdentity {
     LinuxNotificationIdentity {
-        app_name: "motrixnext",
-        icon: "motrix-next",
-        desktop_entry: "MotrixNext",
+        app_name: "rayburst",
+        icon: "rayburst",
+        desktop_entry: "Rayburst",
         urgency: notify_rust::Urgency::Normal,
     }
 }
@@ -586,9 +586,9 @@ mod tests {
     #[test]
     fn linux_notification_identity_matches_gnome_desktop_entry() {
         let identity = linux_notification_identity();
-        assert_eq!(identity.app_name, "motrixnext");
-        assert_eq!(identity.icon, "motrix-next");
-        assert_eq!(identity.desktop_entry, "MotrixNext");
+        assert_eq!(identity.app_name, "rayburst");
+        assert_eq!(identity.icon, "rayburst");
+        assert_eq!(identity.desktop_entry, "Rayburst");
         assert_eq!(identity.urgency, notify_rust::Urgency::Normal);
     }
 }

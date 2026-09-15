@@ -147,7 +147,7 @@ fn normalize_blocklist_with_snapshot(
 
     let source = source.replace(['\r', '\n'], " ");
     let mut output = format!(
-        "# Managed by Motrix Next\n# Source: {source}\n# License: CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/\n# Snapshot: {snapshot}\n# Modified: normalized and deduplicated by Motrix Next\n# Rules normalized to IPv4, IPv6, or CIDR\n"
+        "# Managed by Rayburst\n# Source: {source}\n# License: CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/\n# Snapshot: {snapshot}\n# Modified: normalized and deduplicated by Rayburst\n# Rules normalized to IPv4, IPv6, or CIDR\n"
     );
     for rule in &rules {
         output.push_str(rule);

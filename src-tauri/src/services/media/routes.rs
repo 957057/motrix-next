@@ -4,10 +4,12 @@ use super::{
     contracts::{ProbeRequest, SubmitRequest},
     service,
 };
-use crate::services::http_api::{read_api_secret, validate_bearer_token, ApiContext};
+use crate::services::http_api::{
+    extension_origin, read_api_secret, validate_bearer_token, ApiContext,
+};
 use axum::{
     extract::{DefaultBodyLimit, Path, State},
-    http::{header, HeaderMap, Method, StatusCode},
+    http::{header, HeaderMap, HeaderName, Method, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
@@ -38,18 +40,6 @@ impl IntoResponse for Error {
     }
 }
 
-fn extension_origin(value: &str) -> bool {
-    url::Url::parse(value).is_ok_and(|url| {
-        matches!(url.scheme(), "chrome-extension" | "moz-extension")
-            && url.host_str().is_some()
-            && url.username().is_empty()
-            && url.password().is_none()
-            && url.path().is_empty()
-            && url.query().is_none()
-            && url.fragment().is_none()
-    })
-}
-
 fn authorize(ctx: &ApiContext, headers: &HeaderMap) -> Result<(), Error> {
     if let Some(origin) = headers.get(header::ORIGIN) {
         if !origin.to_str().is_ok_and(extension_origin) {
@@ -77,7 +67,11 @@ pub fn router() -> Router<Arc<ApiContext>> {
                     origin.to_str().is_ok_and(extension_origin)
                 }))
                 .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-                .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
+                .allow_headers([
+                    header::CONTENT_TYPE,
+                    header::AUTHORIZATION,
+                    HeaderName::from_static("x-rayburst-client"),
+                ])
                 .allow_private_network(true),
         )
 }

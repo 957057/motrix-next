@@ -1,4 +1,4 @@
-# AGENTS.md — Motrix Next
+# AGENTS.md — Rayburst
 
 > This file provides context and instructions for AI coding agents.
 > For human contributors, see [README.md](README.md) and [CONTRIBUTING.md](docs/CONTRIBUTING.md).
@@ -36,8 +36,7 @@ src/
 │   ├── guards.ts               # Type guard utilities
 │   ├── locales/                # 27 locale directories (see Section D)
 │   └── utils/
-│       ├── configHydration.ts  # Config defaults, migration, nested merge, and repair boundary
-│       ├── configMigration.ts  # Config schema migration engine (see Section C′)
+│       ├── configHydration.ts  # Current config defaults, nested merge, and validation
 │       ├── config.ts           # Config key-value transform utilities
 │       ├── tracker.ts          # BT tracker fetching with proxy support
 │       ├── geoip.ts            # GeoIP peer lookup (country code → flag)
@@ -106,9 +105,7 @@ src-tauri/
 │   └── upnp.rs                 # UPnP/IGD port mapping with renewal loop
 ├── locales/                    # Compile-time embedded native JSON translations
 ├── nsis/
-│   ├── hooks.nsh              # Windows installer hooks (compat shim + icon refresh)
-│   ├── header.bmp             # Installer header image (150×57, 24-bit BMP)
-│   └── sidebar.bmp            # Installer sidebar image (164×314, 24-bit BMP)
+│   ├── hooks.nsh              # Windows installer hooks (Native Messaging registration + icon refresh)
 ├── Cargo.toml                  # VERSION SOURCE OF TRUTH
 └── tauri.conf.json             # Tauri config (no version field — reads from Cargo.toml)
 
@@ -156,41 +153,19 @@ Follow this exact checklist:
 4. **`src/shared/utils/configHydration.ts`** — Check whether the key needs validation, repair, or selective nested merge. Top-level keys usually need no code here; nested object keys and enum-like values usually do.
 5. **UI binding** — Add the field to the relevant preference composable and component save flow
 6. **All 27 locale files** — Add i18n label keys. **Must use batch Python script** (see Section D)
-7. **Migration decision** — Add a `configMigration.ts` migration only when changing stored shape, semantics, or existing user values. Do not add a migration just to materialize a new default; hydration handles that.
+7. **Compatibility** — This product has a fresh storage identity. Do not add import aliases or migrations for another product.
 
 ---
 
-## C′. Config Hydration & Schema Migration
+## C′. Current configuration
 
-`src/shared/utils/configHydration.ts` is the single frontend entry point for turning persisted `config.json` preferences into a complete runtime `AppConfig`. It clones `DEFAULT_APP_CONFIG`, runs `configMigration.ts`, selectively hydrates known nested objects, repairs invalid enum/port values, preserves secret-generation semantics, and tells the store whether repaired data should be persisted.
+`configHydration.ts` materializes defaults, accepts current keys only, validates values
+and reports repairs. Unknown fields are discarded. It does not run a historical
+migration chain. Arrays remain user-owned; nested fixed-shape objects are hydrated
+selectively. Missing secrets are generated; an empty secret remains explicitly cleared.
 
-`src/shared/utils/configMigration.ts` implements versioned schema migration. It is called from `hydrateAppConfig()`, not directly from the preference store.
-
-### How It Works
-
-- `configVersion` (integer) is stored in `config.json` alongside user preferences
-- `hydrateAppConfig(saved)` runs on `loadPreference()`, `reloadPreferenceFromDisk()`, `savePreference()`, `updateAndSave()`, and in-memory `updatePreference()`
-- `CONFIG_VERSION` constant defines the current schema version
-- `migrations[]` array holds ordered migration functions (index 0 = v0→v1, etc.)
-- Migrations run only when `stored version < CONFIG_VERSION`
-- Hydration handles missing defaults and safe repairs without bumping `CONFIG_VERSION`
-- The store persists only when migration or repair changed the loaded config
-
-### Adding a New Migration
-
-1. Append a function to the `migrations` array in `configMigration.ts`
-2. Increment `CONFIG_VERSION` to match the new array length
-3. Update `DEFAULT_APP_CONFIG.configVersion` in `constants.ts` to match
-4. Add tests in `configMigration.test.ts`
-
-### Rules
-
-- `hydrateAppConfig()` owns default materialization, selective nested merge, enum validation, port validation, and secret preservation
-- Arrays are user-owned by default. Do not deep-merge arrays such as `trackerSource`, `customTrackerUrls`, `historyDirectories`, `favoriteDirectories`, or `fileCategories`
-- `rpcSecret` and `extensionApiSecret` must preserve the existing meaning: `undefined`/`null` means generate later; empty string means intentionally cleared
-- Migrations **mutate** the config object in place
-- Migrations **must be idempotent** — safe to re-run on already-migrated data
-- Migrations **must not delete** user data without logging
+The native database owns its schema. The frontend does not persist schema-version
+mirrors or display historical migration toasts. Unsupported databases fail without deletion.
 
 ---
 
@@ -275,11 +250,11 @@ The release workflow (`.github/workflows/release.yml`) is triggered by `on: rele
 
 ### Updater JSON Hosting
 
-Both `latest.json` and `beta.json` are uploaded to a **permanent `updater` Release tag**:
+Both `latest.json` and `beta.json` are uploaded to the **`rayburst-updater` Release tag**:
 
 ```
-https://github.com/AnInsomniacy/motrix-next/releases/download/updater/latest.json
-https://github.com/AnInsomniacy/motrix-next/releases/download/updater/beta.json
+https://github.com/AnInsomniacy/rayburst/releases/download/rayburst-updater/latest.json
+https://github.com/AnInsomniacy/rayburst/releases/download/rayburst-updater/beta.json
 ```
 
 The CI creates this Release automatically if it doesn't exist, and uses `--clobber` to overwrite on each release.
@@ -330,7 +305,7 @@ All code changes must be finalized before starting. Execute these three steps in
 ### Updater Principles
 
 - **Channel detection** — CI checks the tag name: tags containing `-beta`, `-alpha`, or `-rc` → `beta.json`; everything else → `latest.json`
-- **Single fixed host** — Both JSON files live in a permanent `updater` Release tag (auto-created by CI on first publish). Each publish overwrites the previous JSON via `--clobber`
+- **Single fixed host** — Both JSON files live in a permanent `rayburst-updater` Release tag (auto-created by CI on first publish). Each publish overwrites the previous JSON via `--clobber`
 - **Tag = immutable pointer** — A git tag points to a fixed commit. If a build fails, you must delete both the tag and the Release, then re-publish to pick up the fixed code
 - **CI trigger** — Only `on: release: [published]` triggers builds. Pushing a tag alone does **not** trigger the workflow
 
@@ -385,10 +360,10 @@ One-paragraph summary of the release scope and significance.
 
 ### 📦 Downloads
 
-| Platform | Architecture          | File               |
-| -------- | --------------------- | ------------------ |
-| macOS    | Apple Silicon · Intel | `.dmg`             |
-| Windows  | x64 · ARM64           | `-setup.exe`       |
+| Platform | Architecture          | File                      |
+| -------- | --------------------- | ------------------------- |
+| macOS    | Apple Silicon · Intel | `.dmg`                    |
+| Windows  | x64 · ARM64           | `-setup.exe`              |
 | Linux    | x64 · ARM64           | `.AppImage` `.deb` `.rpm` |
 ```
 
@@ -407,15 +382,15 @@ One-paragraph summary of the release scope and significance.
 
 Two parallel jobs:
 
-| Job        | Steps                                                                                                                        |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `frontend` | `pnpm install` → `pnpm lint` → `pnpm format:check` → `vue-tsc --noEmit` → `vitest run` → `vite build`                        |
+| Job        | Steps                                                                                                                                                                                                    |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `frontend` | `pnpm install` → `pnpm lint` → `pnpm format:check` → `vue-tsc --noEmit` → `vitest run` → `vite build`                                                                                                    |
 | `backend`  | `cargo fmt --all -- --check` → `pnpm build:native-launcher` → `cargo clippy --workspace --all-targets -- -D warnings` → `cargo check --workspace --all-targets` → `cargo test --workspace --all-targets` |
 
 ### `release.yml` (Release Published)
 
 1. **Build job** — Matrix: `macos-latest` (aarch64), `macos-15-intel` (x86_64), `windows-latest` (×2: x64 + aarch64 cross-compile), `ubuntu-22.04` (GLIBC 2.35 compat), `ubuntu-24.04-arm`
-2. **merge-updater-json job** — Detects channel from tag name → generates `latest.json` or `beta.json` with 6 platform keys → uploads to `updater` tag
+2. **merge-updater-json job** — Detects channel from tag name → generates `latest.json` or `beta.json` with 6 platform keys → uploads to `rayburst-updater` tag
 
 ---
 
@@ -445,7 +420,7 @@ Two parallel jobs:
 
 ### Color System
 
-Motrix Next uses a dynamic Material Design 3 color system generated by `@material/material-color-utilities`. `src/shared/utils/colorScheme.ts` is the single source of truth: a preset or custom seed produces the complete light and dark palettes. Primary and tertiary provide theme accents; info, success, warning, and error are harmonized semantic colors. Each role includes color, matching foreground, container, container foreground, hover, and pressed values. Neutral surfaces use the ordered `surface` and `surface-container-*` roles, while text and borders use `on-surface*` and `outline*`.
+Rayburst uses a dynamic Material Design 3 color system generated by `@material/material-color-utilities`. `src/shared/utils/colorScheme.ts` is the single source of truth: a preset or custom seed produces the complete light and dark palettes. Primary and tertiary provide theme accents; info, success, warning, and error are harmonized semantic colors. Each role includes color, matching foreground, container, container foreground, hover, and pressed values. Neutral surfaces use the ordered `surface` and `surface-container-*` roles, while text and borders use `on-surface*` and `outline*`.
 
 `src/composables/useColorScheme.ts` is the only bridge to consumers. It maps the generated tokens to CSS variables, Naive UI overrides, and reactive Canvas consumers. Task status colors are aliases of the same roles: active uses primary, waiting uses info, paused uses outline, error uses error, and complete or sharing uses success. `src/styles/tokens.css` contains first-paint fallbacks only; runtime values replace them after startup. Components must consume semantic tokens instead of fixed colors. Fixed colors are limited to platform-defined controls, brand artwork, and color-picker swatches.
 
@@ -484,3 +459,14 @@ All fast checks must pass with zero errors before any PR or release.
 ## I. Testing Constraints
 
 > **DO NOT use browser tools (Playwright, browser subagent, etc.) to test this app.** Tauri renders in a native webview — `localhost:1420` in a browser lacks IPC, tray, and sidecar access. Use CLI checks (`vue-tsc`, `pnpm test`, `cargo test --workspace --all-targets`) or ask the user to verify UI via `pnpm tauri dev`.
+
+## Brand and delivery
+
+Use the supplied SVG master and purple seed `#7B3ED1`. Keep all implementation
+comments, documentation and new brand copy in English. Existing interface translations
+remain supported. Product names and approved slogans are invariant. Review prose with Sepia.
+
+Follow `docs/BRAND.md` and `docs/RELEASING.md`. Store identities and update signing must
+be configured explicitly for Rayburst. Local verification never submits to a store,
+publishes a website, changes remotes or starts release automation. Native end-to-end
+acceptance belongs to the user. Work on the current branch; do not spawn agents.

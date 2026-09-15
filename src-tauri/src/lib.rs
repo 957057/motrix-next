@@ -1,5 +1,7 @@
 rust_i18n::i18n!("locales", fallback = "en-US");
 
+pub(crate) const APP_ID: &str = env!("RAYBURST_APP_ID");
+
 mod aria2;
 mod commands;
 mod database;
@@ -40,7 +42,7 @@ use upnp::UpnpState;
 /// has been persisted yet.
 pub(crate) fn read_log_level() -> log::LevelFilter {
     (|| -> Option<log::LevelFilter> {
-        let data_dir = dirs::data_dir()?.join("com.motrix.next");
+        let data_dir = dirs::data_dir()?.join(APP_ID);
         let store_path = data_dir.join("config.json");
         let content = std::fs::read_to_string(store_path).ok()?;
         let json: serde_json::Value = serde_json::from_str(&content).ok()?;
@@ -567,7 +569,7 @@ pub fn run() {
     let log_filter = log_control.clone();
     let log_targets = vec![tauri_plugin_log::Target::new(
         tauri_plugin_log::TargetKind::LogDir {
-            file_name: Some("motrix-next".into()),
+            file_name: Some("rayburst".into()),
         },
     )];
     #[cfg(debug_assertions)]

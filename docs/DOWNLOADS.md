@@ -6,12 +6,12 @@ workspace. No shared runtime package or cross-repository test harness is require
 
 ## Responsibilities
 
-| Owner | Responsibility |
-| --- | --- |
+| Owner             | Responsibility                                                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Browser extension | Intercept browser intent, capture observed names and request context, preserve handoff identity until a receipt arrives. |
-| Rust desktop | Apply application preferences, manage confirmation and submission receipts, create/control tasks and persist history. |
-| Vue desktop | Edit user intent, present native task state, select content and invoke named commands. |
-| Aria2 Next | Resolve final output names and paths, handle conflicts and recovery, transfer data and publish completed media. |
+| Rust desktop      | Apply application preferences, manage confirmation and submission receipts, create/control tasks and persist history.    |
+| Vue desktop       | Edit user intent, present native task state, select content and invoke named commands.                                   |
+| Aria2 Next        | Resolve final output names and paths, handle conflicts and recovery, transfer data and publish completed media.          |
 
 `aria2/rpc.rs` owns HTTP JSON-RPC framing, authentication and structured errors.
 `services/tasks/` owns task queries, controls and visibility policy.
@@ -133,3 +133,14 @@ when that dependency provides a useful support window; do not invent an LTS vers
 for community libraries. File length is a review signal, not a reason to split one
 cohesive algorithm. Comments explain ownership, units and non-obvious constraints;
 tests protect behavior, data integrity and recovery rather than implementation shape.
+
+## Product identity
+
+The desktop advertises `product: "rayburst"` in `/ping`, download capabilities and
+media capabilities. Rayburst Connect validates that field and sends
+`X-Rayburst-Client: rayburst-connect` on authenticated requests. Browser-origin
+requests without that header are rejected. Native clients without an Origin header
+continue to authenticate with the Extension API secret.
+
+The `rayburst://` scheme activates the desktop only. It never creates a download or
+transports cookies. Downloads use the authenticated HTTP handoff and its receipts.

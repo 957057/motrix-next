@@ -17,7 +17,6 @@ import { isEngineReady } from '@/api/aria2'
 import { detectKind, createBatchItem } from '@shared/utils/batchHelpers'
 import { createExternalInputTraceId, summarizeExternalInputBatch } from '@shared/utils/externalInputDiagnostics'
 import { getErrorMessage } from '@shared/utils/errorMessage'
-import { isMotrixNewTaskLink } from '@shared/utils/motrixDeepLink'
 import type { ExternalDownloadInput } from '@shared/types'
 import { handleTaskStart } from '@/composables/useTaskNotifyHandlers'
 import { onUnmounted } from 'vue'
@@ -355,10 +354,10 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
         taskStore.pauseAllTask().catch((e) => logger.error('TrayMenu', e))
         break
       case 'release-notes':
-        openUrl('https://github.com/AnInsomniacy/motrix-next/releases').catch((e) => logger.error('TrayMenu', e))
+        openUrl('https://github.com/AnInsomniacy/rayburst/releases').catch((e) => logger.error('TrayMenu', e))
         break
       case 'report-issue':
-        openUrl('https://github.com/AnInsomniacy/motrix-next/issues').catch((e) => logger.error('TrayMenu', e))
+        openUrl('https://github.com/AnInsomniacy/rayburst/issues').catch((e) => logger.error('TrayMenu', e))
         break
     }
   }
@@ -515,31 +514,6 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
       await runExternalInputWindowStage(traceId, 'unminimize', () => mainWindow.unminimize())
       await runExternalInputWindowStage(traceId, 'show', () => mainWindow.show())
       await runExternalInputWindowStage(traceId, 'setFocus', () => mainWindow.setFocus())
-    }
-
-    // Navigate to the "All" downloads tab when receiving new tasks from
-    // extension.  Always land on /task/all regardless of current sub-tab
-    // (active, stopped, etc.) so the user sees the full task list.
-    const hasNewTask = urls.some(isMotrixNewTaskLink)
-    if (!silent && hasNewTask && route.path !== '/task/all') {
-      try {
-        await router.push('/task/all')
-        logger.debug('ExternalInput', 'navigation_completed', {
-          trace_id: traceId,
-          stage: 'navigate',
-          result: 'ok',
-          route: '/task/all',
-        })
-      } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error)
-        logger.warn('ExternalInput', 'navigation_failed', {
-          trace_id: traceId,
-          stage: 'navigate',
-          result: 'failed',
-          route: '/task/all',
-          reason,
-        })
-      }
     }
 
     logger.debug('ExternalInput', 'download_routing_started', {

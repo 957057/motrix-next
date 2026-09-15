@@ -45,7 +45,9 @@ impl MediaService {
         {
             return Err(Error::Unavailable);
         }
-        Ok(json!({"protocolVersion":1,"sourceKinds":["hls","dash"],"requestContexts":true}))
+        Ok(
+            json!({"product":"rayburst","protocolVersion":1,"sourceKinds":["hls","dash"],"requestContexts":true}),
+        )
     }
 
     pub(super) async fn probe(self: Arc<Self>, record: Operation, source: Source) {

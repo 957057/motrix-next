@@ -237,45 +237,6 @@ function stopAppToastListener() {
   unlistenAppToast = null
 }
 
-// ── Config migration toast ──────────────────────────────────────────
-watch(
-  () => preferenceStore.migrationResult,
-  (result) => {
-    if (!result?.migrated) return
-    const v = `v${result.targetVersion}`
-    if (result.errors.length === 0) {
-      message.success(t('app.migration-success', { version: v }))
-    } else {
-      message.warning(t('app.migration-incomplete', { version: v }))
-    }
-    preferenceStore.migrationResult = null
-  },
-  { immediate: true },
-)
-
-// ── DB schema migration toast ───────────────────────────────────────
-// Uses the same reactive pattern as config migration toast above.
-// loadPreference() sets dbUpgradeVersion only for saved preferences.
-// Zero means this UI has not observed a native schema version yet.
-watch(
-  () => preferenceStore.dbUpgradeVersion,
-  async (savedDbVersion) => {
-    if (savedDbVersion === null) return
-    try {
-      const historyStore = useHistoryStore()
-      const currentDbVersion = await historyStore.getSchemaVersion()
-      if (savedDbVersion < currentDbVersion) {
-        if (savedDbVersion > 0) message.info(t('app.db-upgraded', { version: `v${currentDbVersion}` }))
-        await preferenceStore.updateAndSave({ dbSchemaVersion: currentDbVersion })
-      }
-    } catch (e) {
-      logger.debug('DbMigration.toast', e)
-    }
-    preferenceStore.dbUpgradeVersion = null
-  },
-  { immediate: true },
-)
-
 // ── Stat listener — passive subscription to Rust stat_service events ──
 // Replaces the old frontend polling loop. Rust is the sole poller of aria2;
 // the frontend simply listens for `stat:update` and updates reactive state.
@@ -793,10 +754,10 @@ onMounted(async () => {
         Copy: t('app.menu-copy'),
         Paste: t('app.menu-paste'),
         'Select All': t('app.menu-select-all'),
-        'Hide MotrixNext': t('app.hide'),
+        'Hide Rayburst': t('app.hide'),
         'Hide Others': t('app.hide-others'),
         'Show All': t('app.unhide'),
-        'Quit MotrixNext': t('app.quit'),
+        'Quit Rayburst': t('app.quit'),
       },
     })
   } catch (e) {

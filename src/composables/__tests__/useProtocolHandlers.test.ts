@@ -38,7 +38,7 @@ describe('protocol associations', () => {
     const protocols = useProtocolHandlers()
     expect(protocols.status.value.ed2k).toBeUndefined()
     await protocols.refreshAll()
-    expect(protocols.status.value).toEqual({ magnet: true, ed2k: null, thunder: true, motrixnext: true })
+    expect(protocols.status.value).toEqual({ magnet: true, ed2k: null, thunder: true, rayburst: true })
 
     mockInvoke.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('query failed'))
     expect(await protocols.setProtocolEnabled('magnet', false)).toEqual({ kind: 'query-failed' })
@@ -47,7 +47,7 @@ describe('protocol associations', () => {
 
     mockInvoke.mockResolvedValue(false)
     await protocols.refreshAll()
-    expect(protocols.status.value).toEqual({ magnet: false, ed2k: false, thunder: false, motrixnext: false })
+    expect(protocols.status.value).toEqual({ magnet: false, ed2k: false, thunder: false, rayburst: false })
   })
 
   it('serializes changes and verifies before releasing the pending state', async () => {

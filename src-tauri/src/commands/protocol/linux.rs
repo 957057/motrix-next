@@ -4,8 +4,8 @@ use crate::error::AppError;
 use gio::{glib, prelude::*, AppInfo, DesktopAppInfo};
 use std::path::{Path, PathBuf};
 
-pub const DESKTOP_ID: &str = "MotrixNext.desktop";
-pub const PROTOCOLS: [&str; 4] = ["magnet", "ed2k", "thunder", "motrixnext"];
+pub const DESKTOP_ID: &str = "Rayburst.desktop";
+pub const PROTOCOLS: [&str; 4] = ["magnet", "ed2k", "thunder", "rayburst"];
 const DEFAULTS: &str = "Default Applications";
 
 fn failure(context: &str, error: impl std::fmt::Display) -> AppError {
@@ -72,7 +72,7 @@ impl Associations {
                 .map_err(|error| failure("read desktop entry", error))?;
             // Never overwrite a different application or a user's custom launcher.
             if !saved
-                .boolean("Desktop Entry", "X-MotrixNext-Managed")
+                .boolean("Desktop Entry", "X-Rayburst-Managed")
                 .unwrap_or(false)
             {
                 return Err(failure(
@@ -88,10 +88,10 @@ impl Associations {
         .map_err(|error| failure("create desktop entry directory", error))?;
         let keyfile = glib::KeyFile::new();
         for (key, value) in [
-            ("Type", "Application"), ("Name", "Motrix Next"), ("Exec", self.command.as_str()),
-            ("Icon", "motrix-next"), ("Terminal", "false"), ("NoDisplay", "true"),
-            ("X-MotrixNext-Managed", "true"),
-            ("MimeType", "application/x-bittorrent;x-scheme-handler/magnet;x-scheme-handler/ed2k;x-scheme-handler/thunder;x-scheme-handler/motrixnext;"),
+            ("Type", "Application"), ("Name", "Rayburst"), ("Exec", self.command.as_str()),
+            ("Icon", "rayburst"), ("Terminal", "false"), ("NoDisplay", "true"),
+            ("X-Rayburst-Managed", "true"),
+            ("MimeType", "application/x-bittorrent;x-scheme-handler/magnet;x-scheme-handler/ed2k;x-scheme-handler/thunder;x-scheme-handler/rayburst;"),
         ] {
             keyfile.set_string("Desktop Entry", key, value);
         }
@@ -311,7 +311,7 @@ mod tests {
 
     #[test]
     fn native_associations() {
-        if let Ok(scenario) = std::env::var("MOTRIX_PROTOCOL_TEST") {
+        if let Ok(scenario) = std::env::var("RAYBURST_PROTOCOL_TEST") {
             exercise(&scenario);
             return;
         }
@@ -329,7 +329,7 @@ mod tests {
                 }
                 let result = std::process::Command::new(std::env::current_exe().unwrap())
                     .args(["--exact", &test, "--nocapture"])
-                    .env("MOTRIX_PROTOCOL_TEST", scenario)
+                    .env("RAYBURST_PROTOCOL_TEST", scenario)
                     .env("HOME", root.path())
                     .env("XDG_CONFIG_HOME", root.path().join("config"))
                     .env("XDG_CONFIG_DIRS", root.path().join("system-config"))
@@ -371,7 +371,7 @@ mod tests {
         .unwrap();
         std::fs::write(&desktop_defaults, "# Keep this comment\n[Default Applications]\nx-scheme-handler/magnet=other.desktop;\nx-scheme-handler/thunder=other.desktop;\n").unwrap();
         let executable = if scenario == "portable" {
-            let executable = root.join("Motrix $`'\" test.AppImage");
+            let executable = root.join("Rayburst $`'\" test.AppImage");
             std::fs::copy("/usr/bin/true", &executable).unwrap();
             executable
         } else {
@@ -437,14 +437,14 @@ mod tests {
         }
         associations.set_enabled("magnet", false).unwrap();
         assert!(!associations.is_default("magnet").unwrap());
-        for protocol in ["ed2k", "thunder", "motrixnext"] {
+        for protocol in ["ed2k", "thunder", "rayburst"] {
             assert!(associations.is_default(protocol).unwrap());
         }
         associations.set_enabled("magnet", true).unwrap();
         assert!(associations.is_default("magnet").unwrap());
         assert!(associations.set_enabled("https", true).is_err());
         if scenario == "portable" {
-            let moved = root.join("Moved Motrix.AppImage");
+            let moved = root.join("Moved Rayburst.AppImage");
             std::fs::rename(&executable, &moved).unwrap();
             let relocated = Associations::new(&moved).unwrap();
             relocated.set_enabled("magnet", true).unwrap();

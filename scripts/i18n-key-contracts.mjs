@@ -19,7 +19,7 @@ export const INDIRECT_I18N_KEYS = [
   'preferences.bt-external-port-invalid',
   'preferences.bt-proxy-unsupported-protocol',
   'preferences.color-scheme-amber',
-  'preferences.color-scheme-aurora',
+  'preferences.color-scheme-rayburst',
   'preferences.color-scheme-coral',
   'preferences.color-scheme-custom',
   'preferences.color-scheme-evergreen',

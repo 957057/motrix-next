@@ -10,9 +10,10 @@ use crate::services::config::{RuntimeConfigState, DEFAULT_EXTENSION_API_PORT};
 use crate::services::port_guard;
 use crate::services::tasks::TaskServiceState;
 use axum::{
-    extract::State,
-    http::{header, HeaderMap, Method, StatusCode},
-    response::IntoResponse,
+    extract::{Request, State},
+    http::{header, HeaderMap, HeaderName, Method, StatusCode},
+    middleware::{self, Next},
+    response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
 };
@@ -30,6 +31,7 @@ pub use super::downloads::contracts::{AddRequest, AddResponse};
 /// GET /ping response.
 #[derive(Debug, Serialize)]
 pub struct PingResponse {
+    pub product: &'static str,
     pub status: String,
     pub version: String,
 }
@@ -102,9 +104,15 @@ pub struct ApiContext {
 /// Build the Axum router with all routes.
 pub fn build_router(ctx: Arc<ApiContext>) -> Router {
     let cors = CorsLayer::new()
-        .allow_origin(tower_http::cors::Any)
+        .allow_origin(tower_http::cors::AllowOrigin::predicate(|origin, _| {
+            origin.to_str().is_ok_and(extension_origin)
+        }))
         .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-        .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
+        .allow_headers([
+            header::CONTENT_TYPE,
+            header::AUTHORIZATION,
+            HeaderName::from_static("x-rayburst-client"),
+        ])
         .allow_private_network(true);
 
     Router::new()
@@ -115,10 +123,41 @@ pub fn build_router(ctx: Arc<ApiContext>) -> Router {
         .route("/stat", get(handle_stat))
         .route("/pause-all", post(handle_pause_all))
         .route("/resume-all", post(handle_resume_all))
-        .layer(cors)
         .layer(axum::extract::DefaultBodyLimit::max(256 * 1024))
         .nest("/media/v1", super::media::routes::router())
+        .layer(middleware::from_fn(require_product_client))
+        .layer(cors)
         .with_state(ctx)
+}
+
+pub(super) fn extension_origin(value: &str) -> bool {
+    url::Url::parse(value).is_ok_and(|url| {
+        matches!(url.scheme(), "chrome-extension" | "moz-extension")
+            && url.host_str().is_some()
+            && url.username().is_empty()
+            && url.password().is_none()
+            && url.path().is_empty()
+            && url.query().is_none()
+            && url.fragment().is_none()
+    })
+}
+
+async fn require_product_client(request: Request, next: Next) -> Response {
+    let public = matches!(request.uri().path(), "/ping" | "/version");
+    let origin = request.headers().get(header::ORIGIN);
+    if origin.is_some_and(|value| !value.to_str().is_ok_and(extension_origin)) {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+    let browser = origin.is_some();
+    let product_client = request
+        .headers()
+        .get("x-rayburst-client")
+        .and_then(|value| value.to_str().ok())
+        == Some("rayburst-connect");
+    if browser && !public && !product_client && request.method() != Method::OPTIONS {
+        return StatusCode::BAD_REQUEST.into_response();
+    }
+    next.run(request).await
 }
 
 // ── Handlers ────────────────────────────────────────────────────────
@@ -126,6 +165,7 @@ pub fn build_router(ctx: Arc<ApiContext>) -> Router {
 async fn handle_ping(State(ctx): State<Arc<ApiContext>>) -> impl IntoResponse {
     let version = ctx.app.package_info().version.to_string();
     Json(PingResponse {
+        product: "rayburst",
         status: "ok".to_string(),
         version,
     })
@@ -156,7 +196,7 @@ async fn handle_download_capabilities(
         return Err(StatusCode::SERVICE_UNAVAILABLE);
     }
     Ok(Json(
-        serde_json::json!({"protocolVersion":2,"filenameHints":true}),
+        serde_json::json!({"product":"rayburst","protocolVersion":2,"filenameHints":true}),
     ))
 }
 
@@ -517,6 +557,44 @@ fn read_extension_api_allow_remote_access_from_store(app: &AppHandle) -> bool {
 mod tests {
     use super::*;
     use axum::http::HeaderValue;
+
+    #[tokio::test]
+    async fn product_boundary_rejects_unrelated_browser_origins_and_missing_identity() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("local listener");
+        let address = listener.local_addr().expect("local address");
+        let router = Router::new()
+            .route("/add", post(|| async { StatusCode::OK }))
+            .layer(middleware::from_fn(require_product_client));
+        let server = tokio::spawn(async move { axum::serve(listener, router).await });
+        let client = reqwest::Client::new();
+        for (origin, identity, expected) in [
+            (Some("https://example.test"), true, 403),
+            (Some("chrome-extension://test-extension"), false, 400),
+            (Some("chrome-extension://test-extension"), true, 200),
+            (Some("moz-extension://test-extension"), true, 200),
+            (None, false, 200),
+        ] {
+            let mut request = client.post(format!("http://{address}/add"));
+            if let Some(origin) = origin {
+                request = request.header("origin", origin);
+            }
+            if identity {
+                request = request.header("x-rayburst-client", "rayburst-connect");
+            }
+            assert_eq!(
+                request
+                    .send()
+                    .await
+                    .expect("local response")
+                    .status()
+                    .as_u16(),
+                expected
+            );
+        }
+        server.abort();
+    }
 
     // ── validate_bearer_token ───────────────────────────────────────
 

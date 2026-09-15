@@ -1,6 +1,6 @@
 # Native media downloads
 
-Motrix Next uses Aria2 Next's GPAC, libcurl and FFmpeg integration for HLS and
+Rayburst uses Aria2 Next's GPAC, libcurl and FFmpeg integration for HLS and
 DASH. No separate downloader, player or transcoding executable is required.
 The bundled engine must advertise the current RPC contract and implement
 `aria2.finishMedia` and `aria2.retryMedia`. Older sidecars are rejected.

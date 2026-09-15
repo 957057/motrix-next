@@ -17,7 +17,6 @@ import { logger } from '@shared/logger'
 import { STAT_BASE_INTERVAL, STAT_PER_TASK_INTERVAL, STAT_MIN_INTERVAL, STAT_MAX_INTERVAL } from '@shared/timing'
 import { detectExternalInputKind, detectKind, createBatchItem } from '@shared/utils/batchHelpers'
 import { summarizeExternalInput } from '@shared/utils/externalInputDiagnostics'
-import { parseMotrixDeepLink } from '@shared/utils/motrixDeepLink'
 import { submitManualUris } from '@/composables/useAddTaskSubmit'
 import { usePreferenceStore } from '@/stores/preference'
 import { useTaskStore } from '@/stores/task'
@@ -219,47 +218,9 @@ export const useAppStore = defineStore('app', () => {
 
     for (const url of urls) {
       const lower = url.toLowerCase()
-      const motrixDeepLink = parseMotrixDeepLink(url)
-
-      // ── motrixnext:// — extension-to-app communication protocol ───
-      // Bare `motrixnext://` is a wake-up signal (window focus handled
-      // by the deep-link-open listener in useAppEvents).
-      // `motrixnext://new?url=X` creates a download task from the URL.
-      if (motrixDeepLink.valid) {
-        if (motrixDeepLink.isNewTask) {
-          const routed = routeExternalDownloadInput(
-            {
-              url: motrixDeepLink.downloadUrl,
-              referer: motrixDeepLink.referer,
-              cookie: motrixDeepLink.cookie,
-              filename: motrixDeepLink.filename,
-              source: 'deep-link',
-            },
-            items,
-          )
-          result.autoSubmitted += routed.autoSubmitted
-        } else {
-          result.ignored += 1
-          const fields = {
-            action: motrixDeepLink.action,
-            hasUrl: motrixDeepLink.downloadUrl ? 'true' : 'false',
-            reason: motrixDeepLink.downloadUrl ? 'unhandled-action' : 'wake-only',
-          }
-          if (motrixDeepLink.downloadUrl) {
-            logger.warn('DeepLink.ignored', 'deep_link_ignored', fields)
-          } else {
-            logger.debug('DeepLink.ignored', 'deep_link_ignored', fields)
-          }
-        }
-        continue
-      }
-      if (motrixDeepLink.reason === 'malformed') {
+      // The private scheme activates the app; downloads use the authenticated HTTP API.
+      if (lower.startsWith('rayburst:')) {
         result.ignored += 1
-        logger.warn('DeepLink.ignored', 'deep_link_ignored', {
-          action: 'unknown',
-          hasUrl: 'false',
-          reason: 'malformed',
-        })
         continue
       }
 
@@ -272,7 +233,7 @@ export const useAppStore = defineStore('app', () => {
         lower.startsWith('magnet:') ||
         lower.startsWith('ed2k://') ||
         lower.startsWith('thunder://')
-      const isLocalPath = !isRemoteUri && !isFileUri
+      const isLocalPath = !isRemoteUri && !isFileUri && (!/^[a-z][a-z0-9+.-]*:/i.test(url) || /^[a-z]:[\\/]/i.test(url))
 
       // Only treat as a file-based batch item if it's a LOCAL path or file:// URI
       const hasFileExt = FILE_EXTS.some((ext) => lower.endsWith(ext))

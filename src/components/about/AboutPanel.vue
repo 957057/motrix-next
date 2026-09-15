@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const brandLogo = '/logo.svg'
 /** @fileoverview About panel with staggered entrance animations and glass effect. */
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -87,19 +88,19 @@ const links = [
     key: 'github',
     label: 'GitHub',
     icon: LogoGithub,
-    url: 'https://github.com/AnInsomniacy/motrix-next',
+    url: 'https://github.com/AnInsomniacy/rayburst',
   },
   {
     key: 'release',
     i18n: 'about.release',
     icon: RocketOutline,
-    url: 'https://github.com/AnInsomniacy/motrix-next/releases',
+    url: 'https://github.com/AnInsomniacy/rayburst/releases',
   },
   {
     key: 'license',
     i18n: 'about.license',
     icon: DocumentTextOutline,
-    url: 'https://github.com/AnInsomniacy/motrix-next/blob/main/LICENSE',
+    url: 'https://github.com/AnInsomniacy/rayburst/blob/main/LICENSE',
   },
   {
     key: 'support',
@@ -143,17 +144,17 @@ function openUrl(url: string) {
 
       <!-- Logo -->
       <div class="about-logo stagger stagger-1">
-        <img src="@/assets/logo.png" alt="Motrix Next" width="96" height="96" />
+        <img :src="brandLogo" alt="Rayburst" width="96" height="96" />
       </div>
 
       <!-- Title -->
-      <div class="about-title stagger stagger-2">Motrix <span class="accent">Next</span></div>
+      <div class="about-title stagger stagger-2">Rayburst</div>
 
       <!-- Version Badges (stacked, prominent) -->
       <div class="about-versions stagger stagger-2">
         <MTooltip>
           <template #trigger>
-            <button class="version-badge" @click="copyToClipboard(`Motrix Next v${appVersion}`, 'Motrix Next')">
+            <button class="version-badge" @click="copyToClipboard(`Rayburst v${appVersion}`, 'Rayburst')">
               <span class="version-label">{{ t('about.app-version') }}</span>
               <span class="version-value">v{{ appVersion }}</span>
               <svg class="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -199,6 +200,7 @@ function openUrl(url: string) {
       </div>
 
       <!-- Description -->
+      <p class="about-desc stagger stagger-3">Seize the ray, forge the real.</p>
       <p class="about-desc stagger stagger-3">{{ t('about.description') }}</p>
 
       <!-- Tech Stack -->
@@ -236,8 +238,6 @@ function openUrl(url: string) {
         <span>
           Developed by
           <a class="about-link" @click="openUrl('https://github.com/AnInsomniacy')">AnInsomniacy</a>
-          · Inspired by
-          <a class="about-link" @click="openUrl('https://github.com/agalwood/Motrix')">Motrix</a>
         </span>
         <span>&copy; {{ year }} AnInsomniacy</span>
       </div>

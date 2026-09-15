@@ -1,9 +1,6 @@
 //! UPnP/IGD port mapping manager.
 //!
-//! Mirrors the legacy Motrix `UPnPManager.js` + `Application.js` UPnP lifecycle:
-//! discover the IGD gateway, map ED2K ports, periodically
-//! renew the leases, and unmap on shutdown.  The underlying protocol work is
-//! delegated to the `igd-next` crate (UPnP IGD over SSDP).
+//! Owns native UPnP mappings and their renewal lifecycle.
 
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket};
 use std::sync::Mutex;
@@ -27,7 +24,7 @@ const PERMANENT_LEASE_SECS: u32 = 0;
 const RENEWAL_INTERVAL: Duration = Duration::from_secs(1800);
 
 /// Description string embedded in the router's port mapping table.
-const MAPPING_DESC: &str = "Motrix Next";
+const MAPPING_DESC: &str = "Rayburst";
 
 // ─── Public State ────────────────────────────────────────────────────
 

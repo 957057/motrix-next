@@ -163,27 +163,29 @@ mod export_tests {
     #[test]
     fn clear_managed_log_files_truncates_active_logs_and_removes_rotations() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let motrix = dir.path().join("motrix-next.log");
+        let rayburst = dir.path().join("rayburst.log");
         let aria2 = dir.path().join("aria2-next.log");
         let rotated = dir.path().join("aria2-next.1.log");
-        let motrix_rotated = dir.path().join("motrix-next_2026-08-27_12-00-00.log");
+        let rayburst_rotated = dir.path().join("rayburst_2026-08-27_12-00-00.log");
         let other = dir.path().join("other.log");
 
-        std::fs::write(&motrix, "motrix log").expect("motrix log");
+        std::fs::write(&rayburst, "rayburst log").expect("rayburst log");
         std::fs::write(&aria2, "aria2 log").expect("aria2 log");
         std::fs::write(&rotated, "rotated log").expect("rotated log");
-        std::fs::write(&motrix_rotated, "rotated log").expect("motrix rotated log");
+        std::fs::write(&rayburst_rotated, "rotated log").expect("rayburst rotated log");
         std::fs::write(&other, "other log").expect("other log");
 
         clear_managed_log_files_in_dir(dir.path()).expect("clear logs");
 
         assert_eq!(
-            std::fs::metadata(&motrix).expect("motrix metadata").len(),
+            std::fs::metadata(&rayburst)
+                .expect("rayburst metadata")
+                .len(),
             0
         );
         assert_eq!(std::fs::metadata(&aria2).expect("aria2 metadata").len(), 0);
         assert!(!rotated.exists());
-        assert!(!motrix_rotated.exists());
+        assert!(!rayburst_rotated.exists());
         assert_eq!(
             std::fs::read_to_string(&other).expect("other content"),
             "other log"
@@ -604,7 +606,7 @@ mod tests {
     #[test]
     fn check_path_exists_handles_path_with_spaces() {
         // Create a temp file with spaces in the path
-        let dir = std::env::temp_dir().join("motrix test spaces");
+        let dir = std::env::temp_dir().join("rayburst test spaces");
         let _ = std::fs::create_dir_all(&dir);
         let file = dir.join("test file.txt");
         let _ = std::fs::write(&file, "test");
@@ -676,8 +678,8 @@ mod tests {
     #[test]
     fn normalize_path_fixes_mixed_separators_windows() {
         // aria2 returns `Z:\\` + JS joins with `/` → `Z:\\/file.exe`
-        let result = normalize_path("Z:\\/MotrixNext_setup.exe");
-        assert_eq!(result, "Z:\\MotrixNext_setup.exe");
+        let result = normalize_path("Z:\\/Rayburst_setup.exe");
+        assert_eq!(result, "Z:\\Rayburst_setup.exe");
     }
 
     #[cfg(target_os = "windows")]
