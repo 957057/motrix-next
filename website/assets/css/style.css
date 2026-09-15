@@ -1751,10 +1751,6 @@ footer.i18n-fade-in {
   opacity: 0.4;
 }
 
-.footer-ack {
-  margin-bottom: 1.1rem;
-}
-
 .footer-links {
   display: flex;
   flex-wrap: wrap;

@@ -15,8 +15,8 @@ Before you start contributing, make sure you understand [GitHub flow](https://gu
 ### Getting Started
 
 ```bash
-git clone https://github.com/AnInsomniacy/rayburst.git
-cd rayburst
+git clone https://github.com/AnInsomniacy/motrix-next.git
+cd motrix-next
 pnpm install
 pnpm tauri dev    # Start dev server (Tauri + Vite)
 ```

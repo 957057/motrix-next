@@ -54,7 +54,7 @@ Every transition and micro-interaction has been carefully tuned to follow [Mater
 - **Notifications and power options** — Native task start/complete/failure notifications, keep-awake during downloads, and optional shutdown after completion
 - **Network controls** — Scoped proxy support for downloads, app updates, and tracker updates, plus system proxy detection
 - **Auto-update channels** — Stable, Beta, and Latest Across Channels policies with separate download and install phases
-- **Diagnostics** — Structured logs, exportable diagnostic ZIPs, database integrity checks, automatic DB rebuild, and Linux GPU rendering fallback
+- **Diagnostics** — Structured logs, exportable diagnostic ZIPs, database integrity checks and Linux GPU rendering fallback
 - **Personalization** — Light/dark/system theme, 10 color schemes, 27 languages, and first-launch system language detection
 - **Native desktop app** — Tauri 2 with a Rust backend
 
@@ -251,12 +251,6 @@ rayburst/
 ## Contributing
 
 PRs and issues are welcome! Please read the [Contributing Guide](docs/CONTRIBUTING.md) and [Code of Conduct](docs/CODE_OF_CONDUCT.md) before getting started.
-
-## Acknowledgements
-
-- [Motrix](https://github.com/agalwood/Motrix) by [agalwood](https://github.com/agalwood) and all its contributors
-- [Aria2 Next](https://github.com/AnInsomniacy/aria2-next) — the maintained download engine at the core
-- Community translators who contributed 27 locale packs for worldwide accessibility
 
 ## Sponsor
 
