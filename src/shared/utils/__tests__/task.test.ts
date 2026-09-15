@@ -12,6 +12,7 @@ import {
   getTaskSharingState,
   getTaskSharingTime,
   getFileNameFromFile,
+  getTaskDisplayName,
   getTaskUri,
   resolveOpenTarget,
   getRestartDescriptors,
@@ -270,25 +271,25 @@ describe('getFileNameFromFile', () => {
   })
 })
 
-// ── getTaskName ───────────────────────────────────────────────
+// ── getTaskDisplayName ───────────────────────────────────────────────
 
-describe('getTaskName', () => {
-  it('preserves literal percent sequences in native file paths', () => {
+describe('getTaskDisplayName', () => {
+  it('decodes percent-encoded filename from file path', () => {
     const task = createMockTask({
       files: [createMockFile({ path: '/downloads/AAA%20BBB.mp3' })],
     })
-    expect(getTaskName(task)).toBe('AAA%20BBB.mp3')
+    expect(getTaskDisplayName(task)).toBe('AAA BBB.mp3')
   })
 
-  it('does not reinterpret an existing filename as an encoded URL', () => {
+  it('decodes UTF-8 percent sequences in filename', () => {
     const task = createMockTask({
       files: [createMockFile({ path: '/downloads/file-r%C3%A9sum%C3%A9.txt' })],
     })
-    expect(getTaskName(task)).toBe('file-r%C3%A9sum%C3%A9.txt')
+    expect(getTaskDisplayName(task)).toBe('file-résumé.txt')
   })
 
   it('returns default name for null task', () => {
-    expect(getTaskName(null, { defaultName: 'Unknown' })).toBe('Unknown')
+    expect(getTaskDisplayName(null, { defaultName: 'Unknown' })).toBe('Unknown')
   })
 
   it('passes through BT names unmodified', () => {
@@ -296,33 +297,35 @@ describe('getTaskName', () => {
       files: [createMockFile()],
       bittorrent: { info: { name: 'Ubuntu 24.04' } },
     })
-    expect(getTaskName(task)).toBe('Ubuntu 24.04')
+    expect(getTaskDisplayName(task)).toBe('Ubuntu 24.04')
   })
 
   it('returns original name for malformed percent sequence', () => {
     const task = createMockTask({
       files: [createMockFile({ path: '/downloads/bad%ZZname.txt' })],
     })
-    expect(getTaskName(task)).toBe('bad%ZZname.txt')
+    expect(getTaskDisplayName(task)).toBe('bad%ZZname.txt')
   })
 
   it('handles already-decoded path (post-Layer-1 fix) without double-decoding', () => {
+    // After Layer 1, aria2 reports decoded file.path — decoding again should be a no-op
     const task = createMockTask({
       files: [createMockFile({ path: '/downloads/AAA BBB.mp3' })],
     })
-    expect(getTaskName(task)).toBe('AAA BBB.mp3')
+    expect(getTaskDisplayName(task)).toBe('AAA BBB.mp3')
   })
 
   it('handles literal percent sign in filename safely', () => {
+    // A file literally named "100%.pdf" — decodeURIComponent throws → catch returns original
     const task = createMockTask({
       files: [createMockFile({ path: '/downloads/100%.pdf' })],
     })
-    expect(getTaskName(task)).toBe('100%.pdf')
+    expect(getTaskDisplayName(task)).toBe('100%.pdf')
   })
 
   it('returns empty string for task with empty files array', () => {
     const task = createMockTask({ files: [] })
-    expect(getTaskName(task)).toBe('')
+    expect(getTaskDisplayName(task)).toBe('')
   })
 })
 

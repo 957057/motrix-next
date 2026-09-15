@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
-import SettingsRow from './SettingsRow.vue'
 /** @fileoverview Downloads preference tab: paths, concurrency, speed limits, notifications, cleanup. */
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -25,12 +23,14 @@ import {
 } from '@/composables/useDownloadsPreference'
 import {
   NForm,
+  NFormItem,
   NInput,
   NInputNumber,
   NSelect,
   NSwitch,
   NCheckbox,
   NButton,
+  NDivider,
   NInputGroup,
   NText,
   NCollapseTransition,
@@ -43,9 +43,8 @@ import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 import DirectoryPopover from '@/components/common/DirectoryPopover.vue'
 import FileCategoryManager from './FileCategoryManager.vue'
-import { FolderOpen } from '@lucide/vue'
+import { FolderOpenOutline } from '@vicons/ionicons5'
 
-const settingsRoute = useRoute()
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
 const message = useAppMessage()
@@ -272,135 +271,50 @@ onMounted(async () => {
 <template>
   <div class="preference-form-wrapper">
     <div class="preference-form-scroll">
-      <NForm
-        label-placement="left"
-        label-align="left"
-        class="form-preference"
-        :disabled="preferenceStore.savingChanges"
-      >
-        <!-- Download Path -->
-        <h2 class="settings-section-title">{{ t('preferences.download-path') }}</h2>
-        <SettingsRow setting-key="preferences.default-path" :label="t('preferences.default-path')">
-          <NInputGroup>
-            <NInput
-              v-model:value="form.dir"
-              :input-props="{ 'aria-label': t('preferences.default-path') }"
-              class="pref-control-full"
-            />
-            <NButton class="pref-icon-button" @click="handleSelectDir">
-              <template #icon>
-                <NIcon :size="16"><FolderOpen /></NIcon>
-              </template>
-            </NButton>
-            <DirectoryPopover @select="handleRecentDirSelect" />
-          </NInputGroup>
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.file-timestamp" :label="t('preferences.file-timestamp')">
-          <NSelect
-            :aria-label="t('preferences.file-timestamp')"
-            :value="fileTimestampValue"
-            :options="fileTimestampOptions"
-            class="pref-control-auto pref-control-file-timestamp"
-            @update:value="handleFileTimestampChange"
-          />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.file-category-save">
-          <template #label>
-            <PreferenceHintLabel
-              :label="t('preferences.file-category-save')"
-              :hint="t('preferences.file-category-auto-archive-hint')"
-            />
-          </template>
-          <NSwitch v-model:value="form.fileCategoryEnabled" :aria-label="t('preferences.file-category-save')" />
-        </SettingsRow>
-        <SettingsRow :show-label="false">
-          <div class="file-category-summary-row">
-            <div class="file-category-summary-text">
-              <span>{{ categorySummary }}</span>
-              <NText depth="3">{{ t('preferences.file-category-manager-hint') }}</NText>
-            </div>
-            <NButton size="small" @click="showCategoryManager = true">
-              {{ t('preferences.file-category-manage') }}
-            </NButton>
-          </div>
-        </SettingsRow>
-
-        <h2 class="settings-section-title">{{ t('preferences.media-downloads') }}</h2>
-        <SettingsRow
-          setting-key="preferences.media-select-before-download"
-          :label="t('preferences.media-select-before-download')"
-        >
-          <NSwitch
-            v-model:value="form.mediaSelectBeforeDownload"
-            :aria-label="t('preferences.media-select-before-download')"
-          />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.media-default-format" :label="t('preferences.media-default-format')">
-          <NSelect
-            v-model:value="form.mediaDefaultFormat"
-            :aria-label="t('preferences.media-default-format')"
-            :options="[
-              { label: 'MP4', value: 'mp4' },
-              { label: 'MKV', value: 'mkv' },
-            ]"
-            class="pref-control-auto"
-          />
-        </SettingsRow>
-        <h2 class="settings-section-title">{{ t('preferences.download-concurrency') }}</h2>
-        <SettingsRow
-          setting-key="preferences.max-concurrent-downloads"
+      <NForm label-placement="left" label-align="left" label-width="260px" size="small" class="form-preference">
+        <NDivider title-placement="left">{{ t('preferences.download-concurrency') }}</NDivider>
+        <NFormItem
           :label="t('preferences.max-concurrent-downloads')"
           v-bind="configFieldProps('maxConcurrentDownloads', form.maxConcurrentDownloads)"
         >
           <NInputNumber
             v-model:value="form.maxConcurrentDownloads"
-            :input-props="{ 'aria-label': t('preferences.max-concurrent-downloads') }"
             :min="constraint('maxConcurrentDownloads').min"
             :max="constraint('maxConcurrentDownloads').max"
             class="pref-number"
           />
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.stream-max-connections"
+        </NFormItem>
+        <NFormItem
           :label="t('preferences.stream-max-connections')"
           v-bind="configFieldProps('streamMaxConnections', form.streamMaxConnections)"
         >
           <NInputNumber
             v-model:value="form.streamMaxConnections"
-            :input-props="{ 'aria-label': t('preferences.stream-max-connections') }"
             :min="constraint('streamMaxConnections').min"
             :max="constraint('streamMaxConnections').max"
             class="pref-number"
           />
-        </SettingsRow>
-        <h2 class="settings-section-title">{{ t('preferences.p2p-sharing-section') }}</h2>
-        <SettingsRow setting-key="preferences.sharing-mode" :label="t('preferences.sharing-mode')">
-          <NRadioGroup v-model:value="form.sharingMode" :aria-label="t('preferences.sharing-mode')" size="small">
+        </NFormItem>
+        <NDivider title-placement="left">{{ t('preferences.p2p-sharing-section') }}</NDivider>
+        <NFormItem :label="t('preferences.sharing-mode')">
+          <NRadioGroup v-model:value="form.sharingMode" size="small">
             <NRadioButton value="stop-by-condition">
               {{ t('preferences.sharing-mode-stop-by-condition') }}
             </NRadioButton>
             <NRadioButton value="manual-stop">{{ t('preferences.sharing-mode-manual-stop') }}</NRadioButton>
           </NRadioGroup>
-        </SettingsRow>
-        <NCollapseTransition
-          :show="form.sharingMode === 'stop-by-condition' || !!settingsRoute.hash"
-          class="collapse-indent"
-        >
-          <SettingsRow
-            setting-key="preferences.share-ratio"
-            :label="t('preferences.share-ratio')"
-            v-bind="configFieldProps('shareRatio', form.shareRatio)"
-          >
+        </NFormItem>
+        <NCollapseTransition :show="form.sharingMode === 'stop-by-condition'" class="collapse-indent">
+          <NFormItem :label="t('preferences.share-ratio')" v-bind="configFieldProps('shareRatio', form.shareRatio)">
             <NInputNumber
               v-model:value="form.shareRatio"
-              :input-props="{ 'aria-label': t('preferences.share-ratio') }"
               :min="constraint('shareRatio').min"
               :max="constraint('shareRatio').max"
               :step="0.1"
               class="pref-number"
             />
-          </SettingsRow>
-          <SettingsRow
+          </NFormItem>
+          <NFormItem
             :label="t('preferences.share-time') + ' (' + t('preferences.share-time-unit') + ')'"
             v-bind="configFieldProps('shareTime', form.shareTime)"
           >
@@ -410,23 +324,18 @@ onMounted(async () => {
               :max="constraint('shareTime').max"
               class="pref-number"
             />
-          </SettingsRow>
+          </NFormItem>
         </NCollapseTransition>
-        <NCollapseTransition :show="form.sharingMode === 'manual-stop' || !!settingsRoute.hash" class="collapse-indent">
-          <SettingsRow continuation>
+        <NCollapseTransition :show="form.sharingMode === 'manual-stop'" class="collapse-indent">
+          <NFormItem label=" ">
             <NText depth="3">{{ t('preferences.sharing-mode-manual-stop-tips') }}</NText>
-          </SettingsRow>
+          </NFormItem>
         </NCollapseTransition>
         <!-- Retry & File Options -->
-        <h2 class="settings-section-title">{{ t('preferences.retry-and-file-behavior') }}</h2>
-        <SettingsRow
-          setting-key="preferences.max-tries"
-          :label="t('preferences.max-tries')"
-          v-bind="configFieldProps('maxTries', form.maxTries)"
-        >
+        <NDivider title-placement="left">{{ t('preferences.retry-and-file-behavior') }}</NDivider>
+        <NFormItem :label="t('preferences.max-tries')" v-bind="configFieldProps('maxTries', form.maxTries)">
           <NInputNumber
             v-model:value="form.maxTries"
-            :input-props="{ 'aria-label': t('preferences.max-tries') }"
             :min="constraint('maxTries').min"
             :max="constraint('maxTries').max"
             class="pref-number"
@@ -434,87 +343,98 @@ onMounted(async () => {
           <NText depth="3" class="pref-inline-note">
             {{ t('preferences.max-tries-hint') }}
           </NText>
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.retry-wait"
-          :label="t('preferences.retry-wait')"
-          v-bind="configFieldProps('retryWait', form.retryWait)"
-        >
+        </NFormItem>
+        <NFormItem :label="t('preferences.retry-wait')" v-bind="configFieldProps('retryWait', form.retryWait)">
           <NInputNumber
             v-model:value="form.retryWait"
-            :input-props="{ 'aria-label': t('preferences.retry-wait') }"
             :min="constraint('retryWait').min"
             :max="constraint('retryWait').max"
             class="pref-number"
           />
           <NText depth="3" class="pref-inline-note">{{ t('preferences.unit-seconds') }}</NText>
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.continue" :label="t('preferences.continue')">
-          <NSwitch v-model:value="form.continue" :aria-label="t('preferences.continue')" />
-        </SettingsRow>
+        </NFormItem>
+        <NFormItem :label="t('preferences.continue')">
+          <NSwitch v-model:value="form.continue" />
+        </NFormItem>
+
+        <!-- Download Path -->
+        <NDivider title-placement="left">{{ t('preferences.download-path') }}</NDivider>
+        <NFormItem :label="t('preferences.default-path')">
+          <NInputGroup>
+            <NInput v-model:value="form.dir" class="pref-control-full" />
+            <NButton class="pref-icon-button" @click="handleSelectDir">
+              <template #icon>
+                <NIcon :size="16"><FolderOpenOutline /></NIcon>
+              </template>
+            </NButton>
+            <DirectoryPopover @select="handleRecentDirSelect" />
+          </NInputGroup>
+        </NFormItem>
+        <NFormItem :label="t('preferences.file-timestamp')">
+          <NSelect
+            :value="fileTimestampValue"
+            :options="fileTimestampOptions"
+            class="pref-control-auto pref-control-file-timestamp"
+            @update:value="handleFileTimestampChange"
+          />
+        </NFormItem>
+        <NFormItem>
+          <template #label>
+            <PreferenceHintLabel
+              :label="t('preferences.file-category-save')"
+              :hint="t('preferences.file-category-auto-archive-hint')"
+            />
+          </template>
+          <NSwitch v-model:value="form.fileCategoryEnabled" />
+        </NFormItem>
+        <NFormItem :show-label="false">
+          <div class="file-category-summary-row">
+            <div class="file-category-summary-text">
+              <span>{{ categorySummary }}</span>
+              <NText depth="3">{{ t('preferences.file-category-manager-hint') }}</NText>
+            </div>
+            <NButton size="small" @click="showCategoryManager = true">
+              {{ t('preferences.file-category-manage') }}
+            </NButton>
+          </div>
+        </NFormItem>
 
         <!-- Speed Limit -->
-        <h2 class="settings-section-title">{{ t('preferences.speed-limit') }}</h2>
-        <SettingsRow setting-key="app.speedometer-enable-limit" :label="t('app.speedometer-enable-limit')">
-          <NSwitch
-            :aria-label="t('app.speedometer-enable-limit')"
-            :value="preferenceStore.config.speedLimitEnabled"
-            @update:value="handleSpeedLimitToggle"
-          />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.speed-schedule-enabled">
+        <NDivider title-placement="left">{{ t('preferences.speed-limit') }}</NDivider>
+        <NFormItem :label="t('app.speedometer-enable-limit')">
+          <NSwitch :value="preferenceStore.config.speedLimitEnabled" @update:value="handleSpeedLimitToggle" />
+        </NFormItem>
+        <NFormItem>
           <template #label>
             <PreferenceHintLabel
               :label="t('preferences.speed-schedule-enabled')"
               :hint="t('preferences.schedule-hint')"
             />
           </template>
-          <NSwitch
-            :aria-label="t('preferences.speed-schedule-enabled')"
-            :value="preferenceStore.config.speedScheduleEnabled"
-            @update:value="handleScheduleToggle"
-          />
-        </SettingsRow>
-        <NCollapseTransition
-          :show="preferenceStore.config.speedScheduleEnabled || !!settingsRoute.hash"
-          class="collapse-indent"
-        >
-          <SettingsRow v-if="!preferenceStore.config.speedLimitEnabled" :show-label="false">
-            <NText depth="3" type="warning" class="pref-inline-note pref-inline-note--warning">
-              {{ t('preferences.schedule-needs-limit') }}
-            </NText>
-          </SettingsRow>
-
-          <SettingsRow setting-key="preferences.schedule-from" :label="t('preferences.schedule-from')">
-            <NSelect
-              v-model:value="form.speedScheduleFrom"
-              :aria-label="t('preferences.schedule-from')"
-              :options="timeOptions"
-              class="pref-control-auto"
-            />
-          </SettingsRow>
-          <SettingsRow setting-key="preferences.schedule-to" :label="t('preferences.schedule-to')">
-            <NSelect
-              v-model:value="form.speedScheduleTo"
-              :aria-label="t('preferences.schedule-to')"
-              :options="timeOptions"
-              class="pref-control-auto"
-            />
-          </SettingsRow>
-          <SettingsRow setting-key="preferences.schedule-days" :label="t('preferences.schedule-days')">
-            <NSelect
-              v-model:value="form.speedScheduleDays"
-              :aria-label="t('preferences.schedule-days')"
-              :options="scheduleDayOptions"
-              class="pref-control-auto"
-            />
-          </SettingsRow>
+          <NSwitch :value="preferenceStore.config.speedScheduleEnabled" @update:value="handleScheduleToggle" />
+        </NFormItem>
+        <NCollapseTransition :show="preferenceStore.config.speedScheduleEnabled" class="collapse-indent">
+          <Transition name="schedule-warn">
+            <NFormItem v-if="!preferenceStore.config.speedLimitEnabled" :show-label="false">
+              <NText depth="3" type="warning" class="pref-inline-note pref-inline-note--warning">
+                {{ t('preferences.schedule-needs-limit') }}
+              </NText>
+            </NFormItem>
+          </Transition>
+          <NFormItem :label="t('preferences.schedule-from')">
+            <NSelect v-model:value="form.speedScheduleFrom" :options="timeOptions" class="pref-control-auto" />
+          </NFormItem>
+          <NFormItem :label="t('preferences.schedule-to')">
+            <NSelect v-model:value="form.speedScheduleTo" :options="timeOptions" class="pref-control-auto" />
+          </NFormItem>
+          <NFormItem :label="t('preferences.schedule-days')">
+            <NSelect v-model:value="form.speedScheduleDays" :options="scheduleDayOptions" class="pref-control-auto" />
+          </NFormItem>
         </NCollapseTransition>
         <div>
-          <SettingsRow setting-key="preferences.transfer-speed-upload" :label="t('preferences.transfer-speed-upload')">
+          <NFormItem :label="t('preferences.transfer-speed-upload')">
             <NInputGroup>
               <NInputNumber
-                :input-props="{ 'aria-label': t('preferences.transfer-speed-upload') }"
                 :value="uploadSpeedValue"
                 :min="0"
                 :max="65535"
@@ -523,21 +443,16 @@ onMounted(async () => {
                 @update:value="handleUploadValueChange"
               />
               <NSelect
-                :aria-label="t('preferences.transfer-speed-upload')"
                 :value="uploadUnit"
                 :options="speedUnitOptions"
                 class="pref-control-auto pref-control-compact"
                 @update:value="handleUploadUnitChange"
               />
             </NInputGroup>
-          </SettingsRow>
-          <SettingsRow
-            setting-key="preferences.transfer-speed-download"
-            :label="t('preferences.transfer-speed-download')"
-          >
+          </NFormItem>
+          <NFormItem :label="t('preferences.transfer-speed-download')">
             <NInputGroup>
               <NInputNumber
-                :input-props="{ 'aria-label': t('preferences.transfer-speed-download') }"
                 :value="downloadSpeedValue"
                 :min="0"
                 :max="65535"
@@ -546,130 +461,80 @@ onMounted(async () => {
                 @update:value="handleDownloadValueChange"
               />
               <NSelect
-                :aria-label="t('preferences.transfer-speed-download')"
                 :value="downloadUnit"
                 :options="speedUnitOptions"
                 class="pref-control-auto pref-control-compact"
                 @update:value="handleDownloadUnitChange"
               />
             </NInputGroup>
-          </SettingsRow>
+          </NFormItem>
         </div>
 
         <!-- Notification & Confirm -->
-        <h2 class="settings-section-title">{{ t('preferences.notification-and-confirm') }}</h2>
-        <SettingsRow
-          setting-key="preferences.new-task-show-downloading"
-          :label="t('preferences.new-task-show-downloading')"
-        >
-          <NSwitch
-            v-model:value="form.newTaskShowDownloading"
-            :aria-label="t('preferences.new-task-show-downloading')"
-          />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.file-deletion-mode" :label="t('preferences.file-deletion-mode')">
-          <NSelect
-            v-model:value="form.fileDeletionMode"
-            :aria-label="t('preferences.file-deletion-mode')"
-            :options="fileDeletionModeOptions"
-            class="pref-control-auto"
-          />
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.no-confirm-before-delete-task"
-          :label="t('preferences.no-confirm-before-delete-task')"
-        >
-          <NSwitch
-            v-model:value="form.noConfirmBeforeDeleteTask"
-            :aria-label="t('preferences.no-confirm-before-delete-task')"
-          />
-        </SettingsRow>
-        <NCollapseTransition :show="form.noConfirmBeforeDeleteTask || !!settingsRoute.hash" class="collapse-indent">
-          <SettingsRow continuation>
+        <NDivider title-placement="left">{{ t('preferences.notification-and-confirm') }}</NDivider>
+        <NFormItem :label="t('preferences.new-task-show-downloading')">
+          <NSwitch v-model:value="form.newTaskShowDownloading" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.file-deletion-mode')">
+          <NSelect v-model:value="form.fileDeletionMode" :options="fileDeletionModeOptions" class="pref-control-auto" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.no-confirm-before-delete-task')">
+          <NSwitch v-model:value="form.noConfirmBeforeDeleteTask" />
+        </NFormItem>
+        <NCollapseTransition :show="form.noConfirmBeforeDeleteTask">
+          <NFormItem label=" ">
             <NCheckbox v-model:checked="form.deleteFilesWhenSkipConfirm">
               {{ skipConfirmationFileLabel }}
             </NCheckbox>
-          </SettingsRow>
+          </NFormItem>
         </NCollapseTransition>
-        <SettingsRow setting-key="preferences.task-completed-notify" :label="t('preferences.task-completed-notify')">
-          <NSwitch v-model:value="form.taskNotification" :aria-label="t('preferences.task-completed-notify')" />
-        </SettingsRow>
-        <NCollapseTransition :show="form.taskNotification || !!settingsRoute.hash" class="collapse-indent">
-          <SettingsRow continuation>
+        <NFormItem :label="t('preferences.task-completed-notify')">
+          <NSwitch v-model:value="form.taskNotification" />
+        </NFormItem>
+        <NCollapseTransition :show="form.taskNotification">
+          <NFormItem label=" ">
             <PreferenceCheckboxGrid v-model:value="selectedNotificationTypes" :options="notificationTypeOptions" />
-          </SettingsRow>
+          </NFormItem>
         </NCollapseTransition>
-        <SettingsRow setting-key="preferences.shutdown-when-complete" :label="t('preferences.shutdown-when-complete')">
-          <NSwitch v-model:value="form.shutdownWhenComplete" :aria-label="t('preferences.shutdown-when-complete')" />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.keep-awake" :label="t('preferences.keep-awake')">
-          <NSwitch v-model:value="form.keepAwake" :aria-label="t('preferences.keep-awake')" />
-        </SettingsRow>
+        <NFormItem :label="t('preferences.shutdown-when-complete')">
+          <NSwitch v-model:value="form.shutdownWhenComplete" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.keep-awake')">
+          <NSwitch v-model:value="form.keepAwake" />
+        </NFormItem>
 
         <!-- Auto Cleanup -->
-        <h2 class="settings-section-title">{{ t('preferences.auto-cleanup') }}</h2>
-        <SettingsRow
-          setting-key="preferences.delete-torrent-after-complete"
-          :label="t('preferences.delete-torrent-after-complete')"
-        >
-          <NSwitch
-            v-model:value="form.deleteTorrentAfterComplete"
-            :aria-label="t('preferences.delete-torrent-after-complete')"
-          />
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.auto-delete-stale-records"
-          :label="t('preferences.auto-delete-stale-records')"
-        >
-          <NSwitch
-            v-model:value="form.autoDeleteStaleRecords"
-            :aria-label="t('preferences.auto-delete-stale-records')"
-          />
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.clear-completed-on-exit"
-          :label="t('preferences.clear-completed-on-exit')"
-        >
-          <NSwitch v-model:value="form.clearCompletedOnExit" :aria-label="t('preferences.clear-completed-on-exit')" />
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.completed-record-retention"
-          :label="t('preferences.completed-record-retention')"
-        >
+        <NDivider title-placement="left">{{ t('preferences.auto-cleanup') }}</NDivider>
+        <NFormItem :label="t('preferences.delete-torrent-after-complete')">
+          <NSwitch v-model:value="form.deleteTorrentAfterComplete" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.auto-delete-stale-records')">
+          <NSwitch v-model:value="form.autoDeleteStaleRecords" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.clear-completed-on-exit')">
+          <NSwitch v-model:value="form.clearCompletedOnExit" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.completed-record-retention')">
           <NSelect
             v-model:value="completedRecordRetentionSelectValue"
-            :aria-label="t('preferences.completed-record-retention')"
             :options="completedRecordRetentionOptions"
             class="pref-control-auto"
           />
-        </SettingsRow>
-        <NCollapseTransition :show="completedRecordRetentionSelectValue === -1 || !!settingsRoute.hash">
-          <SettingsRow
-            setting-key="preferences.completed-record-retention-custom-days"
+        </NFormItem>
+        <NCollapseTransition :show="completedRecordRetentionSelectValue === -1">
+          <NFormItem
             :label="t('preferences.completed-record-retention-custom-days')"
             v-bind="fieldProps(form.completedRecordRetentionDays, { min: 1, max: 3650, integer: true })"
           >
-            <NInputNumber
-              v-model:value="form.completedRecordRetentionDays"
-              :input-props="{ 'aria-label': t('preferences.completed-record-retention-custom-days') }"
-              :min="1"
-              :max="3650"
-              class="pref-number"
-            />
+            <NInputNumber v-model:value="form.completedRecordRetentionDays" :min="1" :max="3650" class="pref-number" />
             <NText depth="3" class="pref-inline-note">
               {{ t('preferences.completed-record-retention-days-unit') }}
             </NText>
-          </SettingsRow>
+          </NFormItem>
         </NCollapseTransition>
       </NForm>
     </div>
-    <PreferenceActionBar
-      :is-saving="preferenceStore.savingChanges"
-      :is-dirty="isDirty"
-      :is-valid="numericFieldsValid"
-      @save="handleSave"
-      @discard="handleReset"
-    />
+    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
     <FileCategoryManager
       v-model:show="showCategoryManager"
       :categories="form.fileCategories"
@@ -688,13 +553,35 @@ onMounted(async () => {
   min-width: 200px;
 }
 
+.schedule-warn-enter-active,
+.schedule-warn-leave-active {
+  transition:
+    opacity 0.25s cubic-bezier(0.2, 0, 0, 1),
+    transform 0.25s cubic-bezier(0.2, 0, 0, 1),
+    max-height 0.25s cubic-bezier(0.2, 0, 0, 1);
+  overflow: hidden;
+}
+.schedule-warn-enter-from,
+.schedule-warn-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+  max-height: 0;
+}
+.schedule-warn-enter-to,
+.schedule-warn-leave-from {
+  max-height: 60px;
+}
+
 .file-category-summary-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   width: 100%;
-  padding-block: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: 8px;
+  background: var(--m3-surface-container-low);
 }
 
 .file-category-summary-text {

@@ -1,7 +1,7 @@
 /** @fileoverview Shared task detail tab rendering helpers. */
 import { h, type VNodeChild } from 'vue'
 import { NButton, NIcon } from 'naive-ui'
-import { Copy } from '@lucide/vue'
+import { CopyOutline } from '@vicons/ionicons5'
 import MTooltip from '@/components/common/MTooltip.vue'
 
 export function renderDetailLongText(value: string | number): VNodeChild {
@@ -32,7 +32,7 @@ export function renderDetailCopyableText(options: {
               onClick: () => options.onCopy(text, options.label),
             },
             {
-              icon: () => h(NIcon, { size: 13 }, { default: () => h(Copy) }),
+              icon: () => h(NIcon, { size: 13 }, { default: () => h(CopyOutline) }),
             },
           ),
         default: () => options.tooltip,

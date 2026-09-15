@@ -1,15 +1,30 @@
-/** Global application state and the native transfer subscription. */
+/**
+ * @fileoverview Pinia store for global application state: engine, tasks, stats, and polling.
+ *
+ * Global stat (speed / task counts) follows a Backend-as-Source-of-Truth architecture:
+ *   Rust stat_service  ──500ms──▶  aria2 getGlobalStat
+ *                      ├──▶  tray / dock / progress (direct native API)
+ *                      └──▶  emit("stat:update")  ──▶  this store
+ *
+ * The frontend does NOT poll aria2 for global stats — it passively listens
+ * to the Rust event stream. This eliminates double RPC and redundant IPC.
+ */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { Channel, invoke } from '@tauri-apps/api/core'
-import { useTaskStore } from '@/stores/task'
-import type { TransferSnapshot } from '@shared/types'
+import { listen } from '@tauri-apps/api/event'
 import { logger } from '@shared/logger'
-import { detectExternalInputKind, detectKind, createBatchItem } from '@shared/utils/batchHelpers'
+import { STAT_BASE_INTERVAL, STAT_PER_TASK_INTERVAL, STAT_MIN_INTERVAL, STAT_MAX_INTERVAL } from '@shared/timing'
+import {
+  detectExternalInputKind,
+  detectKind,
+  createBatchItem,
+  resolveExternalFilenameHint,
+} from '@shared/utils/batchHelpers'
 import { summarizeExternalInput } from '@shared/utils/externalInputDiagnostics'
-import { parseRayburstDeepLink } from '@shared/utils/rayburstDeepLink'
-import { submitManualUris } from '@/composables/useAddTaskSubmit'
+import { parseMotrixDeepLink } from '@shared/utils/motrixDeepLink'
+import { getDownloadProxy, submitManualUris } from '@/composables/useAddTaskSubmit'
 import { usePreferenceStore } from '@/stores/preference'
+import { useTaskStore } from '@/stores/task'
 import type {
   Aria2EngineOptions,
   BrowserRequestHeader,
@@ -20,6 +35,16 @@ import type {
 } from '@shared/types'
 import type { AddTaskForm } from '@/composables/useAddTaskSubmit'
 import { getDefaultTaskProxyMode } from '@shared/utils/proxy'
+
+/** Payload shape emitted by Rust stat_service via `stat:update`. */
+interface StatPayload {
+  downloadSpeed: number
+  uploadSpeed: number
+  numActive: number
+  numWaiting: number
+  numStopped: number
+  numStoppedTotal: number
+}
 
 export interface DeepLinkHandlingResult {
   received: number
@@ -33,12 +58,11 @@ function normalizeFileUriPath(url: string): string {
   return /^\/[A-Za-z]:[\\/]/.test(decodedPath) ? decodedPath.slice(1) : decodedPath
 }
 
-const SPEED_HISTORY_LENGTH = 90
-
 export const useAppStore = defineStore('app', () => {
   const systemTheme = ref('light')
   const trayFocused = ref(false)
   const aboutPanelVisible = ref(false)
+  const interval = ref(STAT_BASE_INTERVAL)
   const stat = ref({
     downloadSpeed: 0,
     uploadSpeed: 0,
@@ -47,8 +71,6 @@ export const useAppStore = defineStore('app', () => {
     numStopped: 0,
     numStoppedTotal: 0,
   })
-  /** Recent transfer samples, newest last, for the status bar sparkline. */
-  const speedHistory = ref<{ down: number[]; up: number[] }>({ down: [], up: [] })
   const addTaskVisible = ref(false)
   const pendingBatch = ref<BatchItem[]>([])
   const addTaskOptions = ref<Aria2EngineOptions>({})
@@ -63,9 +85,11 @@ export const useAppStore = defineStore('app', () => {
   /** Browser request headers captured by the extension for the most recent external input. */
   const pendingRequestHeaders = ref<BrowserRequestHeader[]>([])
   const progress = ref(0)
-  const updatesAvailable = ref(false)
   const pendingUpdate = ref<TauriUpdate | null>(null)
   const updateCheckRequestId = ref(0)
+  const pendingMagnetGids = ref<string[]>([])
+  const automaticMagnetPromptGids = ref<string[]>([])
+  const requestedMagnetSelectionGid = ref('')
   const externalInputSubmitting = ref(false)
   let externalInputSubmitCount = 0
   let externalInputErrorHandler: ((error: unknown) => void) | null = null
@@ -77,6 +101,37 @@ export const useAppStore = defineStore('app', () => {
     pendingFilename.value = ''
     pendingUserAgent.value = ''
     pendingRequestHeaders.value = []
+  }
+
+  function requestMagnetSelection(gid: string) {
+    requestedMagnetSelectionGid.value = ''
+    requestedMagnetSelectionGid.value = gid
+  }
+
+  function queueMagnetSelection(gid: string, automatic: boolean) {
+    if (!pendingMagnetGids.value.includes(gid)) {
+      pendingMagnetGids.value = [...pendingMagnetGids.value, gid]
+    }
+    if (automatic && !automaticMagnetPromptGids.value.includes(gid)) {
+      automaticMagnetPromptGids.value = [...automaticMagnetPromptGids.value, gid]
+    }
+  }
+
+  function replacePendingMagnetSelections(gids: string[]) {
+    pendingMagnetGids.value = [...new Set(gids)]
+    const pending = new Set(pendingMagnetGids.value)
+    automaticMagnetPromptGids.value = automaticMagnetPromptGids.value.filter((gid) => pending.has(gid))
+  }
+
+  function clearMagnetSelections(gids: string[]) {
+    const removed = new Set(gids)
+    pendingMagnetGids.value = pendingMagnetGids.value.filter((gid) => !removed.has(gid))
+    automaticMagnetPromptGids.value = automaticMagnetPromptGids.value.filter((gid) => !removed.has(gid))
+    if (removed.has(requestedMagnetSelectionGid.value)) requestedMagnetSelectionGid.value = ''
+  }
+
+  function disableAutomaticMagnetPrompt(gid: string) {
+    automaticMagnetPromptGids.value = automaticMagnetPromptGids.value.filter((candidate) => candidate !== gid)
   }
 
   function requestUpdateCheck() {
@@ -97,6 +152,18 @@ export const useAppStore = defineStore('app', () => {
 
   function setExternalInputStartHandler(handler: ((taskNames: string[]) => void) | null) {
     externalInputStartHandler = handler
+  }
+
+  function updateInterval(millisecond: number) {
+    let val = millisecond
+    if (val > STAT_MAX_INTERVAL) val = STAT_MAX_INTERVAL
+    if (val < STAT_MIN_INTERVAL) val = STAT_MIN_INTERVAL
+    if (interval.value === val) return
+    interval.value = val
+  }
+
+  function increaseInterval(millisecond = 100) {
+    if (interval.value < STAT_MAX_INTERVAL) interval.value += millisecond
   }
 
   /**
@@ -132,10 +199,6 @@ export const useAppStore = defineStore('app', () => {
 
   function hideAddTaskDialog() {
     addTaskVisible.value = false
-  }
-
-  function finishAddTaskClose() {
-    if (addTaskVisible.value) return
     pendingBatch.value = []
     clearPendingExternalMetadata()
   }
@@ -144,27 +207,36 @@ export const useAppStore = defineStore('app', () => {
     addTaskOptions.value = { ...options }
   }
 
-  function applyTransferSnapshot(snapshot: TransferSnapshot) {
-    if (!useTaskStore().applyTransferSnapshot(snapshot)) return
-    stat.value = snapshot.stat
-    const history = speedHistory.value
-    speedHistory.value = {
-      down: [...history.down.slice(-(SPEED_HISTORY_LENGTH - 1)), snapshot.stat.downloadSpeed],
-      up: [...history.up.slice(-(SPEED_HISTORY_LENGTH - 1)), snapshot.stat.uploadSpeed],
+  /**
+   * Processes a single stat:update event payload from the Rust backend.
+   * Updates reactive stat values AND the adaptive polling interval that
+   * TaskView's list refresh depends on.
+   */
+  function handleStatEvent(payload: StatPayload) {
+    const { numActive } = payload
+    stat.value = {
+      downloadSpeed: payload.downloadSpeed,
+      uploadSpeed: payload.uploadSpeed,
+      numActive,
+      numWaiting: payload.numWaiting,
+      numStopped: payload.numStopped,
+      numStoppedTotal: payload.numStoppedTotal,
+    }
+    if (numActive > 0) {
+      updateInterval(STAT_BASE_INTERVAL - STAT_PER_TASK_INTERVAL * numActive)
+    } else {
+      increaseInterval()
     }
   }
 
-  async function subscribeTransfers(): Promise<() => void> {
-    let active = true
-    const channel = new Channel<TransferSnapshot>()
-    channel.onmessage = (snapshot) => {
-      if (active) applyTransferSnapshot(snapshot)
-    }
-    const id = await invoke<number>('subscribe_transfer_updates', { onUpdate: channel })
-    return () => {
-      active = false
-      void invoke('unsubscribe_transfer_updates', { id }).catch((error) => logger.debug('Transfer.unsubscribe', error))
-    }
+  /**
+   * Subscribes to the Rust stat_service's `stat:update` event stream.
+   * Returns an unlisten function for cleanup.
+   */
+  function setupStatListener(): Promise<() => void> {
+    return listen<StatPayload>('stat:update', (event) => {
+      handleStatEvent(event.payload)
+    })
   }
 
   /**
@@ -185,20 +257,20 @@ export const useAppStore = defineStore('app', () => {
 
     for (const url of urls) {
       const lower = url.toLowerCase()
-      const rayburstDeepLink = parseRayburstDeepLink(url)
+      const motrixDeepLink = parseMotrixDeepLink(url)
 
-      // ── rayburst:// — extension-to-app communication protocol ───
-      // Bare `rayburst://` is a wake-up signal (window focus handled
+      // ── motrixnext:// — extension-to-app communication protocol ───
+      // Bare `motrixnext://` is a wake-up signal (window focus handled
       // by the deep-link-open listener in useAppEvents).
-      // `rayburst://new?url=X` creates a download task from the URL.
-      if (rayburstDeepLink.valid) {
-        if (rayburstDeepLink.isNewTask) {
+      // `motrixnext://new?url=X` creates a download task from the URL.
+      if (motrixDeepLink.valid) {
+        if (motrixDeepLink.isNewTask) {
           const routed = routeExternalDownloadInput(
             {
-              url: rayburstDeepLink.downloadUrl,
-              referer: rayburstDeepLink.referer,
-              cookie: rayburstDeepLink.cookie,
-              filename: rayburstDeepLink.filename,
+              url: motrixDeepLink.downloadUrl,
+              referer: motrixDeepLink.referer,
+              cookie: motrixDeepLink.cookie,
+              filename: motrixDeepLink.filename,
               source: 'deep-link',
             },
             items,
@@ -207,11 +279,11 @@ export const useAppStore = defineStore('app', () => {
         } else {
           result.ignored += 1
           const fields = {
-            action: rayburstDeepLink.action,
-            hasUrl: rayburstDeepLink.downloadUrl ? 'true' : 'false',
-            reason: rayburstDeepLink.downloadUrl ? 'unhandled-action' : 'wake-only',
+            action: motrixDeepLink.action,
+            hasUrl: motrixDeepLink.downloadUrl ? 'true' : 'false',
+            reason: motrixDeepLink.downloadUrl ? 'unhandled-action' : 'wake-only',
           }
-          if (rayburstDeepLink.downloadUrl) {
+          if (motrixDeepLink.downloadUrl) {
             logger.warn('DeepLink.ignored', 'deep_link_ignored', fields)
           } else {
             logger.debug('DeepLink.ignored', 'deep_link_ignored', fields)
@@ -219,7 +291,7 @@ export const useAppStore = defineStore('app', () => {
         }
         continue
       }
-      if (rayburstDeepLink.reason === 'malformed') {
+      if (motrixDeepLink.reason === 'malformed') {
         result.ignored += 1
         logger.warn('DeepLink.ignored', 'deep_link_ignored', {
           action: 'unknown',
@@ -266,7 +338,7 @@ export const useAppStore = defineStore('app', () => {
     return result
   }
 
-  async function handleExternalInputs(inputs: ExternalDownloadInput[]): Promise<DeepLinkHandlingResult> {
+  function handleExternalInputs(inputs: ExternalDownloadInput[]): DeepLinkHandlingResult {
     const result: DeepLinkHandlingResult = {
       received: inputs?.length ?? 0,
       queued: 0,
@@ -286,18 +358,9 @@ export const useAppStore = defineStore('app', () => {
       result.ignored += routed.ignored
     }
 
-    for (const item of items) {
-      const existing = pendingBatch.value.find((pending) => pending.source === item.source)
-      if (existing) {
-        const id = item.browserContext?.requestId
-        // A replay keeps the original intent; a separate duplicate is dismissed.
-        if (id && id !== existing.browserContext?.requestId) {
-          await invoke('cancel_download_request', { id })
-        }
-        result.ignored += 1
-      } else {
-        result.queued += 1 - enqueueBatch([item])
-      }
+    if (items.length > 0) {
+      const skipped = enqueueBatch(items)
+      result.queued += items.length - skipped
     }
 
     return result
@@ -312,9 +375,6 @@ export const useAppStore = defineStore('app', () => {
       url: input.url,
       finalUrl: input.finalUrl,
       traceId: input.traceId,
-      filename: input.filename,
-      filenameSource: input.filenameSource,
-      requestId: input.requestId,
     }
   }
 
@@ -324,7 +384,7 @@ export const useAppStore = defineStore('app', () => {
   ): Pick<DeepLinkHandlingResult, 'autoSubmitted' | 'ignored'> {
     const downloadUrl = input.finalUrl || input.url
     const kind = detectExternalInputKind(downloadUrl)
-    const resolvedHint = input.filename?.trim() ?? ''
+    const resolvedHint = resolveExternalFilenameHint(downloadUrl, input.filename ?? '')
     const context = buildExternalContext(input)
 
     const preferenceStore = usePreferenceStore()
@@ -342,7 +402,7 @@ export const useAppStore = defineStore('app', () => {
       auto_submit: autoSubmit,
     })
 
-    if (autoSubmit && kind === 'uri' && !input.requestId) {
+    if (autoSubmit && kind === 'uri') {
       void autoSubmitExtensionUrl(downloadUrl, context, resolvedHint)
       return { autoSubmitted: 1, ignored: 0 }
     }
@@ -367,14 +427,19 @@ export const useAppStore = defineStore('app', () => {
     const preferenceStore = usePreferenceStore()
     const taskStore = useTaskStore()
 
-    const form = buildExtensionSubmitForm(url, preferenceStore, context)
+    const form = buildExtensionSubmitForm(url, preferenceStore, context, filenameHint)
     externalInputSubmitCount += 1
     externalInputSubmitting.value = true
     try {
-      const result = await submitManualUris(form, taskStore, {
-        enabled: preferenceStore.config.fileCategoryEnabled,
-        categories: preferenceStore.config.fileCategories,
-      })
+      const result = await submitManualUris(
+        form,
+        taskStore,
+        {
+          enabled: preferenceStore.config.fileCategoryEnabled,
+          categories: preferenceStore.config.fileCategories,
+        },
+        getDownloadProxy(preferenceStore.config.proxy),
+      )
       const taskNames = result.submittedTaskNames.length > 0 ? result.submittedTaskNames : [filenameHint || url]
       externalInputStartHandler?.(taskNames)
       preferenceStore.recordHistoryDirectory(form.dir || preferenceStore.config.dir)
@@ -396,10 +461,11 @@ export const useAppStore = defineStore('app', () => {
     url: string,
     preferenceStore: ReturnType<typeof usePreferenceStore>,
     context: ExternalDownloadContext,
+    filenameHint: string,
   ): AddTaskForm {
     return {
       uris: url,
-      out: '',
+      out: filenameHint,
       dir: preferenceStore.config.dir,
       streamMaxConnections: preferenceStore.config.streamMaxConnections,
       userAgent: context.userAgent || preferenceStore.config.userAgent || '',
@@ -428,8 +494,8 @@ export const useAppStore = defineStore('app', () => {
     systemTheme,
     trayFocused,
     aboutPanelVisible,
+    interval,
     stat,
-    speedHistory,
     addTaskVisible,
     pendingBatch,
     addTaskOptions,
@@ -438,17 +504,25 @@ export const useAppStore = defineStore('app', () => {
     pendingUserAgent,
     pendingRequestHeaders,
     progress,
-    updatesAvailable,
     pendingUpdate,
     updateCheckRequestId,
+    pendingMagnetGids,
+    automaticMagnetPromptGids,
+    requestedMagnetSelectionGid,
+    queueMagnetSelection,
+    replacePendingMagnetSelections,
+    clearMagnetSelections,
+    disableAutomaticMagnetPrompt,
+    requestMagnetSelection,
     requestUpdateCheck,
+    updateInterval,
+    increaseInterval,
     enqueueBatch,
     showAddTaskDialog,
     hideAddTaskDialog,
-    finishAddTaskClose,
     updateAddTaskOptions,
-    applyTransferSnapshot,
-    subscribeTransfers,
+    handleStatEvent,
+    setupStatListener,
     handleDeepLinkUrls,
     handleExternalInputs,
     setExternalInputErrorHandler,

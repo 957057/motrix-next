@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /** @fileoverview Shared BitTorrent file selector for local torrents and magnets. */
-import { computed, h, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NDataTable, NInput } from 'naive-ui'
+import { NDataTable } from 'naive-ui'
 import type { DataTableColumns, DataTableRowKey } from 'naive-ui'
 import { bytesToSize } from '@shared/utils'
 import { calcColumnWidth } from '@shared/utils/calcColumnWidth'
@@ -22,34 +22,29 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const query = ref('')
-const visibleFiles = computed(() =>
-  props.files.filter((file) => file.path.toLocaleLowerCase().includes(query.value.trim().toLocaleLowerCase())),
-)
-
-const commonRoot = computed(() => {
-  const paths = props.files.map((file) => file.path.replace(/\\/g, '/'))
-  const root = paths[0]?.split('/')[0]
-  return root && paths.every((path) => path.startsWith(`${root}/`)) ? `${root}/` : ''
-})
-function displayPath(path: string) {
-  return path.replace(/\\/g, '/').slice(commonRoot.value.length)
-}
+const countDirection = ref<'bt-value-up' | 'bt-value-down'>('bt-value-up')
+const sizeDirection = ref<'bt-value-up' | 'bt-value-down'>('bt-value-up')
 
 const columns = computed<DataTableColumns<BtFileSelectionItem>>(() => [
   { type: 'selection' },
   {
-    title: t('task.file-name'),
-    key: 'path',
-    ellipsis: true,
-    render: (row) => h('span', { title: row.path }, displayPath(row.path)),
+    title: t('task.file-index') || '#',
+    key: 'index',
+    width: calcColumnWidth({
+      title: t('task.file-index') || '#',
+      values: props.files.map((file) => String(file.index)),
+    }),
   },
   {
-    title: t('task.file-size'),
+    title: t('task.file-name') || 'File Name',
+    key: 'path',
+    ellipsis: { tooltip: true },
+  },
+  {
+    title: t('task.file-size') || 'Size',
     key: 'length',
-    align: 'right',
     width: calcColumnWidth({
-      title: t('task.file-size'),
+      title: t('task.file-size') || 'Size',
       values: props.files.map((file) => bytesToSize(file.length)),
       sortable: true,
     }),
@@ -64,28 +59,27 @@ const selectedFiles = computed(() => {
 })
 const selectedSize = computed(() => selectedFiles.value.reduce((sum, file) => sum + file.length, 0))
 
+watch(
+  () => props.selectedIndices.length,
+  (current, previous) => {
+    countDirection.value = current >= previous ? 'bt-value-up' : 'bt-value-down'
+  },
+)
+
+watch(selectedSize, (current, previous) => {
+  sizeDirection.value = current >= previous ? 'bt-value-up' : 'bt-value-down'
+})
+
 function updateSelection(keys: DataTableRowKey[]) {
-  const visible = new Set(visibleFiles.value.map((file) => file.index))
-  const hiddenSelection = props.selectedIndices.filter((index) => !visible.has(index))
-  emit('update:selectedIndices', [...new Set([...hiddenSelection, ...keys.map(Number).filter(Number.isFinite)])])
+  emit('update:selectedIndices', keys.map(Number).filter(Number.isFinite))
 }
 </script>
 
 <template>
   <div class="bt-file-selector">
-    <NInput
-      v-model:value="query"
-      :placeholder="t('task.search-files')"
-      :input-props="{ 'aria-label': t('task.search-files') }"
-      clearable
-    />
     <NDataTable
       :columns="columns"
-      :bordered="false"
-      :single-line="true"
-      :theme-overrides="{ borderColor: 'transparent', tdPaddingSmall: '10px 12px', thPaddingSmall: '8px 12px' }"
-      :pagination="false"
-      :data="visibleFiles"
+      :data="files"
       :row-key="(row: BtFileSelectionItem) => row.index"
       :checked-row-keys="selectedIndices"
       :max-height="maxHeight"
@@ -93,10 +87,15 @@ function updateSelection(keys: DataTableRowKey[]) {
       @update:checked-row-keys="updateSelection"
     />
     <div class="file-summary" aria-live="polite">
-      <span class="summary-value"> {{ selectedIndices.length }}/{{ files.length }} </span>
-
+      <Transition :name="countDirection" mode="out-in">
+        <span :key="selectedIndices.length" class="summary-value">
+          {{ selectedIndices.length }}/{{ files.length }}
+        </span>
+      </Transition>
       <span class="summary-divider">—</span>
-      <span class="summary-value">{{ bytesToSize(selectedSize) }}</span>
+      <Transition :name="sizeDirection" mode="out-in">
+        <span :key="bytesToSize(selectedSize)" class="summary-value">{{ bytesToSize(selectedSize) }}</span>
+      </Transition>
     </div>
   </div>
 </template>
@@ -113,17 +112,49 @@ function updateSelection(keys: DataTableRowKey[]) {
   align-items: baseline;
   gap: 6px;
   min-height: 20px;
-  color: var(--rb-text-muted);
-  font-size: 12px;
+  color: var(--m3-on-surface-variant);
+  font-size: var(--font-size-sm);
   font-variant-numeric: tabular-nums;
 }
 
 .summary-value {
-  color: var(--rb-text);
+  color: var(--m3-on-surface);
   font-weight: 600;
 }
 
 .summary-divider {
-  color: var(--rb-border);
+  color: var(--m3-outline);
+}
+</style>
+
+<style>
+.bt-value-up-enter-active,
+.bt-value-up-leave-active,
+.bt-value-down-enter-active,
+.bt-value-down-leave-active {
+  transition:
+    opacity 0.15s ease-out,
+    transform 0.15s ease-out;
+}
+
+.bt-value-up-enter-from,
+.bt-value-down-leave-to {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.bt-value-up-leave-to,
+.bt-value-down-enter-from {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bt-value-up-enter-active,
+  .bt-value-up-leave-active,
+  .bt-value-down-enter-active,
+  .bt-value-down-leave-active {
+    transition: none;
+  }
 }
 </style>

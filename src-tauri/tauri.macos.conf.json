@@ -4,22 +4,18 @@
     "windows": [
       {
         "label": "main",
-        "title": "Rayburst",
-        "width": 1180,
-        "height": 740,
+        "title": "Motrix Next",
+        "width": 1068,
+        "height": 680,
         "minWidth": 373,
         "minHeight": 240,
         "decorations": true,
         "hiddenTitle": true,
         "titleBarStyle": "Overlay",
-        "transparent": false,
+        "transparent": true,
         "visible": false,
         "center": true,
-        "shadow": true,
-        "trafficLightPosition": {
-          "x": 18,
-          "y": 19
-        }
+        "shadow": true
       }
     ]
   }

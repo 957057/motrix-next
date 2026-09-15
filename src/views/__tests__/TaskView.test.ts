@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
 
 const changeCurrentListMock = vi.fn()
 const fetchListMock = vi.fn()
@@ -13,10 +12,11 @@ const taskStore = {
   taskDetailVisible: false,
   currentTaskItem: null,
   currentTaskFiles: [],
-  currentList: 'all',
-  displayedList: 'all',
-  listPending: false,
   hideTaskDetail: () => hideTaskDetailMock(),
+}
+
+const appStore = {
+  interval: 1000,
 }
 
 const preferenceStore = {
@@ -35,6 +35,10 @@ vi.mock('naive-ui', () => ({
 
 vi.mock('@/stores/task', () => ({
   useTaskStore: () => taskStore,
+}))
+
+vi.mock('@/stores/app', () => ({
+  useAppStore: () => appStore,
 }))
 
 vi.mock('@/stores/preference', () => ({
@@ -95,9 +99,9 @@ function deferredPromise() {
 
 describe('TaskView', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
     vi.clearAllMocks()
     vi.useFakeTimers()
+    appStore.interval = 1000
     isEngineReadyMock.mockReturnValue(true)
   })
 
@@ -105,7 +109,7 @@ describe('TaskView', () => {
     vi.useRealTimers()
   })
 
-  it('does not schedule page queries after unmount', async () => {
+  it('does not restart polling if changeCurrentList resolves after unmount', async () => {
     const pendingChange = deferredPromise()
     changeCurrentListMock.mockReturnValueOnce(pendingChange.promise)
     fetchListMock.mockResolvedValue(undefined)

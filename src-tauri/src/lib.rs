@@ -2,11 +2,11 @@ rust_i18n::i18n!("locales", fallback = "en-US");
 
 mod aria2;
 mod commands;
-mod database;
 mod diagnostics;
 mod engine;
 mod error;
 mod gpu_guard;
+mod history;
 mod i18n;
 mod log_policy;
 #[cfg(target_os = "macos")]
@@ -40,7 +40,7 @@ use upnp::UpnpState;
 /// has been persisted yet.
 pub(crate) fn read_log_level() -> log::LevelFilter {
     (|| -> Option<log::LevelFilter> {
-        let data_dir = dirs::data_dir()?.join("dev.aninsomniacy.rayburst");
+        let data_dir = dirs::data_dir()?.join("com.motrix.next");
         let store_path = data_dir.join("config.json");
         let content = std::fs::read_to_string(store_path).ok()?;
         let json: serde_json::Value = serde_json::from_str(&content).ok()?;
@@ -247,9 +247,9 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     app.manage(tray_state);
 
     // Aria2 JSON-RPC client — starts with default credentials, updated
-    // after engine start via TaskService::update_credentials().
-    let aria2_state = services::tasks::TaskServiceState(std::sync::Arc::new(
-        services::tasks::TaskService::new(DEFAULT_RPC_PORT, String::new()),
+    // after engine start via Aria2Client::update_credentials().
+    let aria2_state = aria2::client::Aria2State(std::sync::Arc::new(
+        aria2::client::Aria2Client::new(DEFAULT_RPC_PORT, String::new()),
     ));
     app.manage(aria2_state);
 
@@ -265,7 +265,6 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     app.manage(services::bt_blocklist::BtPeerBlocklistServiceState::new());
     app.manage(commands::bt_blocklist::BtPeerBlocklistUpdateState::new());
     app.manage(services::http_api::HttpApiState::new());
-    app.manage(services::downloads::SubmissionGate::default());
     #[cfg(target_os = "linux")]
     app.manage(services::notification::LinuxNotificationRegistry::new());
     app.manage(services::deep_link::PendingDeepLinkState::new());
@@ -277,19 +276,9 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     app.manage(AppLifecycleState::new());
 
     // Database failures must not prevent the window from opening.
-    app.manage(database::DatabaseState(std::sync::Arc::new(
-        database::Database::unavailable(),
+    app.manage(history::HistoryDbState(std::sync::Arc::new(
+        history::HistoryDb::unavailable(),
     )));
-    let database_app = app.handle().clone();
-    tauri::async_runtime::spawn(async move {
-        if let Err(error) = commands::database_initialize(database_app.clone()).await {
-            log::error!("database: initialization failed: {error}");
-            return;
-        }
-        if let Err(error) = services::downloads::restore_pending(&database_app).await {
-            log::error!("downloads: pending confirmations could not be restored: {error}");
-        }
-    });
 
     #[cfg(target_os = "macos")]
     app.on_menu_event(|app, event| match event.id().as_ref() {
@@ -562,16 +551,12 @@ pub fn run() {
     // Tauri's thread pool, the async runtime, or any plugin initialisation.
     gpu_guard::pre_flight();
 
-    // Keep a high-resolution source for native window scaling, including recreated windows.
-    let mut context = tauri::generate_context!();
-    context.set_default_window_icon(Some(tauri::include_image!("icons/icon.png")));
-
     let log_level = read_log_level();
     let log_control = log_policy::LogLevelControl::new(log_level);
     let log_filter = log_control.clone();
     let log_targets = vec![tauri_plugin_log::Target::new(
         tauri_plugin_log::TargetKind::LogDir {
-            file_name: Some("rayburst".into()),
+            file_name: Some("motrix-next".into()),
         },
     )];
     #[cfg(debug_assertions)]
@@ -596,10 +581,7 @@ pub fn run() {
                 .clear_targets()
                 .targets(log_targets)
                 .format(|out, message, record| {
-                    out.finish(format_args!(
-                        "{}",
-                        log_policy::format_record(message, record)
-                    ))
+                    out.finish(format_args!("{}", log_policy::format_record(message, record)))
                 })
                 .max_file_size(log_policy::MAX_LOG_FILE_SIZE.into())
                 .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(
@@ -607,6 +589,7 @@ pub fn run() {
                 ))
                 .level(log::LevelFilter::Debug)
                 .level_for("maxminddb", log::LevelFilter::Warn)
+                .level_for("sqlx", log::LevelFilter::Warn)
                 .level_for("zbus", log::LevelFilter::Warn)
                 .level_for("hyper_util", log::LevelFilter::Warn)
                 .level_for("reqwest", log::LevelFilter::Warn)
@@ -616,6 +599,33 @@ pub fn run() {
         .manage(log_control)
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(
+            tauri_plugin_sql::Builder::default()
+                .add_migrations(
+                    "sqlite:history.db",
+                    vec![
+                        tauri_plugin_sql::Migration {
+                            version: 1,
+                            description: "create download_history table",
+                            sql: include_str!("../migrations/001_download_history.sql"),
+                            kind: tauri_plugin_sql::MigrationKind::Up,
+                        },
+                        tauri_plugin_sql::Migration {
+                            version: 2,
+                            description: "add added_at column and task_birth table for position-stable ordering",
+                            sql: include_str!("../migrations/002_add_added_at.sql"),
+                            kind: tauri_plugin_sql::MigrationKind::Up,
+                        },
+                        tauri_plugin_sql::Migration {
+                            version: 3,
+                            description: "add HTTP auth credentials table",
+                            sql: include_str!("../migrations/003_http_auth_credentials.sql"),
+                            kind: tauri_plugin_sql::MigrationKind::Up,
+                        },
+                    ],
+                )
+                .build(),
+        )
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
@@ -663,7 +673,6 @@ pub fn run() {
 
     builder
         .manage(EngineState::new())
-        .manage(services::media::MediaState::new())
         .manage(engine::supervisor::EngineSupervisor::new())
         .manage(UpnpState::new())
         .manage(std::sync::Arc::new(UpdateCancelState::new()))
@@ -681,6 +690,7 @@ pub fn run() {
             commands::engine_recover_runtime_state,
             commands::resolve_bt_listen_port,
             commands::factory_reset,
+            commands::database_prepare,
             commands::database_initialize,
             commands::database_reset,
             commands::update_tray_title,
@@ -690,7 +700,6 @@ pub fn run() {
             commands::update_dock_badge,
             commands::send_task_start_notification,
             commands::send_app_system_notification,
-            commands::updates_available,
             commands::check_for_update,
             commands::download_update,
             commands::apply_update,
@@ -723,26 +732,17 @@ pub fn run() {
             commands::is_default_protocol_client,
             commands::set_default_protocol_client,
             commands::remove_as_default_protocol_client,
+            commands::resolve_filename,
             commands::fetch_remote_bytes,
             commands::get_system_proxy,
             commands::lookup_peer_ips,
             commands::refresh_runtime_config,
-            commands::apply_http_api,
+            commands::restart_http_api,
             commands::peek_pending_deep_links_silent,
             commands::peek_pending_external_inputs_silent,
             commands::take_pending_deep_links,
             commands::take_pending_external_inputs,
             commands::take_pending_frontend_actions,
-            commands::history_get_record,
-            commands::history_get_page,
-            commands::query_tasks,
-            commands::subscribe_transfer_updates,
-            commands::unsubscribe_transfer_updates,
-            commands::history_remove_births,
-            commands::database_schema_version,
-            commands::http_auth_save,
-            commands::http_auth_find,
-            commands::http_auth_mark_used,
             commands::history_add_record,
             commands::history_get_records,
             commands::history_remove_record,
@@ -762,17 +762,12 @@ pub fn run() {
             commands::aria2_replace_bt_web_seeds,
             commands::aria2_add_bt_peers,
             commands::aria2_get_version,
-            commands::aria2_finish_media,
-            commands::aria2_confirm_media,
-            commands::aria2_batch_finish_media,
-            commands::aria2_retry_media,
             commands::aria2_get_global_stat,
             commands::aria2_change_global_option,
             commands::aria2_get_option,
             commands::aria2_change_option,
             commands::aria2_get_files,
             commands::aria2_add_uri,
-            commands::cancel_download_request,
             commands::aria2_add_torrent,
             commands::aria2_inspect_torrent,
             commands::aria2_ed2k_search,
@@ -856,7 +851,7 @@ pub fn run() {
             _ => {}
         })
         .setup(|app| setup_app(app))
-        .build(context)
+        .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(handle_run_event);
 }

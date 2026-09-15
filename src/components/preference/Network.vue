@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
-import SettingsRow from './SettingsRow.vue'
 /** @fileoverview Network preference tab: proxy, ports, user-agent, timeouts, file allocation. */
 import { ref, computed, onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
@@ -8,7 +6,6 @@ import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
 import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
-import { useThemeTokens } from '@/composables/useAppTheme'
 import { usePlatform } from '@/composables/usePlatform'
 import { useSystemProxyDetect } from '@/composables/useSystemProxyDetect'
 import { logger } from '@shared/logger'
@@ -27,8 +24,7 @@ import userAgentMap from '@shared/ua'
 import { hasUnsafeHeaderChars, sanitizeHeaderValue } from '@shared/utils/headerSanitize'
 import {
   NForm,
-  NConfigProvider,
-  NCollapseTransition,
+  NFormItem,
   NInput,
   NInputNumber,
   NInputGroup,
@@ -36,6 +32,7 @@ import {
   NSelect,
   NButton,
   NButtonGroup,
+  NDivider,
   NIcon,
   NText,
 } from 'naive-ui'
@@ -44,9 +41,8 @@ import PreferenceActionBar from './PreferenceActionBar.vue'
 import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 import UserAgentManager from './UserAgentManager.vue'
-import { Search } from '@lucide/vue'
+import { SearchOutline } from '@vicons/ionicons5'
 
-const settingsRoute = useRoute()
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
 const message = useAppMessage()
@@ -54,46 +50,10 @@ const { constraint, configFieldProps, fieldProps, areConfigFieldsValid, portReco
   usePreferenceNumericValidation()
 const { isWindows } = usePlatform()
 
-const proxyScopeOptions = computed(() =>
-  PROXY_SCOPE_OPTIONS.map((value: string) => ({
-    label: t(`preferences.proxy-scope-${value}`),
-    value,
-  })),
-)
-const colorTokens = useThemeTokens()
-const proxyScopeTheme = computed(() => {
-  const tokens = colorTokens.value
-  return {
-    Tag: {
-      border: 'none',
-      borderRadius: '6px',
-      color: tokens.fill,
-      colorBordered: tokens.fill,
-      textColor: tokens.text,
-    },
-    Select: {
-      peers: {
-        InternalSelection: {
-          paddingMultiple: '6px 28px 6px 8px',
-          color: tokens.raised,
-          colorActive: tokens.raised,
-          boxShadowHover: 'none',
-          boxShadowActive: 'none',
-          boxShadowFocus: 'none',
-          borderFocus: `2px solid ${tokens.accent}`,
-        },
-        InternalSelectMenu: {
-          color: tokens.raised,
-          optionColorActive: 'transparent',
-          optionColorPending: tokens.fill,
-          optionColorActivePending: tokens.fill,
-          optionHeightMedium: '36px',
-          paddingMedium: '6px',
-        },
-      },
-    },
-  }
-})
+const proxyScopeOptions = PROXY_SCOPE_OPTIONS.map((s: string) => ({
+  label: t(`preferences.proxy-scope-${s}`),
+  value: s,
+}))
 const fileAllocationOptions = computed(() =>
   FILE_ALLOCATION_OPTIONS.filter((value) => !(isWindows.value && value === 'falloc')).map((value) => ({
     label: value,
@@ -248,151 +208,18 @@ onMounted(() => {
 <template>
   <div class="preference-form-wrapper">
     <div class="preference-form-scroll">
-      <NForm
-        label-placement="left"
-        label-align="left"
-        class="form-preference"
-        :disabled="preferenceStore.savingChanges"
-      >
-        <!-- Proxy -->
-        <h2 class="settings-section-title">{{ t('preferences.proxy') }}</h2>
-        <SettingsRow setting-key="task.use-proxy">
-          <template #label>
-            <PreferenceHintLabel :label="t('task.use-proxy')" :hint="t('preferences.proxy-request-scope-hint')" />
-          </template>
-          <NSwitch
-            :aria-label="t('task.use-proxy')"
-            :value="form.proxy.mode !== 'direct'"
-            @update:value="handleProxySwitch"
-          />
-        </SettingsRow>
-        <NCollapseTransition :show="form.proxy.mode === 'manual' || !!settingsRoute.hash">
-          <div class="proxy-collapse__inner collapse-indent">
-            <SettingsRow setting-key="preferences.proxy-server">
-              <template #label>
-                <PreferenceHintLabel
-                  :label="t('preferences.proxy-server')"
-                  :hint="t('preferences.proxy-protocol-hint')"
-                />
-              </template>
-              <NInputGroup>
-                <NInput
-                  v-model:value="form.proxy.server"
-                  :input-props="{ 'aria-label': t('preferences.proxy-server') }"
-                  class="pref-control-full"
-                  placeholder="http://host:port"
-                />
-                <NButton
-                  class="pref-action-button network-proxy-detect-button"
-                  :loading="detectingProxy"
-                  @click="detectProxy"
-                >
-                  <template #icon>
-                    <NIcon><Search /></NIcon>
-                  </template>
-                  {{ t('preferences.detect-system-proxy') }}
-                </NButton>
-              </NInputGroup>
-            </SettingsRow>
-            <SettingsRow setting-key="preferences.proxy-username" :label="t('preferences.proxy-username')">
-              <NInput
-                v-model:value="form.proxy.username"
-                :input-props="{ 'aria-label': t('preferences.proxy-username') }"
-              />
-            </SettingsRow>
-            <SettingsRow setting-key="preferences.proxy-password" :label="t('preferences.proxy-password')">
-              <NInput
-                v-model:value="form.proxy.password"
-                :input-props="{ 'aria-label': t('preferences.proxy-password') }"
-                type="password"
-                show-password-on="click"
-              />
-            </SettingsRow>
-            <SettingsRow setting-key="preferences.proxy-bypass" :label="t('preferences.proxy-bypass')">
-              <NInput
-                v-model:value="form.proxy.bypass"
-                :input-props="{ 'aria-label': t('preferences.proxy-bypass') }"
-                type="textarea"
-                :autosize="{ minRows: 2, maxRows: 3 }"
-                :placeholder="t('preferences.proxy-bypass-input-tips')"
-              />
-            </SettingsRow>
-            <SettingsRow setting-key="preferences.proxy-scope" :label="t('preferences.proxy-scope')">
-              <NConfigProvider :theme-overrides="proxyScopeTheme" class="pref-control-full">
-                <NSelect
-                  v-model:value="form.proxy.scope"
-                  :aria-label="t('preferences.proxy-scope')"
-                  :options="proxyScopeOptions"
-                  multiple
-                  class="proxy-scope-select"
-                />
-              </NConfigProvider>
-            </SettingsRow>
-          </div>
-        </NCollapseTransition>
-
-        <!-- Port conflict recovery -->
-        <h2 class="settings-section-title">{{ t('preferences.port-conflict-recovery') }}</h2>
-        <SettingsRow
-          setting-key="preferences.port-conflict-recovery-enable"
-          :label="t('preferences.port-conflict-recovery-enable')"
-        >
-          <NSwitch
-            v-model:value="form.portConflictRecovery.enabled"
-            :aria-label="t('preferences.port-conflict-recovery-enable')"
-          />
-        </SettingsRow>
-        <NCollapseTransition :show="form.portConflictRecovery.enabled || !!settingsRoute.hash">
-          <div class="port-recovery-collapse__inner collapse-indent">
-            <SettingsRow v-bind="portRecoveryFieldProps" setting-key="preferences.port-conflict-recovery-range">
-              <template #label>
-                <PreferenceHintLabel
-                  :label="t('preferences.port-conflict-recovery-range')"
-                  :hint="t('preferences.port-conflict-recovery-range-hint')"
-                />
-              </template>
-              <NInputGroup>
-                <NInputNumber
-                  v-model:value="form.portConflictRecovery.rangeStart"
-                  :input-props="{ 'aria-label': t('preferences.port-conflict-recovery-range') }"
-                  :min="portRecoveryConstraint.min"
-                  :max="portRecoveryConstraint.max"
-                  class="pref-port"
-                />
-                <span class="port-range-separator">to</span>
-                <NInputNumber
-                  v-model:value="form.portConflictRecovery.rangeEnd"
-                  :input-props="{ 'aria-label': t('preferences.port-conflict-recovery-range') }"
-                  :min="portRecoveryConstraint.min"
-                  :max="portRecoveryConstraint.max"
-                  class="pref-port"
-                />
-              </NInputGroup>
-            </SettingsRow>
-            <SettingsRow
-              setting-key="preferences.port-conflict-recovery-apply-to"
-              :label="t('preferences.port-conflict-recovery-apply-to')"
-            >
-              <PreferenceCheckboxGrid
-                v-model:value="selectedPortRecoveryTargets"
-                :options="portRecoveryTargetOptions"
-              />
-            </SettingsRow>
-          </div>
-        </NCollapseTransition>
-
+      <NForm label-placement="left" label-align="left" label-width="260px" size="small" class="form-preference">
         <!-- User-Agent -->
-        <h2 class="settings-section-title">{{ t('preferences.user-agent') }}</h2>
-        <SettingsRow setting-key="preferences.mock-user-agent" :label="t('preferences.mock-user-agent')">
+        <NDivider title-placement="left">{{ t('preferences.user-agent') }}</NDivider>
+        <NFormItem :label="t('preferences.mock-user-agent')">
           <div class="ua-field-wrapper">
             <NInput
               v-model:value="form.userAgent"
-              :input-props="{ 'aria-label': t('preferences.mock-user-agent') }"
               type="textarea"
               :autosize="{ minRows: 2, maxRows: 4 }"
               placeholder="User-Agent"
             />
-            <NCollapseTransition :show="uaHasIssue">
+            <div class="ua-warn-collapse" :class="{ 'ua-warn-collapse--open': uaHasIssue }">
               <div class="ua-warn-collapse__inner">
                 <div class="ua-warn-bar">
                   <span class="ua-warn-text">⚠ {{ t('preferences.ua-unsafe-chars-detected') }}</span>
@@ -401,10 +228,10 @@ onMounted(() => {
                   </NButton>
                 </div>
               </div>
-            </NCollapseTransition>
+            </div>
           </div>
-        </SettingsRow>
-        <SettingsRow continuation actions>
+        </NFormItem>
+        <NFormItem label=" ">
           <div class="ua-preset-row">
             <NButtonGroup size="small">
               <NButton @click="changeUA('chrome')">Chrome</NButton>
@@ -416,65 +243,165 @@ onMounted(() => {
               {{ t('preferences.ua-reset') }}
             </NButton>
           </div>
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.ua-saved"
-          :label="t('preferences.ua-manager-title')"
-          :hint="
-            t('preferences.ua-manager-summary', {
-              profiles: form.userAgentProfiles.length,
-              rules: form.userAgentRules.length,
-            })
-          "
-          actions
+        </NFormItem>
+        <NFormItem :label="t('preferences.ua-saved')">
+          <div class="ua-manager-entry">
+            <div class="ua-manager-entry-text">
+              <strong>{{ t('preferences.ua-manager-title') }}</strong>
+              <span>
+                {{
+                  t('preferences.ua-manager-summary', {
+                    profiles: form.userAgentProfiles.length,
+                    rules: form.userAgentRules.length,
+                  })
+                }}
+              </span>
+            </div>
+            <NButton size="small" @click="showUserAgentManager = true">
+              {{ t('preferences.ua-manage') }}
+            </NButton>
+          </div>
+        </NFormItem>
+
+        <!-- Proxy -->
+        <NDivider title-placement="left">{{ t('preferences.proxy') }}</NDivider>
+        <NFormItem>
+          <template #label>
+            <PreferenceHintLabel :label="t('task.use-proxy')" :hint="t('preferences.proxy-request-scope-hint')" />
+          </template>
+          <NSwitch :value="form.proxy.mode !== 'direct'" @update:value="handleProxySwitch" />
+        </NFormItem>
+        <div class="proxy-collapse" :class="{ 'proxy-collapse--open': form.proxy.mode === 'manual' }">
+          <div class="proxy-collapse__inner collapse-indent">
+            <NFormItem
+              v-bind="
+                form.portConflictRecovery.rangeStart > form.portConflictRecovery.rangeEnd
+                  ? {
+                      validationStatus: 'error',
+                      feedback: t('preferences.port-conflict-recovery-invalid-range'),
+                    }
+                  : fieldProps(form.portConflictRecovery.rangeStart, portRecoveryConstraint)
+              "
+            >
+              <template #label>
+                <PreferenceHintLabel
+                  :label="t('preferences.proxy-server')"
+                  :hint="t('preferences.proxy-protocol-hint')"
+                />
+              </template>
+              <NInputGroup>
+                <NInput v-model:value="form.proxy.server" class="pref-control-full" placeholder="http://host:port" />
+                <NButton
+                  class="pref-action-button network-proxy-detect-button"
+                  :loading="detectingProxy"
+                  @click="detectProxy"
+                >
+                  <template #icon>
+                    <NIcon><SearchOutline /></NIcon>
+                  </template>
+                  {{ t('preferences.detect-system-proxy') }}
+                </NButton>
+              </NInputGroup>
+            </NFormItem>
+            <NFormItem :label="t('preferences.proxy-username')">
+              <NInput v-model:value="form.proxy.username" />
+            </NFormItem>
+            <NFormItem :label="t('preferences.proxy-password')">
+              <NInput v-model:value="form.proxy.password" type="password" show-password-on="click" />
+            </NFormItem>
+            <NFormItem :label="t('preferences.proxy-bypass')">
+              <NInput
+                v-model:value="form.proxy.bypass"
+                type="textarea"
+                :autosize="{ minRows: 2, maxRows: 3 }"
+                :placeholder="t('preferences.proxy-bypass-input-tips')"
+              />
+            </NFormItem>
+            <NFormItem :label="t('preferences.proxy-scope')">
+              <NSelect
+                v-model:value="form.proxy.scope"
+                :options="proxyScopeOptions"
+                multiple
+                class="pref-control-full"
+              />
+            </NFormItem>
+          </div>
+        </div>
+
+        <!-- Port conflict recovery -->
+        <NDivider title-placement="left">{{ t('preferences.port-conflict-recovery') }}</NDivider>
+        <NFormItem :label="t('preferences.port-conflict-recovery-enable')">
+          <NSwitch v-model:value="form.portConflictRecovery.enabled" />
+        </NFormItem>
+        <div
+          class="port-recovery-collapse"
+          :class="{ 'port-recovery-collapse--open': form.portConflictRecovery.enabled }"
         >
-          <NButton @click="showUserAgentManager = true">{{ t('preferences.ua-manage') }}</NButton>
-        </SettingsRow>
+          <div class="port-recovery-collapse__inner collapse-indent">
+            <NFormItem v-bind="portRecoveryFieldProps">
+              <template #label>
+                <PreferenceHintLabel
+                  :label="t('preferences.port-conflict-recovery-range')"
+                  :hint="t('preferences.port-conflict-recovery-range-hint')"
+                />
+              </template>
+              <NInputGroup>
+                <NInputNumber
+                  v-model:value="form.portConflictRecovery.rangeStart"
+                  :min="portRecoveryConstraint.min"
+                  :max="portRecoveryConstraint.max"
+                  class="pref-port"
+                />
+                <span class="port-range-separator">to</span>
+                <NInputNumber
+                  v-model:value="form.portConflictRecovery.rangeEnd"
+                  :min="portRecoveryConstraint.min"
+                  :max="portRecoveryConstraint.max"
+                  class="pref-port"
+                />
+              </NInputGroup>
+            </NFormItem>
+            <NFormItem :label="t('preferences.port-conflict-recovery-apply-to')">
+              <PreferenceCheckboxGrid
+                v-model:value="selectedPortRecoveryTargets"
+                :options="portRecoveryTargetOptions"
+              />
+            </NFormItem>
+          </div>
+        </div>
 
         <!-- Port mapping -->
-        <h2 class="settings-section-title">{{ t('preferences.port') }}</h2>
-        <SettingsRow label="UPnP/NAT-PMP">
+        <NDivider title-placement="left">{{ t('preferences.port') }}</NDivider>
+        <NFormItem label="UPnP/NAT-PMP">
           <NSwitch v-model:value="form.enableUpnp" />
-        </SettingsRow>
+        </NFormItem>
 
         <!-- Timeout & Disk -->
-        <h2 class="settings-section-title">{{ t('preferences.transfer-params') }}</h2>
-        <SettingsRow
-          setting-key="preferences.connect-timeout"
+        <NDivider title-placement="left">{{ t('preferences.transfer-params') }}</NDivider>
+        <NFormItem
           :label="t('preferences.connect-timeout')"
           v-bind="configFieldProps('connectTimeout', form.connectTimeout)"
         >
           <NInputNumber
             v-model:value="form.connectTimeout"
-            :input-props="{ 'aria-label': t('preferences.connect-timeout') }"
             :min="constraint('connectTimeout').min"
             :max="constraint('connectTimeout').max"
             class="pref-number"
           />
           <NText depth="3" class="pref-inline-note">{{ t('preferences.unit-seconds') }}</NText>
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.timeout"
-          :label="t('preferences.timeout')"
-          v-bind="configFieldProps('timeout', form.timeout)"
-        >
+        </NFormItem>
+        <NFormItem :label="t('preferences.timeout')" v-bind="configFieldProps('timeout', form.timeout)">
           <NInputNumber
             v-model:value="form.timeout"
-            :input-props="{ 'aria-label': t('preferences.timeout') }"
             :min="constraint('timeout').min"
             :max="constraint('timeout').max"
             class="pref-number"
           />
           <NText depth="3" class="pref-inline-note">{{ t('preferences.unit-seconds') }}</NText>
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.file-allocation" :label="t('preferences.file-allocation')">
-          <NSelect
-            v-model:value="form.fileAllocation"
-            :aria-label="t('preferences.file-allocation')"
-            :options="fileAllocationOptions"
-            class="pref-control-auto"
-          />
-        </SettingsRow>
+        </NFormItem>
+        <NFormItem :label="t('preferences.file-allocation')">
+          <NSelect v-model:value="form.fileAllocation" :options="fileAllocationOptions" class="pref-control-auto" />
+        </NFormItem>
       </NForm>
     </div>
     <UserAgentManager
@@ -484,23 +411,29 @@ onMounted(() => {
       :recent-profile-ids="form.recentUserAgentProfileIds"
       @save="handleUserAgentManagerSave"
     />
-    <PreferenceActionBar
-      :is-saving="preferenceStore.savingChanges"
-      :is-dirty="isDirty"
-      :is-valid="numericFieldsValid"
-      @save="handleSave"
-      @discard="handleReset"
-    />
+    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
-<style scoped>
-/* Naive UI owns the visible focus border; do not add a second global outline. */
-.proxy-scope-select :deep(.n-base-selection-tags:focus-visible) {
-  outline: none;
-}
 
+<style scoped>
+.proxy-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+.proxy-collapse--open {
+  grid-template-rows: 1fr;
+}
 .proxy-collapse__inner {
   overflow: hidden;
+}
+.port-recovery-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+.port-recovery-collapse--open {
+  grid-template-rows: 1fr;
 }
 .port-recovery-collapse__inner {
   overflow: hidden;
@@ -509,7 +442,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   padding: 0 8px;
-  color: var(--rb-text-muted);
+  color: var(--m3-on-surface-variant);
   font-size: 12px;
   line-height: 1;
 }
@@ -527,5 +460,63 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   width: 100%;
+}
+.ua-manager-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--m3-outline-variant) 62%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--m3-surface-container-low) 54%, transparent);
+}
+.ua-manager-entry-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ua-manager-entry-text strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.ua-manager-entry-text span {
+  overflow: hidden;
+  color: var(--n-text-color-3);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ua-warn-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+.ua-warn-collapse--open {
+  grid-template-rows: 1fr;
+}
+.ua-warn-collapse__inner {
+  overflow: hidden;
+}
+.ua-warn-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-top: 6px;
+  border-radius: var(--border-radius);
+  background: var(--m3-error-container);
+  opacity: 0;
+  transition: opacity 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+.ua-warn-collapse--open .ua-warn-bar {
+  opacity: 1;
+}
+.ua-warn-text {
+  font-size: var(--font-size-sm);
+  color: var(--m3-on-error-container);
+  flex: 1;
 }
 </style>

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
-import SettingsRow from './SettingsRow.vue'
 /** @fileoverview BitTorrent preference tab: BT settings + tracker management. */
 import { ref, computed, onMounted, h } from 'vue'
 import type { VNodeChild } from 'vue'
@@ -12,6 +10,7 @@ import { usePreferenceForm } from '@/composables/usePreferenceForm'
 import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
 import { changeGlobalOption, isEngineReady } from '@/api/aria2'
 import { convertTrackerDataToComma, convertTrackerDataToLine } from '@shared/utils/tracker'
+import { SYNC_MIN_DURATION } from '@shared/timing'
 import { DEFAULT_TRACKER_SOURCE, SAFE_LIMIT_BT_MAX_PEERS, TRACKER_SOURCE_OPTIONS } from '@shared/constants'
 import { logger } from '@shared/logger'
 import { getErrorMessage } from '@shared/utils/errorMessage'
@@ -28,23 +27,24 @@ import {
 } from '@/composables/useBtPreference'
 import {
   NForm,
-  NCollapseTransition,
+  NFormItem,
   NInput,
   NInputNumber,
   NInputGroup,
   NSwitch,
   NSelect,
   NButton,
+  NDivider,
   NIcon,
   NCheckbox,
   NCheckboxGroup,
+  NText,
   useDialog,
 } from 'naive-ui'
 import PreferenceActionBar from './PreferenceActionBar.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
-import { RefreshCw, CirclePlus, CircleX, Dices } from '@lucide/vue'
+import { SyncOutline, AddCircleOutline, CloseCircleOutline, DiceOutline } from '@vicons/ionicons5'
 
-const settingsRoute = useRoute()
 const { t, locale } = useI18n()
 const preferenceStore = usePreferenceStore()
 const dialog = useDialog()
@@ -147,7 +147,7 @@ function renderCustomOption(info: {
         class: 'custom-tracker-option__delete',
         onClick: (e: Event) => onDeleteCustomTracker(url, e),
       },
-      [h(NIcon, { size: 18 }, { default: () => h(CircleX) })],
+      [h(NIcon, { size: 18 }, { default: () => h(CloseCircleOutline) })],
     ),
   ])
 }
@@ -341,7 +341,10 @@ async function handleSyncTracker() {
   }
   syncingTracker.value = true
   try {
-    const result = await preferenceStore.fetchBtTracker(form.value.trackerSource)
+    const [result] = await Promise.all([
+      preferenceStore.fetchBtTracker(form.value.trackerSource),
+      new Promise((r) => setTimeout(r, SYNC_MIN_DURATION)),
+    ])
     const text = convertTrackerDataToLine(result.data)
     if (result.failures.length === 0 && text) {
       await applySyncedTrackers(text, result.data)
@@ -432,132 +435,91 @@ onMounted(() => {
 <template>
   <div class="preference-form-wrapper">
     <div class="preference-form-scroll">
-      <NForm
-        label-placement="left"
-        label-align="left"
-        class="form-preference"
-        :disabled="preferenceStore.savingChanges"
-      >
+      <NForm label-placement="left" label-align="left" label-width="260px" size="small" class="form-preference">
         <!-- BT Settings -->
-        <h2 class="settings-section-title">{{ t('preferences.bt-settings') }}</h2>
+        <NDivider title-placement="left">{{ t('preferences.bt-settings') }}</NDivider>
 
-        <SettingsRow setting-key="preferences.magnet-file-selection" :label="t('preferences.magnet-file-selection')">
+        <NFormItem :label="t('preferences.magnet-file-selection')">
           <NSelect
             v-model:value="form.magnetFileSelectionPolicy"
-            :aria-label="t('preferences.magnet-file-selection')"
             :options="magnetFileSelectionOptions"
             class="pref-control-auto"
           />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.bt-encryption" :label="t('preferences.bt-encryption')">
-          <NSelect
-            v-model:value="form.btEncryption"
-            :aria-label="t('preferences.bt-encryption')"
-            :options="encryptionOptions"
-            class="pref-control-auto"
-          />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.bt-transport" :label="t('preferences.bt-transport')">
-          <NSelect
-            v-model:value="form.btTransport"
-            :aria-label="t('preferences.bt-transport')"
-            :options="transportOptions"
-            class="pref-control-auto"
-          />
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.bt-first-last-piece-first"
-          :label="t('preferences.bt-first-last-piece-first')"
-        >
-          <NSwitch
-            v-model:value="form.btFirstLastPieceFirst"
-            :aria-label="t('preferences.bt-first-last-piece-first')"
-          />
-        </SettingsRow>
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-encryption')">
+          <NSelect v-model:value="form.btEncryption" :options="encryptionOptions" class="pref-control-auto" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-transport')">
+          <NSelect v-model:value="form.btTransport" :options="transportOptions" class="pref-control-auto" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-first-last-piece-first')">
+          <NSwitch v-model:value="form.btFirstLastPieceFirst" />
+        </NFormItem>
 
-        <h2 class="settings-section-title">{{ t('preferences.bt-connection-section') }}</h2>
-        <SettingsRow
-          setting-key="preferences.bt-max-peers"
-          :label="t('preferences.bt-max-peers')"
-          v-bind="configFieldProps('btMaxPeers', form.btMaxPeers)"
-        >
+        <NDivider title-placement="left">{{ t('preferences.bt-connection-section') }}</NDivider>
+        <NFormItem :label="t('preferences.bt-max-peers')" v-bind="configFieldProps('btMaxPeers', form.btMaxPeers)">
           <NInputNumber
             v-model:value="form.btMaxPeers"
-            :input-props="{ 'aria-label': t('preferences.bt-max-peers') }"
             :min="constraint('btMaxPeers').min"
             :max="constraint('btMaxPeers').max"
             class="pref-number"
           />
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.bt-max-connections"
+        </NFormItem>
+        <NFormItem
           :label="t('preferences.bt-max-connections')"
           v-bind="configFieldProps('btMaxConnections', form.btMaxConnections)"
         >
           <NInputNumber
             v-model:value="form.btMaxConnections"
-            :input-props="{ 'aria-label': t('preferences.bt-max-connections') }"
             :min="constraint('btMaxConnections').min"
             :max="constraint('btMaxConnections').max"
             class="pref-number"
           />
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.bt-max-uploads"
+        </NFormItem>
+        <NFormItem
           :label="t('preferences.bt-max-uploads')"
           v-bind="configFieldProps('btMaxUploads', form.btMaxUploads)"
         >
           <NInputNumber
             v-model:value="form.btMaxUploads"
-            :input-props="{ 'aria-label': t('preferences.bt-max-uploads') }"
             :min="constraint('btMaxUploads').min"
             :max="constraint('btMaxUploads').max"
             class="pref-number"
           />
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.bt-max-uploads-per-torrent"
+        </NFormItem>
+        <NFormItem
           :label="t('preferences.bt-max-uploads-per-torrent')"
           v-bind="configFieldProps('btMaxUploadsPerTorrent', form.btMaxUploadsPerTorrent)"
         >
           <NInputNumber
             v-model:value="form.btMaxUploadsPerTorrent"
-            :input-props="{ 'aria-label': t('preferences.bt-max-uploads-per-torrent') }"
             :min="constraint('btMaxUploadsPerTorrent').min"
             :max="constraint('btMaxUploadsPerTorrent').max"
             class="pref-number"
           />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.bt-rate-limit-overhead" :label="t('preferences.bt-rate-limit-overhead')">
-          <NSwitch v-model:value="form.btRateLimitOverhead" :aria-label="t('preferences.bt-rate-limit-overhead')" />
-        </SettingsRow>
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-rate-limit-overhead')">
+          <NSwitch v-model:value="form.btRateLimitOverhead" />
+        </NFormItem>
 
-        <h2 class="settings-section-title">{{ t('preferences.bt-endpoint-section') }}</h2>
-        <SettingsRow
-          setting-key="preferences.bt-port"
-          :label="t('preferences.bt-port')"
-          v-bind="configFieldProps('listenPort', form.listenPort)"
-        >
+        <NDivider title-placement="left">{{ t('preferences.bt-endpoint-section') }}</NDivider>
+        <NFormItem :label="t('preferences.bt-port')" v-bind="configFieldProps('listenPort', form.listenPort)">
           <NInputGroup>
             <NInputNumber
               v-model:value="form.listenPort"
-              :input-props="{ 'aria-label': t('preferences.bt-port') }"
               :min="constraint('listenPort').min"
               :max="constraint('listenPort').max"
               class="pref-port"
             />
             <NButton secondary class="pref-action-button pref-action-button--compact" @click="onBtPortDice">
               <template #icon>
-                <NIcon><Dices /></NIcon>
+                <NIcon><DiceOutline /></NIcon>
               </template>
               {{ t('preferences.random-port') }}
             </NButton>
           </NInputGroup>
-        </SettingsRow>
-        <SettingsRow
-          v-bind="configFieldProps('btExternalPort', form.btExternalPort)"
-          setting-key="preferences.bt-external-ip"
-        >
+        </NFormItem>
+        <NFormItem v-bind="configFieldProps('btExternalPort', form.btExternalPort)">
           <template #label>
             <PreferenceHintLabel
               :label="t('preferences.bt-external-ip')"
@@ -566,13 +528,12 @@ onMounted(() => {
           </template>
           <NInput
             v-model:value="form.btExternalIp"
-            :input-props="{ 'aria-label': t('preferences.bt-external-ip') }"
             :placeholder="t('preferences.bt-external-ip-placeholder')"
             clearable
             class="pref-control-auto"
           />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.bt-external-port">
+        </NFormItem>
+        <NFormItem>
           <template #label>
             <PreferenceHintLabel
               :label="t('preferences.bt-external-port')"
@@ -581,62 +542,49 @@ onMounted(() => {
           </template>
           <NInputNumber
             v-model:value="form.btExternalPort"
-            :input-props="{ 'aria-label': t('preferences.bt-external-port') }"
             :min="constraint('btExternalPort').min"
             :max="constraint('btExternalPort').max"
             class="pref-port"
           />
-        </SettingsRow>
+        </NFormItem>
 
-        <h2 class="settings-section-title">{{ t('preferences.bt-discovery-section') }}</h2>
-        <SettingsRow setting-key="preferences.bt-peer-exchange" :label="t('preferences.bt-peer-exchange')">
-          <NSwitch v-model:value="form.btPeerExchangeEnabled" :aria-label="t('preferences.bt-peer-exchange')" />
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.bt-local-peer-discovery"
-          :label="t('preferences.bt-local-peer-discovery')"
-        >
-          <NSwitch
-            v-model:value="form.btLocalPeerDiscoveryEnabled"
-            :aria-label="t('preferences.bt-local-peer-discovery')"
-          />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.bt-dht" :label="t('preferences.bt-dht')">
-          <NSwitch v-model:value="form.btDhtEnabled" :aria-label="t('preferences.bt-dht')" />
-        </SettingsRow>
+        <NDivider title-placement="left">{{ t('preferences.bt-discovery-section') }}</NDivider>
+        <NFormItem :label="t('preferences.bt-peer-exchange')">
+          <NSwitch v-model:value="form.btPeerExchangeEnabled" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-local-peer-discovery')">
+          <NSwitch v-model:value="form.btLocalPeerDiscoveryEnabled" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-dht')">
+          <NSwitch v-model:value="form.btDhtEnabled" />
+        </NFormItem>
 
-        <h2 class="settings-section-title">{{ t('preferences.bt-identity-privacy-section') }}</h2>
-        <SettingsRow setting-key="preferences.bt-anonymous-mode">
+        <NDivider title-placement="left">{{ t('preferences.bt-identity-privacy-section') }}</NDivider>
+        <NFormItem>
           <template #label>
             <PreferenceHintLabel
               :label="t('preferences.bt-anonymous-mode')"
               :hint="t('preferences.bt-anonymous-mode-hint')"
             />
           </template>
-          <NSwitch v-model:value="form.btAnonymousMode" :aria-label="t('preferences.bt-anonymous-mode')" />
-        </SettingsRow>
-        <SettingsRow
+          <NSwitch v-model:value="form.btAnonymousMode" />
+        </NFormItem>
+        <NFormItem
           :validation-status="btUserAgentValid ? undefined : 'error'"
           :feedback="btUserAgentValid ? undefined : t('preferences.bt-user-agent-invalid')"
-          setting-key="preferences.bt-user-agent"
         >
           <template #label>
             <PreferenceHintLabel :label="t('preferences.bt-user-agent')" :hint="t('preferences.bt-user-agent-hint')" />
           </template>
-          <NInput
-            v-model:value="form.btUserAgent"
-            :input-props="{ 'aria-label': t('preferences.bt-user-agent') }"
-            class="pref-control-auto"
-          />
-        </SettingsRow>
-        <SettingsRow
+          <NInput v-model:value="form.btUserAgent" class="pref-control-auto" />
+        </NFormItem>
+        <NFormItem
           :validation-status="btPeerIdPrefixValid ? undefined : 'error'"
           :feedback="
             btPeerIdPrefixValid
               ? undefined
               : t('preferences.bt-peer-id-prefix-invalid', { max: BT_PEER_ID_PREFIX_MAX_BYTES })
           "
-          setting-key="preferences.bt-peer-id-prefix"
         >
           <template #label>
             <PreferenceHintLabel
@@ -644,73 +592,65 @@ onMounted(() => {
               :hint="t('preferences.bt-peer-id-prefix-hint', { max: BT_PEER_ID_PREFIX_MAX_BYTES })"
             />
           </template>
-          <NInput
-            v-model:value="form.btPeerIdPrefix"
-            :input-props="{ 'aria-label': t('preferences.bt-peer-id-prefix') }"
-            class="pref-control-auto"
-          />
-        </SettingsRow>
+          <NInput v-model:value="form.btPeerIdPrefix" class="pref-control-auto" />
+        </NFormItem>
 
-        <h2 class="settings-section-title">{{ t('preferences.bt-peer-blocklist') }}</h2>
-        <SettingsRow
-          setting-key="preferences.bt-peer-blocklist-enable"
-          :label="t('preferences.bt-peer-blocklist-enable')"
-        >
-          <NSwitch
-            v-model:value="form.btPeerBlocklistEnabled"
-            :aria-label="t('preferences.bt-peer-blocklist-enable')"
-          />
-        </SettingsRow>
-        <NCollapseTransition :show="form.btPeerBlocklistEnabled || !!settingsRoute.hash" class="collapse-indent">
+        <NDivider title-placement="left">{{ t('preferences.bt-peer-blocklist') }}</NDivider>
+        <NFormItem :label="t('preferences.bt-peer-blocklist-enable')">
+          <NSwitch v-model:value="form.btPeerBlocklistEnabled" />
+        </NFormItem>
+        <div class="blocklist-collapse" :class="{ 'blocklist-collapse--open': form.btPeerBlocklistEnabled }">
           <div class="blocklist-collapse__inner">
-            <SettingsRow
-              setting-key="preferences.bt-peer-blocklist-url"
-              :label="t('preferences.bt-peer-blocklist-url')"
-            >
+            <NFormItem :label="t('preferences.bt-peer-blocklist-url')">
               <NInput
                 v-model:value="form.btPeerBlocklistUrl"
-                :input-props="{ 'aria-label': t('preferences.bt-peer-blocklist-url') }"
                 :placeholder="t('preferences.bt-peer-blocklist-url-placeholder')"
                 clearable
               />
-            </SettingsRow>
-            <SettingsRow setting-key="preferences.bt-blocklist-scope" :label="t('preferences.bt-blocklist-scope')">
+            </NFormItem>
+            <NFormItem :label="t('preferences.bt-blocklist-scope')">
               <NSelect
                 v-model:value="form.btBlocklistScope"
-                :aria-label="t('preferences.bt-blocklist-scope')"
                 :options="blocklistScopeOptions"
                 class="pref-control-auto bt-blocklist-scope-select"
               />
-            </SettingsRow>
-            <SettingsRow :label="t('preferences.bt-peer-blocklist')" :hint="blocklistStatusText" actions>
-              <NButton
-                class="pref-action-button bt-blocklist-update-button"
-                :loading="syncingBlocklist"
-                :disabled="isDirty"
-                @click="handleSyncBlocklist"
-              >
-                <template #icon>
-                  <NIcon><RefreshCw /></NIcon>
-                </template>
-                {{ t('preferences.bt-peer-blocklist-update') }}
-              </NButton>
-            </SettingsRow>
-            <SettingsRow setting-key="preferences.auto-sync" :label="t('preferences.auto-sync')">
-              <NSwitch v-model:value="form.btPeerBlocklistAutoSync" :aria-label="t('preferences.auto-sync')" />
-            </SettingsRow>
-            <NCollapseTransition :show="form.btPeerBlocklistAutoSync || !!settingsRoute.hash" class="collapse-indent">
+            </NFormItem>
+            <NFormItem label=" ">
+              <div class="pref-action-stack">
+                <NButton
+                  class="pref-action-button bt-blocklist-update-button"
+                  :loading="syncingBlocklist"
+                  :disabled="isDirty"
+                  type="primary"
+                  secondary
+                  @click="handleSyncBlocklist"
+                >
+                  <template #icon>
+                    <NIcon><SyncOutline /></NIcon>
+                  </template>
+                  {{ t('preferences.bt-peer-blocklist-update') }}
+                </NButton>
+                <NText depth="3" class="pref-inline-row__meta">{{ blocklistStatusText }}</NText>
+              </div>
+            </NFormItem>
+            <NFormItem :label="t('preferences.auto-sync')">
+              <NSwitch v-model:value="form.btPeerBlocklistAutoSync" />
+            </NFormItem>
+            <div
+              class="blocklist-frequency-collapse"
+              :class="{ 'blocklist-frequency-collapse--open': form.btPeerBlocklistAutoSync }"
+            >
               <div class="blocklist-frequency-collapse__inner">
-                <SettingsRow setting-key="preferences.sync-frequency" :label="t('preferences.sync-frequency')">
+                <NFormItem :label="t('preferences.sync-frequency')">
                   <NSelect
                     v-model:value="form.btPeerBlocklistSyncIntervalHours"
-                    :aria-label="t('preferences.sync-frequency')"
                     :options="syncIntervalOptions"
                     class="pref-control-auto"
                   />
-                </SettingsRow>
+                </NFormItem>
               </div>
-            </NCollapseTransition>
-            <SettingsRow :show-label="false">
+            </div>
+            <NFormItem :show-label="false">
               <button
                 class="info-link"
                 type="button"
@@ -718,16 +658,13 @@ onMounted(() => {
               >
                 PBH-BTN/BTN-Collected-Rules ↗
               </button>
-            </SettingsRow>
+            </NFormItem>
           </div>
-        </NCollapseTransition>
+        </div>
 
         <!-- Tracker Management -->
-        <h2 class="settings-section-title">{{ t('preferences.bt-tracker') }}</h2>
-        <SettingsRow
-          setting-key="preferences.bt-tracker-source-preset"
-          :label="t('preferences.bt-tracker-source-preset')"
-        >
+        <NDivider title-placement="left">{{ t('preferences.bt-tracker') }}</NDivider>
+        <NFormItem :label="t('preferences.bt-tracker-source-preset')">
           <NCheckboxGroup v-model:value="presetSources" class="tracker-source-group">
             <div class="tracker-source-list">
               <NCheckbox
@@ -743,87 +680,76 @@ onMounted(() => {
               </NCheckbox>
             </div>
           </NCheckboxGroup>
-        </SettingsRow>
-        <SettingsRow
-          setting-key="preferences.bt-tracker-source-custom"
-          :label="t('preferences.bt-tracker-source-custom')"
-        >
-          <div class="tracker-custom-field">
-            <NInputGroup>
-              <NInput
-                v-model:value="customTrackerInput"
-                :input-props="{ 'aria-label': t('preferences.bt-tracker-source-custom') }"
-                :placeholder="t('preferences.bt-tracker-source-custom-placeholder')"
-                clearable
-                class="pref-control-full"
-                @keydown.enter="onAddCustomTracker"
-              />
-              <NButton class="pref-input-group-action" :aria-label="t('app.add')" @click="onAddCustomTracker">
-                <template #icon>
-                  <NIcon><CirclePlus /></NIcon>
-                </template>
-                {{ t('app.add') }}
-              </NButton>
-            </NInputGroup>
-            <NSelect
-              v-model:value="customSources"
-              :options="customSelectOptions"
-              :render-option="renderCustomOption"
-              multiple
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-tracker-source-custom')">
+          <NInputGroup>
+            <NInput
+              v-model:value="customTrackerInput"
+              :placeholder="t('preferences.bt-tracker-source-custom-placeholder')"
               clearable
-              :placeholder="customPlaceholder"
-              max-tag-count="responsive"
+              class="pref-control-full"
+              @keydown.enter="onAddCustomTracker"
             />
+            <NButton size="small" class="pref-input-group-action" @click="onAddCustomTracker">
+              <template #icon>
+                <NIcon><AddCircleOutline /></NIcon>
+              </template>
+            </NButton>
+          </NInputGroup>
+        </NFormItem>
+        <NFormItem label=" ">
+          <NSelect
+            v-model:value="customSources"
+            :options="customSelectOptions"
+            :render-option="renderCustomOption"
+            multiple
+            clearable
+            :placeholder="customPlaceholder"
+            max-tag-count="responsive"
+          />
+        </NFormItem>
+        <NFormItem label=" ">
+          <div class="pref-action-stack">
+            <NButton
+              class="pref-action-button bt-tracker-sync-button"
+              :loading="syncingTracker"
+              type="primary"
+              secondary
+              @click="handleSyncTracker"
+            >
+              <template #icon>
+                <NIcon><SyncOutline /></NIcon>
+              </template>
+              {{ t('preferences.bt-tracker-sync') }}
+            </NButton>
+            <NText depth="3" class="pref-inline-row__meta">
+              {{ t('preferences.bt-tracker-count', { count: mergedTrackerCount }) }} ·
+              {{ t('preferences.last-sync-time') }}
+              {{ form.lastSyncTrackerTime ? new Date(form.lastSyncTrackerTime as number).toLocaleString() : '—' }}
+            </NText>
           </div>
-        </SettingsRow>
-
-        <SettingsRow
-          :label="t('preferences.bt-tracker-content')"
-          :hint="`${t('preferences.bt-tracker-count', { count: mergedTrackerCount })} · ${t('preferences.last-sync-time')} ${form.lastSyncTrackerTime ? new Date(form.lastSyncTrackerTime as number).toLocaleString() : '—'}`"
-          actions
-        >
-          <NButton
-            class="pref-action-button bt-tracker-sync-button"
-            :loading="syncingTracker"
-            @click="handleSyncTracker"
-          >
-            <template #icon>
-              <NIcon><RefreshCw /></NIcon>
-            </template>
-            {{ t('preferences.bt-tracker-sync') }}
-          </NButton>
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.bt-tracker-content" :show-label="false">
+        </NFormItem>
+        <NFormItem :label="t('preferences.bt-tracker-content')">
           <NInput
             v-model:value="form.btTracker"
-            :input-props="{ 'aria-label': t('preferences.bt-tracker-content') }"
             type="textarea"
             :autosize="{ minRows: 3, maxRows: 8 }"
             :placeholder="t('preferences.bt-tracker-input-tips')"
           />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.auto-sync" :label="t('preferences.auto-sync')">
-          <NSwitch v-model:value="form.btTrackerAutoSync" :aria-label="t('preferences.auto-sync')" />
-        </SettingsRow>
-        <NCollapseTransition :show="form.btTrackerAutoSync || !!settingsRoute.hash" class="collapse-indent">
-          <SettingsRow setting-key="preferences.sync-frequency" :label="t('preferences.sync-frequency')">
-            <NSelect
-              v-model:value="form.btTrackerSyncIntervalHours"
-              :aria-label="t('preferences.sync-frequency')"
-              :options="syncIntervalOptions"
-              class="pref-control-auto"
-            />
-          </SettingsRow>
-        </NCollapseTransition>
+        </NFormItem>
+        <NFormItem :label="t('preferences.auto-sync')">
+          <NSwitch v-model:value="form.btTrackerAutoSync" />
+        </NFormItem>
+        <NFormItem v-if="form.btTrackerAutoSync" :label="t('preferences.sync-frequency')">
+          <NSelect
+            v-model:value="form.btTrackerSyncIntervalHours"
+            :options="syncIntervalOptions"
+            class="pref-control-auto"
+          />
+        </NFormItem>
       </NForm>
     </div>
-    <PreferenceActionBar
-      :is-saving="preferenceStore.savingChanges"
-      :is-dirty="isDirty"
-      :is-valid="formFieldsValid"
-      @save="handleSave"
-      @discard="handleReset"
-    />
+    <PreferenceActionBar :is-dirty="isDirty" :is-valid="formFieldsValid" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 
@@ -846,7 +772,7 @@ onMounted(() => {
   right: 8px;
   display: flex;
   align-items: center;
-  color: var(--rb-danger);
+  color: var(--m3-error);
   cursor: pointer;
 }
 :global(.tracker-sync-failures) {
@@ -855,7 +781,7 @@ onMounted(() => {
 }
 :global(.tracker-sync-failures__summary) {
   margin: 0 0 8px;
-  color: var(--rb-text-muted);
+  color: var(--m3-on-surface-variant);
 }
 :global(.tracker-sync-failures__heading) {
   margin: 0 0 8px;
@@ -864,9 +790,9 @@ onMounted(() => {
 :global(.tracker-sync-failure) {
   margin: 6px 0;
   padding: 6px 8px;
-  border-radius: 6px;
-  background: var(--rb-danger-soft);
-  color: var(--rb-danger);
+  border-radius: 4px;
+  background: var(--m3-error-container);
+  color: var(--m3-on-error-container);
 }
 :global(.tracker-sync-failure__url) {
   font-size: 12px;
@@ -887,15 +813,27 @@ onMounted(() => {
   width: 100%;
   max-width: 520px;
 }
-.tracker-custom-field {
-  width: 100%;
-  min-width: 0;
-  display: grid;
-  gap: 8px;
-}
 .tracker-source-option {
   min-width: 0;
-  padding-block: 4px;
+  padding: 9px 12px;
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--m3-surface-container-low) 72%, transparent);
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+.tracker-source-option:hover {
+  border-color: color-mix(in srgb, var(--m3-primary) 42%, var(--m3-outline-variant));
+  background: var(--m3-surface-container-low);
+}
+.tracker-source-option.n-checkbox--checked {
+  border-color: color-mix(in srgb, var(--m3-primary) 58%, var(--m3-outline-variant));
+  background: color-mix(in srgb, var(--m3-primary) 7%, var(--m3-surface-container-low));
+}
+.tracker-source-option:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--m3-primary) 68%, transparent);
+  outline-offset: 2px;
 }
 .tracker-source-option :deep(.n-checkbox__label) {
   min-width: 0;
@@ -909,16 +847,17 @@ onMounted(() => {
 }
 .tracker-source-option__owner,
 .tracker-source-option__repository {
-  white-space: normal;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .tracker-source-option__owner {
-  color: var(--rb-text);
+  color: var(--m3-on-surface);
   font-size: 13px;
   font-weight: 600;
 }
 .tracker-source-option__repository {
-  color: var(--rb-text-muted);
+  color: var(--m3-on-surface-variant);
   font-size: 12px;
 }
 .bt-blocklist-update-button {
@@ -926,6 +865,16 @@ onMounted(() => {
 }
 .bt-blocklist-scope-select {
   width: 200px;
+}
+.blocklist-collapse,
+.blocklist-frequency-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+.blocklist-collapse--open,
+.blocklist-frequency-collapse--open {
+  grid-template-rows: 1fr;
 }
 .blocklist-collapse__inner,
 .blocklist-frequency-collapse__inner {
@@ -936,7 +885,7 @@ onMounted(() => {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--rb-accent);
+  color: var(--m3-primary);
   cursor: pointer;
   text-decoration: none;
   font-size: 12px;

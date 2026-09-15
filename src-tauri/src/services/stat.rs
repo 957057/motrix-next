@@ -2,23 +2,31 @@
 //!
 //! Runs as a background tokio task, updating tray title, dock badge,
 //! and progress bar directly from Rust without WebView round-trips.
-//! Publishes ordered transfer snapshots independently of native presentation.
+//! Also emits `stat:update` events to the frontend for UI display.
 //!
-//! Native presentation consumes the sampler without delaying frontend delivery.
+//! Port of the frontend `fetchGlobalStat` in `stores/app.ts`.
 
 use super::config::RuntimeConfigState;
 use super::power::{PowerGuard, RETRY_DELAY as POWER_RETRY_DELAY};
-use crate::services::tasks::TaskService;
+use crate::aria2::client::Aria2Client;
 use std::sync::Arc;
 use std::time::Duration;
+use tauri::Emitter;
 use tauri::Manager;
 use tokio::sync::watch;
 
-const ACTIVE_INTERVAL: Duration = Duration::from_millis(500);
-const IDLE_INTERVAL: Duration = Duration::from_secs(2);
-const RECONCILE_INTERVAL: Duration = Duration::from_secs(5);
+/// Adaptive polling interval constants — aligned with `src/shared/timing.ts`.
+///
+/// These MUST stay in sync with the frontend `STAT_*` constants.
+/// Mismatched values cause noticeable UI update rate differences
+/// between normal and lightweight mode.
+const STAT_BASE_INTERVAL_MS: u64 = 500;
+const STAT_PER_TASK_INTERVAL_MS: u64 = 100;
+const STAT_MIN_INTERVAL_MS: u64 = 500;
+const STAT_MAX_INTERVAL_MS: u64 = 6000;
+const STAT_IDLE_INCREMENT_MS: u64 = 100;
 
-/// Aggregate counters sampled alongside active task progress.
+/// Payload emitted to the frontend via `stat:update`.
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StatUpdate {
@@ -76,46 +84,6 @@ fn completed_length(task: &crate::aria2::types::Aria2Task) -> u64 {
     parse_length(Some(&task.completed_length))
 }
 
-/// Use task fractions for mixed media/file work; their raw units cannot be summed.
-#[cfg(any(target_os = "macos", target_os = "windows", test))]
-fn task_progress(tasks: &[crate::aria2::types::Aria2Task]) -> Option<u64> {
-    let tasks: Vec<_> = tasks
-        .iter()
-        .filter(|task| task.seeder.as_deref() != Some("true"))
-        .collect();
-    if tasks.is_empty() {
-        return None;
-    }
-    if tasks.iter().any(|task| task.media.is_some()) {
-        let mut sum = 0.0;
-        for task in &tasks {
-            let fraction = if let Some(media) = &task.media {
-                if media.live == "true" || media.state == "finalizing" {
-                    return None;
-                }
-                media.progress.as_deref()?.parse::<f64>().ok()?
-            } else {
-                let total = parse_length(Some(&task.total_length));
-                if total == 0 {
-                    return None;
-                }
-                completed_length(task) as f64 / total as f64
-            };
-            if !fraction.is_finite() {
-                return None;
-            }
-            sum += fraction.clamp(0.0, 1.0);
-        }
-        return Some((sum / tasks.len() as f64 * 100.0) as u64);
-    }
-    let total: u64 = tasks
-        .iter()
-        .map(|task| parse_length(Some(&task.total_length)))
-        .sum();
-    let completed: u64 = tasks.iter().map(|task| completed_length(task)).sum();
-    (total > 0).then(|| ((completed as f64 / total as f64).clamp(0.0, 1.0) * 100.0) as u64)
-}
-
 /// Sets the macOS Dock badge label using `NSApp().dockTile().setBadgeLabel()`.
 ///
 /// This is an **app-level** API that accesses `NSApplication.sharedApplication()`
@@ -163,7 +131,7 @@ pub(crate) fn set_dock_badge(label: Option<&str>) {
 /// capture a bitmap snapshot, but `NSProgressIndicator`'s `drawRect:` relies on
 /// the window compositor's CALayer tree which doesn't exist for dock tiles.
 ///
-/// The fix: register a custom `NSProgressIndicator` subclass (`RayburstProgressIndicator`)
+/// The fix: register a custom `NSProgressIndicator` subclass (`MotrixProgressIndicator`)
 /// with a `drawRect:` override that manually paints using `NSBezierPath`.  This is
 /// the same approach used by tao's `TaoProgressIndicator` — the industry-standard
 /// workaround for dock tile progress rendering.
@@ -208,7 +176,7 @@ pub(crate) fn set_dock_progress(progress: Option<u64>) {
 }
 
 /// Finds an existing `NSProgressIndicator` subclass in the dock tile's content view,
-/// or creates a new `RayburstProgressIndicator` (custom subclass with `drawRect:` override).
+/// or creates a new `MotrixProgressIndicator` (custom subclass with `drawRect:` override).
 ///
 /// A plain `NSProgressIndicator` is invisible in dock tiles because `NSDockTile.display()`
 /// captures a bitmap by calling `drawRect:` on the content view hierarchy, and the stock
@@ -262,7 +230,7 @@ unsafe fn get_or_create_progress_indicator(
     indicator
 }
 
-/// Registers the `RayburstProgressIndicator` ObjC class (once) — a custom
+/// Registers the `MotrixProgressIndicator` ObjC class (once) — a custom
 /// `NSProgressIndicator` subclass with a `drawRect:` override for dock tile rendering.
 ///
 /// The class draws a rounded progress bar using `NSBezierPath`:
@@ -280,8 +248,8 @@ fn register_progress_indicator_class() -> *const objc2::runtime::AnyClass {
 
     INIT.call_once(|| unsafe {
         let superclass = objc2::class!(NSProgressIndicator);
-        let mut decl = ClassBuilder::new(c"RayburstProgressIndicator", superclass)
-            .expect("Failed to create RayburstProgressIndicator class");
+        let mut decl = ClassBuilder::new(c"MotrixProgressIndicator", superclass)
+            .expect("Failed to create MotrixProgressIndicator class");
 
         // Register the custom drawRect: method.
         // Uses raw pointer (*mut AnyObject) to satisfy the HRTB lifetime
@@ -379,14 +347,11 @@ impl StatServiceHandle {
 }
 
 /// Spawns the global stat service as a background tokio task.
-pub fn spawn_stat_service(app: tauri::AppHandle, aria2: Arc<TaskService>) -> StatServiceHandle {
+pub fn spawn_stat_service(app: tauri::AppHandle, aria2: Arc<Aria2Client>) -> StatServiceHandle {
     let (stop_tx, stop_rx) = watch::channel(false);
 
     let join_handle = tokio::spawn(async move {
-        tokio::join!(
-            sample_loop(app.clone(), aria2.clone(), stop_rx.clone()),
-            stat_loop(app, aria2, stop_rx),
-        );
+        stat_loop(app, aria2, stop_rx).await;
     });
 
     StatServiceHandle {
@@ -395,69 +360,42 @@ pub fn spawn_stat_service(app: tauri::AppHandle, aria2: Arc<TaskService>) -> Sta
     }
 }
 
-async fn sample_loop(
-    app: tauri::AppHandle,
-    aria2: Arc<TaskService>,
-    mut stop: watch::Receiver<bool>,
-) {
-    let mut period = ACTIVE_INTERVAL;
-    let mut timer = tokio::time::interval(period);
-    timer.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-    let mut reconcile = tokio::time::Instant::now();
-    let mut failures = 0;
-    loop {
-        tokio::select! {
-            _ = stop.changed() => break,
-            _ = timer.tick() => {},
-            _ = aria2.transfers.wake.notified() => {},
+/// Adaptive interval state.
+struct IntervalState {
+    current_ms: u64,
+}
+
+impl IntervalState {
+    fn new() -> Self {
+        Self {
+            current_ms: STAT_BASE_INTERVAL_MS,
         }
-        if *stop.borrow() {
-            break;
-        }
-        if reconcile.elapsed() >= RECONCILE_INTERVAL {
-            aria2.transfers.mark_changed();
-            reconcile = tokio::time::Instant::now();
-        }
-        let started = std::time::Instant::now();
-        let result = tokio::select! {
-            _ = stop.changed() => break,
-            result = aria2.sample_transfers() => result,
-        };
-        match result {
-            Ok(snapshot) => {
-                failures = 0;
-                let next = if snapshot.stat.num_active > 0 {
-                    ACTIVE_INTERVAL
-                } else {
-                    IDLE_INTERVAL
-                };
-                if next != period {
-                    period = next;
-                    timer = tokio::time::interval_at(tokio::time::Instant::now() + period, period);
-                    timer.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-                }
-                let duration_ms = started.elapsed().as_millis() as u64;
-                if duration_ms >= 500 {
-                    log::warn!(target: "transfer", duration_ms, sequence = snapshot.sequence; "transfer_sample_slow");
-                }
-            }
-            Err(error) => {
-                failures += 1;
-                log::debug!("transfer sample unavailable: {error}");
-                if failures == 5 {
-                    crate::engine::supervisor::report_rpc_unhealthy(app.clone(), error.to_string());
-                }
-            }
-        }
+    }
+
+    /// When tasks are active: interval = base - per_task * num_active (clamped).
+    fn update_for_active(&mut self, num_active: u64) {
+        let computed = STAT_BASE_INTERVAL_MS
+            .saturating_sub(STAT_PER_TASK_INTERVAL_MS.saturating_mul(num_active));
+        self.current_ms = computed.max(STAT_MIN_INTERVAL_MS);
+    }
+
+    /// When idle: increment interval toward max.
+    fn increase_idle(&mut self) {
+        self.current_ms = (self.current_ms + STAT_IDLE_INCREMENT_MS).min(STAT_MAX_INTERVAL_MS);
+    }
+
+    fn duration(&self) -> Duration {
+        Duration::from_millis(self.current_ms)
     }
 }
 
 async fn stat_loop(
     app: tauri::AppHandle,
-    aria2: Arc<TaskService>,
+    aria2: Arc<Aria2Client>,
     mut stop_rx: watch::Receiver<bool>,
 ) {
-    let mut updates = aria2.transfers.latest.subscribe();
+    let mut interval_state = IntervalState::new();
+    let mut consecutive_rpc_failures = 0_u32;
 
     // Keep-awake guard: held while downloads are active and released when idle.
     // Linux acquisition can fail when the desktop portal is temporarily
@@ -468,7 +406,7 @@ async fn stat_loop(
 
     loop {
         tokio::select! {
-            result = updates.changed() => if result.is_err() { return; },
+            _ = tokio::time::sleep(interval_state.duration()) => {},
             _ = stop_rx.changed() => {
                 if *stop_rx.borrow() {
                     if let Some(guard) = awake_guard.take() {
@@ -482,20 +420,49 @@ async fn stat_loop(
             }
         }
 
-        let snapshot = updates.borrow_and_update().clone();
-        let Some(snapshot) = snapshot else {
-            continue;
+        let stat = match aria2.get_global_stat().await {
+            Ok(s) => s,
+            Err(e) => {
+                consecutive_rpc_failures += 1;
+                log::debug!("stat_service: get_global_stat failed: {e}");
+                if consecutive_rpc_failures == 5 {
+                    crate::engine::supervisor::report_rpc_unhealthy(app.clone(), e.to_string());
+                }
+                interval_state.increase_idle();
+                continue;
+            }
         };
-        let StatUpdate {
+        consecutive_rpc_failures = 0;
+
+        // Parse string values to u64
+        let download_speed = stat.download_speed.parse::<u64>().unwrap_or(0);
+        let upload_speed = stat.upload_speed.parse::<u64>().unwrap_or(0);
+        let num_active = stat.num_active.parse::<u64>().unwrap_or(0);
+        let num_waiting = stat.num_waiting.parse::<u64>().unwrap_or(0);
+        let num_stopped = stat.num_stopped.parse::<u64>().unwrap_or(0);
+        let num_stopped_total = stat.num_stopped_total.parse::<u64>().unwrap_or(0);
+
+        // Adaptive interval
+        if num_active > 0 {
+            interval_state.update_for_active(num_active);
+        } else {
+            interval_state.increase_idle();
+        }
+
+        // Emit to frontend
+        let update = StatUpdate {
             download_speed,
             upload_speed,
             num_active,
-            ..
-        } = snapshot.stat;
+            num_waiting,
+            num_stopped,
+            num_stopped_total,
+        };
+        let _ = app.emit("stat:update", &update);
 
         // Update tray/dock/progress directly from Rust — no frontend dependency.
-        // In lightweight mode the WebView is destroyed. Direct API calls
-        // ensure tray speed, dock badge, and
+        // In lightweight mode the WebView is destroyed, so app.emit() would
+        // silently fail. Direct API calls ensure tray speed, dock badge, and
         // progress bar keep updating. See issue #194 follow-up.
         if let Some(rc_state) = app.try_state::<RuntimeConfigState>() {
             let cfg = rc_state.snapshot().await;
@@ -534,7 +501,7 @@ async fn stat_loop(
             }
 
             // ── Tray title (macOS menu bar / Linux appindicator label) ──
-            if let Some(tray) = app.tray_by_id("rayburst") {
+            if let Some(tray) = app.tray_by_id("motrix-next") {
                 let next_title =
                     tray_title_for_speed(cfg.tray_speedometer, download_speed, upload_speed);
                 if tray_title_needs_update(&last_tray_title, &next_title) {
@@ -580,10 +547,26 @@ async fn stat_loop(
             #[cfg(target_os = "macos")]
             {
                 if cfg.show_progress_bar && num_active > 0 {
-                    let pct = task_progress(&snapshot.tasks);
-                    let _ = app.run_on_main_thread(move || {
-                        set_dock_progress(pct);
-                    });
+                    match aria2.tell_active().await {
+                        Ok(tasks) => {
+                            let total: u64 = tasks
+                                .iter()
+                                .filter_map(|t| t.total_length.parse::<u64>().ok())
+                                .sum();
+                            let completed: u64 = tasks.iter().map(completed_length).sum();
+                            let pct = if total > 0 {
+                                Some((completed as f64 / total as f64 * 100.0) as u64)
+                            } else {
+                                Some(0)
+                            };
+                            let _ = app.run_on_main_thread(move || {
+                                set_dock_progress(pct);
+                            });
+                        }
+                        Err(e) => {
+                            log::debug!("stat_service: tell_active for progress failed: {e}");
+                        }
+                    }
                 } else {
                     let _ = app.run_on_main_thread(move || {
                         set_dock_progress(None);
@@ -595,15 +578,27 @@ async fn stat_loop(
             #[cfg(target_os = "windows")]
             if let Some(window) = app.get_webview_window("main") {
                 if cfg.show_progress_bar && num_active > 0 {
-                    let progress = task_progress(&snapshot.tasks);
-                    let _ = window.set_progress_bar(tauri::window::ProgressBarState {
-                        status: Some(if progress.is_some() {
-                            tauri::window::ProgressBarStatus::Normal
-                        } else {
-                            tauri::window::ProgressBarStatus::Indeterminate
-                        }),
-                        progress,
-                    });
+                    match aria2.tell_active().await {
+                        Ok(tasks) => {
+                            let total: u64 = tasks
+                                .iter()
+                                .filter_map(|t| t.total_length.parse::<u64>().ok())
+                                .sum();
+                            let completed: u64 = tasks.iter().map(completed_length).sum();
+                            let progress = if total > 0 {
+                                completed as f64 / total as f64
+                            } else {
+                                0.0
+                            };
+                            let _ = window.set_progress_bar(tauri::window::ProgressBarState {
+                                status: Some(tauri::window::ProgressBarStatus::Normal),
+                                progress: Some((progress * 100.0) as u64),
+                            });
+                        }
+                        Err(e) => {
+                            log::debug!("stat_service: tell_active for progress failed: {e}");
+                        }
+                    }
                 } else {
                     let _ = window.set_progress_bar(tauri::window::ProgressBarState {
                         status: Some(tauri::window::ProgressBarStatus::None),
@@ -672,6 +667,72 @@ mod tests {
         assert!(tray_title_needs_update(&last_title, "↓1.0M"));
     }
 
+    // ── IntervalState ───────────────────────────────────────────────
+
+    #[test]
+    fn interval_default_is_base() {
+        let state = IntervalState::new();
+        assert_eq!(state.current_ms, STAT_BASE_INTERVAL_MS);
+    }
+
+    #[test]
+    fn interval_active_reduces() {
+        let mut state = IntervalState::new();
+        state.update_for_active(5);
+        // 500 - (100 * 5) = 0 → clamped to MIN (500)
+        assert_eq!(state.current_ms, STAT_MIN_INTERVAL_MS);
+    }
+
+    #[test]
+    fn interval_active_single_task() {
+        let mut state = IntervalState::new();
+        state.update_for_active(1);
+        // 500 - (100 * 1) = 400 → clamped to MIN (500)
+        assert_eq!(state.current_ms, STAT_MIN_INTERVAL_MS);
+    }
+
+    #[test]
+    fn interval_active_clamps_to_min() {
+        let mut state = IntervalState::new();
+        state.update_for_active(100);
+        assert_eq!(state.current_ms, STAT_MIN_INTERVAL_MS);
+    }
+
+    #[test]
+    fn interval_idle_increments() {
+        let mut state = IntervalState::new();
+        state.increase_idle();
+        assert_eq!(
+            state.current_ms,
+            STAT_BASE_INTERVAL_MS + STAT_IDLE_INCREMENT_MS
+        );
+    }
+
+    #[test]
+    fn interval_idle_clamps_to_max() {
+        let mut state = IntervalState::new();
+        for _ in 0..200 {
+            state.increase_idle();
+        }
+        assert_eq!(state.current_ms, STAT_MAX_INTERVAL_MS);
+    }
+
+    #[test]
+    fn interval_transitions_between_states() {
+        let mut state = IntervalState::new();
+        // Go idle
+        state.increase_idle();
+        assert_eq!(state.current_ms, 600); // 500 + 100
+        state.increase_idle();
+        assert_eq!(state.current_ms, 700); // 600 + 100
+                                           // Go active — snaps to MIN
+        state.update_for_active(3);
+        // 500 - (100 * 3) = 200 → clamped to 500
+        assert_eq!(state.current_ms, STAT_MIN_INTERVAL_MS);
+    }
+
+    // ── Constant alignment with timing.ts ────────────────────────────
+
     fn make_task(gid: &str, status: &str) -> Aria2Task {
         Aria2Task {
             gid: gid.to_string(),
@@ -690,6 +751,18 @@ mod tests {
             }],
             ..Aria2Task::default()
         }
+    }
+
+    #[test]
+    fn constants_match_frontend_timing_ts() {
+        // These constants MUST match src/shared/timing.ts exactly.
+        // If timing.ts changes and these tests fail, update the Rust
+        // constants to stay in sync.
+        assert_eq!(STAT_BASE_INTERVAL_MS, 500, "BASE must match timing.ts");
+        assert_eq!(STAT_PER_TASK_INTERVAL_MS, 100, "PER_TASK must match");
+        assert_eq!(STAT_MIN_INTERVAL_MS, 500, "MIN must match timing.ts");
+        assert_eq!(STAT_MAX_INTERVAL_MS, 6000, "MAX must match timing.ts");
+        assert_eq!(STAT_IDLE_INCREMENT_MS, 100, "IDLE_INCREMENT must match");
     }
 
     // ── StatUpdate serialization ────────────────────────────────────
@@ -719,25 +792,5 @@ mod tests {
         task.completed_length = "200".to_string();
 
         assert_eq!(completed_length(&task), 200);
-    }
-    #[test]
-    fn media_progress_uses_duration_and_keeps_live_or_finalizing_indeterminate() {
-        let mut task = crate::aria2::types::Aria2Task {
-            total_length: "0".into(),
-            completed_length: "0".into(),
-            media: Some(crate::aria2::types::Aria2Media {
-                live: "false".into(),
-                state: "downloading".into(),
-                progress: Some("0.5".into()),
-                ..Default::default()
-            }),
-            ..Default::default()
-        };
-        assert_eq!(task_progress(&[task.clone()]), Some(50));
-        task.media.as_mut().unwrap().live = "true".into();
-        assert_eq!(task_progress(&[task.clone()]), None);
-        task.media.as_mut().unwrap().live = "false".into();
-        task.media.as_mut().unwrap().state = "finalizing".into();
-        assert_eq!(task_progress(&[task]), None);
     }
 }

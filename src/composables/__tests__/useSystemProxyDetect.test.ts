@@ -11,6 +11,7 @@
  * - Calls `onError` when invoke rejects with an exception
  * - Only one callback fires per detection (mutual exclusivity)
  * - Concurrent detect() calls are serialized (second call is no-op while detecting)
+ * - Minimum loading duration is enforced via DETECT_MIN_DURATION
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { nextTick } from 'vue'
@@ -24,6 +25,7 @@ vi.mock('@tauri-apps/api/core', () => ({
 }))
 
 import { useSystemProxyDetect } from '../useSystemProxyDetect'
+import { DETECT_MIN_DURATION } from '@shared/timing'
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -45,9 +47,10 @@ function makeCallbacks() {
   }
 }
 
-/** Wait for the native operation and its callback. */
+/** Start detect() and advance fake timers so the minimum-duration delay resolves. */
 async function detectAndFlush(detect: () => Promise<void>): Promise<void> {
   const promise = detect()
+  await vi.advanceTimersByTimeAsync(DETECT_MIN_DURATION)
   await promise
 }
 
@@ -89,6 +92,7 @@ describe('useSystemProxyDetect', () => {
     expect(detecting.value).toBe(true)
 
     resolveInvoke(makeProxyInfo())
+    await vi.advanceTimersByTimeAsync(DETECT_MIN_DURATION)
     await promise
     expect(detecting.value).toBe(false)
   })
@@ -123,14 +127,24 @@ describe('useSystemProxyDetect', () => {
     expect(detecting.value).toBe(false)
   })
 
-  it('publishes the native result without an artificial loading delay', async () => {
+  // ── Minimum duration ──────────────────────────────────────────────
+
+  it('keeps detecting true for at least DETECT_MIN_DURATION even if IPC resolves instantly', async () => {
     mockInvoke.mockResolvedValue(makeProxyInfo())
-    const callbacks = makeCallbacks()
-    const { detect, detecting } = useSystemProxyDetect(callbacks)
-    await detect()
+    const cbs = makeCallbacks()
+    const { detect, detecting } = useSystemProxyDetect(cbs)
+
+    const promise = detect()
+    await nextTick()
+    // IPC resolved immediately, but delay still pending
+    expect(detecting.value).toBe(true)
+    expect(cbs.onSuccess).not.toHaveBeenCalled()
+
+    // Advance past the minimum duration
+    await vi.advanceTimersByTimeAsync(DETECT_MIN_DURATION)
+    await promise
     expect(detecting.value).toBe(false)
-    expect(callbacks.onSuccess).toHaveBeenCalledOnce()
-    expect(vi.getTimerCount()).toBe(0)
+    expect(cbs.onSuccess).toHaveBeenCalledTimes(1)
   })
 
   // ── Success path ──────────────────────────────────────────────────
@@ -240,6 +254,7 @@ describe('useSystemProxyDetect', () => {
     expect(mockInvoke).toHaveBeenCalledTimes(1)
 
     resolveInvoke(makeProxyInfo())
+    await vi.advanceTimersByTimeAsync(DETECT_MIN_DURATION)
     await first
     await second
 

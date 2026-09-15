@@ -1,5 +1,5 @@
 [package]
-name = "rayburst"
+name = "motrix-next"
 version = "3.9.9"
 description = "A full-featured download manager"
 authors = ["AnInsomniacy"]
@@ -11,7 +11,7 @@ members = [".", "native-messaging"]
 resolver = "2"
 
 [lib]
-name = "rayburst_lib"
+name = "motrix_next_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -33,8 +33,6 @@ tauri-plugin-fs = "2"
 tauri-plugin-clipboard-manager = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sha2 = "0.10"
-uuid = { version = "1", features = ["v4", "serde"] }
 semver = "1"
 tokio = { version = "1", features = ["full"] }
 log = { version = "0.4", features = ["kv"] }
@@ -44,8 +42,6 @@ thiserror = "2"
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 tauri-plugin-locale = "2.0.1"
 url = "2.5.8"
-urlencoding = "2"
-regex = "1"
 tauri-plugin-window-state = "2.4.1"
 igd-next = { version = "0.15", features = ["aio_tokio"] }
 ipnet = "2"
@@ -53,6 +49,7 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 tokio-tungstenite = "0.28"
 futures-util = "0.3"
 tauri-plugin-log = "2.8.0"
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 dirs = "6"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 chrono = "0.4"
@@ -64,9 +61,14 @@ rusqlite = { version = "0.31", features = ["bundled"] }
 maxminddb = { version = "0.27", features = ["mmap"] }
 axum = "0.8"
 tower-http = { version = "0.6", features = ["cors"] }
+mime2ext = "0.1"
+urlencoding = "2"
+sanitize-filename = "0.6"
+content_disposition = "0.4"
+rfc2047-decoder = "1.1"
 strip-ansi-escapes = "0.2.1"
 tempfile = "3"
-rayburst-browser-launcher = { path = "native-messaging" }
+motrix-next-browser-launcher = { path = "native-messaging" }
 rust-i18n = "4.2.1"
 fluent-langneg = { version = "0.14.2", features = ["cldr"] }
 

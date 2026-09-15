@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_APP_CONFIG } from '@shared/constants'
+import { CONFIG_VERSION } from '@shared/utils/configMigration'
 import {
   buildSettingsBackup,
   parseSettingsBackup,
@@ -13,7 +14,7 @@ describe('settingsBackup', () => {
   it('round-trips settings through the backup envelope', () => {
     const config = {
       ...DEFAULT_APP_CONFIG,
-
+      configVersion: CONFIG_VERSION,
       theme: 'dark',
       taskCardMode: 'compact',
       rpcSecret: 'rpc-secret',
@@ -39,6 +40,7 @@ describe('settingsBackup', () => {
         version: SETTINGS_BACKUP_VERSION,
         exportedAt: new Date().toISOString(),
         settings: {
+          configVersion: CONFIG_VERSION,
           theme: 'missing',
           taskCardMode: 'missing',
           rpcSecret: 'keep-rpc',

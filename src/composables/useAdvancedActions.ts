@@ -160,22 +160,18 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
   // ── Handlers ─────────────────────────────────────────────────────────
 
   function handleEngineStateReset() {
-    if (engineStore.isBusy) return
-    let accepted = false
     dialog.error({
       title: t('preferences.reset-engine-state'),
       content: t('preferences.reset-engine-state-confirm'),
-      positiveText: t('preferences.reset-engine-state'),
-      negativeText: t('app.cancel'),
-      maskClosable: false,
-      onPositiveClick: () => {
-        accepted = true
-      },
-      onAfterLeave: () => {
-        if (!accepted || engineStore.isBusy) return
-        void engineStore.recoverRuntimeState().catch((error: unknown) => {
-          logger.error('Advanced.engineStateReset', error)
-        })
+      positiveText: t('app.yes'),
+      negativeText: t('app.no'),
+      onPositiveClick: async () => {
+        try {
+          await engineStore.recoverRuntimeState()
+          message.success(t('preferences.reset-engine-state-success'))
+        } catch (e) {
+          logger.error('Advanced.engineStateReset', e)
+        }
       },
     })
   }
@@ -280,7 +276,7 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
   async function handleExportLogs() {
     try {
       const resolvedDir = await resolveUserVisibleDownloadDir({ configuredDir: preferenceStore.config.dir })
-      const defaultPath = await join(resolvedDir.path, 'rayburst-logs.zip')
+      const defaultPath = await join(resolvedDir.path, 'motrix-next-logs.zip')
       logger.info('Advanced.exportLogs', `defaultDir source=${resolvedDir.source} fallback=${resolvedDir.usedFallback}`)
       const savePath = await saveDialog({
         title: t('preferences.export-diagnostic-logs'),
@@ -312,7 +308,7 @@ export function useAdvancedActions(deps: AdvancedActionsDeps) {
     try {
       const resolvedDir = await resolveUserVisibleDownloadDir({ configuredDir: preferenceStore.config.dir })
       const date = new Date().toISOString().slice(0, 10)
-      const defaultPath = await join(resolvedDir.path, `rayburst-settings-backup-${date}.json`)
+      const defaultPath = await join(resolvedDir.path, `motrix-next-settings-backup-${date}.json`)
       const savePath = await saveDialog({
         title: t('preferences.export-settings'),
         defaultPath,

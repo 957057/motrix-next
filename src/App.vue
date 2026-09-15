@@ -1,11 +1,12 @@
 <script setup lang="ts">
-/** @fileoverview Root component: theme, locale and motion configuration providers. */
-import { computed } from 'vue'
+/** @fileoverview Root application component with Naive UI theme provider and locale configuration. */
+import { computed, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   NConfigProvider,
   NMessageProvider,
   NDialogProvider,
+  darkTheme,
   type NLocale,
   type NDateLocale,
   zhCN,
@@ -47,19 +48,21 @@ import {
   dateNlNL,
   dateNbNO,
 } from 'naive-ui'
-import { MotionConfig } from 'motion-v'
-import { useInterfaceDirection } from './composables/useInterfaceDirection'
-import { provideAppTheme } from './composables/useAppTheme'
-import { useReducedMotion, useReducedMotionClass } from './composables/useReducedMotion'
+import { useTheme } from './composables/useTheme'
+import { useReducedMotionClass } from './composables/useReducedMotion'
 import { useVisibilityPause } from './composables/useVisibilityPause'
 import { isSupportedLocale, type SupportedLocale } from '@shared/localeCatalog'
 
+import { APP_COLOR_TOKENS_KEY, useColorScheme } from './composables/useColorScheme'
+
 const { locale: currentLocale } = useI18n()
-const { naiveTheme, naiveOverrides } = provideAppTheme()
+const { isDark } = useTheme()
+const { colorTokens, themeOverrides } = useColorScheme()
+provide(APP_COLOR_TOKENS_KEY, colorTokens)
 useVisibilityPause()
 useReducedMotionClass()
-const reduceMotion = useReducedMotion()
-const rtl = useInterfaceDirection()
+
+const theme = computed(() => (isDark.value ? darkTheme : null))
 
 const naiveLocaleMap: Partial<Record<SupportedLocale, NLocale>> = {
   'zh-CN': zhCN,
@@ -110,24 +113,18 @@ const naiveLocale = computed(() =>
 const naiveDateLocale = computed(() =>
   isSupportedLocale(currentLocale.value) ? naiveDateLocaleMap[currentLocale.value] || null : null,
 )
-const motionTransition = computed(() =>
-  reduceMotion.value ? { duration: 0 } : { type: 'spring' as const, stiffness: 520, damping: 42, mass: 1 },
-)
 </script>
 
 <template>
   <NConfigProvider
-    :theme="naiveTheme"
-    :rtl="rtl"
-    :theme-overrides="naiveOverrides"
+    :theme="theme"
+    :theme-overrides="themeOverrides"
     :locale="naiveLocale"
     :date-locale="naiveDateLocale"
   >
-    <NMessageProvider placement="bottom">
+    <NMessageProvider>
       <NDialogProvider>
-        <MotionConfig :reduced-motion="reduceMotion ? 'always' : 'user'" :transition="motionTransition">
-          <router-view />
-        </MotionConfig>
+        <router-view />
       </NDialogProvider>
     </NMessageProvider>
   </NConfigProvider>

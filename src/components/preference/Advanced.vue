@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
-import SettingsRow from './SettingsRow.vue'
-/** @fileoverview Advanced preferences: clipboard, system integration, engine maintenance, and diagnostics. */
+/** @fileoverview Advanced preference tab: RPC, extension, clipboard, default programs, engine, log, history, diagnostics. */
 import { ref, computed, onMounted } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import { invoke } from '@tauri-apps/api/core'
@@ -10,6 +8,7 @@ import { usePlatform } from '@/composables/usePlatform'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceForm } from '@/composables/usePreferenceForm'
+import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
 import { useEngineStore } from '@/stores/engine'
 import { useHistoryStore } from '@/stores/history'
 import { useAdvancedActions } from '@/composables/useAdvancedActions'
@@ -18,15 +17,24 @@ import { useProtocolHandlers, type ProtocolKey } from '@/composables/useProtocol
 import { relaunch } from '@tauri-apps/plugin-process'
 import { appDataDir, appLogDir, join, tempDir } from '@tauri-apps/api/path'
 import { APP_LOG_LEVELS, ARIA2_LOG_LEVELS } from '@shared/constants'
-import { buildAdvancedForm, transformAdvancedForStore } from '@/composables/useAdvancedPreference'
+import {
+  buildAdvancedForm,
+  buildAdvancedSystemConfig,
+  transformAdvancedForStore,
+  randomRpcPort,
+} from '@/composables/useAdvancedPreference'
+import { generateConfigSecret } from '@shared/utils/configHydration'
 import {
   NForm,
+  NFormItem,
   NInput,
+  NInputNumber,
   NInputGroup,
   NSwitch,
   NSelect,
   NButton,
   NSpace,
+  NDivider,
   NIcon,
   NModal,
   NCard,
@@ -36,20 +44,28 @@ import {
   useDialog,
 } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
-import { CloudDownload, CloudUpload, Download, FolderOpen, Trash2, Copy } from '@lucide/vue'
+import {
+  CloudDownloadOutline,
+  CloudUploadOutline,
+  DiceOutline,
+  DownloadOutline,
+  FolderOpenOutline,
+  TrashOutline,
+  CopyOutline,
+} from '@vicons/ionicons5'
 import { logger } from '@shared/logger'
 import PreferenceActionBar from './PreferenceActionBar.vue'
 import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 
 const engineStore = useEngineStore()
-const { confirmManualRestart } = useEngineRestart()
+const { restartEngine } = useEngineRestart()
 
-const settingsRoute = useRoute()
 const { t } = useI18n()
 const preferenceStore = usePreferenceStore()
 const historyStore = useHistoryStore()
 const message = useAppMessage()
+const { constraint, configFieldProps, areConfigFieldsValid } = usePreferenceNumericValidation()
 const dialog = useDialog()
 const protocolHandlers = useProtocolHandlers()
 const protocolStatus = protocolHandlers.status
@@ -59,14 +75,14 @@ const protocolOptions = computed<{ key: ProtocolKey; label: string }[]>(() => [
   { key: 'magnet', label: t('preferences.protocol-magnet') },
   { key: 'ed2k', label: t('preferences.protocol-ed2k') },
   { key: 'thunder', label: t('preferences.protocol-thunder') },
-  { key: 'rayburst', label: t('preferences.protocol-rayburst') },
+  { key: 'motrixnext', label: t('preferences.protocol-motrixnext') },
 ])
 
 useEventListener(window, 'focus', () => protocolHandlers.refreshAll())
 
 const { isLinux } = usePlatform()
 
-import { diffConfig } from '@shared/utils/config'
+import { diffConfig, checkIsNeedRestart } from '@shared/utils/config'
 import { writeAppClipboardText } from '@shared/utils'
 
 const appLogLevelOptions = APP_LOG_LEVELS.map((level) => ({ label: level, value: level }))
@@ -107,9 +123,82 @@ const defaultTempPath = ref('')
 
 const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceForm({
   buildForm,
+  buildSystemConfig: buildAdvancedSystemConfig,
   transformForStore: transformAdvancedForStore,
+  beforeSave: async (f) => {
+    // Only warn when user actively clears the secret (non-empty → empty).
+    // If it was already empty before this edit session, no need to re-warn.
+    const prevSecret = preferenceStore.config.rpcSecret
+    if (!f.rpcSecret && !!prevSecret) {
+      const ok = await new Promise<boolean>((resolve) => {
+        dialog.info({
+          title: t('preferences.rpc-secret-empty-title'),
+          content: t('preferences.rpc-secret-empty-confirm'),
+          positiveText: t('preferences.rpc-secret-empty-continue'),
+          negativeText: t('app.cancel'),
+          maskClosable: false,
+          onPositiveClick: () => resolve(true),
+          onNegativeClick: () => resolve(false),
+          onClose: () => resolve(false),
+        })
+      })
+      if (!ok) return false
+    }
+
+    // Gate: engine restart confirmation (RPC port / secret change).
+    // Must confirm BEFORE saving — declining cancels the entire save so
+    // config.json never contains values the running engine doesn't match.
+    const changed = diffConfig(preferenceStore.config, f)
+    if (checkIsNeedRestart(changed)) {
+      const ok = await new Promise<boolean>((resolve) => {
+        let accepted = false
+        dialog.info({
+          title: t('preferences.engine-restart-title'),
+          content: t('preferences.engine-restart-confirm'),
+          positiveText: t('preferences.engine-restart-now'),
+          negativeText: t('app.cancel'),
+          maskClosable: false,
+          onPositiveClick: () => {
+            accepted = true
+          },
+          onNegativeClick: () => resolve(false),
+          onClose: () => resolve(false),
+          onAfterLeave: () => {
+            if (accepted) resolve(true)
+          },
+        })
+      })
+      if (!ok) return false
+    }
+
+    // Gate: extension API port change confirmation.
+    // Separate from engine restart — this only rebinds the HTTP API server,
+    // downloads are unaffected.
+    if (changed.extensionApiPort !== undefined) {
+      const ok = await new Promise<boolean>((resolve) => {
+        dialog.warning({
+          title: t('preferences.extension-api-port'),
+          content: t('preferences.extension-api-port-confirm', { port: f.extensionApiPort }),
+          positiveText: t('app.confirm'),
+          negativeText: t('app.cancel'),
+          maskClosable: false,
+          onPositiveClick: () => resolve(true),
+          onNegativeClick: () => resolve(false),
+          onClose: () => resolve(false),
+        })
+      })
+      if (!ok) return false
+    }
+
+    return true
+  },
   afterSave: async (f, prevConfig) => {
     const changed = diffConfig(prevConfig, f)
+
+    // Engine restart — user already confirmed in beforeSave, execute immediately.
+    if (checkIsNeedRestart(changed)) {
+      restartEngine('settingsChange')
+    }
 
     if (changed.logLevel !== undefined && changed.logLevel !== prevConfig.logLevel) {
       await invoke('set_app_log_level', { level: f.logLevel })
@@ -139,8 +228,30 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
         },
       })
     }
+
+    // Extension API port — user already confirmed in beforeSave, execute immediately.
+    if (changed.extensionApiPort !== undefined) {
+      const newPort = f.extensionApiPort
+      try {
+        const appliedPort = await invoke<number>('restart_http_api', { port: newPort })
+        if (appliedPort !== newPort) {
+          f.extensionApiPort = appliedPort
+          preferenceStore.updatePreference({ extensionApiPort: appliedPort })
+          resetSnapshot()
+        }
+        message.success(t('preferences.extension-api-port-applied', { port: appliedPort }))
+      } catch (e) {
+        logger.warn('Advanced.extensionApi', `restart_http_api port=${newPort} failed: ${e}`)
+      }
+    }
   },
 })
+const numericFieldsValid = computed(() =>
+  areConfigFieldsValid({
+    extensionApiPort: form.value.extensionApiPort,
+    rpcListenPort: form.value.rpcListenPort,
+  }),
+)
 
 function buildForm() {
   return buildAdvancedForm(preferenceStore.config)
@@ -194,7 +305,7 @@ async function loadPaths() {
   }
   try {
     const logDir = await appLogDir()
-    logPath.value = await join(logDir, 'rayburst.log')
+    logPath.value = await join(logDir, 'motrix-next.log')
   } catch (e) {
     logger.debug('Advanced.loadLogPath', e)
   }
@@ -203,6 +314,18 @@ async function loadPaths() {
   } catch (e) {
     logger.debug('Advanced.loadTempPath', e)
   }
+}
+
+function onRpcPortDice() {
+  form.value.rpcListenPort = randomRpcPort()
+}
+
+function onRpcSecretDice() {
+  form.value.rpcSecret = generateConfigSecret()
+}
+
+function onApiSecretDice() {
+  form.value.extensionApiSecret = generateConfigSecret()
 }
 
 async function copyToClipboard(text: string, label: string) {
@@ -270,27 +393,116 @@ onMounted(async () => {
 <template>
   <div class="preference-form-wrapper">
     <div class="preference-form-scroll">
-      <NForm
-        label-placement="left"
-        label-align="left"
-        class="form-preference"
-        :disabled="preferenceStore.savingChanges"
-      >
-        <h2 class="settings-section-title">{{ t('preferences.engine-section') }}</h2>
-        <SettingsRow setting-key="preferences.engine-maintenance" :label="t('preferences.engine-maintenance')" actions>
-          <div class="settings-action-group">
-            <NButton :disabled="engineStore.isBusy" @click="confirmManualRestart">{{
-              t('preferences.engine-restart-now')
-            }}</NButton>
-            <NButton type="error" ghost :disabled="engineStore.isBusy" @click="handleEngineStateReset">{{
-              t('preferences.reset-engine-state')
-            }}</NButton>
-          </div>
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.temp-files-dir" :label="t('preferences.temp-files-dir')">
+      <NForm label-placement="left" label-align="left" label-width="260px" size="small" class="form-preference">
+        <NDivider title-placement="left">{{ t('preferences.extension-section') }}</NDivider>
+        <NFormItem :label="t('preferences.auto-submit-from-extension')">
+          <NSwitch v-model:value="form.autoSubmitFromExtension" />
+        </NFormItem>
+        <NCollapseTransition :show="form.autoSubmitFromExtension" class="collapse-indent">
+          <NFormItem :label="t('preferences.silent-auto-submit-from-extension')">
+            <NSwitch v-model:value="form.silentAutoSubmitFromExtension" />
+          </NFormItem>
+        </NCollapseTransition>
+        <NFormItem
+          :label="t('preferences.extension-api-port')"
+          v-bind="configFieldProps('extensionApiPort', form.extensionApiPort)"
+        >
+          <NInputNumber
+            v-model:value="form.extensionApiPort"
+            :min="constraint('extensionApiPort').min"
+            :max="constraint('extensionApiPort').max"
+            class="pref-port"
+          />
+        </NFormItem>
+        <NFormItem :validation-status="form.extensionApiSecret ? undefined : 'warning'">
+          <template #label>
+            <PreferenceHintLabel
+              :label="t('preferences.extension-api-secret')"
+              :hint="t('preferences.extension-api-secret-tip')"
+            />
+          </template>
           <NInputGroup>
             <NInput
-              :input-props="{ 'aria-label': t('preferences.temp-files-dir') }"
+              v-model:value="form.extensionApiSecret"
+              type="password"
+              show-password-on="click"
+              :placeholder="t('preferences.extension-api-secret')"
+              class="pref-control-full"
+              :status="form.extensionApiSecret ? undefined : 'warning'"
+            />
+            <NButton
+              class="pref-icon-button"
+              @click="copyToClipboard(form.extensionApiSecret, t('preferences.extension-api-secret'))"
+            >
+              <template #icon>
+                <NIcon :size="14"><CopyOutline /></NIcon>
+              </template>
+            </NButton>
+            <NButton class="pref-icon-button" @click="onApiSecretDice">
+              <template #icon>
+                <NIcon :size="14"><DiceOutline /></NIcon>
+              </template>
+            </NButton>
+          </NInputGroup>
+        </NFormItem>
+
+        <NDivider title-placement="left">{{ t('preferences.rpc') }}</NDivider>
+        <NFormItem
+          :label="t('preferences.rpc-listen-port')"
+          v-bind="configFieldProps('rpcListenPort', form.rpcListenPort)"
+        >
+          <NInputGroup>
+            <NInputNumber
+              v-model:value="form.rpcListenPort"
+              :min="constraint('rpcListenPort').min"
+              :max="constraint('rpcListenPort').max"
+              class="pref-port"
+            />
+            <NButton
+              class="pref-icon-button"
+              @click="copyToClipboard(String(form.rpcListenPort), t('preferences.rpc-listen-port'))"
+            >
+              <template #icon>
+                <NIcon :size="14"><CopyOutline /></NIcon>
+              </template>
+            </NButton>
+            <NButton class="pref-icon-button" @click="onRpcPortDice">
+              <template #icon>
+                <NIcon :size="14"><DiceOutline /></NIcon>
+              </template>
+            </NButton>
+          </NInputGroup>
+        </NFormItem>
+        <NFormItem :label="t('preferences.rpc-secret')" :validation-status="form.rpcSecret ? undefined : 'warning'">
+          <NInputGroup>
+            <NInput
+              v-model:value="form.rpcSecret"
+              type="password"
+              show-password-on="click"
+              :placeholder="t('preferences.rpc-secret')"
+              class="pref-control-full"
+              :status="form.rpcSecret ? undefined : 'warning'"
+            />
+            <NButton class="pref-icon-button" @click="copyToClipboard(form.rpcSecret, t('preferences.rpc-secret'))">
+              <template #icon>
+                <NIcon :size="14"><CopyOutline /></NIcon>
+              </template>
+            </NButton>
+            <NButton class="pref-icon-button" @click="onRpcSecretDice">
+              <template #icon>
+                <NIcon :size="14"><DiceOutline /></NIcon>
+              </template>
+            </NButton>
+          </NInputGroup>
+        </NFormItem>
+
+        <NDivider title-placement="left">{{ t('preferences.engine-section') }}</NDivider>
+        <NFormItem :label="t('preferences.allow-remote-access')">
+          <NSwitch v-model:value="form.allowRemoteAccess" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.temp-files-dir')">
+          <NInputGroup>
+            <NInput
               :value="form.tempFilesDir || defaultTempPath"
               readonly
               class="pref-control-full"
@@ -301,90 +513,80 @@ onMounted(async () => {
               @click="copyToClipboard(form.tempFilesDir || defaultTempPath, t('preferences.temp-files-dir'))"
             >
               <template #icon>
-                <NIcon :size="14"><Copy /></NIcon>
+                <NIcon :size="14"><CopyOutline /></NIcon>
               </template>
             </NButton>
             <NButton class="pref-icon-button" @click="handleSelectTempDir">
               <template #icon>
-                <NIcon :size="14"><FolderOpen /></NIcon>
+                <NIcon :size="14"><FolderOpenOutline /></NIcon>
               </template>
             </NButton>
             <NButton v-if="form.tempFilesDir" quaternary class="pref-icon-button" @click="handleClearTempDir">
               {{ t('preferences.ua-reset') }}
             </NButton>
           </NInputGroup>
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.aria2-conf-path" :label="t('preferences.aria2-conf-path')">
+        </NFormItem>
+        <NFormItem :label="t('preferences.aria2-conf-path')">
           <NInputGroup>
-            <NInput
-              :input-props="{ 'aria-label': t('preferences.aria2-conf-path') }"
-              :value="aria2ConfPath"
-              readonly
-              class="pref-control-full"
-            />
+            <NInput :value="aria2ConfPath" readonly class="pref-control-full" />
             <NButton class="pref-icon-button" @click="copyToClipboard(aria2ConfPath, t('preferences.aria2-conf-path'))">
               <template #icon>
-                <NIcon :size="14"><Copy /></NIcon>
+                <NIcon :size="14"><CopyOutline /></NIcon>
               </template>
             </NButton>
             <NButton class="pref-icon-button" @click="handleRevealPath(aria2ConfPath)">
               <template #icon>
-                <NIcon :size="14"><FolderOpen /></NIcon>
+                <NIcon :size="14"><FolderOpenOutline /></NIcon>
               </template>
             </NButton>
           </NInputGroup>
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.engine-state-path" :label="t('preferences.engine-state-path')">
+        </NFormItem>
+        <NFormItem :label="t('preferences.engine-state-path')">
           <NInputGroup>
-            <NInput
-              :input-props="{ 'aria-label': t('preferences.engine-state-path') }"
-              :value="engineStatePath"
-              readonly
-              class="pref-control-full"
-            />
+            <NInput :value="engineStatePath" readonly class="pref-control-full" />
             <NButton
               class="pref-icon-button"
               @click="copyToClipboard(engineStatePath, t('preferences.engine-state-path'))"
             >
               <template #icon>
-                <NIcon :size="14"><Copy /></NIcon>
+                <NIcon :size="14"><CopyOutline /></NIcon>
               </template>
             </NButton>
             <NButton class="pref-icon-button" @click="handleRevealPath(engineStatePath)">
               <template #icon>
-                <NIcon :size="14"><FolderOpen /></NIcon>
+                <NIcon :size="14"><FolderOpenOutline /></NIcon>
               </template>
             </NButton>
           </NInputGroup>
-        </SettingsRow>
-        <h2 class="settings-section-title">{{ t('preferences.log-section') }}</h2>
-        <SettingsRow setting-key="preferences.log-path" :label="t('preferences.log-path')">
+        </NFormItem>
+        <NFormItem label=" ">
+          <NButton type="error" ghost @click="handleEngineStateReset">
+            {{ t('preferences.reset-engine-state') }}
+          </NButton>
+        </NFormItem>
+
+        <NDivider title-placement="left">{{ t('preferences.log-section') }}</NDivider>
+        <NFormItem :label="t('preferences.log-path')">
           <NInputGroup>
-            <NInput
-              :input-props="{ 'aria-label': t('preferences.log-path') }"
-              :value="logPath"
-              readonly
-              class="pref-control-full"
-            />
+            <NInput :value="logPath" readonly class="pref-control-full" />
             <NButton class="pref-icon-button" @click="copyToClipboard(logPath, t('preferences.log-path'))">
               <template #icon>
-                <NIcon :size="14"><Copy /></NIcon>
+                <NIcon :size="14"><CopyOutline /></NIcon>
               </template>
             </NButton>
             <NButton class="pref-icon-button" @click="handleRevealPath(logPath)">
               <template #icon>
-                <NIcon :size="14"><FolderOpen /></NIcon>
+                <NIcon :size="14"><FolderOpenOutline /></NIcon>
               </template>
             </NButton>
           </NInputGroup>
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.log-level" :label="t('preferences.log-level')">
+        </NFormItem>
+        <NFormItem :label="t('preferences.log-level')">
           <div class="log-level-row">
             <div class="log-level-control">
-              <span class="log-level-control__label">{{ t('preferences.rayburst') }}</span>
+              <span class="log-level-control__label">{{ t('preferences.motrix-next') }}</span>
               <NSelect
                 v-model:value="form.logLevel"
-                :aria-label="t('preferences.log-level')"
                 :options="appLogLevelOptions"
                 class="pref-control-auto pref-control-log-level"
               />
@@ -393,42 +595,41 @@ onMounted(async () => {
               <span class="log-level-control__label">{{ t('preferences.aria2-next') }}</span>
               <NSelect
                 v-model:value="form.aria2LogLevel"
-                :aria-label="t('preferences.log-level')"
                 :options="aria2LogLevelOptions"
                 class="pref-control-auto pref-control-log-level"
               />
             </div>
           </div>
-        </SettingsRow>
-        <SettingsRow :label="t('preferences.log-management')" actions>
-          <div class="settings-action-group">
-            <NButton :loading="exportingLogs" @click="handleExportLogs">
+        </NFormItem>
+        <NFormItem label=" ">
+          <div class="log-action-row">
+            <NButton type="primary" ghost :loading="exportingLogs" @click="handleExportLogs">
               <template #icon>
-                <NIcon><Download /></NIcon>
+                <NIcon><DownloadOutline /></NIcon>
               </template>
               {{ t('preferences.export-diagnostic-logs') }}
             </NButton>
             <NButton type="error" ghost @click="handleClearLog">
               <template #icon>
-                <NIcon><Trash2 /></NIcon>
+                <NIcon><TrashOutline /></NIcon>
               </template>
               {{ t('preferences.clear-log') }}
             </NButton>
           </div>
-        </SettingsRow>
+        </NFormItem>
 
-        <h2 class="settings-section-title">{{ t('preferences.maintenance-section') }}</h2>
-        <SettingsRow v-if="isLinux" setting-key="preferences.hardware-rendering">
+        <NDivider title-placement="left">{{ t('preferences.maintenance-section') }}</NDivider>
+        <NFormItem v-if="isLinux">
           <template #label>
             <PreferenceHintLabel
               :label="t('preferences.hardware-rendering')"
               :hint="t('preferences.hardware-rendering-hint')"
             />
           </template>
-          <NSwitch v-model:value="form.hardwareRendering" :aria-label="t('preferences.hardware-rendering')" />
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.history-section" :label="t('preferences.history-section')" actions>
-          <div class="settings-action-group">
+          <NSwitch v-model:value="form.hardwareRendering" />
+        </NFormItem>
+        <NFormItem :label="t('preferences.history-section')">
+          <NSpace>
             <NButton class="db-integrity-check-btn" @click="handleDbIntegrityCheck">
               {{ t('preferences.db-integrity-check') }}
             </NButton>
@@ -438,18 +639,14 @@ onMounted(async () => {
             <NButton type="error" ghost @click="handleDbReset">
               {{ t('preferences.db-reset') }}
             </NButton>
-          </div>
-        </SettingsRow>
+          </NSpace>
+        </NFormItem>
 
-        <SettingsRow
-          setting-key="preferences.configuration-section"
-          :label="t('preferences.configuration-section')"
-          actions
-        >
-          <div class="settings-action-group">
+        <NFormItem :label="t('preferences.configuration-section')">
+          <NSpace>
             <NButton class="open-config-folder-btn" @click="handleOpenConfigFolder">
               <template #icon>
-                <NIcon :size="14"><FolderOpen /></NIcon>
+                <NIcon :size="14"><FolderOpenOutline /></NIcon>
               </template>
               {{ t('preferences.open-config-folder') }}
             </NButton>
@@ -459,45 +656,47 @@ onMounted(async () => {
             <NButton type="error" ghost @click="handleFactoryReset">
               {{ t('preferences.factory-reset') }}
             </NButton>
+          </NSpace>
+        </NFormItem>
+        <NFormItem :label="t('preferences.settings-backup')">
+          <div class="settings-backup-row">
+            <NSpace>
+              <NButton type="primary" ghost :loading="exportingSettings" @click="handleExportSettings">
+                <template #icon>
+                  <NIcon><CloudDownloadOutline /></NIcon>
+                </template>
+                {{ t('preferences.export-settings') }}
+              </NButton>
+              <NButton type="warning" ghost :loading="importingSettings" @click="handleImportSettings">
+                <template #icon>
+                  <NIcon><CloudUploadOutline /></NIcon>
+                </template>
+                {{ t('preferences.import-settings') }}
+              </NButton>
+            </NSpace>
           </div>
-        </SettingsRow>
-        <SettingsRow setting-key="preferences.settings-backup" :label="t('preferences.settings-backup')" actions>
-          <div class="settings-action-group">
-            <NButton :loading="exportingSettings" @click="handleExportSettings">
-              <template #icon>
-                <NIcon><CloudDownload /></NIcon>
-              </template>
-              {{ t('preferences.export-settings') }}
-            </NButton>
-            <NButton :loading="importingSettings" @click="handleImportSettings">
-              <template #icon>
-                <NIcon><CloudUpload /></NIcon>
-              </template>
-              {{ t('preferences.import-settings') }}
-            </NButton>
-          </div>
-        </SettingsRow>
+        </NFormItem>
 
         <!-- Clipboard Detection (migrated from Basic) -->
-        <h2 class="settings-section-title">{{ t('preferences.clipboard-detection') }}</h2>
-        <SettingsRow setting-key="preferences.clipboard-auto-detect">
+        <NDivider title-placement="left">{{ t('preferences.clipboard-detection') }}</NDivider>
+        <NFormItem>
           <template #label>
             <PreferenceHintLabel
               :label="t('preferences.clipboard-auto-detect')"
               :hint="t('preferences.clipboard-filter-hint')"
             />
           </template>
-          <NSwitch v-model:value="form.clipboardEnable" :aria-label="t('preferences.clipboard-auto-detect')" />
-        </SettingsRow>
-        <NCollapseTransition :show="form.clipboardEnable || !!settingsRoute.hash" class="collapse-indent">
-          <SettingsRow :label="t('preferences.clipboard-types')">
+          <NSwitch v-model:value="form.clipboardEnable" />
+        </NFormItem>
+        <NCollapseTransition :show="form.clipboardEnable">
+          <NFormItem label=" ">
             <PreferenceCheckboxGrid v-model:value="selectedClipboardTypes" :options="clipboardTypeOptions" />
-          </SettingsRow>
+          </NFormItem>
         </NCollapseTransition>
 
         <!-- Default programs reflect the current OS association, not a saved preference. -->
-        <h2 class="settings-section-title">{{ t('preferences.default-programs') }}</h2>
-        <SettingsRow v-for="protocol in protocolOptions" :key="protocol.key" :label="protocol.label">
+        <NDivider title-placement="left">{{ t('preferences.default-programs') }}</NDivider>
+        <NFormItem v-for="protocol in protocolOptions" :key="protocol.key" :label="protocol.label">
           <NSwitch
             v-if="protocolStatus[protocol.key] !== null"
             :value="protocolStatus[protocol.key] === true"
@@ -512,7 +711,7 @@ onMounted(async () => {
               {{ t('app.retry') }}
             </NButton>
           </NSpace>
-        </SettingsRow>
+        </NFormItem>
       </NForm>
     </div>
 
@@ -522,7 +721,6 @@ onMounted(async () => {
         :title="t('preferences.db-browse-title')"
         closable
         class="db-record-modal"
-        content-class="db-record-content"
         :bordered="false"
         @close="showDbBrowse = false"
       >
@@ -544,19 +742,30 @@ onMounted(async () => {
         </NDataTable>
       </NCard>
     </NModal>
-    <PreferenceActionBar
-      :is-saving="preferenceStore.savingChanges"
-      :is-dirty="isDirty"
-      @save="handleSave"
-      @discard="handleReset"
-    />
+    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 
 <style scoped>
+.info-link {
+  color: var(--m3-primary);
+  text-decoration: none;
+  font-size: 12px;
+}
+.info-link:hover {
+  text-decoration: underline;
+}
+.action-link {
+  color: var(--m3-primary);
+  cursor: pointer;
+  margin-left: 8px;
+  font-size: 12px;
+}
+.action-link:hover {
+  text-decoration: underline;
+}
 .log-level-row {
   display: flex;
-  justify-content: var(--settings-control-align);
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
@@ -568,9 +777,9 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
 }
-.db-record-modal :deep(.db-record-content) {
+.db-record-modal :deep(.n-card__content) {
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
 }
 .log-level-control {
   display: inline-flex;
@@ -581,8 +790,83 @@ onMounted(async () => {
   min-width: 100px;
 }
 .log-level-control__label {
-  color: var(--rb-text);
+  color: var(--m3-on-surface);
   font-size: 13px;
   white-space: nowrap;
+}
+.log-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.settings-backup-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+/* ── UA preset row — button group + standalone reset ─────────────── */
+.ua-preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── UA field wrapper — stacks textarea + warning within same NFormItem ── */
+.ua-field-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* ── UA warning — CSS Grid 0fr→1fr slide-in, matches proxy-collapse ── */
+.ua-warn-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+.ua-warn-collapse--open {
+  grid-template-rows: 1fr;
+}
+.ua-warn-collapse__inner {
+  overflow: hidden;
+}
+.ua-warn-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-top: 6px;
+  border-radius: var(--border-radius);
+  background: var(--m3-error-container);
+  opacity: 0;
+  transition: opacity 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+.ua-warn-collapse--open .ua-warn-bar {
+  opacity: 1;
+}
+.ua-warn-text {
+  font-size: var(--font-size-sm);
+  color: var(--m3-on-error-container);
+  flex: 1;
+}
+
+/* ── Proxy collapse — CSS Grid 0fr→1fr for glitch-free height:auto ── */
+.proxy-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+.proxy-collapse--open {
+  grid-template-rows: 1fr;
+}
+.proxy-collapse__inner {
+  overflow: hidden;
 }
 </style>

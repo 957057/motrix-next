@@ -2,7 +2,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { usePreferenceStore } from '../preference'
-import { DEFAULT_APP_CONFIG } from '@shared/constants'
+import { CURRENT_DB_SCHEMA_VERSION, DEFAULT_APP_CONFIG } from '@shared/constants'
+import { CONFIG_VERSION } from '@shared/utils/configMigration'
 import type { AppConfig } from '@shared/types'
 
 // Mock @tauri-apps/plugin-store — returns an in-memory store
@@ -44,6 +45,7 @@ describe('PreferenceStore', () => {
   it('replaceAndSave replaces config instead of merging with current state', async () => {
     await store.updateAndSave({ theme: 'dark', locale: 'zh-CN' })
     await store.replaceAndSave({
+      configVersion: CONFIG_VERSION,
       theme: 'light',
       rpcSecret: 'replacement-rpc',
       extensionApiSecret: 'replacement-api',
@@ -55,6 +57,13 @@ describe('PreferenceStore', () => {
     expect(store.config.rpcSecret).toBe('replacement-rpc')
     expect(store.config.extensionApiSecret).toBe('replacement-api')
     expect(saved.locale).toBe(DEFAULT_APP_CONFIG.locale)
+  })
+
+  it('persists the current DB schema version on first save', async () => {
+    await store.updateAndSave({ locale: 'zh-CN' })
+
+    const saved = mockStoreData.get('preferences') as AppConfig
+    expect(saved.dbSchemaVersion).toBe(CURRENT_DB_SCHEMA_VERSION)
   })
 
   // ─── loadPreference ─────────────────────────────────────
@@ -84,6 +93,7 @@ describe('PreferenceStore', () => {
 
   it('loadPreference hydrates missing nested config fields', async () => {
     mockStoreData.set('preferences', {
+      configVersion: CONFIG_VERSION,
       clipboard: { enable: false },
       proxy: { mode: 'manual', server: 'http://127.0.0.1:7890' },
     })
@@ -100,6 +110,7 @@ describe('PreferenceStore', () => {
 
   it('loadPreference persists repaired invalid config once', async () => {
     mockStoreData.set('preferences', {
+      configVersion: CONFIG_VERSION,
       theme: 'bad-theme',
       updateChannel: 'nightly',
     })

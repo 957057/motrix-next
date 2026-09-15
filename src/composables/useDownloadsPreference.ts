@@ -37,8 +37,6 @@ export interface DownloadsForm {
   speedScheduleFrom: string
   speedScheduleTo: string
   speedScheduleDays: number
-  mediaSelectBeforeDownload: boolean
-  mediaDefaultFormat: 'mp4' | 'mkv'
   newTaskShowDownloading: boolean
   noConfirmBeforeDeleteTask: boolean
   fileDeletionMode: FileDeletionMode
@@ -110,8 +108,6 @@ export function buildDownloadsForm(config: AppConfig, defaultDir: string = ''): 
     speedScheduleFrom: config.speedScheduleFrom ?? D.speedScheduleFrom,
     speedScheduleTo: config.speedScheduleTo ?? D.speedScheduleTo,
     speedScheduleDays: config.speedScheduleDays ?? D.speedScheduleDays,
-    mediaSelectBeforeDownload: config.mediaSelectBeforeDownload ?? D.mediaSelectBeforeDownload,
-    mediaDefaultFormat: config.mediaDefaultFormat ?? D.mediaDefaultFormat,
     newTaskShowDownloading: config.newTaskShowDownloading ?? D.newTaskShowDownloading,
     noConfirmBeforeDeleteTask: config.noConfirmBeforeDeleteTask ?? D.noConfirmBeforeDeleteTask,
     fileDeletionMode: config.fileDeletionMode ?? D.fileDeletionMode,

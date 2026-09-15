@@ -95,7 +95,6 @@ function createDeps() {
   })
   const preferenceStore = reactive({
     pendingChanges: false,
-    savingChanges: false,
     saveBeforeLeave: null as (() => Promise<void>) | null,
     updatePreference: vi.fn(),
     config: {
@@ -207,19 +206,6 @@ describe('useAppEvents', () => {
     expect(removeGuard).toHaveBeenCalledTimes(1)
   })
 
-  it('blocks navigation while connection settings are being applied', async () => {
-    const { deps } = createDeps()
-    const { setupListeners, unmount } = mountComposable(deps)
-    await setupListeners()
-    deps.preferenceStore.savingChanges = true
-    const guard = routerBeforeEachMock.mock.calls[0][0]
-    expect(guard({ path: '/task/all' }, { path: '/preference/connections' })).toBe(false)
-    expect(deps.navDialog.warning).not.toHaveBeenCalled()
-    deps.preferenceStore.savingChanges = false
-    expect(guard({ path: '/task/all' }, { path: '/preference/connections' })).toBe(true)
-    unmount()
-  })
-
   it('keeps task data intact while task route tabs switch', async () => {
     const { deps, taskStore } = createDeps()
     taskStore.taskList = [{ gid: 'old-1' }, { gid: 'old-2' }]
@@ -272,7 +258,7 @@ describe('useAppEvents', () => {
     invokeMock.mockImplementation(async (command: string) => {
       if (command === 'take_pending_deep_links') {
         return {
-          urls: ['rayburst://new?url=https%3A%2F%2Fexample.com%2Ffile.zip'],
+          urls: ['motrixnext://new?url=https%3A%2F%2Fexample.com%2Ffile.zip'],
           silent: true,
         }
       }
@@ -287,12 +273,12 @@ describe('useAppEvents', () => {
     expect(windowApiMock.show).not.toHaveBeenCalled()
     expect(windowApiMock.setFocus).not.toHaveBeenCalled()
     expect(appStore.handleDeepLinkUrls).toHaveBeenCalledWith([
-      'rayburst://new?url=https%3A%2F%2Fexample.com%2Ffile.zip',
+      'motrixnext://new?url=https%3A%2F%2Fexample.com%2Ffile.zip',
     ])
   })
 
   it('routes silent live deep-link events without showing or focusing the window', async () => {
-    const deepLink = 'rayburst://new?url=https%3A%2F%2Fexample.com%2Ffile.zip'
+    const deepLink = 'motrixnext://new?url=https%3A%2F%2Fexample.com%2Ffile.zip'
     const { deps, appStore } = createDeps()
     const { setupListeners } = mountComposable(deps)
 
@@ -419,7 +405,7 @@ describe('useAppEvents', () => {
   it('continues routing external input when focusing the restored window fails', async () => {
     windowApiMock.setFocus.mockRejectedValueOnce(new Error('focus blocked by OS'))
     const deepLink =
-      'rayburst://new?url=https%3A%2F%2Fexample.com%2Ffile.zip&cookie=session%3Dsecret-token&filename=file.zip'
+      'motrixnext://new?url=https%3A%2F%2Fexample.com%2Ffile.zip&cookie=session%3Dsecret-token&filename=file.zip'
     const { deps, appStore } = createDeps()
     const { setupListeners } = mountComposable(deps)
 
@@ -437,7 +423,7 @@ describe('useAppEvents', () => {
   })
 
   it('logs the external input handling result returned by the app store', async () => {
-    const deepLink = 'rayburst:/new?url=https%3A%2F%2Fexample.com%2Ffile.zip'
+    const deepLink = 'motrixnext:/new?url=https%3A%2F%2Fexample.com%2Ffile.zip'
     const { deps, appStore } = createDeps()
     appStore.handleDeepLinkUrls.mockReturnValueOnce({ received: 1, queued: 1, autoSubmitted: 0, ignored: 0 })
     const { setupListeners } = mountComposable(deps)
@@ -483,16 +469,5 @@ describe('useAppEvents', () => {
     expect(loggerMock.info.mock.calls.flat().join(' ')).not.toContain('session=secret')
     expect(loggerMock.info.mock.calls.flat().join(' ')).not.toContain('token=secret')
     expect(loggerMock.info.mock.calls.flat().join(' ')).not.toContain('BrowserUA')
-  })
-  it('accepts uppercase torrent extensions through native drag and drop', async () => {
-    const { deps, appStore } = createDeps()
-    const { setupListeners, unmount } = mountComposable(deps)
-    await setupListeners()
-    const callback = dragDropListenerMock.mock.calls[0][0]
-    callback({ payload: { type: 'drop', paths: ['C:/Downloads/Linux.TORRENT', 'C:/Downloads/readme.txt'] } })
-    expect(appStore.enqueueBatch).toHaveBeenCalledWith([
-      expect.objectContaining({ kind: 'torrent', source: 'C:/Downloads/Linux.TORRENT' }),
-    ])
-    unmount()
   })
 })

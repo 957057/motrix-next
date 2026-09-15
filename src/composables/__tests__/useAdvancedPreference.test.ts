@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { buildAdvancedForm, transformAdvancedForStore } from '../useAdvancedPreference'
+import { buildAdvancedForm, buildAdvancedSystemConfig, transformAdvancedForStore } from '../useAdvancedPreference'
 import { createDefaultAppConfig } from '@shared/utils/configHydration'
 
 describe('Advanced preference ownership', () => {
-  it('persists clipboard switches without owning connection settings', () => {
+  it('sends only RPC options and persists flattened clipboard switches', () => {
     const form = buildAdvancedForm(createDefaultAppConfig())
-    expect(form).not.toHaveProperty('rpcListenPort')
-    expect(form).not.toHaveProperty('rpcSecret')
-    expect(form).not.toHaveProperty('allowRemoteAccess')
+    expect(buildAdvancedSystemConfig(form)).toEqual({
+      'rpc-listen-port': String(form.rpcListenPort),
+      'allow-remote-access': String(form.allowRemoteAccess),
+      'rpc-secret': form.rpcSecret,
+    })
     const stored = transformAdvancedForStore({ ...form, clipboardSftp: false })
     expect(stored.clipboard).toMatchObject({ sftp: false })
     expect(stored).not.toHaveProperty('clipboardSftp')

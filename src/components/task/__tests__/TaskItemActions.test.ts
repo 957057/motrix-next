@@ -4,30 +4,23 @@ import type { Aria2Task, TaskStatus } from '@shared/types'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (key: string) => key }) }))
 vi.mock('naive-ui', () => ({
-  NDropdown: {
-    props: ['options'],
-    emits: ['select'],
-    template:
-      '<div><slot /><button v-for="option in options" :key="option.key" :aria-label="option.label" :disabled="option.disabled" @click="$emit(\'select\', option.key)" /></div>',
-  },
   NIcon: { template: '<span><slot /></span>' },
   NTooltip: { template: '<span><slot name="trigger" /><slot /></span>' },
 }))
-vi.mock('@lucide/vue', () => {
+vi.mock('@vicons/ionicons5', () => {
   const icon = { template: '<i />' }
   return {
-    Ellipsis: icon,
-    Pause: icon,
-    Play: icon,
-    CircleStop: icon,
-    RefreshCw: icon,
-    X: icon,
-    Trash2: icon,
-    Link: icon,
-    Info: icon,
-    FolderOpen: icon,
-    ExternalLink: icon,
-    List: icon,
+    PauseOutline: icon,
+    PlayOutline: icon,
+    StopCircleOutline: icon,
+    RefreshOutline: icon,
+    CloseOutline: icon,
+    TrashOutline: icon,
+    LinkOutline: icon,
+    InformationCircleOutline: icon,
+    FolderOpenOutline: icon,
+    OpenOutline: icon,
+    ListOutline: icon,
   }
 })
 
@@ -54,51 +47,6 @@ function mountActions(task: Aria2Task) {
 }
 
 describe('TaskItemActions', () => {
-  it('opens native media selection instead of resuming unresolved tracks', async () => {
-    const wrapper = mountActions(
-      makeTask('paused', {
-        media: {
-          state: 'awaiting-selection',
-          protocol: 'hls',
-          live: 'true',
-          duration: '0',
-          completedDuration: '0',
-          downloadedLength: '0',
-          lengthKnown: 'false',
-          error: '',
-          tracks: [],
-        },
-      }),
-    )
-    await wrapper.find('[aria-label="media.select-tracks"]').trigger('click')
-    expect(wrapper.emitted('resume')).toBeTruthy()
-    expect(wrapper.emitted('show-info')).toBeFalsy()
-    expect(wrapper.find('[aria-label="media.select-tracks"]').text()).toBe('media.select-tracks')
-    expect(wrapper.find('[aria-label="task.resume-task"]').exists()).toBe(false)
-  })
-
-  it('resumes a paused recording directly and does not offer missing output on failure', async () => {
-    const media = {
-      state: 'paused' as const,
-      protocol: 'hls' as const,
-      live: 'true' as const,
-      duration: '0',
-      completedDuration: '12000',
-      downloadedLength: '1024',
-      lengthKnown: 'false' as const,
-      error: '',
-      tracks: [],
-    }
-    const paused = mountActions(makeTask('paused', { media }))
-    await paused.find('[aria-label="task.resume-task"]').trigger('click')
-    expect(paused.emitted('resume')).toBeTruthy()
-    await paused.find('[aria-label="media.finish"]').trigger('click')
-    expect(paused.emitted('finish-media')).toBeTruthy()
-    const failed = mountActions(makeTask('error', { media: { ...media, state: 'error' } }))
-    expect(failed.find('[aria-label="task.open-file"]').exists()).toBe(false)
-    expect(failed.find('[aria-label="task.retry-task"]').exists()).toBe(true)
-  })
-
   it('renders standard pause and resume actions', async () => {
     const active = mountActions(makeTask('active'))
     await active.find('[aria-label="task.pause-task"]').trigger('click')
@@ -109,7 +57,7 @@ describe('TaskItemActions', () => {
     expect(paused.emitted('resume')).toBeTruthy()
   })
 
-  it('renders a labelled file-selection action for pending magnets', async () => {
+  it('renders an icon-only file-selection action for pending magnets', async () => {
     const wrapper = mountActions(
       makeTask('paused', {
         bittorrent: { state: 'paused', fileSelectionState: 'awaiting', info: { name: 'Torrent' } },
@@ -117,8 +65,8 @@ describe('TaskItemActions', () => {
     )
 
     const action = wrapper.find('[aria-label="task.select-files"]')
-    expect(action.text()).toBe('task.select-files')
-    expect(action.classes()).toContain('emphasized')
+    expect(action.text()).toBe('')
+    expect(action.classes()).toContain('task-item-action--emphasis')
     await action.trigger('click')
     expect(wrapper.emitted('select-files')).toBeTruthy()
     expect(wrapper.emitted('resume')).toBeFalsy()
@@ -206,8 +154,8 @@ describe('TaskItemActions', () => {
 
   it('keeps terminal actions accessible', () => {
     const wrapper = mountActions(makeTask('complete'))
-    const actions = wrapper.findAll('button')
-    expect(actions.length).toBeGreaterThanOrEqual(6)
+    const actions = wrapper.findAll('.task-item-action')
+    expect(actions).toHaveLength(6)
     expect(actions.every((action) => Boolean(action.attributes('aria-label')))).toBe(true)
   })
 

@@ -1,38 +1,30 @@
 <script setup lang="ts">
 /** @fileoverview Action buttons for individual task items. */
-import { computed, h } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { canFinishMedia } from '@shared/utils/media'
 import { TASK_STATUS } from '@shared/constants'
-import { NIcon, NDropdown } from 'naive-ui'
+import { NIcon } from 'naive-ui'
+import MTooltip from '@/components/common/MTooltip.vue'
 import {
-  Ellipsis,
-  Pause,
-  Play,
-  CircleStop,
-  RefreshCw,
-  X,
-  Trash2,
-  Link,
-  Info,
-  FolderOpen,
-  ExternalLink,
-  List,
-} from '@lucide/vue'
+  PauseOutline,
+  PlayOutline,
+  StopCircleOutline,
+  RefreshOutline,
+  CloseOutline,
+  TrashOutline,
+  LinkOutline,
+  InformationCircleOutline,
+  FolderOpenOutline,
+  OpenOutline,
+  ListOutline,
+} from '@vicons/ionicons5'
 import { type Component } from 'vue'
 import type { Aria2Task } from '@shared/types'
-import { canPauseTask, canResumeTask } from '@/composables/taskCapabilities'
 import { getBtLifecycleState } from '@/composables/useBtLifecycle'
 import { getSharingActionLabelKey, getTaskSharingState } from '@shared/utils/task'
 
 const props = withDefaults(
-  defineProps<{
-    task: Aria2Task
-    fileMissing?: boolean
-    pending?: boolean
-    density?: 'full' | 'compact'
-    inDetail?: boolean
-  }>(),
+  defineProps<{ task: Aria2Task; fileMissing?: boolean; pending?: boolean; density?: 'full' | 'compact' }>(),
   { density: 'full' },
 )
 const emit = defineEmits<{
@@ -41,7 +33,6 @@ const emit = defineEmits<{
   retry: []
   redownload: []
   'finish-sharing': []
-  'finish-media': []
   delete: []
   'delete-record': []
   'copy-link': []
@@ -66,130 +57,105 @@ const actions = computed(() => {
   const lifecycle = getBtLifecycleState(props.task)
   const sharing = getTaskSharingState(props.task)
   let primary: ActionDef[]
-  if (props.task.media?.state === 'awaiting-selection') {
-    primary = [
-      { key: 'select-content', icon: List, label: t('media.select-tracks'), event: 'resume', emphasis: true },
-      { key: 'delete', icon: X, label: t('task.delete-task'), event: 'delete' },
-    ]
-  } else if (lifecycle === 'selection') {
+  if (lifecycle === 'selection') {
     primary = [
       {
         key: 'select-files',
-        icon: List,
+        icon: ListOutline,
         label: t('task.select-files'),
         event: 'select-files',
         emphasis: true,
       },
-      { key: 'delete', icon: X, label: t('task.delete-task'), event: 'delete' },
+      { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
   } else if (lifecycle === 'recovering') {
-    primary = [{ key: 'delete', icon: X, label: t('task.delete-task'), event: 'delete' }]
+    primary = [{ key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' }]
   } else if (lifecycle === 'error') {
     primary = [
       ...(props.task.status === TASK_STATUS.ERROR
-        ? [{ key: 'retry', icon: RefreshCw, label: t('task.retry-task'), event: 'retry' }]
+        ? [{ key: 'retry', icon: RefreshOutline, label: t('task.retry-task'), event: 'retry' }]
         : []),
-      { key: 'info', icon: Info, label: t('task.task-detail-title'), event: 'show-info' },
-      { key: 'delete', icon: X, label: t('task.delete-task'), event: 'delete' },
+      { key: 'info', icon: InformationCircleOutline, label: t('task.task-detail-title'), event: 'show-info' },
+      { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
   } else if (sharing?.phase === 'active') {
     primary = [
-      { key: 'toggle', icon: Pause, label: t(getSharingActionLabelKey(sharing.kind, 'pause')), event: 'pause' },
+      { key: 'toggle', icon: PauseOutline, label: t(getSharingActionLabelKey(sharing.kind, 'pause')), event: 'pause' },
       {
         key: 'finish-sharing',
-        icon: CircleStop,
+        icon: StopCircleOutline,
         label: t(getSharingActionLabelKey(sharing.kind, 'finish')),
         event: 'finish-sharing',
       },
-      { key: 'delete', icon: X, label: t('task.delete-task'), event: 'delete' },
+      { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
   } else if (sharing?.phase === 'paused') {
     primary = [
-      { key: 'toggle', icon: Play, label: t(getSharingActionLabelKey(sharing.kind, 'resume')), event: 'resume' },
+      { key: 'toggle', icon: PlayOutline, label: t(getSharingActionLabelKey(sharing.kind, 'resume')), event: 'resume' },
       {
         key: 'finish-sharing',
-        icon: CircleStop,
+        icon: StopCircleOutline,
         label: t(getSharingActionLabelKey(sharing.kind, 'finish')),
         event: 'finish-sharing',
       },
-      { key: 'delete', icon: X, label: t('task.delete-task'), event: 'delete' },
+      { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
     ]
   } else {
     const actionsMap: Record<string, ActionDef[]> = {
       [TASK_STATUS.ACTIVE]: [
-        { key: 'toggle', icon: Pause, label: t('task.pause-task'), event: 'pause' },
-        { key: 'delete', icon: X, label: t('task.delete-task'), event: 'delete' },
+        { key: 'toggle', icon: PauseOutline, label: t('task.pause-task'), event: 'pause' },
+        { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
       ],
       [TASK_STATUS.PAUSED]: [
-        { key: 'toggle', icon: Play, label: t('task.resume-task'), event: 'resume' },
-        { key: 'delete', icon: X, label: t('task.delete-task'), event: 'delete' },
+        { key: 'toggle', icon: PlayOutline, label: t('task.resume-task'), event: 'resume' },
+        { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
       ],
       [TASK_STATUS.WAITING]: [
-        { key: 'toggle', icon: Pause, label: t('task.pause-task'), event: 'pause' },
-        { key: 'delete', icon: X, label: t('task.delete-task'), event: 'delete' },
+        { key: 'toggle', icon: PauseOutline, label: t('task.pause-task'), event: 'pause' },
+        { key: 'delete', icon: CloseOutline, label: t('task.delete-task'), event: 'delete' },
       ],
       [TASK_STATUS.ERROR]: [
-        { key: 'retry', icon: RefreshCw, label: t('task.retry-task'), event: 'retry' },
-        { key: 'trash', icon: Trash2, label: t('task.remove-record'), event: 'delete-record' },
+        { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
+        { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
+        { key: 'retry', icon: RefreshOutline, label: t('task.retry-task'), event: 'retry' },
+        { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
       ],
       [TASK_STATUS.COMPLETE]: [
-        { key: 'open', icon: ExternalLink, label: t('task.open-file'), event: 'open-file' },
-        { key: 'folder', icon: FolderOpen, label: t('task.show-in-folder'), event: 'folder' },
-        { key: 'redownload', icon: RefreshCw, label: t('task.restart-task'), event: 'redownload' },
-        { key: 'trash', icon: Trash2, label: t('task.remove-record'), event: 'delete-record' },
+        { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
+        { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
+        { key: 'redownload', icon: RefreshOutline, label: t('task.restart-task'), event: 'redownload' },
+        { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
       ],
       [TASK_STATUS.REMOVED]: [
-        { key: 'open', icon: ExternalLink, label: t('task.open-file'), event: 'open-file' },
-        { key: 'folder', icon: FolderOpen, label: t('task.show-in-folder'), event: 'folder' },
-        { key: 'redownload', icon: RefreshCw, label: t('task.restart-task'), event: 'redownload' },
-        { key: 'trash', icon: Trash2, label: t('task.remove-record'), event: 'delete-record' },
+        { key: 'open', icon: OpenOutline, label: t('task.open-file'), event: 'open-file' },
+        { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
+        { key: 'redownload', icon: RefreshOutline, label: t('task.restart-task'), event: 'redownload' },
+        { key: 'trash', icon: TrashOutline, label: t('task.remove-record'), event: 'delete-record' },
       ],
     }
     primary = actionsMap[props.task.status] || []
   }
-  if (canFinishMedia(props.task))
-    primary.unshift({ key: 'finish-media', icon: CircleStop, label: t('media.finish'), event: 'finish-media' })
   const primaryKeys = new Set(primary.map((a) => a.key))
 
   // Destructive actions (trash, delete) always go to the far right
   const destructiveKeys = new Set(['trash', 'delete'])
-  const leading = primary.filter(
-    (a) => !destructiveKeys.has(a.key) && !(a.key === 'open' && props.task.media && props.task.status !== 'complete'),
-  )
+  const leading = primary.filter((a) => !destructiveKeys.has(a.key))
   const trailing = primary.filter((a) => destructiveKeys.has(a.key))
 
   const common: ActionDef[] = [
-    { key: 'folder', icon: FolderOpen, label: t('task.show-in-folder'), event: 'folder' },
-    { key: 'link', icon: Link, label: t('task.copy-link'), event: 'copy-link' },
-    { key: 'info', icon: Info, label: t('task.task-detail-title'), event: 'show-info' },
-  ].filter((a) => !primaryKeys.has(a.key) && !(props.inDetail && a.key === 'info'))
+    { key: 'folder', icon: FolderOpenOutline, label: t('task.show-in-folder'), event: 'folder' },
+    { key: 'link', icon: LinkOutline, label: t('task.copy-link'), event: 'copy-link' },
+    { key: 'info', icon: InformationCircleOutline, label: t('task.task-detail-title'), event: 'show-info' },
+  ].filter((a) => !primaryKeys.has(a.key))
 
-  return [...leading, ...common, ...trailing].map((action) => ({
-    ...action,
-    disabled:
-      props.pending ||
-      (action.key === 'open' && props.fileMissing) ||
-      (action.event === 'pause' && !canPauseTask(props.task)) ||
-      (action.event === 'resume' && action.key === 'toggle' && !canResumeTask(props.task)),
-  }))
+  return [...leading, ...common, ...trailing]
+    .map((action) =>
+      action.key === 'retry' || action.key === 'redownload' ? { ...action, disabled: props.pending } : action,
+    )
+    .reverse()
 })
 
-const primary = computed(() => actions.value.find((action) => !['delete', 'trash'].includes(action.key)))
-const inlineActions = computed(() =>
-  actions.value.filter((action) => action === primary.value || action.key === 'finish-sharing'),
-)
-const menuOptions = computed(() =>
-  actions.value
-    .filter((action) => !inlineActions.value.includes(action))
-    .map((action) => ({
-      key: action.event,
-      label: action.label,
-      disabled: action.disabled,
-      icon: () => h(NIcon, null, { default: () => h(action.icon) }),
-    })),
-)
 function onAction(event: string) {
-  if (props.pending) return
   switch (event) {
     case 'pause':
       emit('pause')
@@ -202,9 +168,6 @@ function onAction(event: string) {
       break
     case 'redownload':
       emit('redownload')
-      break
-    case 'finish-media':
-      emit('finish-media')
       break
     case 'finish-sharing':
       emit('finish-sharing')
@@ -235,103 +198,186 @@ function onAction(event: string) {
 </script>
 
 <template>
-  <div class="row-actions" @click.stop @dblclick.stop>
-    <button
-      v-for="action in inlineActions"
-      :key="action.key"
-      type="button"
-      class="primary-action"
-      :class="{ emphasized: action.emphasis }"
-      :aria-label="action.label"
-      :title="action.label"
-      :disabled="action.disabled"
-      @click="onAction(action.event)"
-    >
-      <span class="action-icon"
-        ><Transition name="fade"
-          ><NIcon :key="action.event" :size="17"><component :is="action.icon" /></NIcon></Transition></span
-      ><span v-if="action.emphasis || action.key === 'open' || action.key === 'finish-sharing'" class="action-text">{{
-        action.label
-      }}</span>
-    </button>
-    <NDropdown trigger="click" :options="menuOptions" placement="bottom-end" @select="onAction">
-      <button type="button" class="icon-button" :aria-label="t('workspace.more-actions')" :disabled="pending">
-        <NIcon :size="18"><Ellipsis /></NIcon>
-      </button>
-    </NDropdown>
-  </div>
+  <TransitionGroup
+    tag="ul"
+    name="action-item"
+    class="task-item-actions"
+    :class="{ 'task-item-actions--compact': props.density === 'compact' }"
+  >
+    <li v-for="(action, index) in actions" :key="index" class="task-item-action-slot">
+      <MTooltip>
+        <template #trigger>
+          <button
+            type="button"
+            class="task-item-action"
+            :class="{ 'task-item-action--emphasis': action.emphasis }"
+            :aria-label="action.label"
+            :disabled="action.disabled"
+            @click="onAction(action.event)"
+          >
+            <span class="task-action-visual" aria-hidden="true">
+              <Transition name="icon-swap">
+                <NIcon :key="action.event" class="task-action-icon"><component :is="action.icon" /></NIcon>
+              </Transition>
+            </span>
+          </button>
+        </template>
+        {{ action.label }}
+      </MTooltip>
+    </li>
+  </TransitionGroup>
 </template>
+
 <style scoped>
-.row-actions {
+.task-item-actions {
+  --task-action-height: 32px;
+  --task-action-padding-x: 12px;
+  --task-action-item-margin: 3px;
+  --task-action-icon-size: 20px;
+  --task-action-item-max-width: 38px;
+  --task-action-button-size: 32px;
   display: flex;
   align-items: center;
-  gap: 2px;
-  flex: none;
+  height: var(--task-action-height);
+  padding: 0 var(--task-action-padding-x);
+  margin: 0;
+  overflow: hidden;
+  user-select: none;
+  cursor: default;
+  direction: rtl;
+  border: 1px solid var(--m3-surface-container-highest);
+  color: var(--m3-outline);
+  background-color: var(--task-action-bg);
+  border-radius: 18px;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  list-style: none;
 }
-
-.action-icon {
-  display: inline-grid;
-  width: 17px;
-  height: 17px;
+.task-item-actions:hover {
+  border-color: var(--m3-outline);
+  background-color: var(--m3-surface-container-high);
 }
-
-.action-icon > .n-icon {
-  grid-area: 1 / 1;
-}
-
-.primary-action {
+.task-item-action-slot {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-width: 32px;
-  min-height: 32px;
-  padding: 0 8px;
-  border-radius: var(--rb-radius-control);
-  color: var(--rb-text-muted);
+  flex: 0 0 var(--task-action-button-size);
+  width: var(--task-action-button-size);
+  height: var(--task-action-button-size);
+  margin: 0 var(--task-action-item-margin);
+  max-width: var(--task-action-item-max-width);
+  direction: ltr;
+  transition:
+    max-width 0.2s ease-out,
+    margin 0.2s ease-out,
+    opacity 0.2s ease-out;
+}
+.task-item-action {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--task-action-button-size);
+  height: var(--task-action-button-size);
+  min-width: var(--task-action-button-size);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
   background: transparent;
   font: inherit;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 0;
+  line-height: var(--task-action-icon-size);
   cursor: pointer;
-  transition:
-    background-color var(--rb-motion-feedback) var(--rb-ease),
-    color var(--rb-motion-feedback) var(--rb-ease),
-    transform var(--rb-motion-feedback) var(--rb-ease);
+  transition: color 0.15s;
 }
-
-.primary-action:hover {
-  background: var(--rb-hover);
-  color: var(--rb-text);
+.task-item-actions--compact {
+  --task-action-height: 24px;
+  --task-action-padding-x: 10px;
+  --task-action-item-margin: 3px;
+  --task-action-icon-size: 16px;
+  --task-action-item-max-width: 28px;
+  --task-action-button-size: 22px;
+  border-radius: 13px;
 }
-
-.primary-action:active {
-  transform: scale(0.96);
+.task-item-action:hover,
+.task-item-action:active,
+.task-item-action:focus-visible {
+  color: var(--m3-primary);
 }
-
-.primary-action.emphasized {
-  color: var(--rb-accent-text);
-  background: var(--rb-accent-soft);
-  padding-inline: 12px;
+.task-item-action--emphasis {
+  color: var(--m3-primary);
 }
-
-.primary-action.emphasized:hover {
-  filter: brightness(0.98);
-}
-
-.primary-action:disabled {
-  opacity: 0.4;
+.task-item-action:disabled {
   cursor: default;
-  transform: none;
+  opacity: 0.56;
+}
+.task-action-visual {
+  display: inline-grid;
+  align-items: center;
+  justify-content: center;
+  width: var(--task-action-icon-size);
+  height: var(--task-action-icon-size);
+  transform: scale(1);
+  transform-origin: center;
+  transition: transform 0.18s cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+.task-item-action:active .task-action-visual {
+  transform: scale(0.9);
+  transition: transform 0.09s cubic-bezier(0.2, 0, 0, 1);
 }
 
-@media (max-width: 479px) {
-  .primary-action {
-    padding-inline: 4px;
-  }
+.task-action-icon {
+  grid-area: 1 / 1;
+  font-size: var(--task-action-icon-size);
+}
 
-  .action-text {
-    display: none;
-  }
+/* M3 icon crossfade for play ↔ pause toggle */
+.icon-swap-enter-active {
+  transition: opacity var(--task-motion-enter) var(--task-motion-ease);
+}
+.icon-swap-leave-active {
+  transition: opacity var(--task-motion-leave) var(--task-motion-ease);
+}
+.icon-swap-enter-from {
+  opacity: 0;
+}
+.icon-swap-leave-to {
+  opacity: 0;
+}
+/* ── TransitionGroup: directional toolbar grow/shrink ────────── */
+
+/* Enter: button slides in horizontally (width 0 → full) */
+.action-item-enter-active {
+  transition:
+    opacity 0.2s ease-out,
+    max-width 0.2s ease-out,
+    margin 0.2s ease-out;
+}
+
+/* Leave: button collapses out horizontally (width full → 0) */
+.action-item-leave-active {
+  transition:
+    opacity 0.15s ease-in,
+    max-width 0.15s ease-in,
+    margin 0.15s ease-in;
+}
+
+.action-item-enter-from {
+  opacity: 0;
+  max-width: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+}
+
+.action-item-leave-to {
+  opacity: 0;
+  max-width: 0 !important;
+  margin: 0 !important;
+  overflow: hidden;
+}
+
+/* Move transition: remaining items slide smoothly to fill gaps */
+.action-item-move {
+  transition: transform 0.2s ease-out;
 }
 </style>

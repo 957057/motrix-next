@@ -22,12 +22,13 @@ import { resolveAppProxyUrl } from '@shared/utils/proxy'
 import { checkSyncDue } from '@shared/utils/syncSchedule'
 import type { AppConfig, TauriUpdate } from '@shared/types'
 import App from './App.vue'
-import '@fontsource-variable/geist'
-import '@fontsource-variable/geist-mono'
+import 'virtual:uno.css'
 import './styles/tokens.css'
 import './styles/base.css'
-import './styles/components.css'
-import './styles/motion.css'
+import './styles/transitions.css'
+import './styles/preferences.css'
+import './styles/naive-overrides.css'
+import './styles/reduced-motion.css'
 
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { getLocale } from 'tauri-plugin-locale-api'
@@ -70,7 +71,7 @@ if (import.meta.env.PROD) {
 
   async function autoCheckForUpdate() {
     const config = preferenceStore.config
-    if (!appStore.updatesAvailable || config.autoCheckUpdate === false) return
+    if (config.autoCheckUpdate === false) return
 
     const intervalHours = Number(config.autoCheckUpdateInterval ?? 0)
     if (Number.isFinite(intervalHours) && intervalHours > 0) {
@@ -315,6 +316,7 @@ if (import.meta.env.PROD) {
 
     // Flush deferred migration toasts now that i18n locale is active.
     // loadPreference() buffers these signals to avoid showing English toasts.
+    preferenceStore.flushMigrationSignals()
 
     // Mount only after preference + locale hydration so root-level theme,
     // color-scheme, locale, and layout watchers see stable persisted values
@@ -381,7 +383,6 @@ if (import.meta.env.PROD) {
     }
 
     // ── Phase 4: deferred non-critical tasks ───────────────────────────────
-    appStore.updatesAvailable = await (await import('@tauri-apps/api/core')).invoke<boolean>('updates_available')
     autoCheckForUpdate()
     syncNetworkSourcesIfDue(true)
 

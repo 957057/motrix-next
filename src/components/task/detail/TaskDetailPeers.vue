@@ -207,7 +207,7 @@ async function addPeer() {
     :row-key="(row: PeerDetailRow) => row.host"
     :loading="loading"
     size="small"
-    :bordered="false"
+    :bordered="true"
     :max-height="400"
     :virtual-scroll="true"
     :min-row-height="34"

@@ -36,7 +36,6 @@ vi.mock('@/stores/history', () => ({
 
 function createMockApi(): TaskApi {
   return {
-    queryTasks: vi.fn(),
     fetchTaskList: vi.fn().mockResolvedValue([]),
     fetchTaskItem: vi.fn().mockResolvedValue({}),
     fetchTaskItemWithPeers: vi.fn().mockResolvedValue({}),
@@ -55,7 +54,6 @@ function createMockApi(): TaskApi {
     forcePauseTask: vi.fn().mockResolvedValue('OK'),
     forcePauseAll: vi.fn().mockResolvedValue('OK'),
     pauseTask: vi.fn().mockResolvedValue('OK'),
-    retryMedia: vi.fn().mockResolvedValue('gid1'),
     resumeTask: vi.fn().mockResolvedValue('OK'),
     resumeEligible: vi.fn().mockResolvedValue({ resumed: 1, blocked: 0 }),
     removeTaskRecord: vi.fn().mockResolvedValue('OK'),
@@ -85,7 +83,7 @@ function createDeps(api: TaskApi) {
   const hideTaskDetail = vi.fn()
   const fetchList = vi.fn().mockResolvedValue(undefined)
   const setTaskRemoving = vi.fn()
-  const clearSelections = vi.fn()
+  const clearMagnetSelections = vi.fn()
   return {
     api,
     taskList,
@@ -93,7 +91,7 @@ function createDeps(api: TaskApi) {
     hideTaskDetail,
     fetchList,
     setTaskRemoving,
-    clearSelections,
+    clearMagnetSelections,
   }
 }
 
@@ -108,7 +106,7 @@ describe('removeTask', () => {
     const ops = createTaskOperations(deps)
     await ops.removeTask(makeTask({ gid: 'task-1', infoHash: 'hash-1' }))
     expect(api.deleteTask).toHaveBeenCalledWith({ gid: 'task-1', infoHash: 'hash-1' })
-    expect(deps.clearSelections).toHaveBeenCalledWith(['task-1'])
+    expect(deps.clearMagnetSelections).toHaveBeenCalledWith(['task-1'])
     expect(deps.fetchList).toHaveBeenCalledOnce()
     expect(api.saveSession).toHaveBeenCalledOnce()
   })
@@ -119,7 +117,7 @@ describe('removeTask', () => {
     const deps = createDeps(api)
     const ops = createTaskOperations(deps)
     await expect(ops.removeTask(makeTask())).rejects.toThrow('network')
-    expect(deps.clearSelections).not.toHaveBeenCalled()
+    expect(deps.clearMagnetSelections).not.toHaveBeenCalled()
     expect(deps.fetchList).toHaveBeenCalledOnce()
   })
 })
@@ -443,7 +441,7 @@ describe('batchRemoveTask', () => {
       ],
     })
     expect(api.deleteTask).not.toHaveBeenCalled()
-    expect(deps.clearSelections).toHaveBeenCalledWith(['a', 'b'])
+    expect(deps.clearMagnetSelections).toHaveBeenCalledWith(['a', 'b'])
     expect(api.saveSession).toHaveBeenCalledOnce()
   })
 
@@ -469,7 +467,7 @@ describe('batchRemoveTask', () => {
       succeeded: ['a'],
       failed: [{ gid: 'b', message: 'busy' }],
     })
-    expect(deps.clearSelections).toHaveBeenCalledWith(['a'])
+    expect(deps.clearMagnetSelections).toHaveBeenCalledWith(['a'])
   })
 })
 
@@ -578,18 +576,5 @@ describe('saveSession', () => {
     const ops = createTaskOperations(deps)
     const result = ops.saveSession()
     expect(result).toBeInstanceOf(Promise)
-  })
-})
-
-describe('media selection', () => {
-  it('opens selection without resuming or resubmitting a pending presentation', async () => {
-    const api = createMockApi()
-    const requestMediaSelection = vi.fn()
-    const ops = createTaskOperations({ ...createDeps(api), requestMediaSelection })
-    const task = makeTask({ status: 'paused', media: { state: 'awaiting-selection' } })
-    expect(await ops.resumeTask(task)).toBe(false)
-    expect(requestMediaSelection).toHaveBeenCalledWith(task)
-    expect(api.resumeTask).not.toHaveBeenCalled()
-    expect(api.addUri).not.toHaveBeenCalled()
   })
 })

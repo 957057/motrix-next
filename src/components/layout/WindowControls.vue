@@ -11,7 +11,7 @@
  * SVG symbols, transparent by default, with hover/unfocused states.
  * The close button uses the official Windows 11 red (#C42B1C) on hover.
  *
- * Colors derive from --rb-text so they automatically adapt to the
+ * Colors derive from --m3-on-surface so they automatically adapt to the
  * active color scheme (10 presets) and light/dark mode without hardcoding.
  */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
@@ -98,7 +98,7 @@ async function close() {
           :aria-label="isMaximized ? t('app.window-restore') : t('app.window-maximize')"
           @click="toggleMaximize"
         >
-          <Transition name="icon-swap">
+          <Transition name="icon-swap" mode="out-in">
             <!-- Restore: two overlapping rectangles -->
             <svg
               v-if="isMaximized"
@@ -139,7 +139,7 @@ async function close() {
 /* ── Windows 11 Fluent Design caption buttons ──────────────────────── */
 /* Spec: 46×32px, borderless, transparent bg, hover reveals surface.   */
 /* Close hover: #C42B1C (Windows 11 official red).                     */
-/* Colors use --rb-text for automatic color scheme adaptation.   */
+/* Colors use --m3-on-surface for automatic color scheme adaptation.   */
 
 .caption-bar {
   position: fixed;
@@ -156,7 +156,7 @@ async function close() {
   border: none;
   border-radius: 0;
   background: transparent;
-  color: var(--rb-text);
+  color: var(--m3-on-surface);
   opacity: 0.7;
   cursor: pointer;
   display: flex;
@@ -171,11 +171,11 @@ async function close() {
 
 .caption-btn:hover {
   opacity: 1;
-  background: color-mix(in srgb, var(--rb-text) 8%, transparent);
+  background: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
 }
 
 .caption-btn:active {
-  background: color-mix(in srgb, var(--rb-text) 12%, transparent);
+  background: color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
 }
 
 .caption-close:hover {
@@ -207,8 +207,10 @@ async function close() {
 }
 .icon-swap-enter-from {
   opacity: 0;
+  transform: scale(0.75);
 }
 .icon-swap-leave-to {
   opacity: 0;
+  transform: scale(0.75);
 }
 </style>

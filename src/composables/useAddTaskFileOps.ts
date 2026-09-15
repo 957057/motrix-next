@@ -6,7 +6,6 @@
  */
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { invoke } from '@tauri-apps/api/core'
-import { reactive, toRaw } from 'vue'
 import { logger } from '@shared/logger'
 import { inspectTorrent } from '@/api/aria2'
 import { createBatchItem, detectExternalInputKind, detectKind } from '@shared/utils/batchHelpers'
@@ -61,19 +60,27 @@ async function inspectResolvedTorrent(item: BatchItem, t: (key: string) => strin
   }
 }
 
-const pendingResolutions = new WeakMap<BatchItem, Promise<void>>()
-
-/** Opening, appending and retrying share one read/inspection per batch entry. */
-export function resolveTorrentItem(item: BatchItem, t: (key: string) => string, downloadProxy?: string): Promise<void> {
-  const identity = toRaw(item)
-  const pending = pendingResolutions.get(identity)
-  if (pending) return pending
-  const resolution = readAndInspectTorrent(item, t, downloadProxy).finally(() => pendingResolutions.delete(identity))
-  pendingResolutions.set(identity, resolution)
-  return resolution
+/**
+ * Resolves a single file-based batch item into base64 for native engine parsing.
+ */
+export async function resolveFileItem(item: BatchItem, t: (key: string) => string) {
+  item.inspectionState = 'reading'
+  item.error = undefined
+  try {
+    const bytes = await invoke<number[]>('read_local_file', { path: item.source })
+    const uint8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
+    item.payload = encodeBase64(uint8)
+    await inspectResolvedTorrent(item, t)
+  } catch (e) {
+    logger.error('AddTask.resolveFileItem', e)
+    item.status = 'failed'
+    item.inspectionState = 'failed'
+    item.error = t('task.file-load-failed')
+  }
 }
 
-async function readAndInspectTorrent(item: BatchItem, t: (key: string) => string, downloadProxy?: string) {
+/** Resolves a remote .torrent URL by downloading bytes through Rust IPC. */
+export async function resolveRemoteFileItem(item: BatchItem, t: (key: string) => string, downloadProxy?: string) {
   item.inspectionState = 'reading'
   item.error = undefined
   try {
@@ -83,42 +90,54 @@ async function readAndInspectTorrent(item: BatchItem, t: (key: string) => string
       cookie: context?.cookie,
       userAgent: context?.userAgent,
     })
-    const bytes = isRemoteTorrentSource(item.source)
-      ? await invoke<number[]>('fetch_remote_bytes', {
-          url: item.source,
-          proxy: downloadProxy ?? null,
-          referer: sanitizedHeaders.referer,
-          cookie: sanitizedHeaders.cookie,
-          userAgent: sanitizedHeaders.userAgent,
-          requestHeaders: sanitizeBrowserRequestHeaders(context?.requestHeaders ?? []),
-        })
-      : await invoke<number[]>('read_local_file', { path: item.source })
+    const bytes = await invoke<number[]>('fetch_remote_bytes', {
+      url: item.source,
+      proxy: downloadProxy ?? null,
+      referer: sanitizedHeaders.referer,
+      cookie: sanitizedHeaders.cookie,
+      userAgent: sanitizedHeaders.userAgent,
+      requestHeaders: sanitizeBrowserRequestHeaders(context?.requestHeaders ?? []),
+    })
     const uint8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
     item.payload = encodeBase64(uint8)
     await inspectResolvedTorrent(item, t)
   } catch (e) {
-    logger.error('AddTask.resolveTorrent', e)
+    logger.error('AddTask.resolveRemoteFileItem', e)
     item.status = 'failed'
     item.inspectionState = 'failed'
     item.error = t('task.file-load-failed')
   }
 }
 
-function isRemoteTorrentSource(source: string): boolean {
+export function isRemoteTorrentSource(source: string): boolean {
   return /^https?:\/\//i.test(source) && detectExternalInputKind(source) === 'torrent'
 }
 
-/** Resolves newly queued local and remote torrents without repeating pending work. */
+/**
+ * Resolves all unresolved local file-based batch items by reading their files.
+ */
 export async function resolveUnresolvedItems(batch: BatchItem[], t: (key: string) => string, downloadProxy?: string) {
   const unresolved = batch.filter(
     (item) => item.kind === 'torrent' && item.inspectionState === 'reading' && item.payload === item.source,
   )
-  await Promise.all(unresolved.map((item) => resolveTorrentItem(item, t, downloadProxy)))
+  await Promise.all(
+    unresolved.map((item) =>
+      isRemoteTorrentSource(item.source) ? resolveRemoteFileItem(item, t, downloadProxy) : resolveFileItem(item, t),
+    ),
+  )
+}
+
+export async function retryTorrentInspection(item: BatchItem, t: (key: string) => string, downloadProxy?: string) {
+  if (isRemoteTorrentSource(item.source)) {
+    await resolveRemoteFileItem(item, t, downloadProxy)
+  } else {
+    await resolveFileItem(item, t)
+  }
 }
 
 /**
  * Opens a native file dialog for torrent selection, deduplicates
- * against existing batch items, then shows each file before reading it.
+ * against existing batch items, resolves the files, and appends to batch.
  */
 export async function chooseTorrentFile(deps: FileOpsDeps) {
   const { t, batch, fileItems, selectedBatchIndex, setPendingBatch, showWarning } = deps
@@ -126,7 +145,7 @@ export async function chooseTorrentFile(deps: FileOpsDeps) {
   try {
     const selected = await openDialog({
       multiple: true,
-      filters: [{ name: t('task.torrent-task'), extensions: ['torrent'] }],
+      filters: [{ name: 'Torrent', extensions: ['torrent'] }],
     })
     const paths = typeof selected === 'string' ? [selected] : Array.isArray(selected) ? selected : []
     if (paths.length === 0) return
@@ -142,10 +161,10 @@ export async function chooseTorrentFile(deps: FileOpsDeps) {
       showWarning(t('task.duplicate-task'))
     }
 
-    const items = newPaths.map((p) => reactive(createBatchItem(detectKind(p), p)))
+    const items = newPaths.map((p) => createBatchItem(detectKind(p), p))
+    await Promise.all(items.map((item) => resolveFileItem(item, t)))
     setPendingBatch([...batch.value, ...items])
     selectedBatchIndex.value = Math.max(0, fileItems.value.length - 1)
-    await Promise.all(items.map((item) => resolveTorrentItem(item, t)))
   } catch (e) {
     logger.debug('AddTask.chooseTorrentFile', e)
   }

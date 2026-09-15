@@ -13,7 +13,13 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { getVersion } from '@tauri-apps/api/app'
-import { CircleCheck, CircleX, CircleArrowUp, CircleArrowDown, CloudDownload } from '@lucide/vue'
+import {
+  CheckmarkCircleOutline,
+  CloseCircleOutline,
+  ArrowUpCircleOutline,
+  ArrowDownCircleOutline,
+  CloudDownloadOutline,
+} from '@vicons/ionicons5'
 import { usePreferenceStore } from '@/stores/preference'
 import { logger } from '@shared/logger'
 import type { ResolvedUpdateChannel, TauriUpdate, UpdateChannel } from '@shared/types'
@@ -279,7 +285,7 @@ defineExpose({ open, present })
       </header>
 
       <div class="update-dialog-viewport">
-        <Transition name="view">
+        <Transition name="update-panel">
           <div v-if="phase === 'checking'" key="checking" class="update-panel update-panel--centered">
             <NSpin size="large" />
             <div class="update-copy">
@@ -290,7 +296,7 @@ defineExpose({ open, present })
 
           <div v-else-if="phase === 'up-to-date'" key="up-to-date" class="update-panel update-panel--centered">
             <div class="update-status-icon update-status-icon--success">
-              <NIcon :size="38"><CircleCheck /></NIcon>
+              <NIcon :size="38"><CheckmarkCircleOutline /></NIcon>
             </div>
             <div class="update-copy">
               <h2>{{ t('preferences.is-latest-version') }}</h2>
@@ -305,8 +311,8 @@ defineExpose({ open, present })
                 :class="isRollback ? 'update-status-icon--warning' : 'update-status-icon--primary'"
               >
                 <NIcon :size="30">
-                  <CircleArrowDown v-if="isRollback" />
-                  <CircleArrowUp v-else />
+                  <ArrowDownCircleOutline v-if="isRollback" />
+                  <ArrowUpCircleOutline v-else />
                 </NIcon>
               </div>
               <div class="update-copy update-copy--left">
@@ -327,14 +333,14 @@ defineExpose({ open, present })
 
           <div v-else-if="phase === 'downloading'" key="downloading" class="update-panel update-panel--centered">
             <div class="update-status-icon update-status-icon--primary">
-              <NIcon :size="34"><CloudDownload /></NIcon>
+              <NIcon :size="34"><CloudDownloadOutline /></NIcon>
             </div>
             <div class="update-copy">
               <h2>{{ t('preferences.download-update') }}</h2>
               <p>v{{ version }}</p>
             </div>
             <div class="update-progress-wrap">
-              <NProgress type="line" :percentage="progressPercent" :show-indicator="false" />
+              <NProgress type="line" :percentage="progressPercent" :show-indicator="false" processing />
               <div class="update-progress-meta">
                 <span>{{ downloadedMB }} / {{ totalMB }} MB</span>
                 <strong>{{ progressPercent }}%</strong>
@@ -344,7 +350,7 @@ defineExpose({ open, present })
 
           <div v-else-if="phase === 'ready'" key="ready" class="update-panel update-panel--centered">
             <div class="update-status-icon update-status-icon--success">
-              <NIcon :size="38"><CircleCheck /></NIcon>
+              <NIcon :size="38"><CheckmarkCircleOutline /></NIcon>
             </div>
             <div class="update-copy">
               <h2>{{ t('preferences.update-download-complete') }}</h2>
@@ -363,7 +369,7 @@ defineExpose({ open, present })
           <div v-else key="error" class="update-panel update-panel--document">
             <div class="update-summary">
               <div class="update-status-icon update-status-icon--error">
-                <NIcon :size="30"><CircleX /></NIcon>
+                <NIcon :size="30"><CloseCircleOutline /></NIcon>
               </div>
               <div class="update-copy update-copy--left">
                 <h2>{{ t('preferences.check-update-failed') }}</h2>
@@ -380,7 +386,9 @@ defineExpose({ open, present })
         </NButton>
         <NButton class="action-btn" :type="actionType" :disabled="actionDisabled" @click="handleActionClick">
           <span class="action-label">
-            <span :key="actionLabel">{{ t(actionLabel) }}</span>
+            <Transition name="action-label-swap" mode="out-in">
+              <span :key="actionLabel">{{ t(actionLabel) }}</span>
+            </Transition>
           </span>
         </NButton>
       </footer>
@@ -390,119 +398,193 @@ defineExpose({ open, present })
 
 <style scoped>
 .update-dialog {
-  width: min(560px, calc(100vw - 48px));
-  max-height: calc(100dvh - 48px);
-  display: flex;
-  flex-direction: column;
-  background: var(--rb-canvas);
-  border-radius: var(--rb-radius-dialog);
-  box-shadow: var(--rb-shadow-overlay);
+  width: min(558px, calc(100vw - 40px));
+  height: min(513px, calc(100vh - 40px));
+  display: grid;
+  grid-template-rows: 66px minmax(0, 1fr) 74px;
+  color: var(--m3-on-surface);
+  background: var(--m3-surface-container-high);
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 18px 56px var(--m3-shadow);
 }
 .update-dialog-header {
-  padding: 24px 24px 16px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--m3-outline-variant);
 }
 .update-dialog-title {
-  font-size: 20px;
-  font-weight: 600;
-}
-.update-dialog-title-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  font-size: 16px;
+  font-weight: 650;
 }
 .update-dialog-close {
   width: 32px;
   height: 32px;
-  border-radius: var(--rb-radius-control);
-  font-size: 22px;
-  color: var(--rb-text-muted);
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--m3-outline);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 30px;
+  transition:
+    background-color 0.2s cubic-bezier(0.2, 0, 0, 1),
+    color 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.update-dialog-close:hover {
+  color: var(--m3-on-surface);
+  background: var(--m3-surface-container-highest);
+}
+.update-dialog-close:disabled {
+  cursor: default;
+  opacity: 0.35;
 }
 .update-dialog-viewport {
   position: relative;
-  min-height: 220px;
-  min-width: 0;
-  overflow: auto;
-  padding: 0 24px 24px;
+  min-height: 0;
+  overflow: hidden;
 }
-.update-dialog-viewport > .view-leave-active {
-  inset: 0 24px 24px;
+.update-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 0 24px;
+  border-top: 1px solid var(--m3-outline-variant);
+}
+.update-dialog-close-action {
+  min-width: 96px;
+}
+.action-btn {
+  min-width: 150px;
+}
+.action-label {
+  display: inline-grid;
+  place-items: center;
+}
+.action-label > span {
+  grid-area: 1 / 1;
+}
+.update-dialog-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.update-panel {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  padding: 28px 32px;
 }
 .update-panel--centered {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   align-items: center;
   justify-content: center;
-  min-height: 220px;
+  gap: 18px;
   text-align: center;
 }
 .update-panel--document {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 22px;
 }
 .update-summary {
   display: flex;
-  gap: 16px;
   align-items: center;
+  gap: 16px;
 }
 .update-status-icon {
-  color: var(--rb-accent);
+  display: grid;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  place-items: center;
 }
-.update-status-icon--error {
-  color: var(--rb-danger);
+.update-status-icon--primary {
+  color: var(--m3-on-primary-container);
+  background: var(--m3-primary-container);
+}
+.update-status-icon--success {
+  color: var(--m3-on-success-container);
+  background: var(--m3-success-container);
 }
 .update-status-icon--warning {
-  color: var(--rb-warning);
+  color: var(--m3-on-warning-container);
+  background: var(--m3-warning-container);
+}
+.update-status-icon--error {
+  color: var(--m3-on-error-container);
+  background: var(--m3-error-container);
 }
 .update-copy h2 {
-  font-size: 18px;
-  line-height: 26px;
-  font-weight: 600;
+  margin: 0;
+  color: var(--m3-on-surface);
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.35;
 }
-.update-copy p,
-.update-version-flow {
-  margin-top: 8px;
-  color: var(--rb-text-muted);
+.update-copy p {
+  margin: 6px 0 0;
+  color: var(--m3-on-surface-variant);
   font-size: 13px;
+}
+.update-copy--left {
+  text-align: left;
 }
 .update-version-flow {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: baseline;
+  gap: 9px;
+  margin-top: 6px;
+  color: var(--m3-on-surface-variant);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+.update-version-flow strong {
+  color: var(--m3-primary);
+  font-size: 15px;
+}
+.update-version-arrow {
+  color: var(--m3-outline);
 }
 .update-progress-wrap {
-  width: 100%;
+  width: min(100%, 430px);
 }
 .update-progress-meta {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 8px;
-  font-size: 13px;
+  margin-top: 10px;
+  color: var(--m3-on-surface-variant);
+  font-size: 12px;
 }
-.update-dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px 20px;
-  border-top: 1px solid var(--rb-hairline);
+.update-progress-meta strong {
+  color: var(--m3-primary);
+  font-weight: 650;
 }
-.action-btn {
-  min-width: 120px;
+.update-document,
+.update-error-detail {
+  min-height: 0;
+  margin: 0;
+  padding: 18px 20px;
+  overflow: auto;
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: 12px;
+  background: var(--m3-surface-container);
+  scrollbar-gutter: stable;
 }
 .update-notes-text {
   font-size: 13px;
   line-height: 1.65;
-  color: var(--rb-text-muted);
+  color: var(--m3-on-surface-variant);
 }
 .update-notes-text :deep(h2) {
   margin: 18px 0 8px;
-  color: var(--rb-text);
+  color: var(--m3-on-surface);
   font-size: 15px;
   font-weight: 650;
 }
@@ -511,7 +593,7 @@ defineExpose({ open, present })
 }
 .update-notes-text :deep(h3) {
   margin: 14px 0 6px;
-  color: var(--rb-text);
+  color: var(--m3-on-surface);
   font-size: 14px;
   font-weight: 650;
 }
@@ -537,23 +619,23 @@ defineExpose({ open, present })
 .update-notes-text :deep(th),
 .update-notes-text :deep(td) {
   padding: 4px 8px;
-  border: 1px solid color-mix(in srgb, var(--rb-text) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
   text-align: left;
 }
 .update-notes-text :deep(th) {
   font-weight: 600;
-  background: color-mix(in srgb, var(--rb-text) 8%, transparent);
+  background: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
 }
 .update-notes-text :deep(tr:nth-child(even)) {
-  background: color-mix(in srgb, var(--rb-text) 4%, transparent);
+  background: color-mix(in srgb, var(--m3-on-surface) 4%, transparent);
 }
 
 /* ── Blockquote ────────────────────────────────────────────────────── */
 .update-notes-text :deep(blockquote) {
   margin: 6px 0;
   padding: 6px 12px;
-  border-left: 3px solid color-mix(in srgb, var(--rb-accent) 50%, transparent);
-  background: color-mix(in srgb, var(--rb-text) 4%, transparent);
+  border-left: 3px solid color-mix(in srgb, var(--m3-primary) 50%, transparent);
+  background: color-mix(in srgb, var(--m3-on-surface) 4%, transparent);
   border-radius: 0 4px 4px 0;
 }
 .update-notes-text :deep(blockquote p) {
@@ -585,14 +667,14 @@ defineExpose({ open, present })
   margin: 2px 0;
 }
 .update-notes-text :deep(.markdown-alert-note) {
-  border-left-color: var(--rb-accent);
-  background: var(--rb-accent-soft);
-  color: var(--rb-accent-text);
+  border-left-color: var(--m3-primary);
+  background: var(--m3-primary-container);
+  color: var(--m3-on-primary-container);
 }
 .update-notes-text :deep(.markdown-alert-tip) {
-  border-left-color: var(--rb-success);
-  background: var(--rb-success-soft);
-  color: var(--rb-success);
+  border-left-color: var(--m3-success);
+  background: var(--m3-success-container);
+  color: var(--m3-on-success-container);
 }
 .update-notes-text :deep(.markdown-alert-important) {
   border-left-color: var(--m3-tertiary);
@@ -600,24 +682,24 @@ defineExpose({ open, present })
   color: var(--m3-on-tertiary-container);
 }
 .update-notes-text :deep(.markdown-alert-warning) {
-  border-left-color: var(--rb-warning);
-  background: var(--rb-warning-soft);
-  color: var(--rb-warning);
+  border-left-color: var(--m3-warning);
+  background: var(--m3-warning-container);
+  color: var(--m3-on-warning-container);
 }
 .update-notes-text :deep(.markdown-alert-caution) {
-  border-left-color: var(--rb-danger);
-  background: var(--rb-danger-soft);
-  color: var(--rb-danger);
+  border-left-color: var(--m3-error);
+  background: var(--m3-error-container);
+  color: var(--m3-on-error-container);
 }
 .update-notes-text :deep(.markdown-alert p:not(.markdown-alert-title)) {
-  color: var(--rb-text-muted);
+  color: var(--m3-on-surface-variant);
 }
 
 /* ── Horizontal rule ───────────────────────────────────────────────── */
 .update-notes-text :deep(hr) {
   border: none;
   height: 1px;
-  background: color-mix(in srgb, var(--rb-text) 10%, transparent);
+  background: color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
   margin: 8px 0;
 }
 
@@ -626,14 +708,14 @@ defineExpose({ open, present })
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-size: 0.9em;
   padding: 1px 5px;
-  background: color-mix(in srgb, var(--rb-text) 10%, transparent);
-  border-radius: 6px;
+  background: color-mix(in srgb, var(--m3-on-surface) 10%, transparent);
+  border-radius: 4px;
 }
 .update-notes-text :deep(pre) {
   margin: 6px 0;
   padding: 8px 10px;
-  background: color-mix(in srgb, var(--rb-text) 8%, transparent);
-  border-radius: var(--rb-radius-control);
+  background: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
+  border-radius: 6px;
   overflow-x: auto;
 }
 .update-notes-text :deep(pre code) {
@@ -643,7 +725,7 @@ defineExpose({ open, present })
 
 /* ── Links ─────────────────────────────────────────────────────────── */
 .update-notes-text :deep(a) {
-  color: var(--rb-accent);
+  color: var(--m3-primary);
   text-decoration: none;
 }
 .update-notes-text :deep(a:hover) {
@@ -653,14 +735,14 @@ defineExpose({ open, present })
 /* ── Emphasis ──────────────────────────────────────────────────────── */
 .update-notes-text :deep(strong) {
   font-weight: 600;
-  color: var(--rb-text);
+  color: var(--m3-on-surface);
 }
 
 .update-error-detail {
   box-sizing: border-box;
-  border-color: color-mix(in srgb, var(--rb-danger) 32%, var(--rb-hairline));
-  background: color-mix(in srgb, var(--rb-danger) 7%, var(--rb-raised));
-  color: var(--rb-text);
+  border-color: color-mix(in srgb, var(--m3-error) 32%, var(--m3-outline-variant));
+  background: color-mix(in srgb, var(--m3-error) 7%, var(--m3-surface-container));
+  color: var(--m3-on-surface);
   white-space: pre-wrap;
 }
 .update-error-detail code {
@@ -668,5 +750,60 @@ defineExpose({ open, present })
   font-size: 12.5px;
   line-height: 1.6;
   overflow-wrap: anywhere;
+}
+
+.update-panel-enter-active,
+.update-panel-leave-active {
+  transition:
+    opacity 0.48s cubic-bezier(0.2, 0, 0, 1),
+    transform 0.56s cubic-bezier(0.2, 0, 0, 1);
+}
+.update-panel-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.update-panel-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+@media (max-width: 680px) {
+  .update-dialog {
+    width: calc(100vw - 24px);
+    height: calc(100vh - 24px);
+  }
+
+  .update-panel {
+    padding: 22px 20px;
+  }
+
+  .update-dialog-header,
+  .update-dialog-footer {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+}
+</style>
+
+<style>
+.action-label-swap-enter-active {
+  animation: action-pulse 0.4s ease;
+  transition: opacity 0.28s cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+.action-label-swap-leave-active {
+  transition: opacity 0.18s cubic-bezier(0.3, 0, 0.8, 0.15);
+}
+.action-label-swap-enter-from,
+.action-label-swap-leave-to {
+  opacity: 0;
+}
+@keyframes action-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
 }
 </style>

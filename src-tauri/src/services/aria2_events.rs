@@ -1,13 +1,13 @@
 //! Native Aria2 Next WebSocket lifecycle integration.
 
 use super::monitor::{self, events};
+use crate::aria2::client::Aria2Client;
 use crate::error::AppError;
-use crate::services::tasks::TaskService;
 use futures_util::{SinkExt, StreamExt};
 use serde::Deserialize;
 use std::sync::Arc;
 use std::time::Duration;
-use tauri::{Emitter, Manager};
+use tauri::Emitter;
 use tokio::sync::watch;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
@@ -26,8 +26,6 @@ pub struct DownloadPauseEvent {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum NativeEventKind {
-    DownloadStart,
-    DownloadStop,
     DownloadPause,
     DownloadComplete,
     DownloadError,
@@ -37,8 +35,6 @@ enum NativeEventKind {
 impl NativeEventKind {
     fn from_method(method: &str) -> Option<Self> {
         match method {
-            "aria2.onDownloadStart" => Some(Self::DownloadStart),
-            "aria2.onDownloadStop" => Some(Self::DownloadStop),
             "aria2.onDownloadPause" => Some(Self::DownloadPause),
             "aria2.onDownloadComplete" => Some(Self::DownloadComplete),
             "aria2.onDownloadError" => Some(Self::DownloadError),
@@ -49,7 +45,7 @@ impl NativeEventKind {
 
     fn lifecycle_event(self) -> Option<&'static str> {
         match self {
-            Self::DownloadPause | Self::DownloadStart | Self::DownloadStop => None,
+            Self::DownloadPause => None,
             Self::DownloadComplete => Some(events::TASK_COMPLETE),
             Self::DownloadError => Some(events::TASK_ERROR),
             Self::BtDownloadComplete => Some(events::P2P_DOWNLOAD_COMPLETE),
@@ -96,7 +92,7 @@ impl Aria2EventState {
 
 pub fn spawn_aria2_event_listener(
     app: tauri::AppHandle,
-    aria2: Arc<TaskService>,
+    aria2: Arc<Aria2Client>,
 ) -> Aria2EventHandle {
     let (stop_tx, stop_rx) = watch::channel(false);
     tokio::spawn(async move {
@@ -107,7 +103,7 @@ pub fn spawn_aria2_event_listener(
 
 async fn event_loop(
     app: tauri::AppHandle,
-    aria2: Arc<TaskService>,
+    aria2: Arc<Aria2Client>,
     mut stop_rx: watch::Receiver<bool>,
 ) {
     loop {
@@ -163,7 +159,7 @@ async fn event_loop(
 
 async fn receive_events(
     app: &tauri::AppHandle,
-    aria2: &TaskService,
+    aria2: &Aria2Client,
     socket: &mut WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>,
     stop_rx: &mut watch::Receiver<bool>,
 ) -> bool {
@@ -193,69 +189,12 @@ async fn receive_events(
 
 async fn handle_native_event(
     app: &tauri::AppHandle,
-    aria2: &TaskService,
+    aria2: &Aria2Client,
     event: NativeEvent,
 ) -> Result<(), AppError> {
-    aria2.transfers.invalidate();
-    if matches!(
-        event.kind,
-        NativeEventKind::DownloadStart | NativeEventKind::DownloadStop
-    ) {
-        return Ok(());
-    }
-    if aria2.tasks.is_internal(&event.gid).await {
-        if let Some(name) = event.kind.lifecycle_event() {
-            if let Some(state) = app.try_state::<super::media::MediaState>() {
-                if let Some(service) = state.0.get() {
-                    service
-                        .defer_event(name, aria2.tell_status(&event.gid).await?)
-                        .await;
-                }
-            }
-        }
-        return Ok(());
-    }
-    if event.kind == NativeEventKind::DownloadPause && aria2.tasks.is_automatic(&event.gid).await {
-        return Ok(());
-    }
     if event.kind == NativeEventKind::DownloadPause {
-        if let Err(error) = app.emit(
-            DOWNLOAD_PAUSE,
-            DownloadPauseEvent {
-                gid: event.gid.clone(),
-            },
-        ) {
+        if let Err(error) = app.emit(DOWNLOAD_PAUSE, DownloadPauseEvent { gid: event.gid }) {
             log::warn!("aria2_events: failed to emit download pause: {error}");
-        }
-        let foreground = app
-            .get_webview_window("main")
-            .is_some_and(|window| window.is_focused().unwrap_or(false));
-        if !foreground {
-            let task = aria2.tell_status(&event.gid).await?;
-            if task
-                .media
-                .as_ref()
-                .is_some_and(|media| media.state == "awaiting-selection")
-            {
-                let config = match app.try_state::<super::config::RuntimeConfigState>() {
-                    Some(state) => state.snapshot().await,
-                    None => super::config::RuntimeConfig::default(),
-                };
-                if config.task_notification {
-                    let locale = crate::i18n::resolve_preferred_locale(&config.locale);
-                    let name = monitor::TaskEvent::from_aria2(&task).name;
-                    super::notification::send_app_notification(
-                        app,
-                        &rust_i18n::t!("notification.selection-title", locale = &locale),
-                        &rust_i18n::t!(
-                            "notification.selection-body",
-                            locale = &locale,
-                            task_name = name
-                        ),
-                    )
-                    .await?;
-                }
-            }
         }
         return Ok(());
     }
@@ -264,9 +203,7 @@ async fn handle_native_event(
     let Some(event_name) = event.kind.lifecycle_event() else {
         return Ok(());
     };
-    let result = monitor::process_lifecycle_task(app, event_name, &task, true).await;
-    aria2.transfers.invalidate();
-    result
+    monitor::process_lifecycle_task(app, event_name, &task, true).await
 }
 
 async fn authorize_socket(
@@ -280,7 +217,7 @@ async fn authorize_socket(
     };
     let request = serde_json::json!({
         "jsonrpc": "2.0",
-        "id": "rayburst-events-auth",
+        "id": "motrix-next-events-auth",
         "method": "aria2.getVersion",
         "params": params,
     });
@@ -345,8 +282,6 @@ mod tests {
     #[test]
     fn parses_native_lifecycle_events() {
         let cases = [
-            ("aria2.onDownloadStart", NativeEventKind::DownloadStart),
-            ("aria2.onDownloadStop", NativeEventKind::DownloadStop),
             ("aria2.onDownloadPause", NativeEventKind::DownloadPause),
             (
                 "aria2.onDownloadComplete",
@@ -376,13 +311,13 @@ mod tests {
     fn ignores_non_lifecycle_messages() {
         assert_eq!(
             native_event_from_text(
-                r#"{"jsonrpc":"2.0","method":"aria2.unknown","params":[{"gid":"abc123"}]}"#
+                r#"{"jsonrpc":"2.0","method":"aria2.onDownloadStart","params":[{"gid":"abc123"}]}"#
             ),
             None
         );
         assert_eq!(
             native_event_from_text(
-                r#"{"jsonrpc":"2.0","id":"rayburst-events-auth","result":{"version":"2.6.1"}}"#
+                r#"{"jsonrpc":"2.0","id":"motrix-next-events-auth","result":{"version":"2.6.1"}}"#
             ),
             None
         );

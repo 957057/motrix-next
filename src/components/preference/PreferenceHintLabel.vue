@@ -17,7 +17,9 @@ defineProps<{
   display: inline-flex;
   flex-direction: column;
   gap: 4px;
-  line-height: 1.5;
+  max-width: 220px;
+  padding-bottom: 29.25px;
+  line-height: 1.35;
   white-space: normal;
 }
 .preference-hint-label__title,
@@ -26,8 +28,8 @@ defineProps<{
   overflow-wrap: anywhere;
 }
 .preference-hint-label__hint {
-  color: var(--rb-text-muted);
-  font-size: 13px;
+  color: var(--m3-on-surface-variant);
+  font-size: 12px;
   font-weight: 400;
 }
 </style>

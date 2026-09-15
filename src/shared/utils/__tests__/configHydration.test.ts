@@ -1,6 +1,7 @@
 /** @fileoverview Tests for centralized AppConfig hydration. */
 import { describe, expect, it } from 'vitest'
 import {
+  COLOR_SCHEMES,
   DEFAULT_APP_CONFIG,
   FILE_ALLOCATION_OPTIONS,
   APP_LOG_LEVELS,
@@ -8,7 +9,7 @@ import {
   PROXY_SCOPE_OPTIONS,
   UPDATE_CHANNELS,
 } from '@shared/constants'
-import { COLOR_SCHEMES } from '@shared/theme/schemes'
+import { CONFIG_VERSION } from '@shared/utils/configMigration'
 import { hydrateAppConfig } from '@shared/utils/configHydration'
 import { NUMERIC_CONFIG_CONSTRAINTS } from '@shared/configConstraints'
 import type { AppConfig } from '@shared/types'
@@ -25,6 +26,7 @@ describe('hydrateAppConfig', () => {
 
   it('deep-hydrates fixed nested objects without overwriting saved subfields', () => {
     const result = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       proxy: { mode: 'manual', server: 'http://127.0.0.1:7890' } as AppConfig['proxy'],
       clipboard: { http: false } as AppConfig['clipboard'],
       portConflictRecovery: { enabled: false, rangeStart: 29050 } as AppConfig['portConflictRecovery'],
@@ -45,6 +47,7 @@ describe('hydrateAppConfig', () => {
 
   it('preserves user-owned arrays including intentionally empty arrays', () => {
     const result = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       trackerSource: [],
       customTrackerUrls: ['https://example.com/trackers.txt'],
       historyDirectories: [],
@@ -61,6 +64,7 @@ describe('hydrateAppConfig', () => {
 
   it('repairs user-agent profiles, rules, and recent profile ids', () => {
     const result = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       userAgentProfiles: [
         { id: 'quark', name: 'Quark Drive', value: 'QuarkUA/1.0', createdAt: 1, updatedAt: 1 },
         { id: 'quark', name: 'Duplicate', value: 'DuplicateUA/1.0', createdAt: 2, updatedAt: 2 },
@@ -111,6 +115,7 @@ describe('hydrateAppConfig', () => {
 
   it('repairs invalid scalar enums and records repair names', () => {
     const result = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       theme: 'neon' as AppConfig['theme'],
       taskCardMode: 'tiny' as AppConfig['taskCardMode'],
       colorScheme: 'missing-scheme',
@@ -145,6 +150,7 @@ describe('hydrateAppConfig', () => {
 
   it('repairs invalid external BitTorrent endpoint values', () => {
     const result = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       btExternalIp: 'tracker.example.com',
       btExternalPort: 70000,
     })
@@ -156,6 +162,7 @@ describe('hydrateAppConfig', () => {
 
   it('repairs invalid BitTorrent identity values', () => {
     const result = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       btUserAgent: 'invalid\nidentity',
       btPeerIdPrefix: '超过二十字节的节点标识前缀',
     })
@@ -167,9 +174,11 @@ describe('hydrateAppConfig', () => {
 
   it('preserves stream connection values accepted by the engine', () => {
     const valid = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       streamMaxConnections: 128,
     })
     const invalid = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       streamMaxConnections: NUMERIC_CONFIG_CONSTRAINTS.streamMaxConnections.max + 1,
     })
 
@@ -181,6 +190,7 @@ describe('hydrateAppConfig', () => {
 
   it('repairs invalid nested values and keeps valid nested values', () => {
     const result = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       proxy: { ...DEFAULT_APP_CONFIG.proxy, mode: 'broken' as AppConfig['proxy']['mode'], scope: ['download', 'bad'] },
       portConflictRecovery: {
         ...DEFAULT_APP_CONFIG.portConflictRecovery,
@@ -200,6 +210,7 @@ describe('hydrateAppConfig', () => {
 
   it('repairs invalid manual task order entries', () => {
     const result = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       taskManualOrder: {
         all: ['z'],
         progress: ['a', '', 'a', 1],
@@ -217,8 +228,9 @@ describe('hydrateAppConfig', () => {
     expect(result.repairs).toEqual(expect.arrayContaining(['taskManualOrder.progress', 'taskManualOrder.failed']))
   })
 
-  it('repairs an unsupported proxy mode', () => {
+  it('repairs legacy auto proxy mode to disabled direct mode', () => {
     const result = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       proxy: { ...DEFAULT_APP_CONFIG.proxy, mode: 'auto' as never, server: 'http://127.0.0.1:7890' },
     })
 
@@ -228,6 +240,7 @@ describe('hydrateAppConfig', () => {
 
   it('rejects removed BitTorrent encryption values', () => {
     const result = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       btEncryption: 'enabled' as never,
     })
 
@@ -235,18 +248,20 @@ describe('hydrateAppConfig', () => {
     expect(result.repairs).toContain('btEncryption')
   })
 
-  it('drops unknown fields at the persistence boundary', () => {
+  it('drops removed tracker auto-sync config without migration', () => {
     const result = hydrateAppConfig({
-      unknownPreference: true,
-    } as Partial<AppConfig> & { unknownPreference: boolean })
+      configVersion: CONFIG_VERSION,
+      autoSyncTracker: true,
+    } as Partial<AppConfig> & { autoSyncTracker: boolean })
 
-    expect(result.config).not.toHaveProperty('unknownPreference')
+    expect(result.config).not.toHaveProperty('autoSyncTracker')
     expect(result.config.btTrackerAutoSync).toBe(DEFAULT_APP_CONFIG.btTrackerAutoSync)
   })
 
-  it('distinguishes missing secrets from intentionally cleared values', () => {
-    const missing = hydrateAppConfig({})
+  it('generates required secrets for old configs that do not have them', () => {
+    const missing = hydrateAppConfig({ configVersion: CONFIG_VERSION })
     const cleared = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
       rpcSecret: '',
       extensionApiSecret: '',
     })
@@ -258,6 +273,43 @@ describe('hydrateAppConfig', () => {
     expect(missing.shouldPersist).toBe(true)
     expect(cleared.config.rpcSecret).toBe('')
     expect(cleared.config.extensionApiSecret).toBe('')
+  })
+
+  it('returns migration and persistence signals', () => {
+    const migrated = hydrateAppConfig({ proxy: { ...DEFAULT_APP_CONFIG.proxy, scope: [] } })
+    const current = hydrateAppConfig({
+      configVersion: CONFIG_VERSION,
+      theme: 'light',
+      rpcSecret: 'rpc-secret',
+      extensionApiSecret: 'api-secret',
+    })
+
+    expect(migrated.migration.migrated).toBe(true)
+    expect(migrated.config.configVersion).toBe(CONFIG_VERSION)
+    expect(migrated.shouldPersist).toBe(true)
+    expect(current.migration.migrated).toBe(false)
+    expect(current.shouldPersist).toBe(false)
+  })
+
+  it('discards the retired magnet dialog mode and applies the new default policy', () => {
+    const legacy = {
+      configVersion: 6,
+      btFileSelectionMode: 'manual',
+    } as Partial<AppConfig> & Record<string, unknown>
+
+    const result = hydrateAppConfig(legacy)
+
+    expect(result.config.magnetFileSelectionPolicy).toBe('prompt')
+    expect(result.config).not.toHaveProperty('btFileSelectionMode')
+    expect(result.shouldPersist).toBe(true)
+  })
+
+  it('does not downgrade configs from a future schema version', () => {
+    const future = CONFIG_VERSION + 10
+    const result = hydrateAppConfig({ configVersion: future, theme: 'light' })
+
+    expect(result.config.configVersion).toBe(future)
+    expect(result.migration.migrated).toBe(false)
   })
 
   it('keeps defaults aligned with allowed enum sets', () => {

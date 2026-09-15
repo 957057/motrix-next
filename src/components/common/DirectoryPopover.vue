@@ -4,7 +4,8 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePreferenceStore } from '@/stores/preference'
 import { NPopover, NButton, NIcon, NEllipsis, NEmpty } from 'naive-ui'
-import { Clock, Star, Trash2 } from '@lucide/vue'
+import { TimeOutline, StarOutline, Star, TrashOutline } from '@vicons/ionicons5'
+import { vMotionAutoAnimate } from '@/directives/motionAutoAnimate'
 
 const emit = defineEmits<{ select: [dir: string] }>()
 
@@ -48,129 +49,78 @@ function shortLabel(dir: string): string {
     content-class="dir-popover-content"
   >
     <template #trigger>
-      <NButton :aria-label="t('task.recent-folders')">
+      <NButton>
         <template #icon>
-          <NIcon><Clock /></NIcon>
+          <NIcon><TimeOutline /></NIcon>
         </template>
       </NButton>
     </template>
 
     <template v-if="hasItems">
-      <TransitionGroup name="list" tag="div" class="directory-list">
-        <div v-if="favorites.length > 0" key="favorites-heading" class="dir-popover-heading">
-          {{ t('task.favorite-folders') }}
-        </div>
-        <div
-          v-for="dir in favorites"
-          :key="'fav-' + dir"
-          class="dir-popover-item"
-          :title="dir"
-          role="button"
-          tabindex="0"
-          @keydown.enter.self.prevent="onSelect(dir)"
-          @keydown.space.self.prevent="onSelect(dir)"
-          @click="onSelect(dir)"
-        >
+      <div v-motion-auto-animate="{ duration: 200, easing: 'ease-out' }">
+        <div v-if="favorites.length > 0" class="dir-popover-heading">{{ t('task.favorite-folders') }}</div>
+        <div v-for="dir in favorites" :key="'fav-' + dir" class="dir-popover-item" :title="dir" @click="onSelect(dir)">
           <NEllipsis class="dir-popover-label" :tooltip="false">
             {{ shortLabel(dir) }}
           </NEllipsis>
           <div class="dir-popover-actions">
-            <NButton
-              text
-              size="tiny"
-              class="dir-popover-action"
-              :aria-label="t('task.favorite-folders')"
-              @click.stop="onToggleFavorite(dir, true)"
-            >
+            <NButton text size="tiny" class="dir-popover-action" @click.stop="onToggleFavorite(dir, true)">
               <template #icon>
-                <NIcon color="var(--rb-accent)"><Star fill="currentColor" /></NIcon>
+                <NIcon color="var(--m3-primary)"><Star /></NIcon>
               </template>
             </NButton>
-            <NButton
-              text
-              size="tiny"
-              class="dir-popover-action"
-              :aria-label="t('workspace.clear')"
-              @click.stop="onRemove(dir)"
-            >
+            <NButton text size="tiny" class="dir-popover-action" @click.stop="onRemove(dir)">
               <template #icon>
-                <NIcon><Trash2 /></NIcon>
+                <NIcon><TrashOutline /></NIcon>
               </template>
             </NButton>
           </div>
         </div>
-      </TransitionGroup>
+      </div>
 
-      <TransitionGroup name="list" tag="div" class="directory-list">
+      <div v-motion-auto-animate="{ duration: 200, easing: 'ease-out' }">
         <div
           v-if="recents.length > 0"
-          key="recents-heading"
           class="dir-popover-heading"
           :class="{ 'dir-popover-heading--spaced': favorites.length > 0 }"
         >
           {{ t('task.recent-folders') }}
         </div>
-        <div
-          v-for="dir in recents"
-          :key="'rec-' + dir"
-          class="dir-popover-item"
-          :title="dir"
-          role="button"
-          tabindex="0"
-          @keydown.enter.self.prevent="onSelect(dir)"
-          @keydown.space.self.prevent="onSelect(dir)"
-          @click="onSelect(dir)"
-        >
+        <div v-for="dir in recents" :key="'rec-' + dir" class="dir-popover-item" :title="dir" @click="onSelect(dir)">
           <NEllipsis class="dir-popover-label" :tooltip="false">
             {{ shortLabel(dir) }}
           </NEllipsis>
           <div class="dir-popover-actions">
-            <NButton
-              text
-              size="tiny"
-              class="dir-popover-action"
-              :aria-label="t('task.favorite-folders')"
-              @click.stop="onToggleFavorite(dir, false)"
-            >
+            <NButton text size="tiny" class="dir-popover-action" @click.stop="onToggleFavorite(dir, false)">
               <template #icon>
-                <NIcon><Star /></NIcon>
+                <NIcon><StarOutline /></NIcon>
               </template>
             </NButton>
-            <NButton
-              text
-              size="tiny"
-              class="dir-popover-action"
-              :aria-label="t('workspace.clear')"
-              @click.stop="onRemove(dir)"
-            >
+            <NButton text size="tiny" class="dir-popover-action" @click.stop="onRemove(dir)">
               <template #icon>
-                <NIcon><Trash2 /></NIcon>
+                <NIcon><TrashOutline /></NIcon>
               </template>
             </NButton>
           </div>
         </div>
-      </TransitionGroup>
+      </div>
     </template>
     <NEmpty v-else class="dir-popover-empty" size="small" :description="t('task.dir-no-saved')" />
   </NPopover>
 </template>
 
 <style scoped>
-.directory-list {
-  position: relative;
-}
 .dir-popover-heading {
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--rb-text-muted);
-  padding: 4px 8px 4px;
+  color: var(--n-text-color-3);
+  padding: 4px 8px 2px;
   user-select: none;
 }
 .dir-popover-heading--spaced {
   margin-top: 6px;
   padding-top: 8px;
-  border-top: 1px solid var(--rb-hairline);
+  border-top: 1px solid var(--m3-outline-variant);
 }
 
 .dir-popover-item {
@@ -179,12 +129,12 @@ function shortLabel(dir: string): string {
   justify-content: space-between;
   gap: 4px;
   padding: 5px 8px;
-  border-radius: var(--rb-radius-control);
+  border-radius: var(--border-radius);
   cursor: pointer;
   transition: background-color 0.15s;
 }
 .dir-popover-item:hover {
-  background: var(--rb-hover);
+  background: var(--m3-surface-container-high);
 }
 
 .dir-popover-label {

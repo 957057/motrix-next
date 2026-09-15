@@ -5,54 +5,97 @@ import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
 
-import { batchFinishMedia, saveSession, isEngineReady } from '@/api/aria2'
-import { canFinishMedia } from '@shared/utils/media'
-import { canPauseTask, canResumeTask } from '@/composables/taskCapabilities'
-import { getTaskSharingState, getTaskName } from '@shared/utils/task'
+import { isEngineReady } from '@/api/aria2'
+import { TASK_STATUS } from '@shared/constants'
+import type { Aria2Task } from '@shared/types'
+import type { I18nKey } from '@shared/i18nTypes'
+import { getTaskSharingState } from '@shared/utils/task'
 import { deleteTaskFiles } from '@/composables/useFileDelete'
 
 import { logger } from '@shared/logger'
 import { getErrorMessage } from '@shared/utils/errorMessage'
-import { NButton, NIcon, NCheckbox, NDropdown, NInput, NPopover, useDialog } from 'naive-ui'
-import { useTaskViewStore } from '@/stores/taskView'
+import { NButton, NIcon, NCheckbox, NPopover, useDialog } from 'naive-ui'
+import MTooltip from '@/components/common/MTooltip.vue'
 import { useAppMessage } from '@/composables/useAppMessage'
 import { usePreferenceStore } from '@/stores/preference'
-import { Plus, ChevronDown, Search } from '@lucide/vue'
-import TaskViewOptions from './TaskViewOptions.vue'
+import {
+  PROGRESS_SORT_FIELDS,
+  TERMINAL_SORT_FIELDS,
+  ALL_SORT_FIELDS,
+  DEFAULT_TASK_SORT,
+  type ProgressSortField,
+  type TerminalSortField,
+  type AllSortField,
+} from '@/composables/useTaskSort'
+import {
+  AddOutline,
+  PlayOutline,
+  PauseOutline,
+  StopCircleOutline,
+  TrashOutline,
+  RefreshOutline,
+  CloseOutline,
+  SwapVerticalOutline,
+  ArrowUpOutline,
+  ArrowDownOutline,
+} from '@vicons/ionicons5'
 
 const { t } = useI18n()
 const appStore = useAppStore()
 const taskStore = useTaskStore()
 const preferenceStore = usePreferenceStore()
 
-const view = useTaskViewStore()
-const batchPending = ref(false)
-const selectedTasks = computed(() => taskStore.taskList.filter((task) => view.selected.includes(task.gid)))
-const availableTasks = computed(() =>
-  selectedTasks.value.filter(
-    (task) => !taskStore.pendingGids.includes(task.gid) && !taskStore.removingGids.includes(task.gid),
-  ),
-)
-const pausableTasks = computed(() => availableTasks.value.filter(canPauseTask))
-const resumableTasks = computed(() => availableTasks.value.filter(canResumeTask))
-const sharingLabel = computed(() => {
-  const kinds = new Set(
-    availableTasks.value
-      .map(getTaskSharingState)
-      .filter(Boolean)
-      .map((state) => state!.kind),
-  )
-  if (kinds.size !== 1) return t('task.finish-all-sharing')
-  return kinds.has('bt') ? t('task.finish-seeding') : t('task.finish-sharing')
-})
-function removeSucceededSelection(gids: string[]) {
-  const succeeded = new Set(gids)
-  view.selected = view.selected.filter((gid) => !succeeded.has(gid))
-  if (!view.selected.length) view.clearSelection()
+// ── Sort dropdown ─────────────────────────────────────────────────
+const currentTab = computed(() => taskStore.currentList)
+
+/** Map sort field key to its i18n label. */
+const SORT_LABELS: Record<ProgressSortField | TerminalSortField | AllSortField, I18nKey> = {
+  manual: 'task.sort-manual',
+  'added-at': 'task.sort-added-at',
+  'completed-at': 'task.sort-completed-at',
+  name: 'task.sort-name',
+  size: 'task.sort-size',
+  progress: 'task.sort-progress',
+  speed: 'task.sort-speed',
 }
 
+/** Active sort config for the current tab. */
+const currentSort = computed(() => {
+  const cfg = preferenceStore.config?.taskSort ?? DEFAULT_TASK_SORT
+  switch (currentTab.value) {
+    case 'failed':
+    case 'completed':
+      return cfg[currentTab.value]
+    case 'all':
+      return cfg.all
+    default:
+      return cfg.progress
+  }
+})
+
+/** Sort field list for the current tab. */
+const currentSortFields = computed(() => {
+  switch (currentTab.value) {
+    case 'failed':
+    case 'completed':
+      return TERMINAL_SORT_FIELDS
+    case 'all':
+      return ALL_SORT_FIELDS
+    default:
+      return PROGRESS_SORT_FIELDS
+  }
+})
+
+const sortPopoverVisible = ref(false)
+
+async function onSortSelect(key: ProgressSortField | TerminalSortField | AllSortField) {
+  sortPopoverVisible.value = false
+  await taskStore.changeCurrentSort(key)
+}
 const message = useAppMessage()
 const dialog = useDialog()
+
+const refreshing = ref(false)
 
 async function lockDialog(d: ReturnType<typeof dialog.info>) {
   d.loading = true
@@ -62,9 +105,33 @@ async function lockDialog(d: ReturnType<typeof dialog.info>) {
   await nextTick()
 }
 
-const sharingGids = computed(() =>
-  availableTasks.value.filter((task) => getTaskSharingState(task) !== null).map((task) => task.gid),
+const currentList = computed(() => taskStore.currentList)
+const allGids = computed(() => taskStore.taskList.map((t: { gid: string }) => t.gid))
+const hasActiveTasks = computed(() =>
+  taskStore.taskList.some((t: Aria2Task) => t.status === TASK_STATUS.ACTIVE || t.status === TASK_STATUS.WAITING),
 )
+const hasPausedTasks = computed(() =>
+  taskStore.taskList.some((t: { status: string }) => t.status === TASK_STATUS.PAUSED),
+)
+const sharingGids = computed(() =>
+  taskStore.taskList.filter((task) => getTaskSharingState(task) !== null).map((task) => task.gid),
+)
+
+/** Active and all views show resume, pause, and delete actions. */
+const showActiveActions = computed(() => currentList.value === 'progress' || currentList.value === 'all')
+
+/** Terminal and All scopes expose history purge. */
+const showStoppedActions = computed(
+  () => currentList.value === 'failed' || currentList.value === 'completed' || currentList.value === 'all',
+)
+
+/** GIDs of live (aria2-managed) tasks only — used by Delete All in 'all' view */
+const LIVE_STATUSES = new Set([TASK_STATUS.ACTIVE, TASK_STATUS.WAITING, TASK_STATUS.PAUSED])
+const TERMINAL_STATUSES = new Set([TASK_STATUS.COMPLETE, TASK_STATUS.ERROR, TASK_STATUS.REMOVED])
+const liveGids = computed(() =>
+  taskStore.taskList.filter((t: { status: string }) => LIVE_STATUSES.has(t.status)).map((t: { gid: string }) => t.gid),
+)
+const terminalTasks = computed(() => taskStore.taskList.filter((t: Aria2Task) => TERMINAL_STATUSES.has(t.status)))
 
 const deleteFilesLabel = computed(() =>
   t(
@@ -74,32 +141,43 @@ const deleteFilesLabel = computed(() =>
   ),
 )
 
+/** Queue clear disabled state: in 'all' view, check live tasks; otherwise check all tasks */
+const deleteAllDisabled = computed(() =>
+  currentList.value === 'all' ? liveGids.value.length === 0 : allGids.value.length === 0,
+)
+
 function showAddTask() {
   appStore.showAddTaskDialog()
 }
 
-function removeSelectedTasks() {
+async function onRefresh() {
+  if (refreshing.value) return
+  refreshing.value = true
+  try {
+    await taskStore.fetchList()
+    message.success(t('task.refresh-list-success') || 'List refreshed')
+  } catch (error) {
+    logger.warn('TaskActions.onRefresh', getErrorMessage(error))
+  } finally {
+    refreshing.value = false
+  }
+}
+
+function onDeleteAll() {
   if (!isEngineReady()) {
     message.warning(t('app.engine-not-ready'))
     return
   }
-  // Capture the user's explicit selection before dispatching native removals.
-  const targetGids = availableTasks.value.map((task) => task.gid)
+  // In 'all' view, clear only live aria2 tasks, not DB-only history items.
+  const targetGids = currentList.value === 'all' ? [...liveGids.value] : [...allGids.value]
   if (targetGids.length === 0) return
   const gids = targetGids
   const deleteFiles = ref(false)
   const d = dialog.error({
-    title: t('task.delete-task'),
+    title: t('task.delete-task-queue'),
     content: () =>
       h('div', {}, [
         h('p', { style: 'margin: 0 0 12px;' }, t('task.batch-delete-task-confirm', { count: gids.length })),
-        h(
-          'ul',
-          { class: 'removal-task-list' },
-          taskStore.taskList
-            .filter((task) => gids.includes(task.gid))
-            .map((task) => h('li', { key: task.gid }, getTaskName(task))),
-        ),
         h(
           NCheckbox,
           {
@@ -111,11 +189,10 @@ function removeSelectedTasks() {
           { default: () => deleteFilesLabel.value },
         ),
       ]),
-    positiveText: t('task.delete-task'),
-    negativeText: t('app.cancel'),
+    positiveText: t('app.yes'),
+    negativeText: t('app.no'),
     onPositiveClick: async () => {
       await lockDialog(d)
-      batchPending.value = true
       // Capture task references BEFORE removal — the store list mutates after
       // batchRemoveTask, so we'd lose the dir/path info needed for file deletion.
       const targetTasks = taskStore.taskList.filter((t) => gids.includes(t.gid))
@@ -127,7 +204,6 @@ function removeSelectedTasks() {
       try {
         const result = await taskStore.batchRemoveTask(gids)
         const succeeded = new Set(result.succeeded)
-        removeSucceededSelection(result.succeeded)
         const deletedTasks = tasksToDelete.filter((task) => succeeded.has(task.gid))
 
         let fileDeletionFailed = false
@@ -136,7 +212,7 @@ function removeSelectedTasks() {
             await deleteTaskFiles(task, preferenceStore.config.fileDeletionMode)
           } catch (error) {
             fileDeletionFailed = true
-            logger.warn('TaskActions.removeSelectedTasksFiles', getErrorMessage(error))
+            logger.warn('TaskActions.onDeleteAllFiles', getErrorMessage(error))
           }
         }
 
@@ -150,10 +226,9 @@ function removeSelectedTasks() {
         }
         if (fileDeletionFailed) message.error(t('task.remove-task-file-fail'))
       } catch (error) {
-        logger.warn('TaskActions.removeSelectedTasks', getErrorMessage(error))
+        logger.warn('TaskActions.onDeleteAll', getErrorMessage(error))
         message.error(t('task.batch-delete-task-fail'))
       } finally {
-        batchPending.value = false
         d.destroy()
       }
       return false
@@ -169,11 +244,10 @@ function resumeAll() {
   const d = dialog.info({
     title: t('task.resume-all-task'),
     content: t('task.resume-all-task-confirm') || 'Resume all tasks?',
-    positiveText: t('task.resume-all-task'),
-    negativeText: t('app.cancel'),
+    positiveText: t('app.yes'),
+    negativeText: t('app.no'),
     onPositiveClick: async () => {
       await lockDialog(d)
-      batchPending.value = true
       try {
         const result = await taskStore.resumeAllTask()
         if (result.resumed > 0) message.success(t('task.resume-all-task-success'))
@@ -181,7 +255,6 @@ function resumeAll() {
         logger.warn('TaskActions.resumeAll', getErrorMessage(error))
         message.error(t('task.resume-all-task-fail'))
       } finally {
-        batchPending.value = false
         d.destroy()
       }
       return false
@@ -197,11 +270,10 @@ function pauseAll() {
   const d = dialog.info({
     title: t('task.pause-all-task'),
     content: t('task.pause-all-task-confirm') || 'Pause all tasks?',
-    positiveText: t('task.pause-all-task'),
-    negativeText: t('app.cancel'),
+    positiveText: t('app.yes'),
+    negativeText: t('app.no'),
     onPositiveClick: async () => {
       await lockDialog(d)
-      batchPending.value = true
       try {
         await taskStore.pauseAllTask()
         message.success(t('task.pause-all-task-success'))
@@ -209,7 +281,6 @@ function pauseAll() {
         logger.warn('TaskActions.pauseAll', getErrorMessage(error))
         message.error(t('task.pause-all-task-fail'))
       } finally {
-        batchPending.value = false
         d.destroy()
       }
       return false
@@ -217,7 +288,7 @@ function pauseAll() {
   })
 }
 
-function finishSelectedSharing() {
+function finishAllSharing() {
   if (!isEngineReady()) {
     message.warning(t('app.engine-not-ready'))
     return
@@ -225,16 +296,14 @@ function finishSelectedSharing() {
   const gids = [...sharingGids.value]
   if (gids.length === 0) return
   const d = dialog.warning({
-    title: sharingLabel.value,
+    title: t('task.finish-all-sharing'),
     content: t('task.finish-all-sharing-confirm', { count: gids.length }),
-    positiveText: sharingLabel.value,
-    negativeText: t('app.cancel'),
+    positiveText: t('app.yes'),
+    negativeText: t('app.no'),
     onPositiveClick: async () => {
       await lockDialog(d)
-      batchPending.value = true
       try {
         const result = await taskStore.finishSharingTasks(gids)
-        removeSucceededSelection(result.succeeded)
         if (result.failed.length === 0) {
           message.success(t('task.finish-all-sharing-success', { count: result.succeeded.length }))
         } else if (result.succeeded.length > 0) {
@@ -248,10 +317,9 @@ function finishSelectedSharing() {
           message.error(t('task.finish-all-sharing-fail'))
         }
       } catch (error) {
-        logger.warn('TaskActions.finishSelectedSharing', getErrorMessage(error))
+        logger.warn('TaskActions.finishAllSharing', getErrorMessage(error))
         message.error(t('task.finish-all-sharing-fail'))
       } finally {
-        batchPending.value = false
         d.destroy()
       }
       return false
@@ -259,389 +327,287 @@ function finishSelectedSharing() {
   })
 }
 
-const recordingGids = computed(() => availableTasks.value.filter(canFinishMedia).map((task) => task.gid))
-const finishingMedia = ref(false)
-async function finishRecordings() {
-  if (finishingMedia.value || batchPending.value) return
-  finishingMedia.value = true
-  batchPending.value = true
-  try {
-    const result = await batchFinishMedia([...recordingGids.value])
-    removeSucceededSelection(result.succeeded)
-    if (result.failed.length) message.error(result.failed.map((item) => item.message).join('; '))
-    if (result.succeeded.length) message.info(t('media.finalizing'))
-    await saveSession()
-    await taskStore.fetchList()
-  } catch (error) {
-    logger.warn('TaskActions.finishMedia', getErrorMessage(error))
-    message.error(getErrorMessage(error))
-  } finally {
-    finishingMedia.value = false
-    batchPending.value = false
-  }
-}
+function purgeRecord() {
+  const deleteFiles = ref(false)
+  const d = dialog.error({
+    title: t('task.purge-record'),
+    content: () =>
+      h('div', {}, [
+        h('p', { style: 'margin: 0 0 12px;' }, t('task.purge-record-confirm') || 'Clear all finished records?'),
+        h(
+          NCheckbox,
+          {
+            checked: deleteFiles.value,
+            'onUpdate:checked': (v: boolean) => {
+              deleteFiles.value = v
+            },
+          },
+          { default: () => deleteFilesLabel.value },
+        ),
+      ]),
+    positiveText: t('app.yes'),
+    negativeText: t('app.no'),
+    onPositiveClick: async () => {
+      await lockDialog(d)
 
-const queueOptions = computed(() => [
-  { key: 'resume', label: t('task.resume-all-task'), disabled: batchPending.value || !taskStore.taskCounts.progress },
-  { key: 'pause', label: t('task.pause-all-task'), disabled: batchPending.value || !taskStore.taskCounts.progress },
-])
-function handleQueue(key: string) {
-  if (batchPending.value || taskStore.currentList !== 'progress') return
-  if (key === 'resume') resumeAll()
-  else if (key === 'pause') pauseAll()
-}
-const overflowOptions = computed(() => [
-  ...(resumableTasks.value.length
-    ? [
-        {
-          key: 'resume',
-          label: `${t('task.resume-task')} (${resumableTasks.value.length})`,
-          disabled: batchPending.value,
-        },
-      ]
-    : []),
-  ...(pausableTasks.value.length
-    ? [{ key: 'pause', label: `${t('task.pause-task')} (${pausableTasks.value.length})`, disabled: batchPending.value }]
-    : []),
-  ...(availableTasks.value.length
-    ? [{ key: 'remove', label: t('task.delete-task'), disabled: batchPending.value }]
-    : []),
-  ...(recordingGids.value.length ? [{ key: 'record', label: t('media.finish'), disabled: batchPending.value }] : []),
-])
-function handleOverflow(key: string) {
-  if (key === 'resume' || key === 'pause') void runSelected(key)
-  else if (key === 'record') void finishRecordings()
-  else if (key === 'remove') removeSelectedTasks()
-}
-async function runSelected(action: 'pause' | 'resume') {
-  if (batchPending.value) return
-  if (!isEngineReady()) {
-    message.warning(t('app.engine-not-ready'))
-    return
-  }
-  const targets = [...(action === 'pause' ? pausableTasks.value : resumableTasks.value)]
-  if (!targets.length) return
-  batchPending.value = true
-  try {
-    const results = await Promise.allSettled(
-      targets.map(async (task) => {
-        if (action === 'resume') return taskStore.resumeTask(task)
-        await taskStore.pauseTask(task)
-        return true
-      }),
-    )
-    const succeeded = targets
-      .filter((_, index) => {
-        const result = results[index]
-        return result.status === 'fulfilled' && result.value !== false
-      })
-      .map((task) => task.gid)
-    removeSucceededSelection(succeeded)
-    if (succeeded.length !== targets.length) message.error(t('workspace.partial-failure'))
-  } finally {
-    batchPending.value = false
-  }
-}
-function retireSelectionAction(element: Element) {
-  if (element.contains(document.activeElement)) {
-    element.parentElement?.querySelector<HTMLElement>('[data-selection-done]')?.focus({ preventScroll: true })
-  }
-  element.setAttribute('inert', '')
+      // Capture task refs BEFORE purge — the store list mutates after purgeTaskRecord
+      const tasksToClean = deleteFiles.value ? [...terminalTasks.value] : []
+
+      try {
+        await taskStore.purgeTaskRecord()
+      } catch (error) {
+        logger.warn('TaskActions.purgeRecord', getErrorMessage(error))
+        message.error(t('task.purge-record-fail'))
+        d.destroy()
+        return false
+      }
+
+      let fileDeletionFailed = false
+      for (const task of tasksToClean) {
+        try {
+          await deleteTaskFiles(task, preferenceStore.config.fileDeletionMode)
+        } catch (error) {
+          fileDeletionFailed = true
+          logger.warn('TaskActions.purgeRecordFiles', getErrorMessage(error))
+        }
+      }
+      message[fileDeletionFailed ? 'error' : 'success'](
+        t(fileDeletionFailed ? 'task.remove-task-file-fail' : 'task.purge-record-success'),
+      )
+      d.destroy()
+      return false
+    },
+  })
 }
 </script>
 
 <template>
   <div class="task-actions">
-    <Transition
-      name="toolbar"
-      @before-leave="(element) => element.setAttribute('inert', '')"
-      @before-enter="(element) => element.removeAttribute('inert')"
-      @leave-cancelled="(element) => element.removeAttribute('inert')"
+    <MTooltip>
+      <template #trigger>
+        <NButton type="primary" circle size="small" :aria-label="t('task.new-task')" @click="showAddTask">
+          <template #icon>
+            <NIcon><AddOutline /></NIcon>
+          </template>
+        </NButton>
+      </template>
+      {{ t('task.new-task') || 'New Task' }}
+    </MTooltip>
+    <NPopover
+      v-model:show="sortPopoverVisible"
+      trigger="click"
+      placement="bottom-start"
+      :show-arrow="false"
+      raw
+      style="padding: 0"
     >
-      <TransitionGroup
-        v-if="view.selecting"
-        key="selection"
-        tag="div"
-        name="selection-item"
-        class="toolbar-content selection-actions"
-        @before-leave="retireSelectionAction"
-        @before-enter="(element) => element.removeAttribute('inert')"
-        @leave-cancelled="(element) => element.removeAttribute('inert')"
-      >
-        <NCheckbox
-          key="select-page"
-          :checked="taskStore.taskList.length > 0 && view.selected.length === taskStore.taskList.length"
-          :indeterminate="view.selected.length > 0 && view.selected.length < taskStore.taskList.length"
-          :disabled="batchPending"
-          :aria-label="t('workspace.select-page')"
-          @update:checked="view.selected = $event ? taskStore.taskList.map((task) => task.gid) : []"
-        >
-          <span class="select-page-label">{{ t('workspace.select-page') }}</span>
-        </NCheckbox>
-
-        <NButton
-          v-if="resumableTasks.length"
-          key="resume"
-          class="selection-secondary"
-          secondary
-          :disabled="batchPending"
-          :aria-label="t('task.resume-task')"
-          @click="runSelected('resume')"
-        >
-          {{ t('task.resume-task')
-          }}<span v-if="resumableTasks.length" class="action-count">{{ resumableTasks.length }}</span>
+      <template #trigger>
+        <NButton quaternary circle size="small" :aria-label="t('task.sort-by')">
+          <template #icon>
+            <NIcon><SwapVerticalOutline /></NIcon>
+          </template>
         </NButton>
-        <NButton
-          v-if="pausableTasks.length"
-          key="pause"
-          class="selection-secondary"
-          secondary
-          :disabled="batchPending"
-          :aria-label="t('task.pause-task')"
-          @click="runSelected('pause')"
+      </template>
+      <div class="sort-panel">
+        <div class="sort-panel-header">{{ t('task.sort-by') }}</div>
+        <button
+          v-for="field in currentSortFields"
+          :key="field"
+          class="sort-item"
+          :class="{ active: field === currentSort.field }"
+          @click="onSortSelect(field)"
         >
-          {{ t('task.pause-task')
-          }}<span v-if="pausableTasks.length" class="action-count">{{ pausableTasks.length }}</span>
-        </NButton>
-        <NButton
-          v-if="sharingGids.length"
-          key="sharing"
-          class="selection-primary"
-          :title="sharingLabel"
-          secondary
-          :disabled="batchPending"
-          :aria-label="sharingLabel"
-          @click="finishSelectedSharing"
-        >
-          <span class="action-label">{{ sharingLabel }}</span
-          ><span class="action-count">{{ sharingGids.length }}</span>
-        </NButton>
-        <NButton
-          v-if="recordingGids.length"
-          key="recording"
-          class="selection-secondary"
-          secondary
-          :disabled="batchPending"
-          :loading="finishingMedia"
-          @click="finishRecordings"
-          >{{ t('media.finish') }}</NButton
-        >
-        <NButton
-          v-if="availableTasks.length"
-          key="delete"
-          class="selection-secondary"
-          secondary
-          type="error"
-          :disabled="batchPending"
-          :aria-label="t('task.delete-task')"
-          @click="removeSelectedTasks"
-          >{{ t('task.delete-task') }}</NButton
-        >
-        <div v-if="overflowOptions.length" key="overflow" class="selection-overflow-control">
-          <NDropdown trigger="click" :options="overflowOptions" @select="handleOverflow">
-            <NButton
-              class="selection-overflow"
-              secondary
-              :disabled="batchPending"
-              :aria-label="t('workspace.more-actions')"
-              >{{ t('workspace.more-actions') }}<NIcon :size="14" class="toolbar-chevron"><ChevronDown /></NIcon
-            ></NButton>
-          </NDropdown>
-        </div>
-        <NButton
-          key="done"
-          data-selection-done
-          type="primary"
-          :disabled="batchPending"
-          :aria-label="t('workspace.done')"
-          @click="view.clearSelection()"
-          >{{ t('workspace.done') }}</NButton
-        >
-      </TransitionGroup>
-      <div v-else key="default" class="toolbar-content">
-        <NInput
-          v-model:value="view.query"
-          class="toolbar-search"
-          round
-          clearable
-          :placeholder="t('workspace.search-tasks')"
-          :input-props="{ 'aria-label': t('workspace.search-tasks') }"
-        >
-          <template #prefix
-            ><NIcon :size="15" class="search-icon"><Search /></NIcon
-          ></template>
-        </NInput>
-        <NPopover trigger="click" placement="bottom-end" :show-arrow="false">
-          <template #trigger
-            ><NButton class="search-popover-trigger" quaternary circle :aria-label="t('workspace.search-tasks')"
-              ><template #icon
-                ><NIcon><Search /></NIcon></template></NButton
-          ></template>
-          <NInput
-            v-model:value="view.query"
-            clearable
-            autofocus
-            :placeholder="t('workspace.search-tasks')"
-            :input-props="{ 'aria-label': t('workspace.search-tasks') }"
-            style="width: min(260px, calc(100vw - 64px))"
-          />
-        </NPopover>
-        <NDropdown
-          v-if="taskStore.currentList === 'progress'"
-          trigger="click"
-          :options="queueOptions"
-          @select="handleQueue"
-        >
-          <NButton quaternary :aria-label="t('workspace.queue')"
-            >{{ t('workspace.queue') }}<NIcon :size="14" class="toolbar-chevron"><ChevronDown /></NIcon
-          ></NButton>
-        </NDropdown>
-        <TaskViewOptions />
-        <NButton quaternary :aria-label="t('workspace.select-tasks')" @click="view.selecting = true">{{
-          t('workspace.select-tasks')
-        }}</NButton>
-        <NButton type="primary" class="new-task" :aria-label="t('task.new-task')" @click="showAddTask"
-          ><template #icon
-            ><NIcon><Plus /></NIcon></template
-          >{{ t('task.new-task') }}</NButton
-        >
+          <span class="sort-item-label">{{ t(SORT_LABELS[field]) }}</span>
+          <span v-if="field === currentSort.field" class="sort-item-dir">
+            <NIcon :size="14">
+              <SwapVerticalOutline v-if="field === 'manual'" />
+              <ArrowUpOutline v-else-if="currentSort.direction === 'asc'" />
+              <ArrowDownOutline v-else />
+            </NIcon>
+          </span>
+        </button>
       </div>
-    </Transition>
+    </NPopover>
+    <MTooltip>
+      <template #trigger>
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :aria-label="t('task.refresh-list')"
+          :loading="refreshing"
+          :disabled="refreshing"
+          @click="onRefresh"
+        >
+          <template #icon>
+            <NIcon><RefreshOutline /></NIcon>
+          </template>
+        </NButton>
+      </template>
+      {{ t('task.refresh-list') || 'Refresh' }}
+    </MTooltip>
+    <MTooltip v-if="showActiveActions">
+      <template #trigger>
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :aria-label="t('task.resume-all-task')"
+          :disabled="!hasPausedTasks"
+          @click="resumeAll"
+        >
+          <template #icon>
+            <NIcon><PlayOutline /></NIcon>
+          </template>
+        </NButton>
+      </template>
+      {{ t('task.resume-all-task') || 'Resume All' }}
+    </MTooltip>
+    <MTooltip v-if="showActiveActions">
+      <template #trigger>
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :aria-label="t('task.pause-all-task')"
+          :disabled="!hasActiveTasks"
+          @click="pauseAll"
+        >
+          <template #icon>
+            <NIcon><PauseOutline /></NIcon>
+          </template>
+        </NButton>
+      </template>
+      {{ t('task.pause-all-task') || 'Pause All' }}
+    </MTooltip>
+    <MTooltip v-if="showActiveActions">
+      <template #trigger>
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :aria-label="t('task.finish-all-sharing')"
+          :disabled="sharingGids.length === 0"
+          @click="finishAllSharing"
+        >
+          <template #icon>
+            <NIcon><StopCircleOutline /></NIcon>
+          </template>
+        </NButton>
+      </template>
+      {{ t('task.finish-all-sharing') }}
+    </MTooltip>
+    <MTooltip v-if="showActiveActions">
+      <template #trigger>
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :aria-label="t('task.delete-all-task')"
+          :disabled="deleteAllDisabled"
+          @click="onDeleteAll"
+        >
+          <template #icon>
+            <NIcon><CloseOutline /></NIcon>
+          </template>
+        </NButton>
+      </template>
+      {{ t('task.delete-all-task') }}
+    </MTooltip>
+    <MTooltip v-if="showStoppedActions">
+      <template #trigger>
+        <NButton
+          quaternary
+          circle
+          size="small"
+          :aria-label="t('task.purge-record')"
+          :disabled="terminalTasks.length === 0"
+          @click="purgeRecord"
+        >
+          <template #icon>
+            <NIcon><TrashOutline /></NIcon>
+          </template>
+        </NButton>
+      </template>
+      {{ t('task.purge-record') || 'Purge Records' }}
+    </MTooltip>
   </div>
 </template>
+
 <style scoped>
 .task-actions {
-  display: grid;
-  min-width: 0;
-  width: 100%;
-  container-type: inline-size;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+</style>
+
+<!-- Sort panel renders in teleported popover — must be unscoped -->
+<style>
+.sort-panel {
+  min-width: 160px;
+  padding: 6px;
+  background: var(--m3-surface-container-highest);
+  border: 1px solid var(--m3-outline-variant);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px var(--m3-shadow);
 }
 
-.toolbar-content {
-  position: relative;
+.sort-panel-header {
+  padding: 6px 10px 4px;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--m3-outline);
+  letter-spacing: 0.02em;
+}
+
+.sort-item {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  grid-area: 1 / 1;
-  min-height: 36px;
-  min-width: 0;
-  white-space: nowrap;
-}
-
-.toolbar-content > .n-button {
-  flex-shrink: 0;
-}
-
-.new-task {
-  margin-inline-start: 6px;
-}
-
-.selection-item-move,
-.selection-item-enter-active,
-.selection-item-leave-active {
+  justify-content: space-between;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--m3-on-surface);
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
   transition:
-    transform var(--rb-motion-view) var(--rb-ease),
-    opacity var(--rb-motion-exit) var(--rb-ease);
+    background-color 0.15s cubic-bezier(0.2, 0, 0, 1),
+    color 0.15s cubic-bezier(0.2, 0, 0, 1);
 }
 
-.selection-item-enter-from,
-.selection-item-leave-to {
-  opacity: 0;
+.sort-item:hover {
+  background: var(--m3-surface-container-highest);
 }
 
-.selection-item-leave-active {
-  position: absolute;
-  pointer-events: none;
+.sort-item:active {
+  background: var(--m3-outline-variant);
+  transition: background-color 0.05s ease;
 }
 
-.toolbar-search {
+.sort-item.active {
+  background: color-mix(in srgb, var(--m3-primary) 10%, transparent);
+  color: var(--m3-on-surface);
+  font-weight: 500;
+}
+
+.sort-item.active:hover {
+  background: color-mix(in srgb, var(--m3-primary) 14%, transparent);
+  color: var(--m3-on-surface);
+}
+
+.sort-item-label {
   flex: 1;
-  min-width: 80px;
-  max-width: 220px;
 }
 
-.search-icon {
-  color: var(--rb-text-faint);
-}
-
-.search-popover-trigger.n-button,
-.selection-overflow-control {
-  display: none;
-}
-
-.selection-primary.n-button {
-  flex-shrink: 1;
-  min-width: 0;
-}
-
-.selection-primary :deep(.n-button__content) {
-  min-width: 0;
-}
-
-.action-label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.toolbar-chevron {
-  margin-inline-start: 6px;
-}
-
-.action-count {
-  margin-inline-start: 6px;
-  padding: 0 6px;
-  border-radius: 999px;
-  font-size: 11px;
-  line-height: 18px;
-  background: var(--rb-fill-strong);
-  color: var(--rb-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.toolbar-enter-active,
-.toolbar-leave-active {
-  transition: opacity var(--rb-motion-view) var(--rb-ease);
-}
-
-.toolbar-enter-from,
-.toolbar-leave-to {
-  opacity: 0;
-}
-
-.toolbar-leave-active {
-  pointer-events: none;
-}
-
-@container (max-width: 620px) {
-  .selection-secondary.n-button {
-    display: none;
-  }
-
-  .selection-overflow-control {
-    display: inline-flex;
-  }
-}
-
-@container (max-width: 560px) {
-  .toolbar-search,
-  .select-page-label {
-    display: none;
-  }
-
-  .search-popover-trigger.n-button {
-    display: inline-flex;
-  }
-}
-
-@container (max-width: 360px) {
-  .toolbar-content {
-    gap: 2px;
-  }
-
-  .toolbar-content > .n-button {
-    padding-inline: 6px;
-  }
+.sort-item-dir {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+  color: var(--m3-on-surface);
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 </style>

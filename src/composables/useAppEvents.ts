@@ -5,7 +5,6 @@
  * Contains handlers for: menu-event, tray-menu-action, deep-link-open,
  * single-instance-triggered, port changes, and drag-drop.
  */
-import { useTaskSelectionStore } from '@/stores/taskSelection'
 import { listen } from '@tauri-apps/api/event'
 import { getCurrentWebview } from '@tauri-apps/api/webview'
 import { getCurrentWindow } from '@tauri-apps/api/window'
@@ -17,7 +16,7 @@ import { isEngineReady } from '@/api/aria2'
 import { detectKind, createBatchItem } from '@shared/utils/batchHelpers'
 import { createExternalInputTraceId, summarizeExternalInputBatch } from '@shared/utils/externalInputDiagnostics'
 import { getErrorMessage } from '@shared/utils/errorMessage'
-import { isRayburstNewTaskLink } from '@shared/utils/rayburstDeepLink'
+import { isMotrixNewTaskLink } from '@shared/utils/motrixDeepLink'
 import type { ExternalDownloadInput } from '@shared/types'
 import { handleTaskStart } from '@/composables/useTaskNotifyHandlers'
 import { onUnmounted } from 'vue'
@@ -67,11 +66,12 @@ interface AppEventsDeps {
     showAddTaskDialog: () => void
     enqueueBatch: (items: ReturnType<typeof createBatchItem>[]) => number
     handleDeepLinkUrls: (urls: string[]) => DeepLinkHandlingResult | void
-    handleExternalInputs: (inputs: ExternalDownloadInput[]) => Promise<DeepLinkHandlingResult | void>
+    handleExternalInputs: (inputs: ExternalDownloadInput[]) => DeepLinkHandlingResult | void
     setExternalInputErrorHandler?: (handler: ((error: unknown) => void) | null) => void
     setExternalInputStartHandler?: (handler: ((taskNames: string[]) => void) | null) => void
     addTaskVisible: boolean
     pendingBatch: unknown[]
+    pendingMagnetGids: string[]
     externalInputSubmitting: boolean
   }
   taskStore: {
@@ -83,7 +83,6 @@ interface AppEventsDeps {
   }
   preferenceStore: {
     pendingChanges: boolean
-    savingChanges: boolean
     saveBeforeLeave: (() => Promise<void>) | null
     config: {
       rpcListenPort?: string | number
@@ -254,9 +253,10 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
   function setupNavGuard() {
     return registerCleanup(
       router.beforeEach((to, from) => {
-        const leavingForm = from.path.startsWith('/preference') && from.path !== to.path
-        if (leavingForm && preferenceStore.savingChanges) return false
-        if (leavingForm && preferenceStore.pendingChanges) {
+        const leavingPrefs = from.path.startsWith('/preference') && !to.path.startsWith('/preference')
+        const switchingPrefsTab =
+          from.path.startsWith('/preference') && to.path.startsWith('/preference') && from.path !== to.path
+        if ((leavingPrefs || switchingPrefsTab) && preferenceStore.pendingChanges) {
           return new Promise<boolean>((resolve) => {
             navDialog.warning({
               title: t('preferences.not-saved'),
@@ -268,7 +268,8 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
                   if (preferenceStore.saveBeforeLeave) {
                     await preferenceStore.saveBeforeLeave()
                   }
-                  resolve(!preferenceStore.pendingChanges)
+                  preferenceStore.pendingChanges = false
+                  resolve(true)
                 } catch (e) {
                   logger.error('NavGuard', e)
                   resolve(false)
@@ -444,7 +445,7 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
       await webview.onDragDropEvent((event) => {
         if (event.payload.type === 'drop') {
           const paths = event.payload.paths
-          const validPaths = paths?.filter((p: string) => detectKind(p) === 'torrent') || []
+          const validPaths = paths?.filter((p: string) => p.endsWith('.torrent')) || []
           if (validPaths.length > 0) {
             logger.info('DragDrop', `dropped ${validPaths.length} file(s): [${validPaths.join(', ')}]`)
             const items = validPaths.map((p: string) => createBatchItem(detectKind(p), p))
@@ -475,7 +476,7 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
         if (appStore.externalInputSubmitting) return
         if (appStore.addTaskVisible) return
         if (appStore.pendingBatch.length > 0) return
-        if (useTaskSelectionStore().pending.length > 0) return
+        if (appStore.pendingMagnetGids.length > 0) return
         const mainWindow = getCurrentWindow()
         try {
           if (await mainWindow.isVisible()) return
@@ -519,7 +520,7 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
     // Navigate to the "All" downloads tab when receiving new tasks from
     // extension.  Always land on /task/all regardless of current sub-tab
     // (active, stopped, etc.) so the user sees the full task list.
-    const hasNewTask = urls.some(isRayburstNewTaskLink)
+    const hasNewTask = urls.some(isMotrixNewTaskLink)
     if (!silent && hasNewTask && route.path !== '/task/all') {
       try {
         await router.push('/task/all')
@@ -621,7 +622,7 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
     })
     try {
       const tracedInputs = inputs.map((input) => ({ ...input, traceId }))
-      const handlingResult = await appStore.handleExternalInputs(tracedInputs)
+      const handlingResult = appStore.handleExternalInputs(tracedInputs)
       logger.info('ExternalInput', 'download_routing_completed', {
         trace_id: traceId,
         stage: 'route-download',

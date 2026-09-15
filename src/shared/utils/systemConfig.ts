@@ -1,4 +1,4 @@
-import { buildConnectionsForm, buildConnectionsSystemConfig } from './connectionSettings'
+import { buildAdvancedForm, buildAdvancedSystemConfig } from '@/composables/useAdvancedPreference'
 import { buildBtForm, buildBtSystemConfig } from '@/composables/useBtPreference'
 import { buildDownloadsForm, buildDownloadsSystemConfig } from '@/composables/useDownloadsPreference'
 import { buildEd2kForm, buildEd2kSystemConfig } from '@/composables/useEd2kPreference'
@@ -10,13 +10,13 @@ export function buildSystemConfigFromAppConfig(config: AppConfig, defaultDir = '
   const btSystem = buildBtSystemConfig(buildBtForm(config))
   const networkSystem = buildNetworkSystemConfig(buildNetworkForm(config))
   const ed2kSystem = buildEd2kSystemConfig(buildEd2kForm(config))
-  const connectionsSystem = buildConnectionsSystemConfig(buildConnectionsForm(config))
+  const advancedSystem = buildAdvancedSystemConfig(buildAdvancedForm(config))
 
   return {
     ...downloadsSystem,
     ...btSystem,
     ...networkSystem,
     ...ed2kSystem,
-    ...connectionsSystem,
+    ...advancedSystem,
   }
 }

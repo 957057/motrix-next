@@ -8,17 +8,14 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (key: string) => key }) }))
 vi.mock('@/composables/useAppMessage', () => ({
   useAppMessage: () => ({ error: vi.fn() }),
 }))
-vi.mock('@lucide/vue', () => {
+vi.mock('@vicons/ionicons5', () => {
   const icon = { template: '<i />' }
-  return { CircleCheck: icon, CheckmarkOutline: icon, CircleX: icon }
+  return { CheckmarkCircleOutline: icon, CheckmarkOutline: icon, CloseCircleOutline: icon }
 })
 vi.mock('naive-ui', () => ({
   NModal: {
-    name: 'Modal',
     props: ['show'],
-    emits: ['afterLeave'],
-    // Keep content mounted to model the real modal's leave phase.
-    template: '<div class="modal-stub" :data-open="show"><slot /></div>',
+    template: '<div v-if="show" class="modal-stub"><slot /></div>',
   },
   NButton: {
     props: ['loading', 'disabled', 'type'],
@@ -27,7 +24,6 @@ vi.mock('naive-ui', () => ({
   },
   NIcon: { template: '<span><slot /></span>' },
   NSpin: { template: '<span class="spin-stub" />' },
-  NCollapseTransition: { props: ['show'], template: '<div v-if="show"><slot /></div>' },
 }))
 
 import EngineRecoveryDialog from '@/components/layout/EngineRecoveryDialog.vue'
@@ -76,11 +72,7 @@ describe('EngineRecoveryDialog', () => {
     expect(wrapper.find('.modal-stub').exists()).toBe(true)
 
     await vi.advanceTimersByTimeAsync(1)
-    expect(wrapper.find('.modal-stub').attributes('data-open')).toBe('false')
-    expect(wrapper.find('[data-panel="complete"]').exists()).toBe(true)
-    expect(
-      wrapper.findAll('.engine-recovery-stage').every((stage) => stage.attributes('data-state') === 'complete'),
-    ).toBe(true)
+    expect(wrapper.find('.modal-stub').exists()).toBe(false)
     wrapper.unmount()
   })
 
@@ -115,17 +107,16 @@ describe('EngineRecoveryDialog', () => {
     expect(wrapper.findAll('.engine-stage-dot')).toHaveLength(3)
   })
 
-  it('shows the current stage rather than a zero retry counter on manual restart', () => {
+  it('reserves the retry counter from the first stopping frame', () => {
     const store = useEngineStore()
     store.snapshot = { ...recoverySnapshot('stopping'), attempt: 0, cause: 'manualRestart' }
     const wrapper = mount(EngineRecoveryDialog)
 
-    expect(wrapper.text()).not.toContain('0 / 5')
-    expect(wrapper.text()).toContain('app.engine-restarting')
+    expect(wrapper.text()).toContain('0 / 5')
     expect(wrapper.find('.engine-attempt').exists()).toBe(true)
   })
 
-  it('keeps the stage track mounted when error details arrive', async () => {
+  it('animates the error into the recovering layout without replacing the stage track', async () => {
     const store = useEngineStore()
     store.snapshot = { ...recoverySnapshot('probing'), failure: null }
     const wrapper = mount(EngineRecoveryDialog)
@@ -149,59 +140,5 @@ describe('EngineRecoveryDialog', () => {
     expect(cleanup).toBeDefined()
     await cleanup?.trigger('click')
     expect(recover).toHaveBeenCalledOnce()
-  })
-  it('keeps the same stage track on success and dismisses only its own operation', async () => {
-    vi.useFakeTimers()
-    const store = useEngineStore()
-    store.snapshot = { ...recoverySnapshot('probing'), failure: null }
-    const wrapper = mount(EngineRecoveryDialog)
-    const track = wrapper.find('.engine-stage-track').element
-    store.snapshot = { ...recoverySnapshot('running'), revision: 2, failure: null }
-    await nextTick()
-    expect(wrapper.find('.engine-stage-track').element).toBe(track)
-    expect(wrapper.findAll('.engine-recovery-stage').map((stage) => stage.attributes('data-state'))).toEqual([
-      'complete',
-      'complete',
-      'complete',
-    ])
-    await vi.advanceTimersByTimeAsync(ENGINE_RECOVERY_SUCCESS_DURATION - 100)
-    store.snapshot = { ...recoverySnapshot('starting'), operationId: 2, revision: 3 }
-    await nextTick()
-    // A cancelled leave callback must not reset a newly opened operation.
-    wrapper.findComponent({ name: 'Modal' }).vm.$emit('afterLeave')
-    await vi.advanceTimersByTimeAsync(200)
-    expect(wrapper.find('.modal-stub').attributes('data-open')).toBe('true')
-    expect(wrapper.find('[data-panel="recovering"]').exists()).toBe(true)
-    wrapper.unmount()
-  })
-
-  it('freezes the last visible phase throughout cancellation leave', async () => {
-    const store = useEngineStore()
-    store.snapshot = recoverySnapshot('probing')
-    const wrapper = mount(EngineRecoveryDialog)
-    store.snapshot = { ...recoverySnapshot('stopped'), revision: 2 }
-    await nextTick()
-    expect(wrapper.find('.modal-stub').attributes('data-open')).toBe('false')
-    expect(wrapper.findAll('.engine-recovery-stage').map((stage) => stage.attributes('data-state'))).toEqual([
-      'complete',
-      'complete',
-      'active',
-    ])
-    wrapper.unmount()
-  })
-
-  it('does not extend success display when the command repeats the running snapshot', async () => {
-    vi.useFakeTimers()
-    const store = useEngineStore()
-    store.snapshot = recoverySnapshot('probing')
-    const wrapper = mount(EngineRecoveryDialog)
-    store.snapshot = { ...recoverySnapshot('running'), revision: 2 }
-    await nextTick()
-    await vi.advanceTimersByTimeAsync(800)
-    store.snapshot = { ...recoverySnapshot('running'), revision: 2 }
-    await nextTick()
-    await vi.advanceTimersByTimeAsync(ENGINE_RECOVERY_SUCCESS_DURATION - 800)
-    expect(wrapper.find('.modal-stub').attributes('data-open')).toBe('false')
-    wrapper.unmount()
   })
 })

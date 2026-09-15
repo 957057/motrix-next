@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import AppDialog from '@/components/common/AppDialog.vue'
-import { hasInvalidDownloadLinks } from '@shared/utils/downloadInput'
-import { invoke } from '@tauri-apps/api/core'
-/** @fileoverview Add task dialog: link and torrent creation with one native submission lifecycle. */
+/** @fileoverview Add task dialog: dual-tab layout (URI / Torrent) with AutoAnimate list transitions. */
 import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -13,12 +10,7 @@ import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumer
 import { useHttpAuthStore } from '@/stores/httpAuth'
 import { ADD_TASK_TYPE } from '@shared/constants'
 import { detectResource } from '@shared/utils'
-import {
-  mergeRawUriLines,
-  normalizeUriLines,
-  extractDecodedFilename,
-  extractMagnetDisplayName,
-} from '@shared/utils/batchHelpers'
+import { mergeRawUriLines, normalizeUriLines, extractMagnetDisplayName } from '@shared/utils/batchHelpers'
 import { resolveDownloadCategory, resolveFileSetCategory } from '@shared/utils/fileCategory'
 import { buildOuts } from '@shared/utils/rename'
 import {
@@ -46,10 +38,12 @@ import { findMatchingUserAgentRule, resolveUserAgent } from '@shared/utils/userA
 
 import {
   resolveUnresolvedItems,
-  resolveTorrentItem,
+  retryTorrentInspection,
   chooseTorrentFile as chooseTorrentFileImpl,
 } from '@/composables/useAddTaskFileOps'
 import {
+  NModal,
+  NCard,
   NTabs,
   NTabPane,
   NForm,
@@ -57,22 +51,22 @@ import {
   NInput,
   NInputNumber,
   NButton,
+  NSpace,
   NIcon,
   NInputGroup,
-  NCollapseTransition,
-  NSpin,
-  NAlert,
+  NTag,
+  NEllipsis,
 } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
 import type { BatchItem, BatchItemKind, BtFileSelectionItem, UserAgentProfile } from '@shared/types'
-import { File, X, FolderOpen, CloudUpload, RefreshCw } from '@lucide/vue'
-import { defaultMediaOptions, mediaOutputHint } from '@shared/utils/media'
+import { FolderOpenOutline, CloudUploadOutline } from '@vicons/ionicons5'
+import { vMotionAutoAnimate } from '@/directives/motionAutoAnimate'
 import AdvancedOptions from './addtask/AdvancedOptions.vue'
 import DirectoryPopover from '@/components/common/DirectoryPopover.vue'
 import BtFileSelector from '@/components/task/BtFileSelector.vue'
 
 const props = defineProps<{ show: boolean }>()
-const emit = defineEmits<{ close: []; afterLeave: [] }>()
+const emit = defineEmits<{ close: [] }>()
 
 const { t } = useI18n()
 const router = useRouter()
@@ -86,20 +80,33 @@ const { constraint, configFieldProps, areConfigFieldsValid } = usePreferenceNume
 const dirUserModified = ref(false)
 
 const activeTab = ref<BatchItemKind>(ADD_TASK_TYPE.URI)
-const sourceDirection = ref(1)
+const tabsRef = ref<InstanceType<typeof import('naive-ui').NTabs> | null>(null)
+
+/**
+ * Switch tab programmatically with correct animation direction.
+ *
+ * NTabs only computes `animationDirection` inside its internal `activateTab()`
+ * handler (user clicks).  Programmatic `:value` changes skip that and always
+ * default to `'next'`.  This helper mirrors the direction logic from the NTabs
+ * source and sets it on the component instance before updating `activeTab`.
+ */
+const TAB_ORDER = [ADD_TASK_TYPE.URI, ADD_TASK_TYPE.TORRENT] as const
 function switchTab(target: BatchItemKind): void {
-  if (target === activeTab.value) return
-  sourceDirection.value = target === ADD_TASK_TYPE.TORRENT ? 1 : -1
+  if (activeTab.value === target) return
+  const inst = tabsRef.value as Record<string, unknown> | null
+  if (inst && 'animationDirection' in inst) {
+    const curIdx = TAB_ORDER.indexOf(activeTab.value as (typeof TAB_ORDER)[number])
+    const tgtIdx = TAB_ORDER.indexOf(target as (typeof TAB_ORDER)[number])
+    ;(inst as { animationDirection: string }).animationDirection = tgtIdx > curIdx ? 'next' : 'prev'
+  }
   activeTab.value = target
 }
 
 function activateTab(value: string): void {
-  if (value === ADD_TASK_TYPE.URI || value === ADD_TASK_TYPE.TORRENT) switchTab(value)
+  if (value === ADD_TASK_TYPE.URI || value === ADD_TASK_TYPE.TORRENT) activeTab.value = value
 }
 const showAdvanced = ref(false)
 const submitting = ref(false)
-const submitError = ref('')
-const linksInvalid = computed(() => hasInvalidDownloadLinks(form.value.uris))
 const selectedBatchIndex = ref(0)
 const userAgentManuallyEdited = ref(false)
 const defaultTaskProxyMode = () => getDefaultTaskProxyMode(preferenceStore.config.proxy)
@@ -118,14 +125,13 @@ function syncDefaultTaskProxy() {
 function syncPendingExternalMetadata() {
   form.value.referer = appStore.pendingReferer
   form.value.cookie = appStore.pendingCookie
-  form.value.out = ''
+  form.value.out = appStore.pendingFilename
   form.value.userAgent = appStore.pendingUserAgent
   form.value.requestHeaders = appStore.pendingRequestHeaders
   applyResolvedUserAgent()
 }
 
 const form = ref<AddTaskForm>({
-  media: defaultMediaOptions(preferenceStore.config),
   uris: '',
   out: '',
   dir: preferenceStore.config.dir || '',
@@ -214,13 +220,7 @@ const torrentItemsReady = computed(() =>
 const uriOptionsValid = computed(
   () => !form.value.uris.trim() || areConfigFieldsValid({ streamMaxConnections: form.value.streamMaxConnections }),
 )
-const canSubmit = computed(
-  () =>
-    (normalizeUriLines(form.value.uris).length > 0 || fileItems.value.length > 0) &&
-    !linksInvalid.value &&
-    uriOptionsValid.value &&
-    torrentItemsReady.value,
-)
+const canSubmit = computed(() => uriOptionsValid.value && torrentItemsReady.value)
 
 // Sync download settings with the latest preference every time the dialog
 // opens. AddTask is kept mounted (`:show` not `v-if`), so form values would
@@ -229,7 +229,6 @@ watch(
   () => props.show,
   (visible) => {
     if (visible) {
-      form.value.media = defaultMediaOptions(preferenceStore.config)
       // When classification is enabled, clear the dir so user sees it's optional;
       // otherwise sync from preferences as usual.
       if (preferenceStore.config.fileCategoryEnabled) {
@@ -269,6 +268,8 @@ watch(
   { deep: true },
 )
 
+const submitLabel = computed(() => t('app.submit'))
+
 /** Whether file classification is currently enabled in preferences. */
 const categoryEnabled = computed(() => preferenceStore.config.fileCategoryEnabled)
 
@@ -283,12 +284,7 @@ function resolveCategoryMatches(): Map<string, { label: string; directory: strin
   for (const [index, uri] of uris.entries()) {
     const context = form.value.uriRequestContexts?.[uri]
     const category = resolveDownloadCategory(
-      mediaOutputHint(
-        uri,
-        outs[index] || form.value.out || extractDecodedFilename(uri),
-        form.value.media?.mode,
-        form.value.media?.format,
-      ),
+      outs[index] || form.value.out || uri,
       preferenceStore.config.fileCategories,
       {
         urls: [uri, context?.finalUrl ?? '', context?.url ?? '', context?.referer ?? ''],
@@ -387,23 +383,27 @@ onMounted(async () => {
   }
 })
 
-// External input takes precedence over a clipboard read, even after URI entries
-// have been drained into the form. Asynchronous inspection never selects a tab.
-let batchReceived = false
-let draftGeneration = 0
+// When dialog opens: resolve file items, flush URIs into textarea, auto-select tab
+//
+// Race-condition guard: the batch.length watcher may fire and drain pendingBatch
+// BEFORE this async watcher finishes its clipboard read.  A simple `hasBatch`
+// re-check fails because the batch is already empty by that point.  Instead we
+// use a flag that the batch.length watcher sets synchronously whenever it writes
+// to form.uris — the flag survives the drain and is visible after the await.
+let batchDidWrite = false
 
 watch(
   () => props.show,
   async (visible) => {
-    const generation = ++draftGeneration
     if (!visible) {
-      batchReceived = false
+      batchDidWrite = false
       return
     }
     selectedBatchIndex.value = 0
 
     if (hasBatch.value) {
-      batchReceived = true
+      // Resolve file-based items
+      await localResolveUnresolvedItems()
       // Flush URI batch items into the editable textarea via normalized merge
       const uriItems = batch.value.filter((i) => i.kind === 'uri')
       if (uriItems.length > 0) {
@@ -422,15 +422,20 @@ watch(
       } else {
         switchTab(ADD_TASK_TYPE.URI)
       }
-      await localResolveUnresolvedItems()
     } else {
-      // Keep the tab selected by a newly arrived batch.
-      if (!batchReceived) switchTab(ADD_TASK_TYPE.URI)
+      // Only reset tab if batchWatcher hasn't already handled a programmatic
+      // switch — otherwise we'd cause a rapid URI→TORRENT bounce that
+      // confuses NTabs' animation direction.
+      if (!batchDidWrite) switchTab(ADD_TASK_TYPE.URI)
       // No batch — check clipboard for URIs
       try {
         const { readText } = await import('@tauri-apps/plugin-clipboard-manager')
         const text = await readText()
-        if (generation !== draftGeneration || !props.show || batchReceived) return
+        // Re-check: a deep-link/extension batch may have arrived and been
+        // processed (and drained) during the async readText() gap.
+        // `hasBatch` is unreliable here because batchWatcher drains
+        // pendingBatch after writing — use the flag instead.
+        if (batchDidWrite) return
         if (text && detectResource(text, preferenceStore.config.clipboard)) {
           form.value.uris = text.trim()
         }
@@ -448,11 +453,11 @@ watch(
   () => batch.value.length,
   async (newLen, oldLen) => {
     if (!props.show || newLen <= oldLen) return
-    batchReceived = true
     // Snapshot newly arrived items before any drain/resolve mutates the batch.
     const newlyArrived = batch.value.slice(oldLen)
     const uriItems = batch.value.filter((i) => i.kind === 'uri')
     if (uriItems.length > 0) {
+      batchDidWrite = true
       form.value.uris = mergeRawUriLines(
         '',
         uriItems.map((i) => i.payload),
@@ -463,7 +468,8 @@ watch(
       syncPendingExternalMetadata()
       appStore.pendingBatch = batch.value.filter((i) => i.kind !== 'uri')
     }
-    // Select the incoming source before starting its asynchronous inspection.
+    // Auto-switch tab SYNCHRONOUSLY (before any await) so NTabs computes
+    // the correct slide direction in the same render tick.
     const hasNewFiles = newlyArrived.some((i) => i.kind !== 'uri')
     const hasNewUris = newlyArrived.some((i) => i.kind === 'uri')
     if (hasNewFiles) {
@@ -496,7 +502,7 @@ async function chooseTorrentFile() {
 }
 
 async function retryTorrent(item: BatchItem) {
-  await resolveTorrentItem(item, t, getDownloadProxy(preferenceStore.config.proxy))
+  await retryTorrentInspection(item, t, getDownloadProxy(preferenceStore.config.proxy))
 }
 
 async function chooseDirectory() {
@@ -528,41 +534,15 @@ function selectUserAgentProfile(profile: UserAgentProfile) {
   preferenceStore.recordRecentUserAgentProfile(profile.id)
 }
 
-async function removeBatchItem(item: BatchItem) {
-  if (submitting.value) return
-  try {
-    if (item.browserContext?.requestId) await invoke('cancel_download_request', { id: item.browserContext.requestId })
-  } catch (error) {
-    message.error(getErrorMessage(error))
-    return
-  }
+function removeBatchItem(item: BatchItem) {
   appStore.pendingBatch = batch.value.filter((i) => i !== item)
   selectedBatchIndex.value = Math.min(selectedBatchIndex.value, Math.max(0, fileItems.value.length - 1))
 }
 
 // ── Submit ───────────────────────────────────────────────────────────
 
-async function handleClose(userDismiss = true) {
-  if (submitting.value && userDismiss) return
-  {
-    const ids = new Set(
-      batch.value.flatMap((item) => (item.browserContext?.requestId ? [item.browserContext.requestId] : [])),
-    )
-    try {
-      await Promise.all([...ids].map((id) => invoke('cancel_download_request', { id })))
-    } catch (error) {
-      message.error(getErrorMessage(error))
-      return
-    }
-  }
+function handleClose() {
   emit('close')
-}
-
-function handleAfterLeave() {
-  if (props.show) return
-  submitError.value = ''
-  appStore.finishAddTaskClose()
-  emit('afterLeave')
   Object.assign(form.value, {
     uris: '',
     out: '',
@@ -587,7 +567,6 @@ function handleAfterLeave() {
 async function handleSubmit() {
   if (submitting.value || !canSubmit.value) return
   submitting.value = true
-  submitError.value = ''
 
   try {
     // Validate custom proxy before building options
@@ -620,7 +599,12 @@ async function handleSubmit() {
       await submitBatchItems(batch.value, options, taskStore, fileCategory)
     }
     if (form.value.uris.trim()) {
-      manualResult = await submitManualUris(effectiveForm, taskStore, fileCategory)
+      manualResult = await submitManualUris(
+        effectiveForm,
+        taskStore,
+        fileCategory,
+        getDownloadProxy(preferenceStore.config.proxy),
+      )
     }
 
     const failedCount = batch.value.filter((i) => i.status === 'failed').length + manualResult.magnetFailures.length
@@ -658,7 +642,7 @@ async function handleSubmit() {
         }
       }
 
-      await handleClose(false)
+      handleClose()
 
       // ── Record directory for the recent-folders popover ────────
       const effectiveDir = form.value.dir.trim() || preferenceStore.config.dir
@@ -682,7 +666,6 @@ async function handleSubmit() {
       fallback: t('task.error-unknown'),
       labels: { Aria2: t('task.error-aria2-next') },
     })
-    submitError.value = errMsg
     logger.error('AddTask.submit', e)
     if (category === 'engine-not-ready') {
       message.error(t('app.engine-not-ready'), { closable: true })
@@ -698,156 +681,99 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <AppDialog
+  <NModal
     :show="props.show"
-    height="640px"
-    :title="t('task.new-task-title')"
-    :busy="submitting"
-    :auto-focus="true"
-    @close="handleClose"
-    @after-leave="handleAfterLeave"
+    :mask-closable="false"
+    :close-on-esc="true"
+    :auto-focus="false"
+    transform-origin="center"
+    :transition="{ name: 'fade-scale' }"
+    @update:show="
+      (v: boolean) => {
+        if (!v) handleClose()
+      }
+    "
   >
-    <NForm :show-feedback="false" label-placement="top" :disabled="submitting" class="download-form">
-      <NTabs
-        :value="activeTab"
-        type="segment"
-        size="small"
-        animated
-        pane-wrapper-class="task-source-panes"
-        :pane-wrapper-style="{ '--task-source-direction': sourceDirection }"
-        @update:value="activateTab"
-      >
-        <!-- ── URI Tab ──────────────────────────────────────── -->
-        <NTabPane
-          :name="ADD_TASK_TYPE.URI"
-          :tab="t('task.uri-task')"
-          display-directive="show"
-          :inert="activeTab !== ADD_TASK_TYPE.URI"
-        >
-          <div class="tab-pane-content">
-            <NFormItem
-              :label="t('task.download-links')"
-              :show-feedback="linksInvalid"
-              :validation-status="linksInvalid ? 'error' : undefined"
-              :feedback="linksInvalid ? t('task.invalid-links') : undefined"
-            >
-              <NInput
-                v-model:value="form.uris"
-                class="uri-input"
-                type="textarea"
-                :rows="3"
-                :input-props="{ 'aria-label': t('task.download-links'), 'aria-invalid': linksInvalid }"
-                :placeholder="t('task.uri-task-tips') || 'One URL per line'"
-              />
-            </NFormItem>
-          </div>
-        </NTabPane>
+    <NCard
+      :title="t('task.new-task')"
+      closable
+      class="add-task-card"
+      :style="{
+        maxWidth: '680px',
+        minWidth: 'min(380px, calc(100vw - 24px))',
+        width: '70vw',
+        margin: 'auto',
+        height: '82vh',
+        display: 'flex',
+        flexDirection: 'column',
+      }"
+      :content-style="{ flex: '1', minHeight: '0', overflowY: 'auto', overflowX: 'hidden' }"
+      :segmented="{ footer: true }"
+      @close="handleClose"
+    >
+      <NForm label-placement="left" label-width="110px">
+        <NTabs ref="tabsRef" :value="activeTab" type="line" animated @update:value="activateTab">
+          <!-- ── URI Tab ──────────────────────────────────────── -->
+          <NTabPane :name="ADD_TASK_TYPE.URI" :tab="t('task.uri-task') || 'URL'">
+            <div class="tab-pane-content">
+              <NFormItem :show-label="false" style="margin-bottom: 0">
+                <NInput
+                  v-model:value="form.uris"
+                  class="uri-input"
+                  type="textarea"
+                  :rows="5"
+                  :placeholder="t('task.uri-task-tips') || 'One URL per line'"
+                />
+              </NFormItem>
+            </div>
+          </NTabPane>
 
-        <!-- ── Torrent Tab ─────────────────────────────────── -->
-        <NTabPane
-          :name="ADD_TASK_TYPE.TORRENT"
-          :tab="t('task.torrent-task')"
-          display-directive="show"
-          :inert="activeTab !== ADD_TASK_TYPE.TORRENT"
-        >
-          <div class="tab-pane-content">
-            <!-- Torrent panel: animated batch list + file detail -->
-            <div v-if="fileItems.length > 0" class="torrent-panel">
-              <!-- The same keyed items remain mounted during their leave transition. -->
-              <TransitionGroup
-                tag="div"
-                name="torrent-item"
-                class="batch-list"
-                @before-leave="(element) => element.setAttribute('inert', '')"
-                @before-enter="(element) => element.removeAttribute('inert')"
-                @leave-cancelled="(element) => element.removeAttribute('inert')"
-              >
-                <div
-                  v-for="(item, idx) in fileItems"
-                  :key="item.id"
-                  class="batch-item"
-                  :class="{ 'batch-item-selected': idx === selectedBatchIndex }"
-                >
-                  <button
-                    type="button"
-                    class="batch-item-select"
-                    :aria-pressed="idx === selectedBatchIndex"
-                    :title="item.displayName"
+          <!-- ── Torrent Tab ─────────────────────────────────── -->
+          <NTabPane :name="ADD_TASK_TYPE.TORRENT" :tab="t('task.torrent-task') || 'Torrent'">
+            <div v-motion-auto-animate="{ duration: 200, easing: 'ease-out' }" class="tab-pane-content">
+              <!-- Torrent panel: animated batch list + file detail -->
+              <div v-if="fileItems.length > 0" class="torrent-panel">
+                <!-- Batch list with AutoAnimate transitions -->
+                <div v-motion-auto-animate="{ duration: 200, easing: 'ease-out' }" class="batch-list">
+                  <div
+                    v-for="(item, idx) in fileItems"
+                    :key="item.id"
+                    class="batch-item"
+                    :class="{ 'batch-item-selected': idx === selectedBatchIndex }"
                     @click="selectedBatchIndex = idx"
                   >
-                    <NIcon :size="18"><File /></NIcon>
-                    <span class="batch-item-copy">
-                      <span class="batch-item-name">{{ item.displayName }}</span>
-                      <span v-if="item.inspectionState === 'failed'" class="batch-item-error">{{ item.error }}</span>
-                    </span>
-                  </button>
-                  <div class="batch-item-status">
-                    <Transition
-                      name="fade"
-                      @before-leave="(element) => element.setAttribute('inert', '')"
-                      @before-enter="(element) => element.removeAttribute('inert')"
-                      @leave-cancelled="(element) => element.removeAttribute('inert')"
-                    >
-                      <span
-                        v-if="item.inspectionState === 'reading' || item.inspectionState === 'inspecting'"
-                        key="loading"
-                        class="batch-item-indicator"
-                        role="status"
-                        :aria-label="`${item.displayName}: ${t('about.loading')}`"
-                        :title="t('about.loading')"
-                      >
-                        <NSpin :size="16" />
-                      </span>
-                      <NButton
-                        v-else-if="item.inspectionState === 'failed'"
-                        key="retry"
-                        quaternary
-                        size="small"
-                        :disabled="submitting"
-                        :aria-label="`${t('app.retry')}: ${item.displayName}`"
-                        :title="t('app.retry')"
-                        @click="retryTorrent(item)"
-                      >
-                        <template #icon
-                          ><NIcon :size="16"><RefreshCw /></NIcon
-                        ></template>
-                      </NButton>
-                    </Transition>
+                    <div class="batch-item-main">
+                      <NEllipsis :style="{ maxWidth: '400px', flex: 1 }">{{ item.displayName }}</NEllipsis>
+                      <NSpace :size="4" align="center" :wrap="false">
+                        <NTag type="info" size="small" :bordered="false">
+                          {{ t('task.torrent-task') }}
+                        </NTag>
+                        <NButton quaternary size="tiny" @click.stop="removeBatchItem(item)">✕</NButton>
+                      </NSpace>
+                    </div>
                   </div>
-                  <NButton
-                    quaternary
-                    size="small"
-                    class="batch-item-remove"
-                    :aria-label="`${t('task.delete-task')}: ${item.displayName}`"
-                    @click="removeBatchItem(item)"
-                  >
-                    <template #icon
-                      ><NIcon :size="16"><X /></NIcon
-                    ></template>
-                  </NButton>
                 </div>
-              </TransitionGroup>
 
-              <!-- Add more files button -->
-              <NButton size="small" quaternary class="add-torrent-button" @click="chooseTorrentFile">
-                <template #icon>
-                  <NIcon><CloudUpload /></NIcon>
-                </template>
-                {{ t('task.add-torrent') }}
-              </NButton>
+                <!-- Add more files button -->
+                <NButton size="small" dashed block style="margin-top: 6px" @click="chooseTorrentFile">
+                  <template #icon>
+                    <NIcon><CloudUploadOutline /></NIcon>
+                  </template>
+                  {{ t('task.select-torrent') || 'Select torrent files' }}
+                </NButton>
 
-              <div class="torrent-inspection">
-                <Transition
-                  name="fade"
-                  @before-leave="(element) => element.setAttribute('inert', '')"
-                  @before-enter="(element) => element.removeAttribute('inert')"
-                  @leave-cancelled="(element) => element.removeAttribute('inert')"
-                >
+                <Transition name="content-fade" mode="out-in">
                   <div
-                    v-if="selectedItem?.inspectionState === 'ready' && selectedItem.torrentMeta"
-                    :key="selectedItem.id"
-                    class="torrent-inspection-result"
+                    v-if="selectedItem?.inspectionState === 'failed'"
+                    :key="`${selectedItem.id}-failed`"
+                    class="torrent-inspection-error"
                   >
+                    <span>{{ selectedItem.error }}</span>
+                    <NButton size="tiny" type="primary" ghost @click="retryTorrent(selectedItem)">
+                      {{ t('app.retry') }}
+                    </NButton>
+                  </div>
+                  <div v-else-if="selectedItem?.torrentMeta" :key="selectedItem.id" class="torrent-inspection-result">
                     <BtFileSelector
                       v-model:selected-indices="selectedFileIndices"
                       :files="selectedTorrentFiles"
@@ -856,311 +782,240 @@ async function handleSubmit() {
                   </div>
                 </Transition>
               </div>
+
+              <!-- Upload zone: shown when no torrents loaded -->
+              <div v-if="fileItems.length === 0" class="torrent-upload-zone" @click="chooseTorrentFile">
+                <NIcon :size="36" :depth="3"><CloudUploadOutline /></NIcon>
+                <span class="torrent-upload-text">
+                  {{ t('task.select-torrent') || 'Drag torrent here or click to select' }}
+                </span>
+              </div>
             </div>
+          </NTabPane>
+        </NTabs>
 
-            <!-- Upload zone: shown when no torrents loaded -->
-            <button v-if="fileItems.length === 0" type="button" class="torrent-upload-zone" @click="chooseTorrentFile">
-              <NIcon :size="36" :depth="3"><CloudUpload /></NIcon>
-              <span class="torrent-upload-text">
-                {{ t('task.select-torrent') }}
-              </span>
-            </button>
-          </div>
-        </NTabPane>
-      </NTabs>
-
-      <!-- ── Download settings: always visible ──────────────── -->
-      <div class="download-settings">
-        <NFormItem :label="dirLabel">
-          <div style="width: 100%">
-            <NInputGroup>
-              <NInput
-                :value="displayedDir"
-                style="flex: 1"
-                :placeholder="categoryEnabled ? t('task.category-dir-placeholder') : ''"
-                @update:value="onDirInput"
-              />
-              <NButton :aria-label="t('task.choose-folder')" @click="chooseDirectory">
-                <template #icon>
-                  <NIcon><FolderOpen /></NIcon>
-                </template>
-              </NButton>
-              <DirectoryPopover @select="onDirectorySelect" />
-            </NInputGroup>
-            <NCollapseTransition :show="!!categoryPreviewText">
-              <p class="field-hint">{{ categoryPreviewText }}</p>
-            </NCollapseTransition>
-          </div>
-        </NFormItem>
-        <NFormItem :label="t('task.task-out')">
-          <NInput v-model:value="form.out" :placeholder="t('task.task-out-tips')" :autofocus="false" />
-        </NFormItem>
-        <div
-          class="task-advanced"
-          :class="{ 'task-advanced--visible': activeTab === ADD_TASK_TYPE.URI }"
-          :inert="activeTab !== ADD_TASK_TYPE.URI"
-        >
-          <div class="task-advanced-content">
-            <AdvancedOptions
-              v-model:show="showAdvanced"
-              v-model:authorization="form.authorization"
-              v-model:http-auth-username="form.httpAuthUsername"
-              v-model:http-auth-password="form.httpAuthPassword"
-              v-model:save-http-auth="form.saveHttpAuth"
-              v-model:referer="form.referer"
-              v-model:cookie="form.cookie"
-              v-model:proxy-mode="form.proxyMode"
-              v-model:custom-proxy="form.customProxy"
-              v-model:custom-proxy-username="form.customProxyUsername"
-              v-model:custom-proxy-password="form.customProxyPassword"
-              :source-url="firstRegularUri"
-              :user-agent="form.userAgent"
-              :user-agent-source="userAgentSourceText"
-              :user-agent-profiles="preferenceStore.config.userAgentProfiles"
-              :user-agent-rules="preferenceStore.config.userAgentRules"
-              :recent-user-agent-profile-ids="preferenceStore.config.recentUserAgentProfileIds"
-              :media-mode="form.media?.mode"
-              @update:media-mode="
-                (mode) => {
-                  if (form.media) form.media.mode = mode
-                }
-              "
-              @update:user-agent="onUserAgentInput"
-              @select-user-agent-profile="selectUserAgentProfile"
-            >
-              <NFormItem
-                :label="t('task.task-connections')"
-                v-bind="configFieldProps('streamMaxConnections', form.streamMaxConnections)"
-              >
-                <NInputNumber
-                  v-model:value="form.streamMaxConnections"
-                  :min="constraint('streamMaxConnections').min"
-                  :max="constraint('streamMaxConnections').max"
-                  style="width: 120px"
+        <!-- ── Download settings: always visible ──────────────── -->
+        <div class="download-settings">
+          <NFormItem :label="t('task.task-out') + ':'">
+            <NInput v-model:value="form.out" :placeholder="t('task.task-out-tips')" :autofocus="false" />
+          </NFormItem>
+          <NFormItem
+            :label="t('task.task-connections') + ':'"
+            v-bind="configFieldProps('streamMaxConnections', form.streamMaxConnections)"
+          >
+            <NInputNumber
+              v-model:value="form.streamMaxConnections"
+              :min="constraint('streamMaxConnections').min"
+              :max="constraint('streamMaxConnections').max"
+              style="width: 120px"
+            />
+          </NFormItem>
+          <NFormItem :label="dirLabel + ':'">
+            <div style="width: 100%">
+              <NInputGroup>
+                <NInput
+                  :value="displayedDir"
+                  style="flex: 1"
+                  :placeholder="categoryEnabled ? t('task.category-dir-placeholder') : ''"
+                  @update:value="onDirInput"
                 />
-              </NFormItem>
-            </AdvancedOptions>
-          </div>
+                <NButton @click="chooseDirectory">
+                  <template #icon>
+                    <NIcon><FolderOpenOutline /></NIcon>
+                  </template>
+                </NButton>
+                <DirectoryPopover @select="onDirectorySelect" />
+              </NInputGroup>
+              <div class="category-hint-collapse" :class="{ 'category-hint-collapse--open': !!categoryPreviewText }">
+                <div class="category-hint-collapse__inner">
+                  <Transition name="category-hint" mode="out-in">
+                    <div v-if="categoryPreviewText" :key="categoryPreviewText" class="category-hint-text">
+                      ⓘ {{ categoryPreviewText }}
+                    </div>
+                  </Transition>
+                </div>
+              </div>
+            </div>
+          </NFormItem>
+          <AdvancedOptions
+            v-model:show="showAdvanced"
+            v-model:authorization="form.authorization"
+            v-model:http-auth-username="form.httpAuthUsername"
+            v-model:http-auth-password="form.httpAuthPassword"
+            v-model:save-http-auth="form.saveHttpAuth"
+            v-model:referer="form.referer"
+            v-model:cookie="form.cookie"
+            v-model:proxy-mode="form.proxyMode"
+            v-model:custom-proxy="form.customProxy"
+            v-model:custom-proxy-username="form.customProxyUsername"
+            v-model:custom-proxy-password="form.customProxyPassword"
+            :source-url="firstRegularUri"
+            :user-agent="form.userAgent"
+            :user-agent-source="userAgentSourceText"
+            :user-agent-profiles="preferenceStore.config.userAgentProfiles"
+            :user-agent-rules="preferenceStore.config.userAgentRules"
+            :recent-user-agent-profile-ids="preferenceStore.config.recentUserAgentProfileIds"
+            @update:user-agent="onUserAgentInput"
+            @select-user-agent-profile="selectUserAgentProfile"
+          />
         </div>
-      </div>
-    </NForm>
-    <NAlert v-if="submitError" type="error" role="alert">{{ submitError }}</NAlert>
-    <template #footer>
-      <NButton @click="() => handleClose()">{{ t('app.cancel') }}</NButton>
-      <NButton
-        data-testid="submit-button"
-        type="primary"
-        :loading="submitting"
-        :disabled="!canSubmit"
-        @click="handleSubmit"
-      >
-        {{ t('task.magnet-start-download') }}
-      </NButton>
-    </template>
-  </AppDialog>
+      </NForm>
+      <template #footer>
+        <NSpace justify="end">
+          <NButton @click="handleClose">{{ t('app.cancel') }}</NButton>
+          <NButton
+            data-testid="submit-button"
+            type="primary"
+            :loading="submitting"
+            :disabled="!canSubmit"
+            @click="handleSubmit"
+          >
+            {{ submitLabel }}
+          </NButton>
+        </NSpace>
+      </template>
+    </NCard>
+  </NModal>
 </template>
 
 <style scoped>
-.download-form :deep(.task-source-panes) {
-  --task-source-step: 32px;
-}
-.download-form :deep(.task-source-panes:dir(rtl)) {
-  --task-source-step: -32px;
-}
-/* Naive UI owns the transition lifecycle and height. Its public pane styles
-   supply direction for both clicks and external inputs without instance writes. */
-.download-form :deep(.task-source-panes .n-tab-pane:is(.next-transition-enter-from, .prev-transition-enter-from)) {
-  transform: translateX(calc(var(--task-source-step) * var(--task-source-direction)));
-}
-.download-form :deep(.task-source-panes .n-tab-pane:is(.next-transition-leave-to, .prev-transition-leave-to)) {
-  transform: translateX(calc(-1 * var(--task-source-step) * var(--task-source-direction)));
-}
-.task-advanced {
-  /* Preserve form state; NCollapseTransition unmounts its hidden subtree. */
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  transition:
-    grid-template-rows 200ms cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-.task-advanced--visible {
-  grid-template-rows: 1fr;
-  opacity: 1;
-}
-.task-advanced-content {
-  min-height: 0;
-  overflow: hidden;
-}
+/* Fixed-height tab panes prevent jitter when switching tabs.
+ * URI textarea rows=5 ≈ 138px — keep both panes at same min-height. */
 .tab-pane-content {
-  min-height: 144px;
-  padding-top: 12px;
-}
-.uri-input :deep(textarea) {
-  overflow-wrap: anywhere;
-}
-.field-hint {
-  font-size: 13px;
-  color: var(--rb-text-muted);
-  line-height: 20px;
-  margin-top: 8px;
-}
-.torrent-panel {
-  display: grid;
-  gap: 12px;
-  padding-block: 8px;
-}
-.batch-list {
-  position: relative;
-  display: grid;
-  gap: 4px;
-  padding: 2px;
-}
-.batch-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-  padding-inline-end: 4px;
-  border-radius: var(--rb-radius-control);
-  transition: background-color 120ms ease;
-}
-.batch-item-selected {
-  background: var(--rb-selected);
-}
-.batch-item-select {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-  min-height: 40px;
-  padding: 8px;
-  border: 0;
-  border-radius: var(--rb-radius-control);
-  background: transparent;
-  color: var(--rb-text);
-  text-align: start;
-  cursor: pointer;
-}
-.batch-item-copy {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.batch-item-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.batch-item-error {
-  color: var(--rb-danger);
-  font-size: 12px;
-  line-height: 18px;
-  overflow-wrap: anywhere;
-}
-.batch-item-status {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 28px;
-  height: 28px;
-}
-.batch-item-status > * {
-  grid-area: 1 / 1;
-}
-.batch-item-status :deep(.n-button) {
-  width: 28px;
-  padding-inline: 0;
-}
-.batch-item-status :deep(.fade-leave-active) {
-  pointer-events: none;
-}
-.batch-item-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.batch-item-select:focus-visible {
-  outline-offset: -2px;
-}
-.batch-item-remove:focus-visible {
-  outline-offset: -2px;
-}
-.add-torrent-button {
-  justify-self: start;
-}
-.torrent-item-move,
-.torrent-item-enter-active,
-.torrent-item-leave-active {
-  transition:
-    transform 180ms ease,
-    opacity 140ms ease;
-}
-.torrent-item-enter-from,
-.torrent-item-leave-to {
-  opacity: 0;
-}
-.torrent-item-leave-active {
-  position: absolute;
-  inset-inline: 2px;
-  pointer-events: none;
-}
-.torrent-inspection {
-  display: grid;
-}
-.torrent-inspection:empty {
-  display: none;
-}
-.torrent-inspection > * {
-  grid-area: 1 / 1;
-  min-width: 0;
+  min-height: 150px;
 }
 
+.uri-input :deep(.n-input__textarea-el) {
+  white-space: pre-wrap;
+  overflow-wrap: normal;
+  word-break: break-all;
+  hyphens: none;
+}
+
+/* ── Torrent panel ────────────────────────────────────────────────── */
+.torrent-panel {
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--m3-outline-variant);
+  background: var(--m3-surface-container-low);
+}
+
+/* ── Batch list ───────────────────────────────────────────────────── */
+.batch-list {
+  border-radius: 6px;
+  border: 1px solid var(--m3-outline-variant);
+  overflow: hidden;
+}
+
+.torrent-inspection-result,
+.torrent-inspection-error {
+  margin-top: 8px;
+}
+
+.torrent-inspection-error {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--m3-error);
+}
+
+/* ── Upload zone (when no torrents) ───────────────────────────────── */
 .torrent-upload-zone {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  min-height: 150px;
-  border: 1.5px dashed var(--rb-border);
-  border-radius: var(--rb-radius-card);
-  background: var(--rb-fill);
-  color: var(--rb-text-muted);
-  transition:
-    border-color var(--rb-motion-feedback) var(--rb-ease),
-    background-color var(--rb-motion-feedback) var(--rb-ease),
-    color var(--rb-motion-feedback) var(--rb-ease);
+  gap: 6px;
+  min-height: 138px;
+  border: 1px dashed var(--m3-drop-zone-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 .torrent-upload-zone:hover {
-  border-color: var(--rb-accent);
-  background: var(--rb-accent-soft);
-  color: var(--rb-accent-text);
+  border-color: var(--m3-primary);
 }
+.torrent-upload-text {
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+/* ── Download settings ────────────────────────────────────────────── */
 .download-settings {
-  padding-top: 20px;
+  margin-top: 4px;
 }
-.download-form :deep(.n-form-item) {
-  margin-block-end: 22px;
+</style>
+
+<!-- Non-scoped: Vue Transition classes must NOT be scoped -->
+<style>
+/* ── Batch item base styles ───────────────────────────────────────── */
+.batch-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.15s;
 }
-.download-form :deep(.n-form-item-label) {
-  font-weight: 500;
-  padding-block: 0 6px;
-  color: var(--rb-text-muted);
+.batch-item:hover {
+  background: var(--m3-surface-container-high);
 }
-.download-form :deep(.n-form-item-feedback-wrapper) {
-  min-height: 0;
+.batch-item-selected {
+  background: var(--m3-surface-container-highest);
 }
-.download-form :deep(.n-input-group) {
-  align-items: stretch;
+.batch-item + .batch-item {
+  border-top: 1px solid var(--m3-outline-variant);
 }
-.download-form :deep(.n-input-group > .n-button) {
-  height: auto;
-  min-height: 36px;
+.batch-item-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
-.add-torrent-button {
-  margin-block: 8px;
+
+/* ── Content crossfade (file detail switching) ────────────────────── */
+.content-fade-enter-active {
+  transition: opacity 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.content-fade-leave-active {
+  transition: opacity 0.15s cubic-bezier(0.3, 0, 0.8, 0.15);
+}
+.content-fade-enter-from,
+.content-fade-leave-to {
+  opacity: 0;
+}
+
+/* ── Category hint below dir field ────────────────────────────────── */
+.category-hint-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.2, 0, 0, 1);
+}
+.category-hint-collapse--open {
+  grid-template-rows: 1fr;
+}
+.category-hint-collapse__inner {
+  overflow: hidden;
+}
+.category-hint-text {
+  font-size: var(--font-size-sm);
+  color: var(--n-text-color-3);
+  margin-top: 4px;
+  padding-left: 2px;
+}
+.category-hint-enter-active {
+  transition:
+    opacity 0.25s cubic-bezier(0.2, 0, 0, 1),
+    transform 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+.category-hint-leave-active {
+  transition:
+    opacity 0.15s cubic-bezier(0.3, 0, 0.8, 0.15),
+    transform 0.15s cubic-bezier(0.3, 0, 0.8, 0.15);
+}
+.category-hint-enter-from,
+.category-hint-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>

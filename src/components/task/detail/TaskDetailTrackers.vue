@@ -165,7 +165,7 @@ onMounted(refreshTrackers)
     :data="rows"
     :row-key="(row) => row.url"
     size="small"
-    :bordered="false"
+    :bordered="true"
     :max-height="400"
     :virtual-scroll="true"
     :min-row-height="34"

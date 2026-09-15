@@ -1,11 +1,14 @@
 use crate::error::AppError;
 use crate::services::{deep_link, external_input, frontend_action, http_api};
 
-/// Apply the extension API binding from Connections preferences.
-/// Matching bindings remain running across combined engine and API changes.
+/// Restart the embedded HTTP API server on a new port.
+///
+/// Called by the frontend when the user changes `extensionApiPort` in
+/// Advanced settings and confirms the port-switch dialog.  The old server
+/// is stopped before binding the new port.
 #[tauri::command]
-pub async fn apply_http_api(app: tauri::AppHandle, port: u16) -> Result<u16, AppError> {
-    http_api::apply_on_port(&app, port).await
+pub async fn restart_http_api(app: tauri::AppHandle, port: u16) -> Result<u16, AppError> {
+    http_api::restart_on_port(&app, port).await
 }
 
 /// Drain and return all pending deep-link URLs.

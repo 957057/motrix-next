@@ -1,6 +1,7 @@
 /** @fileoverview Application-wide constants: themes, intervals, suffixes, limits. */
 import { DEFAULT_TASK_MANUAL_ORDER, DEFAULT_TASK_SORT } from '@/composables/useTaskSort'
 import type { AppLogLevel, Aria2LogLevel } from '@shared/types'
+import type { I18nKey } from '@shared/i18nTypes'
 export const EMPTY_STRING = ''
 
 export const APP_THEME = {
@@ -8,6 +9,45 @@ export const APP_THEME = {
   LIGHT: 'light',
   DARK: 'dark',
 }
+
+/** Color scheme definition for the preset palette picker. */
+export interface ColorSchemeDefinition {
+  /** Unique identifier stored in config (kebab-case). */
+  id: string
+  /** i18n key suffix: `preferences.color-scheme-{id}` */
+  labelKey: I18nKey
+  /** Seed hex fed to MCU `themeFromSourceColor` to generate the full M3 tonal palette. */
+  seed: string
+  /** Palette generation mode. Content keeps low-chroma colors visually neutral. */
+  variant?: 'source' | 'content'
+}
+
+/**
+ * 10 curated preset color schemes spanning warm, cool, and neutral hues.
+ *
+ * Each seed is chosen for:
+ * - Even HSL hue distribution (~36° apart) to avoid clustering
+ * - WCAG AA contrast compliance when MCU-generated
+ * - Aesthetic harmony across both light and dark M3 surfaces
+ *
+ * Sources: Tailwind CSS v4, macOS system colors, Catppuccin/Nord,
+ * M3 Material Theme Builder, color psychology research.
+ */
+export const COLOR_SCHEMES: ColorSchemeDefinition[] = [
+  { id: 'amber', labelKey: 'preferences.color-scheme-amber', seed: '#E0A422' },
+  { id: 'space', labelKey: 'preferences.color-scheme-space', seed: '#4A6CF7' },
+  { id: 'mint', labelKey: 'preferences.color-scheme-mint', seed: '#10B981' },
+  { id: 'rose', labelKey: 'preferences.color-scheme-rose', seed: '#F43F5E' },
+  { id: 'aurora', labelKey: 'preferences.color-scheme-aurora', seed: '#8B5CF6' },
+  { id: 'coral', labelKey: 'preferences.color-scheme-coral', seed: '#F97316' },
+  { id: 'glacier', labelKey: 'preferences.color-scheme-glacier', seed: '#06B6D4' },
+  { id: 'evergreen', labelKey: 'preferences.color-scheme-evergreen', seed: '#15803D' },
+  { id: 'graphite', labelKey: 'preferences.color-scheme-graphite', seed: '#737373', variant: 'content' },
+  { id: 'sakura', labelKey: 'preferences.color-scheme-sakura', seed: '#EC4899' },
+]
+
+export const CUSTOM_COLOR_SCHEME_ID = 'custom'
+export const DEFAULT_CUSTOM_COLOR_SCHEME = '#737373'
 
 export const ADD_TASK_TYPE = {
   URI: 'uri',
@@ -70,7 +110,7 @@ export const UPDATE_CHANNELS = ['stable', 'beta', 'latest'] as const
  * Each value is justified by industry research:
  * - Aria2 Next native defaults and accepted ranges
  * - BT client conventions (qBittorrent, Transmission, Deluge)
- * - Download manager standards (IDM, FDM, Rayburst)
+ * - Download manager standards (IDM, FDM, Motrix)
  * - Security best practices (UPnP off, rpcSecret generated at runtime)
  *
  * Dynamic values handled at runtime:
@@ -152,6 +192,10 @@ export const MAX_FILE_CATEGORIES = 20
  *  on categories loaded from persisted config (which may lack the field). */
 export const BUILTIN_CATEGORY_LABELS: ReadonlySet<string> = new Set(BUILTIN_CATEGORY_TEMPLATES.map((t) => t.label))
 
+/** Latest registered SQLite migration version for history.db.
+ *  Keep this in sync with tauri_plugin_sql migrations in src-tauri/src/lib.rs. */
+export const CURRENT_DB_SCHEMA_VERSION = 3
+
 /** Official, independently hosted tracker-list sources. */
 export const TRACKER_SOURCE_OPTIONS = [
   {
@@ -169,12 +213,15 @@ export const TRACKER_SOURCE_OPTIONS = [
 export const DEFAULT_TRACKER_SOURCE = TRACKER_SOURCE_OPTIONS.map((source) => source.value)
 
 export const DEFAULT_APP_CONFIG = {
+  configVersion: 7,
+  dbSchemaVersion: CURRENT_DB_SCHEMA_VERSION,
   // ── Appearance ──────────────────────────────────────────────────
   theme: 'auto' as const,
-  colorScheme: 'electric',
-  customColorScheme: '#737373',
+  colorScheme: 'amber',
+  customColorScheme: DEFAULT_CUSTOM_COLOR_SCHEME,
   taskCardMode: 'full' as const,
   reduceMotion: false,
+  taskListWatermark: true,
   sidebarTaskCounts: true,
   taskPageSize: 20,
   locale: 'auto',
@@ -236,8 +283,6 @@ export const DEFAULT_APP_CONFIG = {
   taskNotification: true, // users expect download-complete notifications
   notifyOnStart: true,
   notifyOnComplete: true, // main value of OS notification: background completion alert
-  mediaSelectBeforeDownload: true,
-  mediaDefaultFormat: 'mp4' as const,
   newTaskShowDownloading: true, // auto-navigate to downloads after adding task
   noConfirmBeforeDeleteTask: false, // require confirmation to prevent accidental deletion
   fileDeletionMode: 'trash' as const,
@@ -253,7 +298,7 @@ export const DEFAULT_APP_CONFIG = {
   lastCheckUpdateTime: 0,
 
   // ── Network & Security ────────────────────────────────────────
-  enableUpnp: true, // old Rayburst=true; required for BitTorrent behind NAT
+  enableUpnp: true, // old Motrix=true; required for BitTorrent behind NAT
   rpcListenPort: ENGINE_RPC_PORT,
   extensionApiPort: EXTENSION_API_PORT,
   allowRemoteAccess: false,

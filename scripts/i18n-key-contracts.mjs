@@ -1,12 +1,5 @@
 /** Locale keys referenced through typed maps, constrained templates, or helper return values. */
 export const INDIRECT_I18N_KEYS = [
-  'media.duration',
-  'media.received',
-  'media.probing',
-  'media.waiting-selection',
-  'media.downloading',
-  'media.recording',
-  'media.finalizing',
   'about.license',
   'about.release',
   'about.support',
@@ -18,7 +11,7 @@ export const INDIRECT_I18N_KEYS = [
   'preferences.bt-external-ip-invalid',
   'preferences.bt-external-port-invalid',
   'preferences.bt-proxy-unsupported-protocol',
-  'preferences.color-scheme-electric',
+  'preferences.color-scheme-amber',
   'preferences.color-scheme-aurora',
   'preferences.color-scheme-coral',
   'preferences.color-scheme-custom',
