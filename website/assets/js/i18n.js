@@ -108,7 +108,12 @@ function detectLocale() {
     if (resolved) return resolved
   }
   // 2. localStorage
-  const stored = localStorage.getItem(STORAGE_KEY)
+  let stored
+  try {
+    stored = localStorage.getItem(STORAGE_KEY)
+  } catch {
+    // Language detection does not require persistent storage.
+  }
   if (stored && SUPPORTED_LOCALES.includes(stored)) return stored
   // 3. navigator.languages (preferred over navigator.language)
   //    On Windows + Chromium, navigator.language returns the *browser UI*
@@ -125,13 +130,15 @@ function detectLocale() {
 }
 
 /** Fetch a locale JSON file. Returns parsed object or empty on failure. */
-async function fetchLocale(locale) {
+async function fetchLocale(locale, signal = AbortSignal.timeout(8000)) {
   try {
     const res = await fetch(new URL(`locales/${locale}.json`, document.baseURI), {
-      signal: AbortSignal.timeout(8000),
+      signal,
     })
     if (!res.ok) return {}
-    return await res.json()
+    const data = await res.json()
+    if (!data || Array.isArray(data) || typeof data !== 'object') return {}
+    return Object.fromEntries(Object.entries(data).filter(([, value]) => typeof value === 'string'))
   } catch {
     return {}
   }
@@ -242,19 +249,26 @@ function onLocaleChange(cb) {
 
 /** Initialize i18n: detect language, load messages, render. */
 async function initI18n() {
-  // Detect and remember the system locale (before checking localStorage/hash)
-  detectedSystemLocale = resolveLocale(navigator.language) || FALLBACK
-  currentLocale = detectLocale()
-  // Always load fallback for missing keys
-  fallbackMessages = await fetchLocale(FALLBACK)
-  if (currentLocale !== FALLBACK) {
-    messages = await fetchLocale(currentLocale)
-  } else {
-    messages = fallbackMessages
+  const boot = window.localeBoot
+  try {
+    detectedSystemLocale = resolveLocale(navigator.language) || FALLBACK
+    const locale = detectLocale()
+    const fallback = fetchLocale(FALLBACK, boot.signal)
+    const selected = locale === FALLBACK ? fallback : fetchLocale(locale, boot.signal)
+    const [english, localized] = await Promise.all([fallback, selected])
+    // A timed-out page has already revealed its static English content.
+    if (boot.finished) return
+    fallbackMessages = english
+    messages = localized
+    currentLocale = Object.keys(localized).length ? locale : FALLBACK
+    applyTranslations()
+    for (const cb of localeChangeCallbacks) cb()
+  } finally {
+    boot.finish()
   }
-  applyTranslations()
-  for (const cb of localeChangeCallbacks) cb()
 }
 
 // Expose globally for inline usage
 window.i18n = { t, setLocale, onLocaleChange, currentLocale: () => currentLocale, SUPPORTED_LOCALES }
+// Locale readiness owns first paint; GitHub requests and other UI code never gate it.
+window.i18n.ready = initI18n()

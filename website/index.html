@@ -12,14 +12,41 @@
     <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg" />
     <link rel="preload" href="assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="assets/css/style.css" />
+    <style>
+      html[data-locale-pending] {
+        background: var(--bg);
+      }
+      html[data-locale-pending] body {
+        visibility: hidden;
+      }
+    </style>
     <!-- Critical: apply stored theme before first paint, hide until i18n is ready -->
     <script>
       ;(() => {
-        document.documentElement.classList.add('js')
-        const t = localStorage.getItem('rayburst-website-theme')
+        const root = document.documentElement
+        root.setAttribute('data-locale-pending', '')
+        const controller = new AbortController()
+        const timer = setTimeout(() => window.localeBoot.finish(), 8000)
+        window.localeBoot = {
+          signal: controller.signal,
+          finished: false,
+          finish() {
+            if (this.finished) return
+            this.finished = true
+            clearTimeout(timer)
+            controller.abort()
+            root.removeAttribute('data-locale-pending')
+          },
+        }
+        let t
+        try {
+          t = localStorage.getItem('rayburst-website-theme')
+        } catch {
+          // Storage access is optional; system preferences still work.
+        }
         const effective =
           t === 'light' || t === 'dark' ? t : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
-        document.documentElement.dataset.theme = effective
+        root.dataset.theme = effective
       })()
     </script>
   </head>

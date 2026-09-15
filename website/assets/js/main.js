@@ -21,6 +21,7 @@ const revealObserver = new IntersectionObserver(
   { threshold: 0.08, rootMargin: '0px 0px -40px 0px' },
 )
 document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el))
+document.documentElement.classList.add('js')
 
 /* ═══ Bento spotlight — cursor-following highlight ═══════════════════ */
 document.querySelectorAll('.bcard').forEach((card) => {
@@ -111,16 +112,24 @@ langDropdown.addEventListener('click', (e) => {
   const getSystemTheme = () => (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
 
   const getStored = () => {
-    const v = localStorage.getItem(THEME_KEY)
-    return v === 'light' || v === 'dark' ? v : 'system'
+    try {
+      const v = localStorage.getItem(THEME_KEY)
+      return v === 'light' || v === 'dark' ? v : 'system'
+    } catch {
+      return 'system'
+    }
   }
 
   function applyTheme(choice) {
     const effective = choice === 'system' ? getSystemTheme() : choice
     document.documentElement.dataset.theme = effective
     if (meta) meta.content = colors[effective]
-    if (choice === 'system') localStorage.removeItem(THEME_KEY)
-    else localStorage.setItem(THEME_KEY, choice)
+    try {
+      if (choice === 'system') localStorage.removeItem(THEME_KEY)
+      else localStorage.setItem(THEME_KEY, choice)
+    } catch {
+      // Apply the theme even when storage is unavailable.
+    }
 
     label.textContent = i18n.t(i18nKeys[choice])
     const sysLabel = i18n.t(i18nKeys[getSystemTheme()])
@@ -170,7 +179,7 @@ langDropdown.addEventListener('click', (e) => {
   })
 
   matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
-    if (!localStorage.getItem(THEME_KEY)) applyTheme('system')
+    if (getStored() === 'system') applyTheme('system')
   })
 })()
 
@@ -328,7 +337,7 @@ function closeDlModal() {
 
 /* ═══ Boot ══════════════════════════════════════════════════════════ */
 ;(async () => {
-  await initI18n()
+  await i18n.ready
 
   const os = detectOS()
   const detected = document.getElementById('dl-detected')
