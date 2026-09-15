@@ -1,5 +1,5 @@
 /**
- * @fileoverview Lightweight i18n engine for the Motrix Next website.
+ * @fileoverview Locale loading and DOM translations for the Rayburst website.
  *
  * Architecture:
  *   1. Detect language: URL hash (#lang=xx) > localStorage > navigator.languages > en-US
@@ -8,7 +8,7 @@
  *   4. Handle interpolation: {variable} placeholders
  *   5. RTL support for Arabic and Persian
  *
- * Zero dependencies. ~90 lines.
+ * Zero dependencies.
  */
 
 const SUPPORTED_LOCALES = [
@@ -74,7 +74,7 @@ const LOCALE_NAMES = {
 
 const RTL_LOCALES = ['ar', 'fa']
 const FALLBACK = 'en-US'
-const STORAGE_KEY = 'motrix-website-lang'
+const STORAGE_KEY = 'rayburst-website-lang'
 
 let currentLocale = FALLBACK
 let detectedSystemLocale = null
@@ -127,7 +127,9 @@ function detectLocale() {
 /** Fetch a locale JSON file. Returns parsed object or empty on failure. */
 async function fetchLocale(locale) {
   try {
-    const res = await fetch(new URL(`locales/${locale}.json`, document.baseURI))
+    const res = await fetch(new URL(`locales/${locale}.json`, document.baseURI), {
+      signal: AbortSignal.timeout(8000),
+    })
     if (!res.ok) return {}
     return await res.json()
   } catch {
@@ -151,7 +153,7 @@ function t(key, vars) {
 function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     const key = el.getAttribute('data-i18n')
-    if (key) el.textContent = t(key)
+    if (key && (key in messages || key in fallbackMessages)) el.textContent = t(key)
   })
   // HTML interpolation variables — keeps locale files free of markup
   const HTML_VARS = {
@@ -160,12 +162,14 @@ function applyTranslations() {
   }
   document.querySelectorAll('[data-i18n-html]').forEach((el) => {
     const key = el.getAttribute('data-i18n-html')
-    if (key) el.innerHTML = t(key, HTML_VARS)
+    if (key && (key in messages || key in fallbackMessages)) el.innerHTML = t(key, HTML_VARS)
   })
-  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
-    const key = el.getAttribute('data-i18n-placeholder')
-    if (key) el.placeholder = t(key)
-  })
+  for (const attribute of ['alt', 'aria-label']) {
+    document.querySelectorAll(`[data-i18n-${attribute}]`).forEach((el) => {
+      const key = el.getAttribute(`data-i18n-${attribute}`)
+      if (key && (key in messages || key in fallbackMessages)) el.setAttribute(attribute, t(key))
+    })
+  }
 
   // Update HTML lang and dir attributes
   document.documentElement.lang = currentLocale
@@ -184,7 +188,7 @@ function applyTranslations() {
   const sysHint = document.getElementById('lang-system-hint')
   if (sysHint && detectedSystemLocale) {
     const sysName = LOCALE_NAMES[detectedSystemLocale] || detectedSystemLocale
-    sysHint.textContent = 'System: ' + sysName
+    sysHint.textContent = `${t('theme.system')}: ${sysName}`
     sysHint.dataset.lang = detectedSystemLocale
     sysHint.style.display = ''
     const sysSep = document.getElementById('lang-system-sep')

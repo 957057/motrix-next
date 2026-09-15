@@ -6,7 +6,6 @@
 ![Total Downloads](https://img.shields.io/github/downloads/AnInsomniacy/motrix-next/total.svg)
 <br>
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue.svg)
-![Bundle Size](https://img.shields.io/badge/bundle%20size-~20MB-brightgreen.svg)
 
 [![Website](https://img.shields.io/badge/Website-7B3ED1?style=for-the-badge&logo=safari&logoColor=white)](https://motrix-next.pages.dev)
 [![Rayburst Connect](https://img.shields.io/badge/Rayburst%20Connect-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/AnInsomniacy/motrix-next-extension)
@@ -14,7 +13,7 @@
 </div>
 
 > [!IMPORTANT]
-> **Rayburst is the new name of Motrix Next.** The rebrand is in transition: the GitHub repositories, release assets, package names and store listings still carry the Motrix Next name until the move completes, so links on this page open the `motrix-next` repositories. The next release is a major update that adds browser media discovery and HLS/DASH streaming. It ships on the Beta update channel first; switch to Beta in Settings → General to try it.
+> **Motrix Next is becoming Rayburst.** The next major release adds browser media discovery with Rayburst Connect and native HLS/DASH downloads, including track selection, live recording and MP4/MKV output. A Beta release is planned first. Existing releases and repository links still use the previous name; they do not include the upcoming features shown here.
 
 ---
 
@@ -57,7 +56,7 @@ Every transition and micro-interaction has been carefully tuned to follow [Mater
 - **Auto-update channels** — Stable, Beta, and Latest Across Channels policies with separate download and install phases
 - **Diagnostics** — Structured logs, exportable diagnostic ZIPs, database integrity checks, automatic DB rebuild, and Linux GPU rendering fallback
 - **Personalization** — Light/dark/system theme, 10 color schemes, 27 languages, and first-launch system language detection
-- **Lightweight bundle** — Tauri 2 + Rust backend with a ~20 MB application bundle
+- **Native desktop app** — Tauri 2 with a Rust backend
 
 ## Installation
 
@@ -143,7 +142,7 @@ Rayburst relies on [Aria2 Next](https://github.com/AnInsomniacy/aria2-next) as i
 
 These are fundamental constraints of the Tauri sidecar model and the Windows operating system, not limitations we can work around. Notable Tauri projects like [Clash Verge Rev](https://github.com/clash-verge-rev/clash-verge-rev) (80k+ stars) previously shipped portable builds but [discontinued them](https://clash-verge.com/) due to the same set of issues.
 
-We provide **NSIS installers** for Windows — lightweight (~20 MB), fast to install, and fully featured.
+We provide **NSIS installers** for Windows — with the bundled download engine.
 
 </details>
 
@@ -246,7 +245,7 @@ rayburst/
 │   └── binaries/               #   Aria2 Next sidecar binaries (6 platforms)
 ├── scripts/                    # bump-version.sh, release.sh
 ├── .github/workflows/          # CI (ci.yml) + Release (release.yml)
-└── website/                    # Landing page (Astro + React)
+└── website/                    # Static website (HTML, CSS and JavaScript)
 ```
 
 ## Contributing

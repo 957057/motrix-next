@@ -30,3 +30,12 @@ Interface slogans use the existing i18n dictionaries in all 27 supported locales
 The approved Simplified Chinese slogan is “捕光捉影，化虚为实。”
 Use its Traditional Chinese equivalent for zh-TW. Preserve the approved English
 slogan in English interfaces, README banners and promotional artwork.
+
+The website remains a standalone HTML, CSS and JavaScript site. Its light and dark
+colors use the desktop's default palette; the SVG logos retain their original colors.
+Website artwork copies come from `public/logo.svg`, Rayburst Connect's
+`public/icon/icon.svg`, and the screenshots in `docs/media/`.
+Keep the transition notice and release availability accurate. Browser media discovery
+and native HLS/DASH downloads are upcoming release features, not features of the
+currently published Motrix Next stable build. Keep working repository URLs until
+the repositories move. Localize website copy in all 27 languages.
