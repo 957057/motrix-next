@@ -448,6 +448,7 @@ mod tests {
 
     fn event() -> TaskEvent {
         TaskEvent {
+            media: None,
             gid: "g1".to_string(),
             name: "file.zip".to_string(),
             status: "complete".to_string(),

@@ -12,17 +12,13 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { listen } from '@tauri-apps/api/event'
+import { invoke } from '@tauri-apps/api/core'
 import { logger } from '@shared/logger'
 import { STAT_BASE_INTERVAL, STAT_PER_TASK_INTERVAL, STAT_MIN_INTERVAL, STAT_MAX_INTERVAL } from '@shared/timing'
-import {
-  detectExternalInputKind,
-  detectKind,
-  createBatchItem,
-  resolveExternalFilenameHint,
-} from '@shared/utils/batchHelpers'
+import { detectExternalInputKind, detectKind, createBatchItem } from '@shared/utils/batchHelpers'
 import { summarizeExternalInput } from '@shared/utils/externalInputDiagnostics'
 import { parseMotrixDeepLink } from '@shared/utils/motrixDeepLink'
-import { getDownloadProxy, submitManualUris } from '@/composables/useAddTaskSubmit'
+import { submitManualUris } from '@/composables/useAddTaskSubmit'
 import { usePreferenceStore } from '@/stores/preference'
 import { useTaskStore } from '@/stores/task'
 import type {
@@ -87,9 +83,6 @@ export const useAppStore = defineStore('app', () => {
   const progress = ref(0)
   const pendingUpdate = ref<TauriUpdate | null>(null)
   const updateCheckRequestId = ref(0)
-  const pendingMagnetGids = ref<string[]>([])
-  const automaticMagnetPromptGids = ref<string[]>([])
-  const requestedMagnetSelectionGid = ref('')
   const externalInputSubmitting = ref(false)
   let externalInputSubmitCount = 0
   let externalInputErrorHandler: ((error: unknown) => void) | null = null
@@ -101,37 +94,6 @@ export const useAppStore = defineStore('app', () => {
     pendingFilename.value = ''
     pendingUserAgent.value = ''
     pendingRequestHeaders.value = []
-  }
-
-  function requestMagnetSelection(gid: string) {
-    requestedMagnetSelectionGid.value = ''
-    requestedMagnetSelectionGid.value = gid
-  }
-
-  function queueMagnetSelection(gid: string, automatic: boolean) {
-    if (!pendingMagnetGids.value.includes(gid)) {
-      pendingMagnetGids.value = [...pendingMagnetGids.value, gid]
-    }
-    if (automatic && !automaticMagnetPromptGids.value.includes(gid)) {
-      automaticMagnetPromptGids.value = [...automaticMagnetPromptGids.value, gid]
-    }
-  }
-
-  function replacePendingMagnetSelections(gids: string[]) {
-    pendingMagnetGids.value = [...new Set(gids)]
-    const pending = new Set(pendingMagnetGids.value)
-    automaticMagnetPromptGids.value = automaticMagnetPromptGids.value.filter((gid) => pending.has(gid))
-  }
-
-  function clearMagnetSelections(gids: string[]) {
-    const removed = new Set(gids)
-    pendingMagnetGids.value = pendingMagnetGids.value.filter((gid) => !removed.has(gid))
-    automaticMagnetPromptGids.value = automaticMagnetPromptGids.value.filter((gid) => !removed.has(gid))
-    if (removed.has(requestedMagnetSelectionGid.value)) requestedMagnetSelectionGid.value = ''
-  }
-
-  function disableAutomaticMagnetPrompt(gid: string) {
-    automaticMagnetPromptGids.value = automaticMagnetPromptGids.value.filter((candidate) => candidate !== gid)
   }
 
   function requestUpdateCheck() {
@@ -338,7 +300,7 @@ export const useAppStore = defineStore('app', () => {
     return result
   }
 
-  function handleExternalInputs(inputs: ExternalDownloadInput[]): DeepLinkHandlingResult {
+  async function handleExternalInputs(inputs: ExternalDownloadInput[]): Promise<DeepLinkHandlingResult> {
     const result: DeepLinkHandlingResult = {
       received: inputs?.length ?? 0,
       queued: 0,
@@ -358,9 +320,18 @@ export const useAppStore = defineStore('app', () => {
       result.ignored += routed.ignored
     }
 
-    if (items.length > 0) {
-      const skipped = enqueueBatch(items)
-      result.queued += items.length - skipped
+    for (const item of items) {
+      const existing = pendingBatch.value.find((pending) => pending.source === item.source)
+      if (existing) {
+        const id = item.browserContext?.requestId
+        // A replay keeps the original intent; a separate duplicate is dismissed.
+        if (id && id !== existing.browserContext?.requestId) {
+          await invoke('cancel_download_request', { id })
+        }
+        result.ignored += 1
+      } else {
+        result.queued += 1 - enqueueBatch([item])
+      }
     }
 
     return result
@@ -375,6 +346,9 @@ export const useAppStore = defineStore('app', () => {
       url: input.url,
       finalUrl: input.finalUrl,
       traceId: input.traceId,
+      filename: input.filename,
+      filenameSource: input.filenameSource,
+      requestId: input.requestId,
     }
   }
 
@@ -384,7 +358,7 @@ export const useAppStore = defineStore('app', () => {
   ): Pick<DeepLinkHandlingResult, 'autoSubmitted' | 'ignored'> {
     const downloadUrl = input.finalUrl || input.url
     const kind = detectExternalInputKind(downloadUrl)
-    const resolvedHint = resolveExternalFilenameHint(downloadUrl, input.filename ?? '')
+    const resolvedHint = input.filename?.trim() ?? ''
     const context = buildExternalContext(input)
 
     const preferenceStore = usePreferenceStore()
@@ -402,7 +376,7 @@ export const useAppStore = defineStore('app', () => {
       auto_submit: autoSubmit,
     })
 
-    if (autoSubmit && kind === 'uri') {
+    if (autoSubmit && kind === 'uri' && !input.requestId) {
       void autoSubmitExtensionUrl(downloadUrl, context, resolvedHint)
       return { autoSubmitted: 1, ignored: 0 }
     }
@@ -427,19 +401,14 @@ export const useAppStore = defineStore('app', () => {
     const preferenceStore = usePreferenceStore()
     const taskStore = useTaskStore()
 
-    const form = buildExtensionSubmitForm(url, preferenceStore, context, filenameHint)
+    const form = buildExtensionSubmitForm(url, preferenceStore, context)
     externalInputSubmitCount += 1
     externalInputSubmitting.value = true
     try {
-      const result = await submitManualUris(
-        form,
-        taskStore,
-        {
-          enabled: preferenceStore.config.fileCategoryEnabled,
-          categories: preferenceStore.config.fileCategories,
-        },
-        getDownloadProxy(preferenceStore.config.proxy),
-      )
+      const result = await submitManualUris(form, taskStore, {
+        enabled: preferenceStore.config.fileCategoryEnabled,
+        categories: preferenceStore.config.fileCategories,
+      })
       const taskNames = result.submittedTaskNames.length > 0 ? result.submittedTaskNames : [filenameHint || url]
       externalInputStartHandler?.(taskNames)
       preferenceStore.recordHistoryDirectory(form.dir || preferenceStore.config.dir)
@@ -461,11 +430,10 @@ export const useAppStore = defineStore('app', () => {
     url: string,
     preferenceStore: ReturnType<typeof usePreferenceStore>,
     context: ExternalDownloadContext,
-    filenameHint: string,
   ): AddTaskForm {
     return {
       uris: url,
-      out: filenameHint,
+      out: '',
       dir: preferenceStore.config.dir,
       streamMaxConnections: preferenceStore.config.streamMaxConnections,
       userAgent: context.userAgent || preferenceStore.config.userAgent || '',
@@ -506,14 +474,6 @@ export const useAppStore = defineStore('app', () => {
     progress,
     pendingUpdate,
     updateCheckRequestId,
-    pendingMagnetGids,
-    automaticMagnetPromptGids,
-    requestedMagnetSelectionGid,
-    queueMagnetSelection,
-    replacePendingMagnetSelections,
-    clearMagnetSelections,
-    disableAutomaticMagnetPrompt,
-    requestMagnetSelection,
     requestUpdateCheck,
     updateInterval,
     increaseInterval,

@@ -3,10 +3,10 @@ use std::path::{Path, PathBuf};
 use serde_json::Value;
 use tauri::Manager;
 
-use crate::aria2::client::Aria2State;
 use crate::engine::supervisor::EngineSupervisor;
 use crate::error::AppError;
 use crate::log_policy::{managed_log_source, LogSource};
+use crate::services::tasks::TaskServiceState;
 
 pub(crate) struct DiagnosticLogs {
     pub motrix: Vec<u8>,
@@ -138,7 +138,7 @@ pub(crate) async fn runtime_snapshot(app: &tauri::AppHandle, raw_config: Option<
         .try_state::<EngineSupervisor>()
         .map(|state| state.snapshot());
     let (engine_version, global_stat, bt_session) =
-        if let Some(state) = app.try_state::<Aria2State>() {
+        if let Some(state) = app.try_state::<TaskServiceState>() {
             let version =
                 tokio::time::timeout(std::time::Duration::from_secs(2), state.0.get_version())
                     .await

@@ -21,6 +21,7 @@ const emit = defineEmits<{
   retry: [task: Aria2Task]
   redownload: [task: Aria2Task]
   'finish-sharing': [task: Aria2Task]
+  'finish-media': [task: Aria2Task]
   delete: [task: Aria2Task]
   'delete-record': [task: Aria2Task]
   'copy-link': [task: Aria2Task]
@@ -38,6 +39,7 @@ const {
   statusBadge,
   taskStatus,
   isActive,
+  indeterminate,
   percent,
   completedSize,
   totalSize,
@@ -113,6 +115,7 @@ const compactStatus = computed<{ label: string; tone: string; icon: Component } 
           @retry="emit('retry', task)"
           @redownload="emit('redownload', task)"
           @finish-sharing="emit('finish-sharing', task)"
+          @finish-media="emit('finish-media', task)"
           @delete="emit('delete', task)"
           @delete-record="emit('delete-record', task)"
           @copy-link="emit('copy-link', task)"
@@ -124,6 +127,7 @@ const compactStatus = computed<{ label: string; tone: string; icon: Component } 
       </div>
       <div class="compact-progress-row">
         <NProgress
+          v-if="!indeterminate"
           class="compact-progress"
           type="line"
           :percentage="percent"
@@ -134,7 +138,7 @@ const compactStatus = computed<{ label: string; tone: string; icon: Component } 
           :show-indicator="false"
           :processing="isActive"
         />
-        <span class="compact-percent">{{ percent }}%</span>
+        <span v-if="!indeterminate" class="compact-percent">{{ indeterminate ? '—' : `${percent}%` }}</span>
         <div class="compact-meta">
           <NEllipsis :tooltip="TOOLTIP_DEFAULTS">
             <TaskTextTransition
@@ -148,7 +152,7 @@ const compactStatus = computed<{ label: string; tone: string; icon: Component } 
               </span>
             </TaskTextTransition>
             <span v-if="hasSizeInfo" class="compact-meta-item">{{ completedSize }} / {{ totalSize }}</span>
-            <span class="compact-speed compact-meta-item">
+            <span v-if="isActive && hasSizeInfo" class="compact-speed compact-meta-item">
               <NIcon :size="10"><ArrowDownOutline /></NIcon>
               {{ downloadSpeed }}/s
             </span>

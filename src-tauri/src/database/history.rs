@@ -1,23 +1,9 @@
-//! History database repository — Rust-side access to `history.db`.
-//!
-//! Provides the same CRUD operations as the frontend `useHistoryStore` but
-//! accessible from Rust commands. Uses `rusqlite` directly (NOT through
-//! tauri-plugin-sql) to avoid IPC round-trips for backend consumers like
-//! stale-record cleanup and task lifecycle monitor.
-//!
-//! The database schema is still managed by tauri-plugin-sql migrations —
-//! this module only reads/writes to existing tables.
-
+//! Download history queries and lifecycle transactions.
+use super::Database;
 use crate::error::AppError;
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, OptionalExtension};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
-use std::sync::Arc;
-use tokio::sync::{MappedMutexGuard, Mutex, MutexGuard};
 
-/// Rust-side mirror of the TypeScript `HistoryRecord` interface.
-///
-/// Field names use `snake_case` to match the SQLite column names.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HistoryRecord {
     pub id: Option<i64>,
@@ -34,98 +20,80 @@ pub struct HistoryRecord {
     pub meta: Option<String>,
 }
 
-/// Thread-safe history database handle.
-///
-/// Uses `Mutex<Connection>` because `rusqlite::Connection` is `!Send` on
-/// some configurations.  The mutex is uncontended in practice — backend
-/// writes are infrequent and read-only queries are fast.
-pub struct HistoryDb {
-    conn: Mutex<Option<Connection>>,
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryPageInput {
+    pub status: Option<String>,
+    pub page: u32,
+    pub page_size: u32,
+    pub sort_field: Option<String>,
+    pub sort_order: Option<String>,
+}
+#[derive(Serialize)]
+pub struct HistoryPage {
+    pub records: Vec<HistoryRecord>,
+    pub total: i64,
 }
 
-/// Tauri managed state wrapper.
-pub struct HistoryDbState(pub Arc<HistoryDb>);
-
-impl HistoryDb {
-    pub fn unavailable() -> Self {
-        Self {
-            conn: Mutex::new(None),
-        }
+impl Database {
+    pub async fn get_record(&self, gid: &str) -> Result<Option<HistoryRecord>, AppError> {
+        Ok(self
+            .connection()
+            .await?
+            .query_row(
+                "SELECT * FROM download_history WHERE gid=?1",
+                [gid],
+                Self::row_to_record,
+            )
+            .optional()?)
     }
 
-    pub async fn is_ready(&self) -> bool {
-        self.conn.lock().await.is_some()
+    pub async fn get_records_page(&self, input: HistoryPageInput) -> Result<HistoryPage, AppError> {
+        let mut conn = self.connection().await?;
+        let transaction = conn.transaction()?;
+        let column = match input.sort_field.as_deref() {
+            Some("name") => "name",
+            Some("status") => "status",
+            Some("total_length") => "total_length",
+            Some("task_type") => "task_type",
+            Some("completed_at") => "completed_at",
+            _ => "COALESCE(added_at, completed_at)",
+        };
+        let direction = if input.sort_order.as_deref() == Some("ascend") {
+            "ASC"
+        } else {
+            "DESC"
+        };
+        let size = input.page_size.clamp(1, 100);
+        let offset = u64::from(input.page.saturating_sub(1)) * u64::from(size);
+        let filter = "WHERE (?1 IS NULL OR status=?1)";
+        let records = transaction.prepare(&format!(
+            "SELECT * FROM download_history {filter} ORDER BY {column} {direction}, COALESCE(added_at, completed_at) DESC, id DESC LIMIT ?2 OFFSET ?3"
+        ))?.query_map(params![input.status, size, offset], Self::row_to_record)?.collect::<Result<Vec<_>, _>>()?;
+        let total = transaction.query_row(
+            &format!("SELECT COUNT(*) FROM download_history {filter}"),
+            params![input.status],
+            |row| row.get(0),
+        )?;
+        transaction.commit()?;
+        Ok(HistoryPage { records, total })
     }
 
-    pub async fn initialize(&self, path: &Path) -> Result<(), AppError> {
-        let mut conn = self.conn.lock().await;
-        if conn.is_none() {
-            *conn = Self::open(path)?.conn.into_inner();
+    pub async fn remove_birth_records(&self, gids: &[String]) -> Result<(), AppError> {
+        let mut conn = self.connection().await?;
+        let transaction = conn.transaction()?;
+        {
+            let mut statement = transaction.prepare("DELETE FROM task_birth WHERE gid=?1")?;
+            for gid in gids {
+                statement.execute([gid])?;
+            }
         }
+        transaction.commit()?;
         Ok(())
     }
-
-    pub async fn close(&self) {
-        self.conn.lock().await.take();
-    }
-
-    async fn connection(&self) -> Result<MappedMutexGuard<'_, Connection>, AppError> {
-        MutexGuard::try_map(self.conn.lock().await, Option::as_mut)
-            .map_err(|_| AppError::Database("Database is unavailable".into()))
-    }
-
-    /// Opens the existing database after the SQL plugin has applied migrations.
-    ///
-    /// Applies the same connection PRAGMAs as the frontend history store.
-    pub fn open(path: &Path) -> Result<Self, AppError> {
-        let conn = Connection::open_with_flags(path, rusqlite::OpenFlags::SQLITE_OPEN_READ_WRITE)?;
-        // Fail at initialization instead of silently creating a second, empty database.
-        conn.prepare("SELECT gid, added_at FROM task_birth LIMIT 0")?;
-        conn.prepare("SELECT gid, added_at, meta FROM download_history LIMIT 0")?;
-        conn.execute_batch(
-            "PRAGMA journal_mode = WAL;
-             PRAGMA synchronous = NORMAL;
-             PRAGMA busy_timeout = 5000;
-             PRAGMA foreign_keys = ON;",
-        )?;
-        Ok(Self {
-            conn: Mutex::new(Some(conn)),
-        })
-    }
-
-    /// Opens an in-memory database for testing, with the schema pre-applied.
-    #[cfg(test)]
-    pub fn open_in_memory() -> Result<Self, AppError> {
-        let conn = Connection::open_in_memory()?;
-        conn.execute_batch(
-            "CREATE TABLE IF NOT EXISTS download_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                gid TEXT NOT NULL UNIQUE,
-                name TEXT NOT NULL,
-                uri TEXT,
-                dir TEXT,
-                total_length INTEGER,
-                status TEXT NOT NULL DEFAULT 'complete',
-                task_type TEXT,
-                added_at TEXT,
-                created_at TEXT DEFAULT (datetime('now')),
-                completed_at TEXT,
-                meta TEXT
-             );
-             CREATE TABLE IF NOT EXISTS task_birth (
-                gid TEXT PRIMARY KEY,
-                added_at TEXT NOT NULL
-             );",
-        )?;
-        Ok(Self {
-            conn: Mutex::new(Some(conn)),
-        })
-    }
-
     /// Upsert a history record by GID.
     ///
     /// Uses ON CONFLICT(gid) DO UPDATE to preserve the immutable `added_at`.
-    /// Matches the frontend's `addRecord()` SQL exactly.
     pub async fn add_record(&self, record: &HistoryRecord) -> Result<(), AppError> {
         let conn = self.connection().await?;
         conn.execute(
@@ -179,7 +147,7 @@ impl HistoryDb {
 
     /// Query records, optionally filtered by status.
     ///
-    /// Sorted by `COALESCE(added_at, completed_at) DESC` matching the frontend.
+    /// Sorted by `COALESCE(added_at, completed_at) DESC`.
     pub async fn get_records(
         &self,
         status: Option<&str>,
@@ -372,35 +340,56 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn opens_only_the_migrated_database_and_shares_records() {
-        let directory = tempfile::tempdir().unwrap();
+    async fn native_initialization_preserves_records_without_a_webview() {
+        let directory =
+            tempfile::tempdir_in(concat!(env!("CARGO_MANIFEST_DIR"), "/target")).unwrap();
         let path = directory.path().join("history.db");
-        assert!(HistoryDb::open(&path).is_err());
-        assert!(!path.exists());
-        let frontend = Connection::open(&path).unwrap();
-        assert!(HistoryDb::open(&path).is_err());
-        for migration in [
-            include_str!("../migrations/001_download_history.sql"),
-            include_str!("../migrations/002_add_added_at.sql"),
-            include_str!("../migrations/003_http_auth_credentials.sql"),
-        ] {
-            frontend.execute_batch(migration).unwrap();
-        }
-        let backend = HistoryDb::unavailable();
-        assert!(!backend.is_ready().await);
-        backend.initialize(&path).await.unwrap();
-        assert!(backend.is_ready().await);
-        backend
-            .add_record(&make_record("shared", "file.txt", "complete"))
+        let db = Database::unavailable();
+        db.initialize(&path).await.unwrap();
+        db.add_record(&make_record("saved", "literal%20.txt", "complete"))
             .await
             .unwrap();
-        let gid: String = frontend
-            .query_row("SELECT gid FROM download_history", [], |row| row.get(0))
+        db.close().await;
+        db.initialize(&path).await.unwrap();
+        assert_eq!(
+            db.get_records(None, None).await.unwrap()[0].name,
+            "literal%20.txt"
+        );
+        assert_eq!(db.schema_version().await.unwrap(), 4);
+    }
+
+    #[tokio::test]
+    async fn pages_filter_and_sort_native_records_with_a_consistent_count() {
+        let db = Database::open_in_memory().unwrap();
+        for (gid, name, status) in [
+            ("1", "z", "complete"),
+            ("2", "a", "complete"),
+            ("3", "b", "error"),
+        ] {
+            db.add_record(&make_record(gid, name, status))
+                .await
+                .unwrap();
+        }
+        let page = db
+            .get_records_page(HistoryPageInput {
+                status: Some("complete".into()),
+                page: 2,
+                page_size: 1,
+                sort_field: Some("name".into()),
+                sort_order: Some("ascend".into()),
+            })
+            .await
             .unwrap();
-        assert_eq!(gid, "shared");
-        backend.close().await;
-        assert!(!backend.is_ready().await);
-        assert!(backend.get_records(None, None).await.is_err());
+        assert_eq!(page.total, 2);
+        assert_eq!(page.records[0].gid, "1");
+        db.record_task_birth("1", "original").await.unwrap();
+        db.record_task_birth("2", "other").await.unwrap();
+        db.remove_birth_records(&["1".into()]).await.unwrap();
+        assert_eq!(db.get_task_birth("1").await.unwrap(), None);
+        assert_eq!(
+            db.get_task_birth("2").await.unwrap().as_deref(),
+            Some("other")
+        );
     }
 
     fn make_record(gid: &str, name: &str, status: &str) -> HistoryRecord {
@@ -424,7 +413,7 @@ mod tests {
 
     #[tokio::test]
     async fn add_and_get_record() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         let rec = make_record("gid001", "test.zip", "complete");
         db.add_record(&rec).await.unwrap();
 
@@ -438,7 +427,7 @@ mod tests {
 
     #[tokio::test]
     async fn contains_record_checks_lifecycle_gid() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         assert!(!db.contains_record("gid001").await.unwrap());
 
         db.add_record(&make_record("gid001", "test.zip", "complete"))
@@ -450,7 +439,7 @@ mod tests {
 
     #[tokio::test]
     async fn upsert_preserves_completion_timestamps_and_merges_meta() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         let rec1 = HistoryRecord {
             added_at: Some("2025-01-01T00:00:00Z".to_string()),
             meta: Some(r#"{"infoHash":"abc"}"#.to_string()),
@@ -485,7 +474,7 @@ mod tests {
 
     #[tokio::test]
     async fn get_records_filters_by_status() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         db.add_record(&make_record("g1", "a.zip", "complete"))
             .await
             .unwrap();
@@ -506,7 +495,7 @@ mod tests {
 
     #[tokio::test]
     async fn get_records_respects_limit() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         for i in 0..10 {
             let mut rec = make_record(&format!("g{i}"), &format!("file{i}.zip"), "complete");
             rec.added_at = Some(format!("2025-01-{:02}T00:00:00Z", i + 1));
@@ -519,7 +508,7 @@ mod tests {
 
     #[tokio::test]
     async fn remove_record_by_gid() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         db.add_record(&make_record("g1", "a.zip", "complete"))
             .await
             .unwrap();
@@ -536,7 +525,7 @@ mod tests {
 
     #[tokio::test]
     async fn remove_task_records_clears_history_and_birth() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         db.add_record(&make_record("gid001", "test.zip", "complete"))
             .await
             .unwrap();
@@ -552,7 +541,7 @@ mod tests {
 
     #[tokio::test]
     async fn clear_records_by_status() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         db.add_record(&make_record("g1", "a.zip", "complete"))
             .await
             .unwrap();
@@ -580,7 +569,7 @@ mod tests {
 
     #[tokio::test]
     async fn clear_all_records() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         db.add_record(&make_record("g1", "a.zip", "complete"))
             .await
             .unwrap();
@@ -596,7 +585,7 @@ mod tests {
 
     #[tokio::test]
     async fn remove_stale_records() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         db.add_record(&make_record("g1", "a.zip", "complete"))
             .await
             .unwrap();
@@ -618,7 +607,7 @@ mod tests {
 
     #[tokio::test]
     async fn remove_stale_records_empty_is_noop() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         db.add_record(&make_record("g1", "a.zip", "complete"))
             .await
             .unwrap();
@@ -630,7 +619,7 @@ mod tests {
 
     #[tokio::test]
     async fn remove_by_info_hash() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         let mut rec = make_record("g1", "torrent.zip", "complete");
         rec.meta = Some(r#"{"infoHash":"abc123"}"#.to_string());
         db.add_record(&rec).await.unwrap();
@@ -649,7 +638,7 @@ mod tests {
 
     #[tokio::test]
     async fn remove_by_info_hash_empty_is_noop() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         db.add_record(&make_record("g1", "a.zip", "complete"))
             .await
             .unwrap();
@@ -661,7 +650,7 @@ mod tests {
 
     #[tokio::test]
     async fn record_and_load_task_births() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         db.record_task_birth("g1", "2025-01-01T00:00:00Z")
             .await
             .unwrap();
@@ -675,7 +664,7 @@ mod tests {
 
     #[tokio::test]
     async fn record_task_birth_ignores_duplicate() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         db.record_task_birth("g1", "2025-01-01T00:00:00Z")
             .await
             .unwrap();
@@ -691,7 +680,7 @@ mod tests {
 
     #[tokio::test]
     async fn get_task_birth_returns_persisted_added_at() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         db.record_task_birth("g1", "2025-01-01T00:00:00Z")
             .await
             .unwrap();
@@ -707,7 +696,7 @@ mod tests {
 
     #[tokio::test]
     async fn check_integrity_returns_ok() {
-        let db = HistoryDb::open_in_memory().unwrap();
+        let db = Database::open_in_memory().unwrap();
         let result = db.check_integrity().await.unwrap();
         assert_eq!(result, "ok");
     }

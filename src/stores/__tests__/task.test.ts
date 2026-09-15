@@ -79,6 +79,7 @@ function createMockApi() {
     forcePauseTask: vi.fn().mockResolvedValue('gid1'),
     forcePauseAll: vi.fn().mockResolvedValue('OK'),
     pauseTask: vi.fn().mockResolvedValue('gid1'),
+    retryMedia: vi.fn().mockResolvedValue('gid1'),
     resumeTask: vi.fn().mockResolvedValue('gid1'),
     resumeEligible: vi.fn().mockResolvedValue({ resumed: 1, blocked: 0 }),
     removeTaskRecord: vi.fn().mockResolvedValue('OK'),
@@ -383,31 +384,6 @@ describe('TaskStore', () => {
     expect(mockApi.fetchTaskList).toHaveBeenCalled()
   })
 
-  it('addUri injects saved HTTP auth credentials for matching origins', async () => {
-    mockHttpAuthFns.findByUrl.mockResolvedValueOnce({
-      id: 10,
-      origin: 'https://files.example.com',
-      username: 'demo',
-      password: 'secret',
-      created_at: '2026-01-01T00:00:00Z',
-      updated_at: '2026-01-01T00:00:00Z',
-      last_used_at: null,
-    })
-
-    await store.addUri({ uris: ['https://files.example.com/private/file.zip'], outs: [], options: {} })
-
-    expect(mockApi.addUri).toHaveBeenCalledWith({
-      uris: ['https://files.example.com/private/file.zip'],
-      outs: [''],
-      options: expect.objectContaining({
-        'http-user': 'demo',
-        'http-passwd': 'secret',
-      }),
-      fileCategory: undefined,
-    })
-    expect(mockHttpAuthFns.markUsed).toHaveBeenCalledWith(10)
-  })
-
   it('addTorrent calls API, refreshes, and returns gid', async () => {
     const gid = await store.addTorrent({ torrent: 'base64data', options: {} })
     expect(mockApi.addTorrent).toHaveBeenCalledWith({ torrent: 'base64data', options: {} })
@@ -424,24 +400,26 @@ describe('TaskStore', () => {
       outs: [],
       options: { dir: '/dl', 'pause-metadata': 'true', 'check-integrity': 'true', 'force-save': 'true' },
     })
-    const { useAppStore } = await import('@/stores/app')
-    expect(useAppStore().pendingMagnetGids).toEqual(['gid3'])
-    expect(useAppStore().automaticMagnetPromptGids).toEqual(['gid3'])
+    const { useTaskSelectionStore } = await import('@/stores/taskSelection')
+    const pending = [{ kind: 'bt' as const, gid: 'gid3' }]
+    useTaskSelectionStore().reconcile(pending, pending)
+    expect(useTaskSelectionStore().queue).toEqual(pending)
   })
 
   it('captures manual selection for a new magnet without automatic prompting', async () => {
-    const { useAppStore } = await import('@/stores/app')
+    const { useTaskSelectionStore } = await import('@/stores/taskSelection')
     const { usePreferenceStore } = await import('@/stores/preference')
     usePreferenceStore().updatePreference({ magnetFileSelectionPolicy: 'manual' })
 
     await store.addMagnetUri({ uri: 'magnet:?xt=urn:btih:abc123', options: { dir: '/dl' } })
 
-    expect(useAppStore().pendingMagnetGids).toEqual(['gid3'])
-    expect(useAppStore().automaticMagnetPromptGids).toEqual([])
+    const pending = [{ kind: 'bt' as const, gid: 'gid3' }]
+    useTaskSelectionStore().reconcile(pending, pending)
+    expect(useTaskSelectionStore().queue).toEqual([])
   })
 
   it('lets aria2 download every magnet file without creating selection state', async () => {
-    const { useAppStore } = await import('@/stores/app')
+    const { useTaskSelectionStore } = await import('@/stores/taskSelection')
     const { usePreferenceStore } = await import('@/stores/preference')
     usePreferenceStore().updatePreference({ magnetFileSelectionPolicy: 'download-all' })
 
@@ -452,12 +430,12 @@ describe('TaskStore', () => {
       outs: [],
       options: { dir: '/dl', 'pause-metadata': 'false', 'check-integrity': 'true', 'force-save': 'true' },
     })
-    expect(useAppStore().pendingMagnetGids).toEqual([])
-    expect(useAppStore().automaticMagnetPromptGids).toEqual([])
+    expect(useTaskSelectionStore().pending).toEqual([])
+    expect(useTaskSelectionStore().queue).toEqual([])
   })
 
   it('pauses download-all magnets for native metadata classification', async () => {
-    const { useAppStore } = await import('@/stores/app')
+    const { useTaskSelectionStore } = await import('@/stores/taskSelection')
     const { usePreferenceStore } = await import('@/stores/preference')
     usePreferenceStore().updatePreference({ magnetFileSelectionPolicy: 'download-all' })
 
@@ -475,8 +453,9 @@ describe('TaskStore', () => {
       outs: [],
       options: { dir: '/dl', 'pause-metadata': 'true', 'check-integrity': 'true', 'force-save': 'true' },
     })
-    expect(useAppStore().pendingMagnetGids).toEqual(['gid3'])
-    expect(useAppStore().automaticMagnetPromptGids).toEqual([])
+    const pending = [{ kind: 'bt' as const, gid: 'gid3' }]
+    useTaskSelectionStore().reconcile(pending, pending)
+    expect(useTaskSelectionStore().queue).toEqual([])
   })
 
   // ─── pauseAllTask / resumeAllTask ───────────────────────

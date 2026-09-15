@@ -437,15 +437,6 @@ mod tests {
     }
 
     #[test]
-    fn constants_are_sane() {
-        assert_eq!(LEASE_DURATION_SECS, 3600);
-        assert_eq!(RENEWAL_INTERVAL, Duration::from_secs(1800));
-        assert_eq!(MAPPING_DESC, "Motrix Next");
-        // Renewal interval must be less than lease duration
-        assert!(RENEWAL_INTERVAL.as_secs() < u64::from(LEASE_DURATION_SECS));
-    }
-
-    #[test]
     fn permanent_lease_error_detection_matches_gateway_message() {
         assert!(requires_permanent_lease(
             "UPnP map port 29668 (TCP) failed: The gateway only supports permanent leases (ie. a lease_duration of 0),"

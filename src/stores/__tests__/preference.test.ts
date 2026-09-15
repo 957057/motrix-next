@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { usePreferenceStore } from '../preference'
-import { CURRENT_DB_SCHEMA_VERSION, DEFAULT_APP_CONFIG } from '@shared/constants'
+import { DEFAULT_APP_CONFIG } from '@shared/constants'
 import { CONFIG_VERSION } from '@shared/utils/configMigration'
 import type { AppConfig } from '@shared/types'
 
@@ -57,13 +57,6 @@ describe('PreferenceStore', () => {
     expect(store.config.rpcSecret).toBe('replacement-rpc')
     expect(store.config.extensionApiSecret).toBe('replacement-api')
     expect(saved.locale).toBe(DEFAULT_APP_CONFIG.locale)
-  })
-
-  it('persists the current DB schema version on first save', async () => {
-    await store.updateAndSave({ locale: 'zh-CN' })
-
-    const saved = mockStoreData.get('preferences') as AppConfig
-    expect(saved.dbSchemaVersion).toBe(CURRENT_DB_SCHEMA_VERSION)
   })
 
   // ─── loadPreference ─────────────────────────────────────
