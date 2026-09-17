@@ -63,11 +63,11 @@
   "hero.stars": "Stars",
   "hero.downloads": "Lượt tải",
   "hero.version": "Ổn định",
-  "rebrand.body": "Motrix Next đang đổi tên thành Rayburst. Bản phát hành lớn tiếp theo sẽ thêm tính năng phát hiện nội dung đa phương tiện trong trình duyệt và tải HLS/DASH. Dự kiến phát hành Beta trước; các bản hiện tại và liên kết kho mã vẫn dùng tên cũ.",
+  "rebrand.body": "Motrix Next nay là Rayburst, còn tiện ích trình duyệt là Rayburst Connect. Bạn nên cài mới ứng dụng máy tính. Cài đặt, tác vụ và lịch sử không được nhập lại. Cập nhật trong ứng dụng có thể giữ cả hai phiên bản hoặc các lối tắt cũ.",
   "connect.description": "Phát hiện luồng HLS/DASH và tệp âm thanh, video khi duyệt web. Gửi nguồn đến Rayburst từ nút trên trình phát hoặc thẻ đa phương tiện của tiện ích.",
   "features.media.description": "Chọn video, âm thanh và phụ đề, ghi luồng trực tiếp rồi lưu thành MP4 hoặc MKV. Không hỗ trợ nội dung được bảo vệ bằng DRM.",
   "engine.description": "{aria2Next} xử lý các lượt tải.",
-  "dl.note": "Bản ổn định hiện tại. Các tính năng đa phương tiện mới được giới thiệu ở đây dự kiến có trong bản phát hành lớn tiếp theo.",
+  "dl.note": "Bản ổn định mới nhất. Các bản cũ có thể vẫn dùng tên trước đây.",
   "dl.releases": "Xem tất cả bản phát hành",
   "hero.description": "Trình quản lý tải xuống trên máy tính cho tệp, torrent và luồng phương tiện.",
   "connect.tagline": "Lần theo dòng chảy, nối liền khoảng không.",
@@ -78,5 +78,5 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Chế độ tối",
   "showcase.light.alt": "Rayburst — Chế độ sáng",
-  "rebrand.title": "Tên mới. Tính năng mới."
+  "rebrand.title": "Chuyển đổi"
 }

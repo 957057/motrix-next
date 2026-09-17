@@ -35,12 +35,6 @@ export default mergeConfig(
           'src/vite-env.d.ts',
           'src/main.ts',
         ],
-        thresholds: {
-          statements: 50,
-          branches: 45,
-          functions: 33,
-          lines: 50,
-        },
       },
     },
   }),

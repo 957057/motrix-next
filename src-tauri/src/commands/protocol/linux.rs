@@ -311,7 +311,7 @@ mod tests {
 
     #[test]
     fn native_associations() {
-        if let Ok(scenario) = std::env::var("RAYBURST_PROTOCOL_TEST") {
+        if let Ok(scenario) = std::env::var("DESKTOP_PROTOCOL_TEST") {
             exercise(&scenario);
             return;
         }
@@ -329,7 +329,7 @@ mod tests {
                 }
                 let result = std::process::Command::new(std::env::current_exe().unwrap())
                     .args(["--exact", &test, "--nocapture"])
-                    .env("RAYBURST_PROTOCOL_TEST", scenario)
+                    .env("DESKTOP_PROTOCOL_TEST", scenario)
                     .env("HOME", root.path())
                     .env("XDG_CONFIG_HOME", root.path().join("config"))
                     .env("XDG_CONFIG_DIRS", root.path().join("system-config"))

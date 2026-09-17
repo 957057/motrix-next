@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
 
+env:
+  ENGINE_VERSION: 2.8.0
+
 jobs:
   build:
     strategy:
@@ -49,7 +52,7 @@ jobs:
 
       # Cross-compilation: add the secondary Rust target when building for
       # a different architecture on the same OS runner.
-      # - macOS x86_64 uses a native Intel runner (macos-13), no cross-compile needed.
+      # - macOS x86_64 uses a native Intel runner, no cross-compile needed.
       # - Windows ARM64 cross-compiles on x64 runner (NSIS is arch-agnostic).
       - name: Add cross-compilation target
         if: contains(matrix.args, 'aarch64-pc-windows-msvc')
@@ -59,6 +62,8 @@ jobs:
           rustup target add "$TARGET"
 
       - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
 
       # Suppress needrestart daemon (auto-restarts services on package
       # install, can kill the runner agent and cause "operation canceled").
@@ -72,25 +77,27 @@ jobs:
             libwebkit2gtk-4.1-dev libayatana-appindicator3-dev \
             librsvg2-dev patchelf xdg-utils
 
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
 
-      - name: Configure Rayburst update signing
+      - name: Prepare verified engine release
         shell: bash
         env:
-          RAYBURST_UPDATER_PUBLIC_KEY: ${{ vars.RAYBURST_UPDATER_PUBLIC_KEY }}
-        run: node scripts/configure-release.mjs
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TARGET=$(echo '${{ matrix.args }}' | sed 's/.*--target \([^ ]*\).*/\1/')
+          node scripts/prepare-engine.mjs "$ENGINE_VERSION" "$TARGET"
 
       - uses: tauri-apps/tauri-action@v0
         id: tauri
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.RAYBURST_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.RAYBURST_SIGNING_PRIVATE_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.event.release.tag_name || '' }}
           releaseId: ${{ github.event_name == 'release' && github.event.release.id || '' }}
           includeUpdaterJson: false
-          args: ${{ matrix.args }} --config src-tauri/tauri.release.local.json
+          args: ${{ matrix.args }} --config src-tauri/tauri.release.json
 
       - name: Upload build artifacts (manual trigger only)
         if: github.event_name == 'workflow_dispatch'
@@ -103,7 +110,8 @@ jobs:
   merge-updater-json:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'release'
+    # Signed Windows packages must be final before the update channel changes.
+    if: github.event_name == 'release' && vars.SIGNPATH_ENABLED != 'true'
 
     steps:
       - uses: actions/checkout@v6
@@ -117,7 +125,7 @@ jobs:
   update-homebrew:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && !github.event.release.prerelease && vars.RAYBURST_HOMEBREW_ENABLED == 'true'
+    if: github.event_name == 'release' && !github.event.release.prerelease && vars.HOMEBREW_ENABLED == 'true'
 
     steps:
       - name: Download macOS artifacts and compute checksums

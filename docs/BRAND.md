@@ -35,7 +35,11 @@ The website remains a standalone HTML, CSS and JavaScript site. Its light and da
 colors use the desktop's default palette; the SVG logos retain their original colors.
 Website artwork copies come from `public/logo.svg`, Rayburst Connect's
 `public/icon/icon.svg`, and the screenshots in `docs/media/`.
-Keep the transition notice and release availability accurate. Browser media discovery
-and native HLS/DASH downloads are upcoming release features, not features of the
-currently published Motrix Next stable build. Keep working repository URLs until
-the repositories move. Localize website copy in all 27 languages.
+Use the current repository URLs throughout the app, website and documentation.
+Keep the previous product name in the README and website migration notices only.
+The website continues to offer the latest stable release, even before the first
+release under the new brand. Localize website copy in all 27 languages.
+
+Product names belong in visible copy and distributable filenames. Internal symbols
+use their responsibility, and published protocol and storage identities stay fixed.
+Rebranding does not rotate signing keys, rename update channels or change engine APIs.

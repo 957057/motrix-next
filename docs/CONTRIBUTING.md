@@ -15,8 +15,8 @@ Before you start contributing, make sure you understand [GitHub flow](https://gu
 ### Getting Started
 
 ```bash
-git clone https://github.com/AnInsomniacy/motrix-next.git
-cd motrix-next
+git clone https://github.com/AnInsomniacy/rayburst.git
+cd rayburst
 pnpm install
 pnpm tauri dev    # Start dev server (Tauri + Vite)
 ```
@@ -32,17 +32,16 @@ cargo test --workspace --all-targets
 
 ## ✅ Code Quality
 
-All checks must pass before PR merge:
+CI runs the checks below. Run the relevant subset locally before PR review:
 
 ```bash
 pnpm lint                                      # ESLint
 pnpm format:check                              # Prettier formatting
-npx vue-tsc --noEmit                           # TypeScript strict mode
 pnpm test                                      # Vitest
-npx vite build                                 # Frontend production build
+pnpm check:repo                                # Locale structure and placeholders
+pnpm build                                     # TypeScript check and frontend bundle
 cd src-tauri && cargo fmt --all -- --check     # Rust formatting
 cd src-tauri && cargo clippy --workspace --all-targets -- -D warnings
-cd src-tauri && cargo check --workspace --all-targets
 cd src-tauri && cargo test --workspace --all-targets
 ```
 
@@ -62,7 +61,7 @@ Pre-commit hooks (husky + lint-staged) auto-run `eslint --fix` and `prettier --w
 
 ## 🧪 Testing
 
-- Add focused tests for new utilities, guards, business rules, and regression fixes.
+- Test risky business rules, data boundaries and regressions. Avoid duplicate cases, trivial forwarding tests and coverage quotas.
 - Test files live alongside source: `__tests__/filename.test.ts`.
 - Runtime type guards (in `guards.ts`) validate all external API responses.
 
@@ -131,7 +130,7 @@ docs: update i18n translation guide
 
 ### Before you push
 
-Run the full check suite locally. PRs that fail any of these will not be reviewed:
+Run checks that cover your changes and report what you verified. Required CI must pass:
 
 ```bash
 pnpm lint
@@ -141,7 +140,6 @@ pnpm test
 npx vite build
 cd src-tauri && cargo fmt --all -- --check
 cd src-tauri && cargo clippy --workspace --all-targets -- -D warnings
-cd src-tauri && cargo check --workspace --all-targets
 cd src-tauri && cargo test --workspace --all-targets
 ```
 

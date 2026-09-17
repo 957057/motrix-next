@@ -9,9 +9,8 @@ use tauri_plugin_updater::UpdaterExt;
 use tokio::sync::{Mutex, Notify};
 use url::Url;
 
-/// Base URL for update JSON files on the fixed `rayburst-updater` GitHub Release tag.
-const UPDATER_BASE_URL: &str =
-    "https://github.com/AnInsomniacy/rayburst/releases/download/rayburst-updater";
+/// Base URL for update JSON files on the fixed `updater` GitHub Release tag.
+const UPDATER_BASE_URL: &str = "https://github.com/AnInsomniacy/rayburst/releases/download/updater";
 
 /// Serializable update metadata returned to the frontend.
 #[derive(Debug, Clone, Serialize)]

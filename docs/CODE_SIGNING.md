@@ -1,12 +1,14 @@
 # Code signing
 
-Local builds are unsigned unless a signing identity is explicitly configured.
-A renamed product does not inherit a certificate or signing-service approval.
+Rayburst keeps the existing Tauri updater signing key. The public key is checked in
+under `plugins.updater.pubkey` in `src-tauri/tauri.conf.json`. Private material stays
+in `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` repository
+secrets. Rebranding does not require key rotation.
 
-Rayburst's updater requires its own public signing key. The checked-in configuration
-leaves that key empty, so local builds report that updates are not configured and do
-not contact an update server. Release builds inject the public key through Tauri's
-configuration merge. Private keys belong in release secrets, never in source control.
+Release builds enable updater signatures through `src-tauri/tauri.release.json`.
+Local builds do not require a signing key unless that release configuration is used.
 
-The Windows signing workflow is opt-in and requires Rayburst-specific SignPath
-configuration. See [Release configuration](RELEASING.md).
+Tauri updater signatures verify downloaded update packages. Windows Authenticode
+signing is a separate, opt-in SignPath operation. It uses the existing `SIGNPATH_*`
+configuration and signs the final installers before their updater signatures and
+channel manifests are published. See [Release configuration](RELEASING.md).

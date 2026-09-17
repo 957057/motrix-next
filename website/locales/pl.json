@@ -63,11 +63,11 @@
   "hero.stars": "Stars",
   "hero.downloads": "Pobrania",
   "hero.version": "Stabilny",
-  "rebrand.body": "Motrix Next zmienia nazwę na Rayburst. Następne główne wydanie doda wykrywanie multimediów w przeglądarce i pobieranie HLS/DASH. Najpierw planowana jest Beta; obecne wydania i linki do repozytorium nadal używają poprzedniej nazwy.",
+  "rebrand.body": "Motrix Next nazywa się teraz Rayburst, a rozszerzenie przeglądarki — Rayburst Connect. Zalecamy czystą instalację aplikacji komputerowej. Ustawienia, zadania i historia nie są importowane. Aktualizacja z aplikacji może pozostawić obie wersje lub stare skróty.",
   "connect.description": "Wykrywaj strumienie HLS/DASH oraz pliki audio i wideo podczas przeglądania. Wyślij źródło do Rayburst przyciskiem przy odtwarzaczu lub z karty multimediów rozszerzenia.",
   "features.media.description": "Wybieraj wideo, dźwięk i napisy, nagrywaj transmisje na żywo i zapisuj jako MP4 lub MKV. Multimedia chronione DRM nie są obsługiwane.",
   "engine.description": "Pobieranie obsługuje {aria2Next}.",
-  "dl.note": "Obecna wersja stabilna. Przedstawione nowe funkcje multimedialne są planowane na następne główne wydanie.",
+  "dl.note": "Najnowsza stabilna wersja. Starsze wydania mogą nadal używać poprzedniej nazwy.",
   "dl.releases": "Zobacz wszystkie wydania",
   "hero.description": "Menedżer pobierania plików, torrentów i strumieni multimedialnych na komputer.",
   "connect.tagline": "Podążaj za strumieniem, połącz odległe światy.",
@@ -78,5 +78,5 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Tryb ciemny",
   "showcase.light.alt": "Rayburst — Tryb jasny",
-  "rebrand.title": "Nowa nazwa. Nowe funkcje."
+  "rebrand.title": "Migracja"
 }

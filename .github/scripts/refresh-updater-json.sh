@@ -7,6 +7,10 @@ if [ $# -ne 1 ]; then
 fi
 
 TAG="${1%$'\r'}"
+if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+  echo "Expected a version tag, got: $TAG" >&2
+  exit 1
+fi
 VERSION="${TAG#v}"
 REPO="${GITHUB_REPOSITORY:-AnInsomniacy/rayburst}"
 BASE="https://github.com/$REPO/releases/download/$TAG"
@@ -19,29 +23,43 @@ else
   echo "Channel: STABLE (tag=$TAG)"
 fi
 
-NOTES=$(gh release view "$TAG" -R "$REPO" --json body -q .body || echo "")
-
-rm -rf sigs
-mkdir -p sigs
-gh release download "$TAG" -R "$REPO" -p "*.sig" -D sigs
-
-echo "Downloaded signatures:"
-ls -la sigs/
+RELEASE=$(gh release view "$TAG" -R "$REPO" --json body,assets,isDraft)
+jq -e '.isDraft == false' <<< "$RELEASE" >/dev/null
+NOTES=$(jq -r '.body' <<< "$RELEASE")
+SIG_DIR=$(mktemp -d)
+trap 'rm -f "$SIG_DIR"/*.sig "$SIG_DIR"/*.json; rmdir "$SIG_DIR"' EXIT
+gh release download "$TAG" -R "$REPO" -p "*.sig" -D "$SIG_DIR"
 
 read_sig() {
-  [ -f "$1" ] && cat "$1" || echo ""
+  local name="$1"
+  local asset="${name%.sig}"
+  if ! jq -e --arg name "$asset" 'any(.assets[]; .name == $name and .size > 0)' <<< "$RELEASE" >/dev/null; then
+    echo "Missing release asset: $asset" >&2
+    return 1
+  fi
+  if [ ! -s "$SIG_DIR/$name" ]; then
+    echo "Missing updater signature: $name" >&2
+    return 1
+  fi
+  local signature
+  signature=$(tr -d '\r\n' < "$SIG_DIR/$name")
+  if [ -z "$signature" ]; then
+    echo "Empty updater signature: $name" >&2
+    return 1
+  fi
+  printf '%s' "$signature"
 }
 
-DARWIN_SIG=$(read_sig "sigs/Rayburst_aarch64.app.tar.gz.sig")
-DARWIN_X64_SIG=$(read_sig "sigs/Rayburst_x64.app.tar.gz.sig")
-WINDOWS_SIG=$(read_sig "sigs/Rayburst_${VERSION}_x64-setup.exe.sig")
-WINDOWS_ARM_SIG=$(read_sig "sigs/Rayburst_${VERSION}_arm64-setup.exe.sig")
-LINUX_X64_SIG=$(read_sig "sigs/Rayburst_${VERSION}_amd64.AppImage.sig")
-LINUX_ARM_SIG=$(read_sig "sigs/Rayburst_${VERSION}_aarch64.AppImage.sig")
-LINUX_X64_DEB_SIG=$(read_sig "sigs/Rayburst_${VERSION}_amd64.deb.sig")
-LINUX_ARM_DEB_SIG=$(read_sig "sigs/Rayburst_${VERSION}_arm64.deb.sig")
-LINUX_X64_RPM_SIG=$(read_sig "sigs/Rayburst-${VERSION}-1.x86_64.rpm.sig")
-LINUX_ARM_RPM_SIG=$(read_sig "sigs/Rayburst-${VERSION}-1.aarch64.rpm.sig")
+DARWIN_SIG=$(read_sig "Rayburst_aarch64.app.tar.gz.sig")
+DARWIN_X64_SIG=$(read_sig "Rayburst_x64.app.tar.gz.sig")
+WINDOWS_SIG=$(read_sig "Rayburst_${VERSION}_x64-setup.exe.sig")
+WINDOWS_ARM_SIG=$(read_sig "Rayburst_${VERSION}_arm64-setup.exe.sig")
+LINUX_X64_SIG=$(read_sig "Rayburst_${VERSION}_amd64.AppImage.sig")
+LINUX_ARM_SIG=$(read_sig "Rayburst_${VERSION}_aarch64.AppImage.sig")
+LINUX_X64_DEB_SIG=$(read_sig "Rayburst_${VERSION}_amd64.deb.sig")
+LINUX_ARM_DEB_SIG=$(read_sig "Rayburst_${VERSION}_arm64.deb.sig")
+LINUX_X64_RPM_SIG=$(read_sig "Rayburst-${VERSION}-1.x86_64.rpm.sig")
+LINUX_ARM_RPM_SIG=$(read_sig "Rayburst-${VERSION}-1.aarch64.rpm.sig")
 
 jq -n \
   --arg version "$VERSION" \
@@ -83,17 +101,17 @@ jq -n \
       "linux-x86_64-rpm": { signature: $lrpmx64_sig, url: $lrpmx64_url },
       "linux-aarch64-rpm": { signature: $lrpmarm_sig, url: $lrpmarm_url }
     }
-  }' > "$JSON_FILE"
+  }' > "$SIG_DIR/$JSON_FILE"
 
 echo "Generated $JSON_FILE:"
-cat "$JSON_FILE"
+cat "$SIG_DIR/$JSON_FILE"
 
-gh release view rayburst-updater -R "$REPO" 2>/dev/null || \
-  gh release create rayburst-updater \
+gh release view updater -R "$REPO" 2>/dev/null || \
+  gh release create updater \
     --title "Auto-Updater Assets" \
     --notes "Managed by CI. Do not delete. Contains latest.json and beta.json for the Tauri updater." \
     --latest=false \
     -R "$REPO"
 
-gh release upload rayburst-updater "$JSON_FILE" --clobber -R "$REPO"
-echo "Uploaded $JSON_FILE to 'rayburst-updater' release"
+gh release upload updater "$SIG_DIR/$JSON_FILE" --clobber -R "$REPO"
+echo "Uploaded $JSON_FILE to 'updater' release"

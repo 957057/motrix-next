@@ -1,19 +1,18 @@
 <div align="center">
   <img src="docs/brand/banner.png" alt="Rayburst. Seize the ray, forge the real." width="800" />
 
-[![GitHub release](https://img.shields.io/github/v/release/AnInsomniacy/motrix-next.svg)](https://github.com/AnInsomniacy/motrix-next/releases)
-![Build](https://img.shields.io/github/actions/workflow/status/AnInsomniacy/motrix-next/ci.yml?branch=main&label=Build)
-![Total Downloads](https://img.shields.io/github/downloads/AnInsomniacy/motrix-next/total.svg)
+[![GitHub release](https://img.shields.io/github/v/release/AnInsomniacy/rayburst.svg)](https://github.com/AnInsomniacy/rayburst/releases)
+![Build](https://img.shields.io/github/actions/workflow/status/AnInsomniacy/rayburst/ci.yml?branch=main&label=Build)
+![Total Downloads](https://img.shields.io/github/downloads/AnInsomniacy/rayburst/total.svg)
 <br>
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue.svg)
 
-[![Website](https://img.shields.io/badge/Website-7B3ED1?style=for-the-badge&logo=safari&logoColor=white)](https://motrix-next.pages.dev)
-[![Extension](https://img.shields.io/badge/Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/AnInsomniacy/motrix-next-extension)
+[![Extension](https://img.shields.io/badge/Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/AnInsomniacy/rayburst-connect)
 
 </div>
 
 > [!IMPORTANT]
-> **Motrix Next is becoming Rayburst.** The next major release adds browser media discovery with Rayburst Connect and native HLS/DASH downloads, including track selection, live recording and MP4/MKV output. A Beta release is planned first. Existing releases and repository links still use the previous name; they do not include the upcoming features shown here.
+> **Motrix Next is now Rayburst.** We recommend uninstalling the previous desktop app before installing Rayburst. Settings, tasks and history are not imported; keep your downloaded files. In-app updates may leave both apps installed or retain old shortcuts. The [website](https://motrix-next.pages.dev) and published stable builds may still use the previous name while releases catch up.
 
 ---
 
@@ -44,7 +43,7 @@ Every transition and micro-interaction has been carefully tuned to follow [Mater
 - **Multi-protocol downloads** — HTTP, HTTPS, SFTP, ED2K, BitTorrent, Magnet, and `.torrent` tasks
 - **HLS and DASH** — Native track selection, subtitles, live recording, resumable media downloads and MP4/MKV output. See [media downloads](docs/MEDIA.md).
 - **BitTorrent** — Selective file download, DHT, peer exchange, encryption controls, metadata caching, GeoIP peer flags, and tracker probing
-- **Browser extension integration** — Embedded Extension API with independent authentication, download confirmation, smart auto-submit, filename hints, referer/cookie forwarding, and real-time controls ([Rayburst Connect](https://github.com/AnInsomniacy/motrix-next-extension))
+- **Browser extension integration** — Embedded Extension API with independent authentication, download confirmation, smart auto-submit, filename hints, referer/cookie forwarding, and real-time controls ([Rayburst Connect](https://github.com/AnInsomniacy/rayburst-connect))
 - **Safe filename handling** — Content-Disposition, RFC 2047, non-UTF-8, percent-encoded, and extensionless URL resolution with path traversal sanitization
 - **Download organization** — Favorite and recent folders, optional file-type categorization, stale-record cleanup, and completed history backed by SQLite
 - **Concurrent downloads** — Independent limits for active tasks, stream connections, and BitTorrent peers
@@ -60,11 +59,11 @@ Every transition and micro-interaction has been carefully tuned to follow [Mater
 
 ## Installation
 
-Download the latest release from [GitHub Releases](https://github.com/AnInsomniacy/motrix-next/releases).
+Download the latest release from [GitHub Releases](https://github.com/AnInsomniacy/rayburst/releases).
 
 ### macOS
 
-Download the `.dmg` installer from [Releases](https://github.com/AnInsomniacy/motrix-next/releases):
+Download the `.dmg` installer from [Releases](https://github.com/AnInsomniacy/rayburst/releases):
 
 | Architecture  | File                         |
 | ------------- | ---------------------------- |
@@ -78,7 +77,7 @@ The `.app.tar.gz` macOS artifacts are published for the Tauri updater.
 
 ### Windows
 
-Download the installer from [Releases](https://github.com/AnInsomniacy/motrix-next/releases):
+Download the installer from [Releases](https://github.com/AnInsomniacy/rayburst/releases):
 
 | Architecture   | File                             |
 | -------------- | -------------------------------- |
@@ -89,7 +88,7 @@ Run the installer — it takes about 10 seconds, no reboot required.
 
 ### Linux
 
-Download directly from [Releases](https://github.com/AnInsomniacy/motrix-next/releases):
+Download directly from [Releases](https://github.com/AnInsomniacy/rayburst/releases):
 
 **Debian / Ubuntu:**
 
@@ -148,11 +147,11 @@ We provide **NSIS installers** for Windows — with the bundled download engine.
 
 ## Code Signing
 
-Rayburst is **not code-signed** on macOS or Windows, so your browser or antivirus software may show a security warning when downloading or running the installer.
+macOS builds use ad-hoc signing and are not notarized. Windows Authenticode signing is optional through the [SignPath workflow](.github/workflows/sign-windows-release.yml). Unsigned installers may trigger browser or system warnings.
 
-The app is fully open-source and every release binary is built automatically by [GitHub Actions CI](https://github.com/AnInsomniacy/motrix-next/actions). For added peace of mind, you can always [build from source](#development).
+The app is fully open-source and every release binary is built automatically by [GitHub Actions CI](https://github.com/AnInsomniacy/rayburst/actions). For added peace of mind, you can always [build from source](#development).
 
-Release `.sig` files are Tauri updater signatures, not GPG signatures. They can be verified with minisign using the two-line public key format required by minisign. The Rayburst updater public key is published with each release; save it as `rayburst.pub`, then replace `Rayburst_x.x.x_<file>` with the release file you downloaded:
+Release `.sig` files are Tauri updater signatures, not GPG signatures. They can be verified with minisign using the two-line public key format required by minisign. Decode `plugins.updater.pubkey` from [tauri.conf.json](src-tauri/tauri.conf.json) from base64 and save it as `rayburst.pub`, then replace `Rayburst_x.x.x_<file>` with the release file you downloaded:
 
 ```bash
 python3 -c 'import base64,sys; sys.stdout.write(base64.b64decode(sys.stdin.read()).decode())' \
@@ -192,8 +191,8 @@ Signature verification failed
 
 ```bash
 # Clone the repository
-git clone https://github.com/AnInsomniacy/motrix-next.git
-cd motrix-next
+git clone https://github.com/AnInsomniacy/rayburst.git
+cd rayburst
 
 # Install frontend dependencies
 pnpm install

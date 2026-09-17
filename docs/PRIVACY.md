@@ -91,4 +91,4 @@ Updates to this privacy policy will be posted in this file within the project's 
 ## Contact
 
 For privacy-related questions, please open an issue on GitHub:
-https://github.com/AnInsomniacy/motrix-next/issues
+https://github.com/AnInsomniacy/rayburst/issues

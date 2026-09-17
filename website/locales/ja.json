@@ -63,11 +63,11 @@
   "hero.stars": "Stars",
   "hero.downloads": "ダウンロード",
   "hero.version": "安定版",
-  "rebrand.body": "Motrix Next は Rayburst へ名称を変更します。次のメジャーリリースでは、ブラウザーでのメディア検出と HLS/DASH ダウンロードを追加し、まず Beta 版を公開する予定です。現在のリリースとリポジトリのリンクは旧名称のままです。",
+  "rebrand.body": "Motrix Next は Rayburst に、ブラウザー拡張機能は Rayburst Connect に名称を変更しました。デスクトップアプリは新規インストールを推奨します。設定、タスク、履歴は引き継がれません。アプリ内更新では両方のバージョンや古いショートカットが残る場合があります。",
   "connect.description": "閲覧中に HLS/DASH ストリームや音声・動画ファイルを検出。プレーヤーのボタンや拡張機能のメディアタブから Rayburst に送信できます。",
   "features.media.description": "動画・音声・字幕を選択し、ライブ配信を録画して MP4 や MKV に保存できます。DRM 保護メディアには対応していません。",
   "engine.description": "ダウンロードは {aria2Next} が処理します。",
-  "dl.note": "現在の安定版です。ここで紹介する新しいメディア機能は次のメジャーリリースで提供予定です。",
+  "dl.note": "最新の安定版です。以前のリリースは旧名称のままの場合があります。",
   "dl.releases": "すべてのリリースを見る",
   "hero.description": "ファイル、Torrent、ストリーミングに対応したデスクトップ用ダウンロードマネージャー。",
   "connect.tagline": "流れをたどり、隔たりをつなぐ。",
@@ -78,5 +78,5 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — ダークモード",
   "showcase.light.alt": "Rayburst — ライトモード",
-  "rebrand.title": "新しい名前、新しい機能。"
+  "rebrand.title": "移行について"
 }

@@ -63,11 +63,11 @@
   "hero.stars": "Stars",
   "hero.downloads": "İndirmeler",
   "hero.version": "Kararlı",
-  "rebrand.body": "Motrix Next, Rayburst adını alıyor. Sonraki ana sürüme tarayıcıda medya keşfi ve HLS/DASH indirmeleri eklenecek. Önce Beta sürümü planlanıyor; mevcut sürümler ve depo bağlantıları hâlâ önceki adı kullanıyor.",
+  "rebrand.body": "Motrix Next artık Rayburst, tarayıcı uzantısı ise Rayburst Connect adını taşıyor. Masaüstü uygulaması için temiz kurulum önerilir. Ayarlar, görevler ve geçmiş aktarılmaz. Uygulama içinden güncelleme yapıldığında iki sürüm de yüklü kalabilir veya eski kısayollar korunabilir.",
   "connect.description": "Gezinirken HLS/DASH akışlarını ve ses/video dosyalarını keşfedin. Oynatıcı düğmesinden veya uzantının Medya sekmesinden bir kaynağı Rayburst’e gönderin.",
   "features.media.description": "Video, ses ve altyazı seçin, canlı yayınları kaydedin ve MP4 veya MKV olarak saklayın. DRM korumalı medya desteklenmez.",
   "engine.description": "İndirmeleri {aria2Next} yürütür.",
-  "dl.note": "Mevcut kararlı sürüm. Burada gösterilen yeni medya özellikleri sonraki ana sürüm için planlanmaktadır.",
+  "dl.note": "En son kararlı sürüm. Önceki sürümler eski adı kullanabilir.",
   "dl.releases": "Tüm sürümleri görüntüle",
   "hero.description": "Dosyalar, torrentler ve medya akışları için masaüstü indirme yöneticisi.",
   "connect.tagline": "Akışın izini sür, boşluğa köprü kur.",
@@ -78,5 +78,5 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Koyu mod",
   "showcase.light.alt": "Rayburst — Açık mod",
-  "rebrand.title": "Yeni ad. Yeni özellikler."
+  "rebrand.title": "Geçiş"
 }

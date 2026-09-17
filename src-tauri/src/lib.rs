@@ -1,6 +1,6 @@
 rust_i18n::i18n!("locales", fallback = "en-US");
 
-pub(crate) const APP_ID: &str = env!("RAYBURST_APP_ID");
+pub(crate) const APP_ID: &str = env!("DESKTOP_APP_ID");
 
 mod aria2;
 mod commands;

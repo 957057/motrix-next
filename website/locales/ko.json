@@ -63,11 +63,11 @@
   "hero.stars": "Stars",
   "hero.downloads": "다운로드",
   "hero.version": "안정",
-  "rebrand.body": "Motrix Next가 Rayburst로 이름을 바꿉니다. 다음 주요 버전에는 브라우저 미디어 감지와 HLS/DASH 다운로드가 추가되며, Beta 버전을 먼저 공개할 예정입니다. 현재 릴리스와 저장소 링크는 이전 이름을 사용합니다.",
+  "rebrand.body": "Motrix Next의 이름이 Rayburst로, 브라우저 확장 기능의 이름이 Rayburst Connect로 바뀌었습니다. 데스크톱 앱은 새로 설치하는 것을 권장합니다. 설정, 작업, 기록은 가져오지 않습니다. 앱 내 업데이트 시 두 버전이 함께 설치되거나 이전 바로 가기가 남을 수 있습니다.",
   "connect.description": "탐색 중 HLS/DASH 스트림과 오디오·비디오 파일을 감지합니다. 플레이어 버튼이나 확장 프로그램의 미디어 탭에서 Rayburst로 보낼 수 있습니다.",
   "features.media.description": "비디오, 오디오, 자막을 선택하고 라이브 스트림을 녹화하여 MP4 또는 MKV로 저장합니다. DRM으로 보호된 미디어는 지원하지 않습니다.",
   "engine.description": "{aria2Next}가 다운로드를 처리합니다.",
-  "dl.note": "현재 안정 버전입니다. 소개된 새 미디어 기능은 다음 주요 버전에 포함될 예정입니다.",
+  "dl.note": "최신 안정 버전입니다. 이전 릴리스는 옛 이름을 사용할 수 있습니다.",
   "dl.releases": "모든 릴리스 보기",
   "hero.description": "파일, 토렌트, 스트림을 위한 데스크톱 다운로드 관리자.",
   "connect.tagline": "흐름을 따라, 빈틈을 잇다.",
@@ -78,5 +78,5 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — 다크 모드",
   "showcase.light.alt": "Rayburst — 라이트 모드",
-  "rebrand.title": "새 이름, 새 기능."
+  "rebrand.title": "이전 안내"
 }

@@ -63,11 +63,11 @@
   "hero.stars": "Stars",
   "hero.downloads": "Téléchargements",
   "hero.version": "Stable",
-  "rebrand.body": "Motrix Next devient Rayburst. La prochaine version majeure ajoutera la détection de médias dans le navigateur et les téléchargements HLS/DASH. Une Beta est prévue en premier ; les versions actuelles et les liens du dépôt gardent l’ancien nom.",
+  "rebrand.body": "Motrix Next s’appelle désormais Rayburst, et son extension de navigateur, Rayburst Connect. Une nouvelle installation de l’application de bureau est recommandée. Les paramètres, les tâches et l’historique ne sont pas importés. Une mise à jour depuis l’application peut conserver les deux versions ou d’anciens raccourcis.",
   "connect.description": "Détectez les flux HLS/DASH et les fichiers audio ou vidéo pendant la navigation. Envoyez une source à Rayburst depuis le bouton du lecteur ou l’onglet Médias de l’extension.",
   "features.media.description": "Choisissez la vidéo, l’audio et les sous-titres, enregistrez les directs et sauvegardez en MP4 ou MKV. Les médias protégés par DRM ne sont pas pris en charge.",
   "engine.description": "Les téléchargements sont gérés par {aria2Next}.",
-  "dl.note": "Version stable actuelle. Les nouvelles fonctions multimédias présentées ici sont prévues pour la prochaine version majeure.",
+  "dl.note": "Dernière version stable. Les anciennes versions peuvent conserver le nom précédent.",
   "dl.releases": "Voir toutes les versions",
   "hero.description": "Un gestionnaire de téléchargements pour les fichiers, les torrents et les flux multimédias.",
   "connect.tagline": "Suivez le flux, franchissez le vide.",
@@ -78,5 +78,5 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Mode sombre",
   "showcase.light.alt": "Rayburst — Mode clair",
-  "rebrand.title": "Un nouveau nom. De nouvelles fonctions."
+  "rebrand.title": "Migration"
 }

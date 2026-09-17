@@ -63,11 +63,11 @@
   "hero.stars": "Stars",
   "hero.downloads": "Descărcări",
   "hero.version": "Stabil",
-  "rebrand.body": "Motrix Next devine Rayburst. Următoarea versiune majoră adaugă detectarea conținutului media în browser și descărcări HLS/DASH. Este planificată mai întâi o Beta; versiunile actuale și linkurile către depozit folosesc încă numele anterior.",
+  "rebrand.body": "Motrix Next se numește acum Rayburst, iar extensia pentru browser Rayburst Connect. Se recomandă o instalare curată a aplicației desktop. Setările, sarcinile și istoricul nu sunt importate. Actualizarea din aplicație poate păstra ambele versiuni instalate sau scurtăturile vechi.",
   "connect.description": "Detectează fluxuri HLS/DASH și fișiere audio/video în timpul navigării. Trimite o sursă către Rayburst din butonul playerului sau din fila media a extensiei.",
   "features.media.description": "Alege video, audio și subtitrări, înregistrează transmisiuni live și salvează în MP4 sau MKV. Conținutul protejat prin DRM nu este acceptat.",
   "engine.description": "Descărcările sunt gestionate de {aria2Next}.",
-  "dl.note": "Versiunea stabilă actuală. Noile funcții media prezentate aici sunt planificate pentru următoarea versiune majoră.",
+  "dl.note": "Cea mai recentă versiune stabilă. Versiunile mai vechi pot folosi numele anterior.",
   "dl.releases": "Vezi toate versiunile",
   "hero.description": "Un manager de descărcări pentru fișiere, torrente și fluxuri media, pe desktop.",
   "connect.tagline": "Urmărește fluxul, unește depărtările.",
@@ -78,5 +78,5 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Mod întunecat",
   "showcase.light.alt": "Rayburst — Mod luminos",
-  "rebrand.title": "Nume nou. Funcții noi."
+  "rebrand.title": "Migrare"
 }

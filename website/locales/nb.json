@@ -63,11 +63,11 @@
   "hero.stars": "Stars",
   "hero.downloads": "Nedlastinger",
   "hero.version": "Stabil",
-  "rebrand.body": "Motrix Next blir til Rayburst. Neste hovedversjon får medieoppdagelse i nettleseren og HLS/DASH-nedlastinger. En Beta er planlagt først; dagens utgivelser og lenker til kodelageret bruker fortsatt det gamle navnet.",
+  "rebrand.body": "Motrix Next heter nå Rayburst, og nettleserutvidelsen heter Rayburst Connect. Vi anbefaler en ny installasjon av skrivebordsappen. Innstillinger, oppgaver og historikk importeres ikke. Oppdatering fra appen kan la begge versjonene eller gamle snarveier bli liggende.",
   "connect.description": "Oppdag HLS/DASH-strømmer og lyd- og videofiler mens du surfer. Send en kilde til Rayburst fra spillerknappen eller mediefanen i utvidelsen.",
   "features.media.description": "Velg video, lyd og undertekster, ta opp direktesendinger og lagre som MP4 eller MKV. DRM-beskyttede medier støttes ikke.",
   "engine.description": "{aria2Next} håndterer nedlastingene.",
-  "dl.note": "Gjeldende stabil versjon. De nye mediefunksjonene som vises her, er planlagt for neste hovedversjon.",
+  "dl.note": "Nyeste stabile utgave. Eldre utgaver kan fortsatt bruke det gamle navnet.",
   "dl.releases": "Se alle utgivelser",
   "hero.description": "En nedlastingsbehandler for filer, torrenter og mediestrømmer på skrivebordet.",
   "connect.tagline": "Følg strømmen, bygg bro over tomrommet.",
@@ -78,5 +78,5 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Mørk modus",
   "showcase.light.alt": "Rayburst — Lys modus",
-  "rebrand.title": "Nytt navn. Nye funksjoner."
+  "rebrand.title": "Overgang"
 }

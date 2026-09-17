@@ -63,11 +63,11 @@
   "hero.stars": "Stars",
   "hero.downloads": "Downloads",
   "hero.version": "Stable",
-  "rebrand.body": "Motrix Next is becoming Rayburst. The next major release adds browser media discovery and HLS/DASH downloads. A Beta release is planned first; current releases and repository links still use the previous name.",
+  "rebrand.body": "Motrix Next is now Rayburst, and its browser extension is now Rayburst Connect. A fresh desktop installation is recommended. Settings, tasks and history are not imported. In-app updates may leave both apps installed or retain old shortcuts.",
   "connect.description": "Discover HLS/DASH streams and audio/video files as you browse. Send a source to Rayburst from the player button or the extension's Media tab.",
   "features.media.description": "Choose video, audio and subtitles, record live streams, and save to MP4 or MKV. DRM-protected media is not supported.",
   "engine.description": "Downloads run in {aria2Next}.",
-  "dl.note": "Current stable release. The new media features shown here are planned for the next major release.",
+  "dl.note": "Latest stable release. Older releases may use the previous name.",
   "dl.releases": "View all releases",
   "hero.description": "A desktop download manager for files, torrents and streams.",
   "connect.tagline": "Trace the stream, bridge the void.",
@@ -78,5 +78,5 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Dark Mode",
   "showcase.light.alt": "Rayburst — Light Mode",
-  "rebrand.title": "A new name. New capabilities."
+  "rebrand.title": "Migration"
 }

@@ -3,7 +3,7 @@ fn main() {
     let config: serde_json::Value =
         serde_json::from_str(include_str!("tauri.conf.json")).expect("valid Tauri configuration");
     println!(
-        "cargo:rustc-env=RAYBURST_APP_ID={}",
+        "cargo:rustc-env=DESKTOP_APP_ID={}",
         config["identifier"]
             .as_str()
             .expect("application identifier")

@@ -36,7 +36,7 @@
     "active": true,
     "targets": "all",
     "publisher": "AnInsomniacy",
-    "copyright": "Copyright \u6f0f 2025\u9225\u640dresent AnInsomniacy",
+    "copyright": "Copyright (c) 2025-present AnInsomniacy",
     "createUpdaterArtifacts": false,
     "externalBin": ["binaries/aria2-next", "generated-binaries/rayburst-browser-launcher"],
     "resources": [
@@ -122,8 +122,8 @@
   },
   "plugins": {
     "updater": {
-      "endpoints": ["https://github.com/AnInsomniacy/rayburst/releases/download/rayburst-updater/latest.json"],
-      "pubkey": ""
+      "endpoints": ["https://github.com/AnInsomniacy/rayburst/releases/download/updater/latest.json"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc2MjEwNDUzQTk3OUM2NDUKUldSRnhubXBVd1FoZHUxeWtoRGJFblZaZ3V3UWZMQTYwL29CQTNySWxQMForTDA2YjN1Mk50Sk4K"
     },
     "deep-link": {
       "desktop": {

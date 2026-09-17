@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub(crate) const LOG_SCHEMA_VERSION: u32 = 1;
 pub(crate) const MAX_LOG_FILE_SIZE: u64 = 10 * 1024 * 1024;
 pub(crate) const MAX_LOG_FILES: usize = 3;
-pub(crate) const RAYBURST_LOG_FILE: &str = "rayburst.log";
+pub(crate) const APP_LOG_FILE: &str = "rayburst.log";
 pub(crate) const ARIA2_LOG_FILE: &str = "aria2-next.log";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -18,7 +18,7 @@ pub(crate) enum LogSource {
 }
 
 pub(crate) fn managed_log_source(name: &str) -> Option<LogSource> {
-    if name == RAYBURST_LOG_FILE || (name.starts_with("rayburst_") && name.ends_with(".log")) {
+    if name == APP_LOG_FILE || (name.starts_with("rayburst_") && name.ends_with(".log")) {
         return Some(LogSource::Rayburst);
     }
     if name == ARIA2_LOG_FILE
@@ -35,7 +35,7 @@ pub(crate) fn managed_log_source(name: &str) -> Option<LogSource> {
 }
 
 pub(crate) fn is_managed_active_log_file(name: &str) -> bool {
-    matches!(name, RAYBURST_LOG_FILE | ARIA2_LOG_FILE)
+    matches!(name, APP_LOG_FILE | ARIA2_LOG_FILE)
 }
 
 pub(crate) fn run_id() -> &'static str {

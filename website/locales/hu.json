@@ -63,11 +63,11 @@
   "hero.stars": "Stars",
   "hero.downloads": "Letöltések",
   "hero.version": "Stabil",
-  "rebrand.body": "A Motrix Next neve Rayburst lesz. A következő főverzió böngészőbeli médiafelderítést és HLS/DASH-letöltést ad hozzá. Először Beta kiadást tervezünk; a jelenlegi kiadások és tárolóhivatkozások még a régi nevet használják.",
+  "rebrand.body": "A Motrix Next neve mostantól Rayburst, a böngészőbővítményé pedig Rayburst Connect. Az asztali alkalmazás tiszta telepítése ajánlott. A beállítások, feladatok és előzmények nem kerülnek át. Az alkalmazáson belüli frissítés megtarthatja mindkét verziót vagy a régi parancsikonokat.",
   "connect.description": "HLS/DASH-adatfolyamok és hang- vagy videófájlok felderítése böngészés közben. Küldje a forrást a Rayburstnek a lejátszó gombjával vagy a bővítmény Média lapjáról.",
   "features.media.description": "Válasszon videót, hangot és feliratot, rögzítsen élő adásokat, és mentse MP4 vagy MKV formátumban. A DRM-védett média nem támogatott.",
   "engine.description": "A letöltéseket az {aria2Next} végzi.",
-  "dl.note": "Jelenlegi stabil kiadás. Az itt bemutatott új médiafunkciókat a következő főverzióhoz tervezzük.",
+  "dl.note": "Legújabb stabil kiadás. A korábbi kiadások még a régi nevet használhatják.",
   "dl.releases": "Összes kiadás",
   "hero.description": "Asztali letöltéskezelő fájlokhoz, torrentekhez és médiafolyamokhoz.",
   "connect.tagline": "Kövesd az áramlatot, hidald át az űrt.",
@@ -78,5 +78,5 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Sötét mód",
   "showcase.light.alt": "Rayburst — Világos mód",
-  "rebrand.title": "Új név. Új funkciók."
+  "rebrand.title": "Átállás"
 }

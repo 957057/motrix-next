@@ -5,15 +5,34 @@ website, change Git remotes or submit a signing request during development.
 
 ## Desktop updates
 
-Configure `RAYBURST_UPDATER_PUBLIC_KEY`, `RAYBURST_SIGNING_PRIVATE_KEY` and
-`RAYBURST_SIGNING_PRIVATE_KEY_PASSWORD` in the release repository. The public key is a
-repository variable; private material is a secret. The release workflow merges the
-public key into Tauri configuration and enables signed updater artifacts before building. An empty public key disables
-update checks in local builds.
+Keep the existing `TAURI_SIGNING_PRIVATE_KEY` and
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` repository secrets. The matching public key
+is in `src-tauri/tauri.conf.json`; `src-tauri/tauri.release.json` enables signed
+updater artifacts for release builds. There is no second key or public-key variable.
 
-Update manifests live under the separate `rayburst-updater` release tag. Stable
-builds use `latest.json`; prereleases use `beta.json`. Do not reuse another product's
-update tag, key or installer identity. Verify the new repository exists before publishing.
+Update manifests stay under the existing `updater` release tag:
+
+- Stable: `https://github.com/AnInsomniacy/rayburst/releases/download/updater/latest.json`
+- Prerelease: `https://github.com/AnInsomniacy/rayburst/releases/download/updater/beta.json`
+
+Previous releases reach these files through GitHub's repository redirect and verify
+updates with the same key. Keep the release tag; replace only the channel JSON after
+all referenced packages and signatures exist. Missing assets or signatures stop
+publication. The website continues to select the latest stable release only.
+
+The new application identifier uses separate settings, task state and history.
+There is no data import or installer migration layer. Native installation may
+replace the app in place or leave both products installed, depending on the package
+type. Existing filenames and shortcuts can retain the previous name. Recommend a
+fresh installation in the README and website migration notices.
+
+## Bundled engine
+
+Release builds download the engine version pinned in `.github/workflows/release.yml`
+from the aria2-next repository and verify its published SHA-256 checksum. Publish
+that engine release before building the desktop release. Every platform uses the
+same engine version; a missing release or checksum fails the build. Development
+sidecars in the checkout are not a substitute for release preparation.
 
 ## Browser identities
 
@@ -28,10 +47,18 @@ No wildcard extension origins are allowed.
 
 ## Platform distribution
 
-Homebrew publication requires `RAYBURST_HOMEBREW_ENABLED=true` and a configured
-Rayburst tap. Windows signing requires `RAYBURST_SIGNPATH_ENABLED=true` and the
-Rayburst SignPath project settings. Community package entries are not assumed to
-exist. Keep installation instructions limited to packages that have been published.
+Homebrew publication requires `HOMEBREW_ENABLED=true` and a configured
+Rayburst tap. Windows signing requires `SIGNPATH_ENABLED=true` and the existing
+`SIGNPATH_API_TOKEN`, `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG` and
+`SIGNPATH_RELEASE_ARTIFACT_CONFIGURATION_SLUG` settings. Match the artifact
+configuration to the new installer names in the signing service.
+
+When SignPath is enabled, the release build leaves the update channel unchanged.
+Run the existing Windows signing workflow to sign the installers, regenerate their
+updater signatures and publish the complete channel JSON. Without SignPath, the
+release build publishes the channel JSON after all platform builds finish.
+Community package entries are not assumed to exist. Keep installation instructions
+limited to packages that have been published.
 
 Use `scripts/bump-version.sh` for a chosen release version. Creating a release,
 submitting to stores and platform acceptance are separate actions.

@@ -361,7 +361,7 @@ function closeDlModal() {
   })
 
   let resolvedUrls = {}
-  let releaseUrl = 'https://github.com/AnInsomniacy/motrix-next/releases'
+  let releaseUrl = 'https://github.com/AnInsomniacy/rayburst/releases'
   let apiFailed = false
   const verEl = document.getElementById('stat-version')
 
@@ -380,8 +380,8 @@ function closeDlModal() {
 
     try {
       const [repoRes, releasesRes] = await Promise.all([
-        fetch('https://api.github.com/repos/AnInsomniacy/motrix-next', { signal: controller.signal }),
-        fetch('https://api.github.com/repos/AnInsomniacy/motrix-next/releases?per_page=100', {
+        fetch('https://api.github.com/repos/AnInsomniacy/rayburst', { signal: controller.signal }),
+        fetch('https://api.github.com/repos/AnInsomniacy/rayburst/releases?per_page=100', {
           signal: controller.signal,
         }),
       ])
@@ -413,7 +413,7 @@ function closeDlModal() {
 
   /* Latest release assets → primary button + all-platforms grid */
   try {
-    const res = await fetch('https://api.github.com/repos/AnInsomniacy/motrix-next/releases/latest', {
+    const res = await fetch('https://api.github.com/repos/AnInsomniacy/rayburst/releases/latest', {
       signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) throw new Error(`Release request failed: ${res.status}`)
