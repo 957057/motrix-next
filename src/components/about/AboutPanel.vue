@@ -149,6 +149,13 @@ function openUrl(url: string) {
 
       <!-- Title -->
       <div class="about-title stagger stagger-2">Rayburst</div>
+      <a
+        class="about-website stagger stagger-2"
+        href="https://rayburst.pages.dev/"
+        @click.prevent="openUrl('https://rayburst.pages.dev/')"
+      >
+        rayburst.pages.dev
+      </a>
 
       <!-- Version Badges (stacked, prominent) -->
       <div class="about-versions stagger stagger-2">
@@ -247,6 +254,27 @@ function openUrl(url: string) {
 </template>
 
 <style scoped>
+.about-website {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--m3-primary);
+  font-size: 13px;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
+  border-radius: 4px;
+}
+
+.about-website:hover {
+  text-decoration-color: currentColor;
+}
+
+.about-website:focus-visible {
+  outline: 2px solid var(--m3-primary);
+  outline-offset: 3px;
+}
+
 /* ── Glass Container ──────────────────────────────────────────────── */
 .about-glass {
   position: relative;
