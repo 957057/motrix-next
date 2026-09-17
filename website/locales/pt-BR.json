@@ -1,6 +1,6 @@
 {
   "nav.download": "Baixar",
-  "hero.tagline": "Redefinindo o gerenciador de downloads de código aberto.",
+  "hero.tagline": "Redefinindo o gerenciador de downloads de código aberto",
   "hero.github": "GitHub",
   "hero.sponsor": "Patrocinar",
   "hero.download": "Baixar",
@@ -70,7 +70,7 @@
   "dl.note": "Última versão estável. Versões anteriores podem manter o nome antigo.",
   "dl.releases": "Ver todas as versões",
   "hero.description": "Um gerenciador de downloads para arquivos, torrents e fluxos de mídia no computador.",
-  "connect.tagline": "Redefinindo a extensão complementar do navegador.",
+  "connect.tagline": "Redefinindo a extensão complementar do navegador",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Fechar",
   "a11y.language": "Idioma",

@@ -199,9 +199,8 @@ function openUrl(url: string) {
         </Transition>
       </div>
 
-      <!-- Description -->
+      <!-- Slogan -->
       <p class="about-desc stagger stagger-3">{{ t('about.tagline') }}</p>
-      <p class="about-desc stagger stagger-3">{{ t('about.description') }}</p>
 
       <!-- Tech Stack -->
       <div class="about-section-label stagger stagger-4">{{ t('about.tech-stack') }}</div>

@@ -1,6 +1,6 @@
 {
   "nav.download": "Download",
-  "hero.tagline": "Redefining the open-source download manager.",
+  "hero.tagline": "Redefining the open-source download manager",
   "hero.github": "GitHub",
   "hero.sponsor": "Sponsor",
   "hero.download": "Download",
@@ -70,7 +70,7 @@
   "dl.note": "Latest stable release. Older releases may use the previous name.",
   "dl.releases": "View all releases",
   "hero.description": "A desktop download manager for files, torrents and streams.",
-  "connect.tagline": "Redefining the companion browser extension.",
+  "connect.tagline": "Redefining the companion browser extension",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Close",
   "a11y.language": "Language",

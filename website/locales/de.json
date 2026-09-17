@@ -1,6 +1,6 @@
 {
   "nav.download": "Herunterladen",
-  "hero.tagline": "Wir definieren den Open-Source-Downloadmanager neu.",
+  "hero.tagline": "Wir definieren den Open-Source-Downloadmanager neu",
   "hero.github": "GitHub",
   "hero.sponsor": "Sponsern",
   "hero.download": "Herunterladen",
@@ -70,7 +70,7 @@
   "dl.note": "Neueste stabile Version. Ältere Versionen können noch den bisherigen Namen tragen.",
   "dl.releases": "Alle Releases ansehen",
   "hero.description": "Ein Downloadmanager für Dateien, Torrents und Streams auf dem Desktop.",
-  "connect.tagline": "Wir definieren die begleitende Browsererweiterung neu.",
+  "connect.tagline": "Wir definieren die begleitende Browsererweiterung neu",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Schließen",
   "a11y.language": "Sprache",

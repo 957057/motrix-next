@@ -1,6 +1,6 @@
 {
   "nav.download": "İndir",
-  "hero.tagline": "Açık kaynaklı indirme yöneticisini yeniden tanımlıyoruz.",
+  "hero.tagline": "Açık kaynaklı indirme yöneticisini yeniden tanımlıyoruz",
   "hero.github": "GitHub",
   "hero.sponsor": "Sponsor",
   "hero.download": "İndir",
@@ -70,7 +70,7 @@
   "dl.note": "En son kararlı sürüm. Önceki sürümler eski adı kullanabilir.",
   "dl.releases": "Tüm sürümleri görüntüle",
   "hero.description": "Dosyalar, torrentler ve medya akışları için masaüstü indirme yöneticisi.",
-  "connect.tagline": "Tamamlayıcı tarayıcı uzantısını yeniden tanımlıyoruz.",
+  "connect.tagline": "Tamamlayıcı tarayıcı uzantısını yeniden tanımlıyoruz",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Kapat",
   "a11y.language": "Dil",

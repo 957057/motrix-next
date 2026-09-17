@@ -1,6 +1,5 @@
 <div align="center">
-  <img src="docs/brand/banner.png" alt="Rayburst. Seize the ray, forge the real." width="800" />
-  <p><strong>Redefining the open-source download manager.</strong></p>
+  <img src="docs/brand/banner.png" alt="Rayburst — Redefining the open-source download manager" width="800" />
 
 [![GitHub release](https://img.shields.io/github/v/release/AnInsomniacy/rayburst.svg)](https://github.com/AnInsomniacy/rayburst/releases)
 ![Build](https://img.shields.io/github/actions/workflow/status/AnInsomniacy/rayburst/ci.yml?branch=main&label=Build)
@@ -8,6 +7,7 @@
 <br>
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue.svg)
 
+[![Website](https://img.shields.io/badge/Website-946ECE?style=for-the-badge)](https://rayburst.pages.dev/)
 [![Extension](https://img.shields.io/badge/Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/AnInsomniacy/rayburst-connect)
 
 </div>

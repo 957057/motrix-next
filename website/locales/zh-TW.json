@@ -1,6 +1,6 @@
 {
   "nav.download": "下載",
-  "hero.tagline": "重新定義開源下載器。",
+  "hero.tagline": "重新定義開源下載器",
   "hero.github": "GitHub",
   "hero.sponsor": "贊助",
   "hero.download": "下載",
@@ -70,7 +70,7 @@
   "dl.note": "最新穩定版。較早的發行版本可能仍使用舊名稱。",
   "dl.releases": "查看所有版本",
   "hero.description": "支援檔案、種子與串流媒體的桌面下載管理員。",
-  "connect.tagline": "重新定義瀏覽器配套擴充功能。",
+  "connect.tagline": "重新定義瀏覽器配套擴充功能",
   "features.media.title": "HLS / DASH",
   "a11y.close": "關閉",
   "a11y.language": "語言",

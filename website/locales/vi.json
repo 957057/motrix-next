@@ -1,6 +1,6 @@
 {
   "nav.download": "Tải xuống",
-  "hero.tagline": "Định nghĩa lại trình quản lý tải xuống mã nguồn mở.",
+  "hero.tagline": "Định nghĩa lại trình quản lý tải xuống mã nguồn mở",
   "hero.github": "GitHub",
   "hero.sponsor": "Tài trợ",
   "hero.download": "Tải xuống",
@@ -70,7 +70,7 @@
   "dl.note": "Bản ổn định mới nhất. Các bản cũ có thể vẫn dùng tên trước đây.",
   "dl.releases": "Xem tất cả bản phát hành",
   "hero.description": "Trình quản lý tải xuống trên máy tính cho tệp, torrent và luồng phương tiện.",
-  "connect.tagline": "Định nghĩa lại tiện ích trình duyệt đồng hành.",
+  "connect.tagline": "Định nghĩa lại tiện ích trình duyệt đồng hành",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Đóng",
   "a11y.language": "Ngôn ngữ",
