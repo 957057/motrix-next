@@ -29,11 +29,16 @@ impl MediaService {
         let media_features = version["mediaFeatures"]
             .as_array()
             .ok_or(Error::Unavailable)?;
-        if !["request-contexts", "stable-track-ids", "structured-errors"]
-            .iter()
-            .all(|required| media_features.iter().any(|feature| feature == required))
+        if ![
+            "request-contexts",
+            "stable-track-ids",
+            "structured-errors",
+            "captured-inputs",
+        ]
+        .iter()
+        .all(|required| media_features.iter().any(|feature| feature == required))
         {
-            return Err(Error::Unavailable);
+            return Err(Error::IntegrationUnavailable);
         }
         let features = version["enabledFeatures"]
             .as_array()
@@ -43,10 +48,10 @@ impl MediaService {
                 .iter()
                 .all(|name| methods.iter().any(|method| method == name))
         {
-            return Err(Error::Unavailable);
+            return Err(Error::IntegrationUnavailable);
         }
         Ok(
-            json!({"product":"rayburst","protocolVersion":1,"sourceKinds":["hls","dash"],"requestContexts":true}),
+            json!({"product":"rayburst","protocolVersion":2,"sourceKinds":["hls","dash","collection"],"requestContexts":true}),
         )
     }
 
@@ -85,6 +90,18 @@ impl MediaService {
             "media-request-contexts": serde_json::to_string(&source.request_contexts.iter()
                 .map(|context| json!({"url":context.url,"headers":context.headers}))
                 .collect::<Vec<_>>()).map_err(|_| Error::UnsupportedSource)?});
+        options["media-input"] = serde_json::to_string(&source.input)
+            .map_err(|_| Error::UnsupportedSource)?
+            .into();
+        if !source.input.tracks.is_empty()
+            && source
+                .input
+                .tracks
+                .iter()
+                .any(|track| track.r#type == "subtitle")
+        {
+            options["media-subtitles"] = "best".into();
+        }
         options["filename-hint"] = source.filename_hint().into();
         options["filename-hint-source"] = if source.title.trim().is_empty() {
             "suggested"

@@ -921,6 +921,10 @@
     "download-options": "下載選項",
     "recording-options": "錄製選項",
     "unlimited": "不限時",
-    "custom": "自訂"
+    "custom": "自訂",
+    "advanced": "媒體工具",
+    "start-time": "起點（秒）",
+    "end-time": "終點（0 表示結尾）",
+    "aes-key": "AES-128 金鑰"
   }
 }

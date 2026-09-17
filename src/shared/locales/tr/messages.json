@@ -921,6 +921,10 @@
     "download-options": "İndirme seçenekleri",
     "recording-options": "Kayıt seçenekleri",
     "unlimited": "Sınırsız",
-    "custom": "Özel"
+    "custom": "Özel",
+    "advanced": "Medya araçları",
+    "start-time": "Başlangıç (saniye)",
+    "end-time": "Bitiş (0: kaynağın sonu)",
+    "aes-key": "AES-128 anahtarı"
   }
 }

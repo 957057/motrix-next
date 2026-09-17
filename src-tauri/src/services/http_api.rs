@@ -124,7 +124,7 @@ pub fn build_router(ctx: Arc<ApiContext>) -> Router {
         .route("/pause-all", post(handle_pause_all))
         .route("/resume-all", post(handle_resume_all))
         .layer(axum::extract::DefaultBodyLimit::max(256 * 1024))
-        .nest("/media/v1", super::media::routes::router())
+        .nest("/media/v2", super::media::routes::router())
         .layer(middleware::from_fn(require_product_client))
         .layer(cors)
         .with_state(ctx)

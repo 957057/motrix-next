@@ -14,7 +14,6 @@ import { ref } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core'
 import { logger } from '@shared/logger'
-import { STAT_BASE_INTERVAL, STAT_PER_TASK_INTERVAL, STAT_MIN_INTERVAL, STAT_MAX_INTERVAL } from '@shared/timing'
 import { detectExternalInputKind, detectKind, createBatchItem } from '@shared/utils/batchHelpers'
 import { summarizeExternalInput } from '@shared/utils/externalInputDiagnostics'
 import { submitManualUris } from '@/composables/useAddTaskSubmit'
@@ -57,7 +56,6 @@ export const useAppStore = defineStore('app', () => {
   const systemTheme = ref('light')
   const trayFocused = ref(false)
   const aboutPanelVisible = ref(false)
-  const interval = ref(STAT_BASE_INTERVAL)
   const stat = ref({
     downloadSpeed: 0,
     uploadSpeed: 0,
@@ -115,18 +113,6 @@ export const useAppStore = defineStore('app', () => {
     externalInputStartHandler = handler
   }
 
-  function updateInterval(millisecond: number) {
-    let val = millisecond
-    if (val > STAT_MAX_INTERVAL) val = STAT_MAX_INTERVAL
-    if (val < STAT_MIN_INTERVAL) val = STAT_MIN_INTERVAL
-    if (interval.value === val) return
-    interval.value = val
-  }
-
-  function increaseInterval(millisecond = 100) {
-    if (interval.value < STAT_MAX_INTERVAL) interval.value += millisecond
-  }
-
   /**
    * Unified entry point for all external inputs.
    * Accepts pre-built BatchItems (already resolved) and appends them to
@@ -170,23 +156,16 @@ export const useAppStore = defineStore('app', () => {
 
   /**
    * Processes a single stat:update event payload from the Rust backend.
-   * Updates reactive stat values AND the adaptive polling interval that
-   * TaskView's list refresh depends on.
+   * The task list has its own fixed refresh cadence.
    */
   function handleStatEvent(payload: StatPayload) {
-    const { numActive } = payload
     stat.value = {
       downloadSpeed: payload.downloadSpeed,
       uploadSpeed: payload.uploadSpeed,
-      numActive,
+      numActive: payload.numActive,
       numWaiting: payload.numWaiting,
       numStopped: payload.numStopped,
       numStoppedTotal: payload.numStoppedTotal,
-    }
-    if (numActive > 0) {
-      updateInterval(STAT_BASE_INTERVAL - STAT_PER_TASK_INTERVAL * numActive)
-    } else {
-      increaseInterval()
     }
   }
 
@@ -423,7 +402,6 @@ export const useAppStore = defineStore('app', () => {
     systemTheme,
     trayFocused,
     aboutPanelVisible,
-    interval,
     stat,
     addTaskVisible,
     pendingBatch,
@@ -436,8 +414,6 @@ export const useAppStore = defineStore('app', () => {
     pendingUpdate,
     updateCheckRequestId,
     requestUpdateCheck,
-    updateInterval,
-    increaseInterval,
     enqueueBatch,
     showAddTaskDialog,
     hideAddTaskDialog,

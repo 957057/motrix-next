@@ -921,6 +921,10 @@
     "download-options": "Letöltési beállítások",
     "recording-options": "Felvételi beállítások",
     "unlimited": "Korlátlan",
-    "custom": "Egyéni"
+    "custom": "Egyéni",
+    "advanced": "Médiaeszközök",
+    "start-time": "Kezdet (másodperc)",
+    "end-time": "Vég (0: forrás vége)",
+    "aes-key": "AES-128-kulcs"
   }
 }

@@ -41,6 +41,8 @@ pub struct Operation {
     pub selection: Option<Selection>,
     pub submission_id: Option<Uuid>,
     pub error: Option<Error>,
+    #[serde(default)]
+    pub capture_ids: Vec<Uuid>,
 }
 impl Operation {
     pub fn new(id: Uuid, fingerprint: String, now: i64, format: Format) -> Self {
@@ -56,6 +58,7 @@ impl Operation {
             selection: None,
             submission_id: None,
             error: None,
+            capture_ids: vec![],
         }
     }
     pub fn response(&self) -> serde_json::Value {

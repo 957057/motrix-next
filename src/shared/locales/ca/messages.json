@@ -921,6 +921,10 @@
     "download-options": "Opcions de baixada",
     "recording-options": "Opcions de gravació",
     "unlimited": "Sense límit",
-    "custom": "Personalitzat"
+    "custom": "Personalitzat",
+    "advanced": "Eines multimèdia",
+    "start-time": "Inici (segons)",
+    "end-time": "Final (0: final de la font)",
+    "aes-key": "Clau AES-128"
   }
 }

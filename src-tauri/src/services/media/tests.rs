@@ -47,7 +47,7 @@ async fn rpc(
             )
         }
         "aria2.getVersion" => {
-            json!({"enabledFeatures":["HLS/DASH"],"mediaFeatures":["request-contexts","stable-track-ids","structured-errors"]})
+            json!({"enabledFeatures":["HLS/DASH"],"mediaFeatures":["request-contexts","stable-track-ids","structured-errors","captured-inputs"]})
         }
         "system.listMethods" => json!(["aria2.finishMedia", "aria2.retryMedia"]),
         "aria2.addUri" => {
@@ -217,6 +217,7 @@ fn request() -> ProbeRequest {
             filename: "stream.m3u8".into(),
             mime: "application/vnd.apple.mpegurl".into(),
             request_contexts: vec![],
+            input: InputPlan::default(),
         },
     }
 }
@@ -482,6 +483,8 @@ fn selection_validates_track_identity_muxed_sources_and_live_duration() {
             subtitle_id: None,
             format: Format::Mp4,
             record_time_seconds: 0,
+            start_time_seconds: 0,
+            end_time_seconds: 0,
         },
     };
     assert!(presentation

@@ -64,7 +64,7 @@ sys-locale = "0.3"
 rusqlite = { version = "0.31", features = ["bundled"] }
 maxminddb = { version = "0.27", features = ["mmap"] }
 axum = "0.8"
-tower-http = { version = "0.6", features = ["cors"] }
+tower-http = { version = "0.6", features = ["cors", "fs"] }
 strip-ansi-escapes = "0.2.1"
 tempfile = "3"
 rayburst-browser-launcher = { path = "native-messaging" }

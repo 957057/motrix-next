@@ -5,6 +5,7 @@ import Sortable from 'sortablejs'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceStore } from '@/stores/preference'
 import { useReducedMotion } from '@/composables/useReducedMotion'
+import { logger } from '@shared/logger'
 import TaskItem from './TaskItem.vue'
 import TaskCompactItem from './TaskCompactItem.vue'
 import type { ComponentPublicInstance } from 'vue'
@@ -33,7 +34,18 @@ const reduceMotion = useReducedMotion()
 
 type ListRefTarget = HTMLElement | ComponentPublicInstance | null
 
-const taskList = ref<Aria2Task[]>(taskStore.taskList)
+const dragOrder = ref<string[] | null>(null)
+const taskList = computed(() => {
+  if (!dragOrder.value) return taskStore.taskList
+  const tasks = new Map(taskStore.taskList.map((task) => [task.gid, task]))
+  const ordered: Aria2Task[] = []
+  for (const gid of dragOrder.value) {
+    const task = tasks.get(gid)
+    if (task) ordered.push(task)
+    tasks.delete(gid)
+  }
+  return [...ordered, ...tasks.values()]
+})
 const listRef = ref<ListRefTarget>(null)
 const sorting = ref(false)
 const containerTransitioning = ref(false)
@@ -53,11 +65,11 @@ const visibleTaskList = computed<Aria2Task[]>({
   },
   set(nextPageList) {
     const start = (taskPage.value - 1) * pageSize.value
-    taskList.value = [
+    dragOrder.value = [
       ...taskList.value.slice(0, start),
       ...nextPageList,
       ...taskList.value.slice(start + nextPageList.length),
-    ]
+    ].map((task) => task.gid)
   },
 })
 
@@ -128,18 +140,10 @@ function animateDropSettle(event: SortableEvent | undefined): Promise<void> {
   })
 }
 
-watch(
-  () => taskStore.taskList,
-  (v) => {
-    if (sorting.value) return
-    taskList.value = v
-    taskStore.clampCurrentTaskPage()
-  },
-  { immediate: true },
-)
-
-watch([taskPage, pageSize], () => {
-  if (sorting.value) return
+watch([taskPage, pageSize, pageTransitionKey], () => {
+  dragOrder.value = null
+  sorting.value = false
+  stopFloatingRectTracking()
   taskStore.clampCurrentTaskPage()
 })
 
@@ -170,6 +174,7 @@ const sortableOptions: SortableOptions = {
   fallbackTolerance: 3,
   preventOnFilter: false,
   onStart: () => {
+    dragOrder.value = taskStore.taskList.map((task) => task.gid)
     sorting.value = true
     if (!reduceMotion.value) startFloatingRectTracking()
   },
@@ -182,13 +187,18 @@ const sortableOptions: SortableOptions = {
     visibleTaskList.value = nextPageList
   },
   onEnd: async (event) => {
+    if (!sorting.value) return
+    const gids = visibleTaskList.value.map((task) => task.gid)
+    sorting.value = false
+    dragOrder.value = null
     stopFloatingRectTracking()
-    await nextTick()
-    await animateDropSettle(event)
-    await taskStore.saveVisiblePageManualOrder(visibleTaskList.value)
-    window.setTimeout(() => {
-      sorting.value = false
-    }, 0)
+    try {
+      const saved = taskStore.saveVisiblePageManualOrder(gids)
+      await nextTick()
+      await Promise.all([animateDropSettle(event), saved])
+    } catch (error) {
+      logger.warn('TaskList.saveOrder', error instanceof Error ? error.message : String(error))
+    }
   },
 }
 
@@ -256,7 +266,7 @@ function handleCardBeforeLeave(element: Element) {
         class="task-list-inner"
         @before-leave="handleCardBeforeLeave"
       >
-        <div v-for="item in visibleTaskList" :key="taskStore.taskCardKey(item.gid)" class="task-list-item">
+        <div v-for="item in visibleTaskList" :key="item.gid" class="task-list-item">
           <component
             :is="taskCardComponent"
             :task="item"

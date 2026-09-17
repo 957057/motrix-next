@@ -42,6 +42,7 @@ const MANAGED_KEYS: &[&str] = &[
     "quiet",
     "rpc-allow-origin-all",
     "rpc-listen-all",
+    "rpc-max-request-size",
     "save-session",
     "show-console-readout",
     "state-dir",
@@ -205,6 +206,7 @@ pub(crate) fn build_runtime_config(
     }
 
     insert_option(&mut options, "enable-rpc", "true")?;
+    insert_option(&mut options, "rpc-max-request-size", "16M")?;
     insert_option(
         &mut options,
         "rpc-listen-all",

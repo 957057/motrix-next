@@ -28,7 +28,7 @@ impl IntoResponse for Error {
             Error::NotFound => StatusCode::NOT_FOUND,
             Error::Conflict => StatusCode::CONFLICT,
             Error::Expired => StatusCode::GONE,
-            Error::Unavailable => StatusCode::SERVICE_UNAVAILABLE,
+            Error::Unavailable | Error::IntegrationUnavailable => StatusCode::SERVICE_UNAVAILABLE,
             _ => StatusCode::UNPROCESSABLE_ENTITY,
         };
         (
@@ -40,7 +40,7 @@ impl IntoResponse for Error {
     }
 }
 
-fn authorize(ctx: &ApiContext, headers: &HeaderMap) -> Result<(), Error> {
+pub(super) fn authorize(ctx: &ApiContext, headers: &HeaderMap) -> Result<(), Error> {
     if let Some(origin) = headers.get(header::ORIGIN) {
         if !origin.to_str().is_ok_and(extension_origin) {
             return Err(Error::OriginDenied);
@@ -56,19 +56,36 @@ fn authorize(ctx: &ApiContext, headers: &HeaderMap) -> Result<(), Error> {
 pub fn router() -> Router<Arc<ApiContext>> {
     Router::new()
         .route("/capabilities", get(capabilities))
+        .route(
+            "/assets/{id}",
+            post(super::assets::create).delete(super::assets::discard),
+        )
+        .route("/assets/{id}/seal", post(super::assets::seal))
+        .route(
+            "/assets/{id}/{stream}",
+            get(super::assets::read).put(super::assets::append),
+        )
         .route("/probes", post(create))
         .route("/probes/{id}", get(read))
         .route("/probes/{id}/submit", post(submit))
         .route("/probes/{id}/cancel", post(cancel))
-        .layer(DefaultBodyLimit::max(256 * 1024))
+        .layer(DefaultBodyLimit::max(4 * 1024 * 1024))
         .layer(
             CorsLayer::new()
                 .allow_origin(AllowOrigin::predicate(|origin, _| {
                     origin.to_str().is_ok_and(extension_origin)
                 }))
-                .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+                .allow_methods([
+                    Method::GET,
+                    Method::POST,
+                    Method::PUT,
+                    Method::DELETE,
+                    Method::OPTIONS,
+                ])
                 .allow_headers([
                     header::CONTENT_TYPE,
+                    header::RANGE,
+                    HeaderName::from_static("x-upload-offset"),
                     header::AUTHORIZATION,
                     HeaderName::from_static("x-rayburst-client"),
                 ])
@@ -123,7 +140,11 @@ async fn submit(
 ) -> Reply {
     authorize(&ctx, &headers)?;
     let Json(request) = body.map_err(|_| Error::UnsupportedSelection)?;
-    reply(service(&ctx.app).await?.submit(id, request).await?)
+    let receipt = service(&ctx.app).await?.submit(id, request).await?;
+    if let Some(gid) = receipt["gid"].as_str() {
+        crate::services::tasks::notify_changed(&ctx.app, gid);
+    }
+    reply(receipt)
 }
 async fn cancel(
     State(ctx): State<Arc<ApiContext>>,

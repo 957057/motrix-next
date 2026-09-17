@@ -5,12 +5,17 @@ import type { I18nKey } from '@shared/i18nTypes'
 import { logger } from '@shared/logger'
 
 export interface MediaOptions {
-  mode: 'auto' | 'file' | 'hls' | 'dash'
-  format: 'mp4' | 'mkv'
+  mode: 'auto' | 'file' | 'hls' | 'dash' | 'collection'
+  format: 'mp4' | 'mkv' | 'vtt'
   video: string
   audio: string
   subtitles: string
   recordTime: number
+  startTime?: number
+  endTime?: number
+  key?: string
+  iv?: string
+  input?: string
   pauseAfterProbe: 'true' | 'false' | 'default'
 }
 
@@ -31,7 +36,10 @@ export function defaultMediaOptions(
 export function readMediaOptions(options: Record<string, string>, tracks: Aria2MediaTrack[] = []): MediaOptions {
   const mode = options.media
   const format = options.mediaFormat
-  if ((mode !== 'auto' && mode !== 'hls' && mode !== 'dash') || (format !== 'mp4' && format !== 'mkv'))
+  if (
+    (mode !== 'auto' && mode !== 'hls' && mode !== 'dash' && mode !== 'collection') ||
+    (format !== 'mp4' && format !== 'mkv' && format !== 'vtt')
+  )
     throw new Error('Invalid native media options')
   const recordTime = Number(options.mediaRecordTime)
   if (!Number.isInteger(recordTime) || recordTime < 0 || recordTime > 31536000)
@@ -50,6 +58,9 @@ export function readMediaOptions(options: Record<string, string>, tracks: Aria2M
     audio: selected(options.mediaAudio, 'audio'),
     subtitles: selected(options.mediaSubtitles, 'subtitle'),
     recordTime,
+    startTime: Number(options.mediaStartTime ?? 0),
+    endTime: Number(options.mediaEndTime ?? 0),
+    input: options.mediaInput,
     pauseAfterProbe: 'false',
   }
 }
@@ -78,24 +89,56 @@ export function mediaTrackLabel(track: Aria2MediaTrack, locale: string): string 
 /** A filename hint for known manifests; actual media detection remains native. */
 export function mediaOutputHint(uri: string, name: string, mode = 'auto', format = 'mp4'): string {
   if (mode === 'file') return name
-  let manifest = mode === 'hls' || mode === 'dash'
+  let manifest = mode === 'hls' || mode === 'dash' || mode === 'collection'
   try {
     manifest ||= /\.(m3u8|mpd)$/i.test(new URL(uri).pathname)
   } catch {
     return name
   }
   if (!manifest || !name) return name
-  return `${name.replace(/\.[^./\\]*$/, '') || 'media'}.${format === 'mkv' ? 'mkv' : 'mp4'}`
+  return `${name.replace(/\.[^./\\]*$/, '') || 'media'}.${format === 'mkv' ? 'mkv' : format === 'vtt' ? 'vtt' : 'mp4'}`
 }
 
 export function mediaEngineOptions(value: MediaOptions): Aria2EngineOptions {
   if (value.mode === 'file') return { media: 'file' }
   if (!Number.isInteger(value.recordTime) || value.recordTime < 0 || value.recordTime > 31536000)
     throw new Error('Recording duration must be between 0 and 31536000 seconds')
-  if (value.video === 'none' && value.audio === 'none') throw new Error('Select at least one audio or video track')
+  if (value.video === 'none' && value.audio === 'none' && value.subtitles === 'none')
+    throw new Error('Select at least one audio or video track')
+  const start = value.startTime ?? 0
+  const end = value.endTime ?? 0
+  if (
+    !Number.isInteger(start) ||
+    !Number.isInteger(end) ||
+    start < 0 ||
+    end < 0 ||
+    start > 31536000 ||
+    end > 31536000 ||
+    (end && end <= start)
+  )
+    throw new Error('Invalid media time range')
+  let input = value.input
+  if (value.key?.trim()) {
+    const decode = (text: string) => {
+      const key = text.trim().replace(/^0x/i, '')
+      if (/^[a-f0-9]{32}$/i.test(key)) return key.toLowerCase()
+      const bytes = Uint8Array.from(atob(key), (char) => char.charCodeAt(0))
+      if (bytes.length !== 16) throw new Error('An AES-128 key or IV must contain 16 bytes')
+      return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+    }
+    const plan: unknown = input ? JSON.parse(input) : { manifests: [], tracks: [], keys: [] }
+    if (!plan || typeof plan !== 'object' || Array.isArray(plan)) throw new Error('Invalid media input')
+    input = JSON.stringify({
+      ...plan,
+      keys: [{ url: '', key: decode(value.key), iv: value.iv?.trim() ? decode(value.iv) : '' }],
+    })
+  }
   return {
     media: value.mode,
     'media-format': value.format,
+    ...(input ? { 'media-input': input } : {}),
+    'media-start-time': String(start),
+    'media-end-time': String(end),
     'media-video': value.video,
     'media-audio': value.audio,
     'media-subtitles': value.subtitles,

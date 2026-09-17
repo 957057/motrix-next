@@ -921,6 +921,10 @@
     "download-options": "Options de téléchargement",
     "recording-options": "Options d’enregistrement",
     "unlimited": "Illimitée",
-    "custom": "Personnalisée"
+    "custom": "Personnalisée",
+    "advanced": "Outils multimédias",
+    "start-time": "Début (secondes)",
+    "end-time": "Fin (0 : fin de la source)",
+    "aes-key": "Clé AES-128"
   }
 }

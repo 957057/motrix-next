@@ -921,6 +921,10 @@
     "download-options": "Opțiuni de descărcare",
     "recording-options": "Opțiuni de înregistrare",
     "unlimited": "Nelimitată",
-    "custom": "Personalizată"
+    "custom": "Personalizată",
+    "advanced": "Instrumente media",
+    "start-time": "Început (secunde)",
+    "end-time": "Sfârșit (0: sfârșitul sursei)",
+    "aes-key": "Cheie AES-128"
   }
 }

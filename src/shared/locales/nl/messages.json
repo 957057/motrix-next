@@ -921,6 +921,10 @@
     "download-options": "Downloadopties",
     "recording-options": "Opnameopties",
     "unlimited": "Onbeperkt",
-    "custom": "Aangepast"
+    "custom": "Aangepast",
+    "advanced": "Mediahulpmiddelen",
+    "start-time": "Begin (seconden)",
+    "end-time": "Einde (0: broneinde)",
+    "aes-key": "AES-128-sleutel"
   }
 }

@@ -921,6 +921,10 @@
     "download-options": "Nedlastingsvalg",
     "recording-options": "Opptaksvalg",
     "unlimited": "Ubegrenset",
-    "custom": "Egendefinert"
+    "custom": "Egendefinert",
+    "advanced": "Medieverktøy",
+    "start-time": "Start (sekunder)",
+    "end-time": "Slutt (0: kildens slutt)",
+    "aes-key": "AES-128-nøkkel"
   }
 }

@@ -1,16 +1,13 @@
 <script setup lang="ts">
-/** @fileoverview Task list view with polling, task actions, and file delete confirmation. */
-import { computed, watch, onMounted, onBeforeUnmount } from 'vue'
+/** @fileoverview Task list view, task actions, and file delete confirmation. */
+import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTaskStore } from '@/stores/task'
 import { useTaskSelectionStore } from '@/stores/taskSelection'
-import { useAppStore } from '@/stores/app'
 import { usePreferenceStore } from '@/stores/preference'
 
-import { isEngineReady } from '@/api/aria2'
 import { useTaskActions } from '@/composables/useTaskActions'
 
-import { logger } from '@shared/logger'
 import { useDialog } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
 import TaskList from '@/components/task/TaskList.vue'
@@ -22,7 +19,6 @@ const props = withDefaults(defineProps<{ status?: string }>(), { status: 'all' }
 
 const { t } = useI18n()
 const taskStore = useTaskStore()
-const appStore = useAppStore()
 const preferenceStore = usePreferenceStore()
 const showEmptyBrand = computed(() => preferenceStore.config.showLogoWhenEmpty && taskStore.isCurrentListEmpty)
 const dialog = useDialog()
@@ -63,57 +59,13 @@ const title = computed(() => {
   return sub?.title ?? props.status
 })
 
-let refreshTimer: ReturnType<typeof setTimeout> | null = null
-let pollStopped = true
-let isUnmounted = false
-let changeRequestId = 0
-
-function startPolling() {
-  if (isUnmounted) return
-  stopPolling()
-  pollStopped = false
-  async function tick() {
-    if (pollStopped) return
-    if (isEngineReady()) {
-      await taskStore.fetchList().catch((e) => logger.debug('TaskView.fetchList', e))
-    }
-    if (pollStopped) return
-    refreshTimer = setTimeout(tick, appStore.interval)
-  }
-  refreshTimer = setTimeout(tick, appStore.interval)
-}
-
-function stopPolling() {
-  pollStopped = true
-  if (refreshTimer) {
-    clearTimeout(refreshTimer)
-    refreshTimer = null
-  }
-}
-
-async function changeCurrentList() {
-  stopPolling()
-  const requestId = ++changeRequestId
-  await taskStore.changeCurrentList(props.status)
-  if (isUnmounted || requestId !== changeRequestId) return
-  startPolling()
-}
-
 watch(
   () => props.status,
-  () => {
-    void changeCurrentList()
+  (status) => {
+    void taskStore.changeCurrentList(status)
   },
+  { immediate: true },
 )
-onMounted(() => {
-  isUnmounted = false
-  void changeCurrentList()
-})
-onBeforeUnmount(() => {
-  isUnmounted = true
-  changeRequestId += 1
-  stopPolling()
-})
 </script>
 
 <template>

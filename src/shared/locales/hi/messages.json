@@ -921,6 +921,10 @@
     "download-options": "डाउनलोड विकल्प",
     "recording-options": "रिकॉर्डिंग विकल्प",
     "unlimited": "असीमित",
-    "custom": "कस्टम"
+    "custom": "कस्टम",
+    "advanced": "मीडिया उपकरण",
+    "start-time": "शुरुआत (सेकंड)",
+    "end-time": "अंत (0: स्रोत का अंत)",
+    "aes-key": "AES-128 कुंजी"
   }
 }

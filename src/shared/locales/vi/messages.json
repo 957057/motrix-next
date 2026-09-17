@@ -921,6 +921,10 @@
     "download-options": "Tùy chọn tải xuống",
     "recording-options": "Tùy chọn ghi",
     "unlimited": "Không giới hạn",
-    "custom": "Tùy chỉnh"
+    "custom": "Tùy chỉnh",
+    "advanced": "Công cụ phương tiện",
+    "start-time": "Bắt đầu (giây)",
+    "end-time": "Kết thúc (0: cuối nguồn)",
+    "aes-key": "Khóa AES-128"
   }
 }

@@ -112,6 +112,47 @@ describe('TaskStore', () => {
   })
 
   // ─── fetchList ──────────────────────────────────────────
+  it('keeps live progress updating while history is unavailable', async () => {
+    mockHistoryFns.getRecords.mockImplementationOnce(() => new Promise(() => {}))
+    mockApi.fetchTaskList.mockResolvedValueOnce([makeMockTask('live', 'active', { completedLength: '750' })])
+    await store.fetchList()
+    expect(store.taskList[0].completedLength).toBe('750')
+    mockApi.fetchTaskList.mockResolvedValueOnce([makeMockTask('live', 'active', { completedLength: '900' })])
+    await store.fetchList(false)
+    expect(store.taskList[0].completedLength).toBe('900')
+  })
+
+  it('shares timer requests and coalesces action invalidations into one follow-up', async () => {
+    let resolve!: (tasks: Aria2Task[]) => void
+    mockApi.fetchTaskList.mockImplementationOnce(
+      () =>
+        new Promise((done) => {
+          resolve = done
+        }),
+    )
+    const first = store.fetchList(false)
+    const timer = store.fetchList(false)
+    const action = store.fetchList()
+    store.fetchList()
+    expect(mockApi.fetchTaskList).toHaveBeenCalledTimes(1)
+    resolve([makeMockTask('first')])
+    await Promise.all([first, timer, action])
+    expect(mockApi.fetchTaskList).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not freeze unrelated tasks during resubmission or a slow detail query', async () => {
+    store.resubmittingGids = ['restarting']
+    store.showTaskDetail(makeMockTask('live'))
+    mockApi.fetchTaskItemWithPeers.mockImplementationOnce(() => new Promise(() => {}))
+    mockApi.fetchTaskList.mockResolvedValueOnce([makeMockTask('live', 'active', { completedLength: '750' })])
+    await store.fetchList()
+    mockApi.fetchTaskList.mockResolvedValueOnce([makeMockTask('live', 'active', { completedLength: '950' })])
+    await store.fetchList(false)
+    expect(store.taskList[0].completedLength).toBe('950')
+    expect(store.currentTaskItem?.completedLength).toBe('950')
+    expect(mockApi.fetchTaskItemWithPeers).toHaveBeenCalledTimes(1)
+  })
+
   it('shows an empty list immediately, including while the database or engine is unavailable', async () => {
     const { useDatabaseStore } = await import('@/stores/database')
     useDatabaseStore().phase = 'loading'
@@ -328,7 +369,7 @@ describe('TaskStore', () => {
     expect(store.taskCounts.all).toBe(1)
   })
 
-  it('preserves the card key when retry replaces the engine GID', async () => {
+  it('publishes the replacement when retry changes the engine GID', async () => {
     store.currentList = 'all'
     const original = makeMockTask('original', 'error', {
       files: [
@@ -348,7 +389,6 @@ describe('TaskStore', () => {
     mockApi.fetchTaskList.mockResolvedValue([makeMockTask('replacement')])
     await store.retryTask(original)
     expect(store.taskList.map((task) => task.gid)).toEqual(['replacement'])
-    expect(store.taskCardKey('replacement')).toBe('original')
     expect(store.resubmittingGids).toEqual([])
   })
 
@@ -401,7 +441,7 @@ describe('TaskStore', () => {
     store.setTaskPageSize(2)
     store.setTaskPage('progress', 2)
 
-    await store.saveVisiblePageManualOrder([makeMockTask('d'), makeMockTask('c')])
+    await store.saveVisiblePageManualOrder(['d', 'c'])
 
     expect(store.taskList.map((task) => task.gid)).toEqual(['a', 'b', 'd', 'c', 'e'])
     expect(saveSpy).toHaveBeenCalledWith(
@@ -574,10 +614,10 @@ describe('TaskStore', () => {
       { gid: 'completed', name: 'completed.zip', status: 'complete' } as HistoryRecord,
     ])
     mockApi.fetchTaskList.mockResolvedValueOnce([])
-    await store.changeCurrentList('completed')
+    const switching = store.changeCurrentList('completed')
 
     resolveProgress([makeMockTask('stale')])
-    await staleRequest
+    await Promise.all([staleRequest, switching])
 
     expect(store.currentList).toBe('completed')
     expect(store.taskList.map((task) => task.gid)).toEqual(['completed'])

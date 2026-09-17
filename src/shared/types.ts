@@ -234,7 +234,7 @@ export interface Aria2MediaTrack {
 }
 export interface Aria2Media {
   state: MediaState
-  protocol: '' | 'hls' | 'dash'
+  protocol: '' | 'hls' | 'dash' | 'collection'
   live: 'true' | 'false'
   duration: string
   completedDuration: string

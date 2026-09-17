@@ -99,16 +99,16 @@ and provides selection beside status, without repeating protocol or diagnostics.
 
 ## Browser media API
 
-The desktop provides the `/media/v1` inspection contract in Rust; the extension
+The desktop provides the `/media/v2` inspection contract in Rust; the extension
 consumes and validates it independently.
 The endpoints are authenticated with the Extension API secret; media requests
 require a nonempty secret and an extension origin (or an authenticated native
 client with no Origin header). Browser-page origins cannot use these endpoints.
 Media operations remain available when the main webview is closed.
 
-The API advertises `hls`, `dash` and `requestContexts: true` only when the running
-engine advertises origin-scoped request contexts, stable track IDs and structured
-media errors. Ordinary files use `/add`; this API has no direct-file inspection
+The API advertises `hls`, `dash`, `collection` and `requestContexts: true` only when the running
+engine advertises origin-scoped request contexts, stable track IDs, structured
+media errors and `captured-inputs`. Ordinary files use `/add`; this API has no direct-file inspection
 or original-container branch.
 
 The adapter validates browser request contexts and sends them through the native
@@ -155,3 +155,27 @@ Static verification uses TypeScript, ESLint, formatting and
 fixtures. No test starts another repository or imports its test implementation.
 Browser-to-desktop E2E acceptance is performed manually by the maintainer using
 separately built applications. Compiler success does not establish runtime success.
+
+## Browser captures and custom keys
+
+The extension can send inline manifests, selected source tracks and AES-128 key/IV
+candidates through `media-input`. Aria2 Next owns URL resolution, key verification,
+OpenSSL decryption and remuxing. The desktop's existing media options expose custom
+keys, finite HLS/DASH segment ranges and compatible subtitle-only WebVTT output.
+These task-specific inputs are not global preferences or application history data.
+
+Authenticated `/media/v2/assets` routes receive bounded capture chunks from native
+browser recording and SourceBuffer capture. Upload offsets make exact retries and
+partial-write recovery idempotent. Sealing makes a capture immutable; tower-http
+provides native file streaming and byte ranges to the engine. There is no browser
+FFmpeg, external downloader or new transcoding process.
+
+Capture files are stored under the application local-data directory. Hourly cleanup
+removes unclaimed captures older than 24 hours, retaining inputs referenced by
+pending native tasks. A failed inventory skips deletion. Capture IDs are recorded
+with operation receipts; raw bytes and keys are excluded from history.
+
+The managed engine RPC request limit is 16 MiB to accommodate bounded inline
+manifests after JSON encoding. The extension API JSON limit is 4 MiB. Compile the
+updated engine, desktop and extension together; the previous bundled binary cannot
+provide the new media capabilities.

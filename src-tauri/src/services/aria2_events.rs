@@ -26,6 +26,7 @@ pub struct DownloadPauseEvent {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum NativeEventKind {
+    DownloadStart,
     DownloadPause,
     DownloadComplete,
     DownloadError,
@@ -35,6 +36,7 @@ enum NativeEventKind {
 impl NativeEventKind {
     fn from_method(method: &str) -> Option<Self> {
         match method {
+            "aria2.onDownloadStart" => Some(Self::DownloadStart),
             "aria2.onDownloadPause" => Some(Self::DownloadPause),
             "aria2.onDownloadComplete" => Some(Self::DownloadComplete),
             "aria2.onDownloadError" => Some(Self::DownloadError),
@@ -45,7 +47,7 @@ impl NativeEventKind {
 
     fn lifecycle_event(self) -> Option<&'static str> {
         match self {
-            Self::DownloadPause => None,
+            Self::DownloadStart | Self::DownloadPause => None,
             Self::DownloadComplete => Some(events::TASK_COMPLETE),
             Self::DownloadError => Some(events::TASK_ERROR),
             Self::BtDownloadComplete => Some(events::P2P_DOWNLOAD_COMPLETE),
@@ -207,6 +209,10 @@ async fn handle_native_event(
     if event.kind == NativeEventKind::DownloadPause && aria2.tasks.is_automatic(&event.gid).await {
         return Ok(());
     }
+    if event.kind == NativeEventKind::DownloadStart {
+        super::tasks::notify_changed(app, &event.gid);
+        return Ok(());
+    }
     if event.kind == NativeEventKind::DownloadPause {
         if let Err(error) = app.emit(
             DOWNLOAD_PAUSE,
@@ -332,6 +338,7 @@ mod tests {
     #[test]
     fn parses_native_lifecycle_events() {
         let cases = [
+            ("aria2.onDownloadStart", NativeEventKind::DownloadStart),
             ("aria2.onDownloadPause", NativeEventKind::DownloadPause),
             (
                 "aria2.onDownloadComplete",
@@ -359,12 +366,6 @@ mod tests {
 
     #[test]
     fn ignores_non_lifecycle_messages() {
-        assert_eq!(
-            native_event_from_text(
-                r#"{"jsonrpc":"2.0","method":"aria2.onDownloadStart","params":[{"gid":"abc123"}]}"#
-            ),
-            None
-        );
         assert_eq!(
             native_event_from_text(
                 r#"{"jsonrpc":"2.0","id":"rayburst-events-auth","result":{"version":"2.6.1"}}"#

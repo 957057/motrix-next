@@ -17,6 +17,15 @@ pub struct TaskService {
     generation: AtomicU64,
 }
 pub struct TaskServiceState(pub Arc<TaskService>);
+
+pub const TASKS_CHANGED: &str = "tasks:changed";
+
+pub fn notify_changed(app: &tauri::AppHandle, gid: &str) {
+    use tauri::Emitter;
+    if let Err(error) = app.emit(TASKS_CHANGED, serde_json::json!({ "gid": gid })) {
+        log::warn!("tasks: failed to publish task change: {error}");
+    }
+}
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ResumeEligibleResult {

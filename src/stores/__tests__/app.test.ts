@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { invoke } from '@tauri-apps/api/core'
-import { STAT_BASE_INTERVAL, STAT_MAX_INTERVAL, STAT_MIN_INTERVAL } from '@shared/timing'
 
 // ── Mocks ───────────────────────────────────────────────────────────
 vi.mock('@tauri-apps/api/core', () => ({
@@ -115,47 +114,6 @@ describe('useAppStore', () => {
 
   // ── Interval Management ─────────────────────────────────────────
 
-  describe('interval management', () => {
-    it('updateInterval sets interval within bounds', () => {
-      const store = useAppStore()
-      store.updateInterval(2000)
-      expect(store.interval).toBe(2000)
-    })
-
-    it('updateInterval clamps to STAT_MAX_INTERVAL', () => {
-      const store = useAppStore()
-      store.updateInterval(99999)
-      expect(store.interval).toBe(STAT_MAX_INTERVAL)
-    })
-
-    it('updateInterval clamps to STAT_MIN_INTERVAL', () => {
-      const store = useAppStore()
-      store.updateInterval(1)
-      expect(store.interval).toBe(STAT_MIN_INTERVAL)
-    })
-
-    it('updateInterval no-ops when value equals current', () => {
-      const store = useAppStore()
-      store.interval = 2000
-      store.updateInterval(2000)
-      expect(store.interval).toBe(2000)
-    })
-
-    it('increaseInterval increments by 100ms by default', () => {
-      const store = useAppStore()
-      const before = store.interval
-      store.increaseInterval()
-      expect(store.interval).toBe(before + 100)
-    })
-
-    it('increaseInterval does not exceed STAT_MAX_INTERVAL', () => {
-      const store = useAppStore()
-      store.interval = STAT_MAX_INTERVAL
-      store.increaseInterval()
-      expect(store.interval).toBe(STAT_MAX_INTERVAL)
-    })
-  })
-
   // ── Dialog State ────────────────────────────────────────────────
 
   describe('dialog state', () => {
@@ -229,34 +187,6 @@ describe('useAppStore', () => {
       expect(store.stat.numActive).toBe(2)
       expect(store.stat.numWaiting).toBe(1)
       expect(store.stat.numStopped).toBe(5)
-    })
-
-    it('decreases interval when active tasks are present', () => {
-      const store = useAppStore()
-      store.interval = STAT_BASE_INTERVAL
-      store.handleStatEvent({
-        downloadSpeed: 1000,
-        uploadSpeed: 0,
-        numActive: 3,
-        numWaiting: 0,
-        numStopped: 0,
-        numStoppedTotal: 0,
-      })
-      expect(store.interval).toBeLessThanOrEqual(STAT_BASE_INTERVAL)
-    })
-
-    it('increases interval when idle (numActive = 0)', () => {
-      const store = useAppStore()
-      const before = store.interval
-      store.handleStatEvent({
-        downloadSpeed: 0,
-        uploadSpeed: 0,
-        numActive: 0,
-        numWaiting: 0,
-        numStopped: 3,
-        numStoppedTotal: 5,
-      })
-      expect(store.interval).toBeGreaterThanOrEqual(before)
     })
 
     it('preserves the authoritative engine speed payload', () => {

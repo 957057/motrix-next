@@ -22,6 +22,8 @@ pub enum Error {
     NotFound,
     #[error("conflict")]
     Conflict,
+    #[error("integration_unavailable")]
+    IntegrationUnavailable,
     #[error("unavailable")]
     Unavailable,
     #[error("api_auth_failed")]

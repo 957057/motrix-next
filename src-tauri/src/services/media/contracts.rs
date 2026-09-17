@@ -15,6 +15,8 @@ pub const HISTORY_OPTIONS: &[&str] = &[
     "media-audio",
     "media-subtitles",
     "media-record-time",
+    "media-start-time",
+    "media-end-time",
     "media-pause-after-probe",
 ];
 
@@ -23,6 +25,7 @@ pub const HISTORY_OPTIONS: &[&str] = &[
 pub enum SourceKind {
     Hls,
     Dash,
+    Collection,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -30,12 +33,14 @@ pub enum SourceKind {
 pub enum Format {
     Mp4,
     Mkv,
+    Vtt,
 }
 impl Format {
     pub fn parse(value: &str) -> Result<Self, Error> {
         match value {
             "mp4" => Ok(Self::Mp4),
             "mkv" => Ok(Self::Mkv),
+            "vtt" => Ok(Self::Vtt),
             _ => Err(Error::UnsupportedSelection),
         }
     }
@@ -57,6 +62,8 @@ pub struct Source {
     pub filename: String,
     pub mime: String,
     pub request_contexts: Vec<RequestContext>,
+    #[serde(default)]
+    pub input: InputPlan,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -70,6 +77,82 @@ pub struct RequestHeader {
     pub name: String,
     pub value: String,
 }
+#[derive(Clone, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct InputPlan {
+    pub manifests: Vec<CapturedManifest>,
+    pub tracks: Vec<InputTrack>,
+    pub keys: Vec<InputKey>,
+}
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CapturedManifest {
+    pub url: String,
+    pub content: String,
+}
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct InputTrack {
+    pub id: String,
+    pub r#type: String,
+    pub urls: Vec<String>,
+    #[serde(default, rename = "offsetMs")]
+    pub offset_ms: u64,
+}
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct InputKey {
+    pub url: String,
+    pub key: String,
+    pub iv: String,
+}
+impl InputPlan {
+    pub fn validate(&self) -> Result<(), Error> {
+        if self.manifests.len() > 32 || self.tracks.len() > 32 || self.keys.len() > 64 {
+            return Err(Error::UnsupportedSource);
+        }
+        let mut urls = std::collections::HashSet::new();
+        for item in &self.manifests {
+            http_url(&item.url)?;
+            if item.content.is_empty()
+                || item.content.len() > 2 * 1024 * 1024
+                || item.content.contains('\0')
+                || !urls.insert(&item.url)
+            {
+                return Err(Error::UnsupportedSource);
+            }
+        }
+        let mut ids = std::collections::HashSet::new();
+        for track in &self.tracks {
+            if track.offset_ms > 31_536_000_000
+                || track.id.is_empty()
+                || track.id.len() > 128
+                || !ids.insert(&track.id)
+                || !matches!(
+                    track.r#type.as_str(),
+                    "video" | "audio" | "subtitle" | "muxed"
+                )
+                || track.urls.is_empty()
+                || track.urls.len() > 10_000
+            {
+                return Err(Error::UnsupportedSource);
+            }
+            for url in &track.urls {
+                http_url(url)?;
+            }
+        }
+        let hex = |value: &str| value.len() == 32 && value.bytes().all(|b| b.is_ascii_hexdigit());
+        for item in &self.keys {
+            if !item.url.is_empty() {
+                http_url(&item.url)?;
+            }
+            if !hex(&item.key) || (!item.iv.is_empty() && !hex(&item.iv)) {
+                return Err(Error::UnsupportedSource);
+            }
+        }
+        Ok(())
+    }
+}
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Selection {
@@ -78,6 +161,10 @@ pub struct Selection {
     pub subtitle_id: Option<String>,
     pub format: Format,
     pub record_time_seconds: u32,
+    #[serde(default)]
+    pub start_time_seconds: u32,
+    #[serde(default)]
+    pub end_time_seconds: u32,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -134,6 +221,7 @@ impl Source {
     }
 
     pub fn validate(&self) -> Result<(), Error> {
+        self.input.validate()?;
         http_url(&self.url)?;
         http_url(&self.page_url)?;
         if self.title.encode_utf16().count() > 512
@@ -216,7 +304,9 @@ impl Presentation {
             .unwrap_or("Media")
             .to_string();
         let media = task.media.as_ref().ok_or(Error::UnsupportedSource)?;
-        if !matches!(media.protocol.as_str(), "hls" | "dash") || media.tracks.len() > 256 {
+        if !matches!(media.protocol.as_str(), "hls" | "dash" | "collection")
+            || media.tracks.len() > 256
+        {
             return Err(Error::UnsupportedSource);
         }
         let mut ids = std::collections::HashSet::new();
@@ -249,6 +339,7 @@ impl Presentation {
             kind: match media.protocol.as_str() {
                 "hls" => SourceKind::Hls,
                 "dash" => SourceKind::Dash,
+                "collection" => SourceKind::Collection,
                 _ => return Err(Error::UnsupportedSource),
             },
             title,
@@ -271,13 +362,19 @@ impl Presentation {
                     })
                 })
                 .collect::<Result<_, Error>>()?,
-            formats: vec![Format::Mp4, Format::Mkv],
+            formats: if media.tracks.iter().any(|track| track.r#type == "subtitle") {
+                vec![Format::Mp4, Format::Mkv, Format::Vtt]
+            } else {
+                vec![Format::Mp4, Format::Mkv]
+            },
             defaults: Selection {
                 video_id: selected("video").or(muxed.clone()),
                 audio_id: selected("audio").or(muxed),
                 subtitle_id: selected("subtitle"),
                 format,
                 record_time_seconds: 0,
+                start_time_seconds: 0,
+                end_time_seconds: 0,
             },
         };
         value.validate_selection(&value.defaults)?;
@@ -286,13 +383,22 @@ impl Presentation {
 
     pub fn validate_selection(&self, value: &Selection) -> Result<(), Error> {
         let invalid = || Err(Error::UnsupportedSelection);
-        if !self.formats.contains(&value.format)
+        if (value.format == Format::Vtt
+            && (value.video_id.is_some()
+                || value.audio_id.is_some()
+                || value.subtitle_id.is_none()))
+            || !self.formats.contains(&value.format)
             || value.record_time_seconds > 31_536_000
+            || value.start_time_seconds > 31_536_000
+            || value.end_time_seconds > 31_536_000
+            || (value.end_time_seconds != 0 && value.end_time_seconds <= value.start_time_seconds)
+            || ((self.live || self.kind == SourceKind::Collection)
+                && (value.start_time_seconds != 0 || value.end_time_seconds != 0))
             || (!self.live && value.record_time_seconds != 0)
         {
             return invalid();
         }
-        if value.video_id.is_none() && value.audio_id.is_none() {
+        if value.video_id.is_none() && value.audio_id.is_none() && value.subtitle_id.is_none() {
             return invalid();
         }
         for (id, kinds) in [
@@ -328,6 +434,7 @@ impl Selection {
     pub fn options(&self) -> Value {
         json!({"media-format":self.format, "media-video":self.video_id.as_deref().unwrap_or("none"),
             "media-audio":self.audio_id.as_deref().unwrap_or("none"), "media-subtitles":self.subtitle_id.as_deref().unwrap_or("none"),
+            "media-start-time":self.start_time_seconds.to_string(), "media-end-time":self.end_time_seconds.to_string(),
             "media-record-time":self.record_time_seconds.to_string(), "media-pause-after-probe":"false"})
     }
 }

@@ -32,12 +32,71 @@ pub async fn service(app: &AppHandle) -> Result<Arc<MediaService>, Error> {
             let weak = Arc::downgrade(&service);
             let app = app.clone();
             tokio::spawn(async move {
+                let mut maintenance_ticks = 0u32;
                 loop {
                     let Some(worker) = weak.upgrade() else { break };
                     if let Err(code) = worker.maintain().await {
                         log::warn!("media: operation reconciliation failed code={code}");
                     }
                     worker.flush_events(&app).await;
+                    if maintenance_ticks % 720 == 0 {
+                        if let Ok(tasks) = worker.engine.tell_task_snapshot(true).await {
+                            let mut protected: std::collections::HashSet<_> = worker
+                                .operations
+                                .lock()
+                                .await
+                                .values()
+                                .flat_map(|operation| operation.capture_ids.iter().copied())
+                                .collect();
+                            let mut complete = true;
+                            for task in tasks {
+                                if matches!(task.status.as_str(), "complete" | "removed") {
+                                    continue;
+                                }
+                                for file in &task.files {
+                                    for uri in &file.uris {
+                                        if let Some(id) = super::assets::capture_id(&uri.uri) {
+                                            protected.insert(id);
+                                        }
+                                    }
+                                }
+                                if task.media.is_some() {
+                                    match worker.engine.get_option(&task.gid).await {
+                                        Ok(options) => {
+                                            if let Some(raw) = options["media-input"]
+                                                .as_str()
+                                                .filter(|value| !value.is_empty())
+                                            {
+                                                if let Ok(plan) = serde_json::from_str::<
+                                                    super::contracts::InputPlan,
+                                                >(
+                                                    raw
+                                                ) {
+                                                    protected.extend(
+                                                        plan.tracks
+                                                            .iter()
+                                                            .flat_map(|track| &track.urls)
+                                                            .filter_map(|url| {
+                                                                super::assets::capture_id(url)
+                                                            }),
+                                                    );
+                                                } else {
+                                                    complete = false;
+                                                }
+                                            }
+                                        }
+                                        Err(_) => complete = false,
+                                    }
+                                }
+                            }
+                            if complete {
+                                if let Err(code) = super::assets::cleanup(&app, &protected).await {
+                                    log::warn!("media capture cleanup failed: {code}");
+                                }
+                            }
+                        }
+                    }
+                    maintenance_ticks = maintenance_ticks.wrapping_add(1);
                     drop(worker);
                     tokio::time::sleep(Duration::from_secs(5)).await;
                 }

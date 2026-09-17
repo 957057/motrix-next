@@ -2,7 +2,7 @@
 /** @fileoverview Contextual controls for a natively inspected media presentation. */
 import { computed, watch, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { NFormItem, NSelect, NInputNumber } from 'naive-ui'
+import { NFormItem, NSelect, NInputNumber, NInput, NCollapse, NCollapseItem } from 'naive-ui'
 import type { Aria2MediaTrack } from '@shared/types'
 import { mediaTrackLabel, type MediaOptions } from '@shared/utils/media'
 
@@ -60,6 +60,16 @@ watch(
   },
   { immediate: true },
 )
+watch(
+  () => model.value.format,
+  (format) => {
+    if (format === 'vtt') {
+      model.value.video = 'none'
+      model.value.audio = 'none'
+      if (model.value.subtitles === 'none') model.value.subtitles = 'best'
+    }
+  },
+)
 const durationPresets = [0, 900, 1800, 3600]
 const customDuration = ref(!durationPresets.includes(model.value.recordTime))
 const durationPreset = computed({
@@ -111,6 +121,7 @@ const durationOptions = computed(() => [
         :options="[
           { value: 'mp4', label: 'MP4' },
           { value: 'mkv', label: 'MKV' },
+          ...(hasSubtitles ? [{ value: 'vtt', label: 'WebVTT' }] : []),
         ]"
         :disabled="disabled"
       />
@@ -136,6 +147,30 @@ const durationOptions = computed(() => [
         </NInputNumber>
       </div>
     </NFormItem>
+    <div key="advanced" class="media-field-wide">
+      <NCollapse
+        ><NCollapseItem name="advanced" :title="t('media.advanced')">
+          <div class="media-fields">
+            <NFormItem v-if="!live && model.mode !== 'collection'" :label="t('media.start-time')" :show-feedback="false"
+              ><NInputNumber v-model:value="model.startTime" :min="0" :max="31536000" :disabled="disabled"
+            /></NFormItem>
+            <NFormItem v-if="!live && model.mode !== 'collection'" :label="t('media.end-time')" :show-feedback="false"
+              ><NInputNumber v-model:value="model.endTime" :min="0" :max="31536000" :disabled="disabled"
+            /></NFormItem>
+            <NFormItem :label="t('media.aes-key')" :show-feedback="false"
+              ><NInput
+                v-model:value="model.key"
+                type="password"
+                show-password-on="click"
+                placeholder="Hex / Base64"
+                :disabled="disabled"
+            /></NFormItem>
+            <NFormItem label="IV" :show-feedback="false"
+              ><NInput v-model:value="model.iv" placeholder="Hex / Base64" :disabled="disabled"
+            /></NFormItem>
+          </div> </NCollapseItem
+      ></NCollapse>
+    </div>
   </TransitionGroup>
 </template>
 

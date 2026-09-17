@@ -148,6 +148,9 @@ pub async fn submit(
     } else {
         input.create(&engine, options).await
     };
+    if let Ok(gid) = &result {
+        super::tasks::notify_changed(app, gid);
+    }
     native::finish(app.clone(), engine, automatic, generation).await;
     result
 }

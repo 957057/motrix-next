@@ -921,6 +921,10 @@
     "download-options": "다운로드 옵션",
     "recording-options": "녹화 옵션",
     "unlimited": "무제한",
-    "custom": "사용자 지정"
+    "custom": "사용자 지정",
+    "advanced": "미디어 도구",
+    "start-time": "시작 위치(초)",
+    "end-time": "끝 위치(0: 소스 끝)",
+    "aes-key": "AES-128 키"
   }
 }

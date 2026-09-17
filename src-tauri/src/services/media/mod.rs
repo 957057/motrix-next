@@ -1,4 +1,5 @@
 //! Native HLS/DASH inspection leases and durable extension submission receipts.
+mod assets;
 pub mod contracts;
 pub mod error;
 mod journal;
@@ -80,7 +81,17 @@ impl MediaService {
         if records.values().filter(|op| op.state.active()).count() >= 8 || records.len() >= 4096 {
             return Err(Error::Unavailable);
         }
-        let record = Operation::new(request.id, fingerprint, now(), format);
+        let mut record = Operation::new(request.id, fingerprint, now(), format);
+        record.capture_ids = request
+            .source
+            .input
+            .tracks
+            .iter()
+            .flat_map(|track| track.urls.iter())
+            .filter_map(|url| assets::capture_id(url))
+            .collect();
+        record.capture_ids.sort();
+        record.capture_ids.dedup();
         self.journal.save(&record).await?;
         self.engine.tasks.set_internal(&record.gid, true).await;
         records.insert(record.id, record.clone());

@@ -921,6 +921,10 @@
     "download-options": "گزینه‌های دانلود",
     "recording-options": "گزینه‌های ضبط",
     "unlimited": "نامحدود",
-    "custom": "سفارشی"
+    "custom": "سفارشی",
+    "advanced": "ابزارهای رسانه",
+    "start-time": "شروع (ثانیه)",
+    "end-time": "پایان (0: انتهای منبع)",
+    "aes-key": "کلید AES-128"
   }
 }

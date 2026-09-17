@@ -24,7 +24,7 @@ import type { UserAgentProfile, UserAgentRule } from '@shared/types'
 const { t } = useI18n()
 
 const props = defineProps<{
-  mediaMode?: 'auto' | 'file' | 'hls' | 'dash'
+  mediaMode?: 'auto' | 'file' | 'hls' | 'dash' | 'collection'
   show: boolean
   userAgent: string
   authorization: string
@@ -48,7 +48,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'update:mediaMode': [value: 'auto' | 'file' | 'hls' | 'dash']
+  'update:mediaMode': [value: 'auto' | 'file' | 'hls' | 'dash' | 'collection']
   'update:show': [value: boolean]
   'update:userAgent': [value: string]
   'update:authorization': [value: string]

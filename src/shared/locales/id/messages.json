@@ -921,6 +921,10 @@
     "download-options": "Opsi unduhan",
     "recording-options": "Opsi perekaman",
     "unlimited": "Tanpa batas",
-    "custom": "Kustom"
+    "custom": "Kustom",
+    "advanced": "Alat media",
+    "start-time": "Awal (detik)",
+    "end-time": "Akhir (0: akhir sumber)",
+    "aes-key": "Kunci AES-128"
   }
 }

@@ -17,7 +17,11 @@ vi.mock('sortablejs', () => ({
 }))
 
 vi.mock('../TaskItem.vue', () => ({
-  default: { name: 'TaskItem', props: ['task'], template: '<div class="full-task-item" />' },
+  default: {
+    name: 'TaskItem',
+    props: ['task'],
+    template: '<div class="full-task-item">{{ task.completedLength }}</div>',
+  },
 }))
 
 vi.mock('../TaskCompactItem.vue', () => ({
@@ -54,6 +58,35 @@ describe('TaskList', () => {
     pinia = createPinia()
     setActivePinia(pinia)
     useTaskStore().currentList = 'progress'
+  })
+
+  it('renders new progress during dragging and while order persistence fails', async () => {
+    const store = useTaskStore()
+    store.taskList = [createTask()]
+    let rejectSave!: (error: Error) => void
+    vi.spyOn(store, 'saveVisiblePageManualOrder').mockImplementationOnce(
+      () =>
+        new Promise((_, reject) => {
+          rejectSave = reject
+        }),
+    )
+    const wrapper = mount(TaskList, { global: { plugins: [pinia] } })
+    await wrapper.vm.$nextTick()
+    const options = sortableCreateMock.mock.calls[sortableCreateMock.mock.calls.length - 1][1]
+    options.onStart?.({} as SortableEvent)
+    store.taskList = [{ ...createTask(), completedLength: '75' }]
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.full-task-item').text()).toBe('75')
+    const ending = options.onEnd?.({} as SortableEvent)
+    store.taskList = [{ ...createTask(), completedLength: '90' }]
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.full-task-item').text()).toBe('90')
+    rejectSave(new Error('Order persistence failed'))
+    await ending
+    store.taskList = [{ ...createTask(), completedLength: '100' }]
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('.full-task-item').text()).toBe('100')
+    wrapper.unmount()
   })
 
   it('renders full task cards by default', async () => {
@@ -143,9 +176,10 @@ describe('TaskList', () => {
 
     const sortableOptions = sortableCreateMock.mock.calls[sortableCreateMock.mock.calls.length - 1]?.[1]
     expect(sortableOptions?.handle).toBe('.task-drag-handle')
+    sortableOptions?.onStart?.({} as SortableEvent)
     await sortableOptions?.onEnd?.({} as SortableEvent)
 
-    expect(saveSpy).toHaveBeenCalledWith([expect.objectContaining({ gid: 'c' }), expect.objectContaining({ gid: 'd' })])
+    expect(saveSpy).toHaveBeenCalledWith(['c', 'd'])
   })
 
   it('marks a single removed card for collapse with its current height', async () => {

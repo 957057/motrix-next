@@ -1,6 +1,8 @@
 <script setup lang="ts">
 /** @fileoverview Main application layout with sidebar, subnav, and IPC event handling. */
 import { computed, ref, nextTick, watch } from 'vue'
+import { useIntervalFn } from '@vueuse/core'
+import { TASK_REFRESH_INTERVAL } from '@shared/timing'
 import { useRoute } from 'vue-router'
 import { onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -48,6 +50,9 @@ const route = useRoute()
 const appStore = useAppStore()
 const engineStore = useEngineStore()
 const taskStore = useTaskStore()
+useIntervalFn(() => {
+  if (engineStore.isReady) void taskStore.fetchList(false)
+}, TASK_REFRESH_INTERVAL)
 const btSelection = useBtSelection()
 const preferenceStore = usePreferenceStore()
 const navDialog = useDialog()
@@ -633,6 +638,9 @@ onMounted(async () => {
   }
 
   unlistenTaskMonitor = [
+    await listen<{ gid: string }>('tasks:changed', () => {
+      void taskStore.fetchList()
+    }),
     await listen<{ gid: string }>('task-monitor:error', async ({ payload }) => {
       const task = await fetchTaskForEvent(payload.gid)
       if (task) await onTaskError(task)

@@ -15,7 +15,7 @@ use tauri::Emitter;
 use tauri::Manager;
 use tokio::sync::watch;
 
-/// Adaptive polling interval constants — aligned with `src/shared/timing.ts`.
+/// Native statistics cadence, independent of the frontend task refresh.
 ///
 /// These MUST stay in sync with the frontend `STAT_*` constants.
 /// Mismatched values cause noticeable UI update rate differences

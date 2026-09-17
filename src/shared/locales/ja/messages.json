@@ -921,6 +921,10 @@
     "download-options": "ダウンロード設定",
     "recording-options": "録画設定",
     "unlimited": "無制限",
-    "custom": "カスタム"
+    "custom": "カスタム",
+    "advanced": "メディアツール",
+    "start-time": "開始位置（秒）",
+    "end-time": "終了位置（0：末尾）",
+    "aes-key": "AES-128 キー"
   }
 }

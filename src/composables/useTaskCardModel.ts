@@ -1,5 +1,5 @@
 /** @fileoverview Shared task-card display model for full and compact task rows. */
-import { computed, ref, watch, type ComputedRef } from 'vue'
+import { computed, type ComputedRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { mediaPercent, mediaDuration, mediaStateLabel } from '@shared/utils/media'
 import { TASK_STATUS } from '@shared/constants'
@@ -52,25 +52,6 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
 
   const taskFullName = computed(() => getTaskName(task.value, { defaultName: t('task.get-task-name') || 'Unknown' }))
   const btLifecycle = computed(() => getBtLifecycleState(task.value))
-  const stableProgress = ref({
-    gid: task.value.gid,
-    total: Number(task.value.totalLength) || 0,
-    completed: getTaskCompletedLength(task.value),
-  })
-  watch(
-    () => [task.value.gid, task.value.totalLength, task.value.completedLength, btLifecycle.value] as const,
-    ([gid, totalLength, _completedLength, lifecycle]) => {
-      const total = Number(totalLength) || 0
-      const completed = getTaskCompletedLength(task.value)
-      if (gid !== stableProgress.value.gid) {
-        stableProgress.value = { gid, total, completed }
-        return
-      }
-      if ((lifecycle === 'checking' || lifecycle === 'recovering') && stableProgress.value.total > 0) return
-      stableProgress.value = { gid, total, completed }
-    },
-    { immediate: true },
-  )
   const sharingState = computed(() => getTaskSharingState(task.value))
   const sharingKind = computed(() => sharingState.value?.kind ?? null)
   const isSharing = computed(() => checkTaskIsSharing(task.value))
@@ -142,8 +123,8 @@ export function useTaskCardModel(task: ComputedRef<Aria2Task>): TaskCardModel {
     }
   })
   const isActive = computed(() => task.value.status === TASK_STATUS.ACTIVE)
-  const displayedTotalLength = computed(() => stableProgress.value.total)
-  const completedLengthValue = computed(() => stableProgress.value.completed)
+  const displayedTotalLength = computed(() => Number(task.value.totalLength) || 0)
+  const completedLengthValue = computed(() => getTaskCompletedLength(task.value))
   const indeterminate = computed(() => Boolean(task.value.media) && mediaPercent(task.value) === null)
   const percent = computed(() =>
     task.value.media
