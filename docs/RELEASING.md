@@ -62,3 +62,14 @@ limited to packages that have been published.
 
 Use `scripts/bump-version.sh` for a chosen release version. Creating a release,
 submitting to stores and platform acceptance are separate actions.
+
+## Website
+
+Cloudflare Pages serves `https://rayburst.pages.dev` from this repository's `main`
+branch. Use the `website` root directory, `.` output directory, no framework preset,
+and `exit 0` build command. Set `SKIP_DEPENDENCY_INSTALL=1`.
+
+Include only `website/*` in build watch paths, leave exclusions empty, and disable
+preview branch deployments. Cloudflare bypasses path filtering for pushes with no
+changed files, at least 3,000 changed files, or at least 20 commits. The website uses
+native Pages caching and `404.html`; it has no separate deployment workflow.
