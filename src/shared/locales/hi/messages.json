@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "वेबसाइट",
     "license": "लाइसेंस",
     "release": "रिलीज़ नोट्स",
     "support": "सहायता",
@@ -10,7 +11,7 @@
     "aria2-version": "Aria2 Next संस्करण",
     "loading": "लोड हो रहा है…",
     "unavailable": "उपलब्ध नहीं",
-    "tagline": "किरण पकड़ो, कल्पना को साकार करो।",
+    "tagline": "ओपन-सोर्स डाउनलोड मैनेजर को नया रूप।",
     "tech-stack": "तकनीकें",
     "developed-by": "{author} द्वारा विकसित"
   },

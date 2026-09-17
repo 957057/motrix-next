@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "Strona internetowa",
     "license": "Licencja",
     "release": "Informacje o wydaniu",
     "support": "Wsparcie",
@@ -10,7 +11,7 @@
     "aria2-version": "Wersja Aria2 Next",
     "loading": "Ładowanie…",
     "unavailable": "Niedostępny",
-    "tagline": "Uchwyć promień, wykuj rzeczywistość.",
+    "tagline": "Definiujemy na nowo menedżer pobierania o otwartym kodzie.",
     "tech-stack": "Technologie",
     "developed-by": "Autor: {author}"
   },

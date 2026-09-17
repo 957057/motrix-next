@@ -1,5 +1,6 @@
 <div align="center">
   <img src="docs/brand/banner.png" alt="Rayburst. Seize the ray, forge the real." width="800" />
+  <p><strong>Redefining the open-source download manager.</strong></p>
 
 [![GitHub release](https://img.shields.io/github/v/release/AnInsomniacy/rayburst.svg)](https://github.com/AnInsomniacy/rayburst/releases)
 ![Build](https://img.shields.io/github/actions/workflow/status/AnInsomniacy/rayburst/ci.yml?branch=main&label=Build)

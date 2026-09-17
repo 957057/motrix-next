@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "Site web",
     "license": "Licență",
     "release": "Note de lansare",
     "support": "Asistență",
@@ -10,7 +11,7 @@
     "aria2-version": "Versiune Aria2 Next",
     "loading": "Se încarcă…",
     "unavailable": "Indisponibil",
-    "tagline": "Prinde raza, făurește realul.",
+    "tagline": "Redefinim managerul de descărcări cu sursă deschisă.",
     "tech-stack": "Tehnologii",
     "developed-by": "Dezvoltat de {author}"
   },

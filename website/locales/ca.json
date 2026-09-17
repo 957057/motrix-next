@@ -1,6 +1,6 @@
 {
   "nav.download": "Descarregar",
-  "hero.tagline": "Captura el raig, forja la realitat.",
+  "hero.tagline": "Redefinim el gestor de baixades de codi obert.",
   "hero.github": "GitHub",
   "hero.sponsor": "Patrocinar",
   "hero.download": "Descarregar",
@@ -70,7 +70,7 @@
   "dl.note": "Darrera versió estable. Les versions anteriors poden conservar el nom antic.",
   "dl.releases": "Vegeu totes les versions",
   "hero.description": "Un gestor de baixades d’escriptori per a fitxers, torrents i contingut en streaming.",
-  "connect.tagline": "Segueix el flux, uneix les distàncies.",
+  "connect.tagline": "Redefinim l’extensió complementària del navegador.",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Tancar",
   "a11y.language": "Idioma",

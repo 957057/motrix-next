@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "공식 웹사이트",
     "license": "라이선스",
     "release": "릴리스 노트",
     "support": "지원",
@@ -10,7 +11,7 @@
     "aria2-version": "Aria2 Next 버전",
     "loading": "로딩 중…",
     "unavailable": "사용 불가",
-    "tagline": "빛을 붙잡아, 현실로 빚다.",
+    "tagline": "오픈 소스 다운로드 관리자를 새롭게 정의합니다.",
     "tech-stack": "사용 기술",
     "developed-by": "{author} 개발"
   },

@@ -1,6 +1,6 @@
 {
   "nav.download": "İndir",
-  "hero.tagline": "Işığı yakala, gerçeğe dönüştür.",
+  "hero.tagline": "Açık kaynaklı indirme yöneticisini yeniden tanımlıyoruz.",
   "hero.github": "GitHub",
   "hero.sponsor": "Sponsor",
   "hero.download": "İndir",
@@ -70,7 +70,7 @@
   "dl.note": "En son kararlı sürüm. Önceki sürümler eski adı kullanabilir.",
   "dl.releases": "Tüm sürümleri görüntüle",
   "hero.description": "Dosyalar, torrentler ve medya akışları için masaüstü indirme yöneticisi.",
-  "connect.tagline": "Akışın izini sür, boşluğa köprü kur.",
+  "connect.tagline": "Tamamlayıcı tarayıcı uzantısını yeniden tanımlıyoruz.",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Kapat",
   "a11y.language": "Dil",

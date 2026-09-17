@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "Weboldal",
     "license": "Licenc",
     "release": "Kiadási megjegyzések",
     "support": "Támogatás",
@@ -10,7 +11,7 @@
     "aria2-version": "Aria2 Next verzió",
     "loading": "Betöltés…",
     "unavailable": "Nem elérhető",
-    "tagline": "Ragadd meg a fényt, formálj valóságot.",
+    "tagline": "Újradefiniáljuk a nyílt forráskódú letöltéskezelőt.",
     "tech-stack": "Technológiák",
     "developed-by": "Fejlesztő: {author}"
   },

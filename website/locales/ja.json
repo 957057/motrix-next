@@ -1,6 +1,6 @@
 {
   "nav.download": "ダウンロード",
-  "hero.tagline": "光を捉え、かたちにする。",
+  "hero.tagline": "オープンソースのダウンロードマネージャーを再定義する。",
   "hero.github": "GitHub",
   "hero.sponsor": "スポンサー",
   "hero.download": "ダウンロード",
@@ -70,7 +70,7 @@
   "dl.note": "最新の安定版です。以前のリリースは旧名称のままの場合があります。",
   "dl.releases": "すべてのリリースを見る",
   "hero.description": "ファイル、Torrent、ストリーミングに対応したデスクトップ用ダウンロードマネージャー。",
-  "connect.tagline": "流れをたどり、隔たりをつなぐ。",
+  "connect.tagline": "連携ブラウザー拡張機能を再定義する。",
   "features.media.title": "HLS / DASH",
   "a11y.close": "閉じる",
   "a11y.language": "言語",

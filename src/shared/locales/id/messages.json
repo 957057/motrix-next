@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "Situs web",
     "license": "Lisensi",
     "release": "Catatan rilis",
     "support": "Dukungan",
@@ -10,7 +11,7 @@
     "aria2-version": "Versi Aria2 Next",
     "loading": "Memuat…",
     "unavailable": "Tidak tersedia",
-    "tagline": "Tangkap sinarnya, wujudkan yang maya.",
+    "tagline": "Mendefinisikan ulang pengelola unduhan sumber terbuka.",
     "tech-stack": "Teknologi",
     "developed-by": "Dikembangkan oleh {author}"
   },

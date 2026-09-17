@@ -1,6 +1,6 @@
 {
   "nav.download": "다운로드",
-  "hero.tagline": "빛을 붙잡아, 현실로 빚다.",
+  "hero.tagline": "오픈 소스 다운로드 관리자를 새롭게 정의합니다.",
   "hero.github": "GitHub",
   "hero.sponsor": "후원하기",
   "hero.download": "다운로드",
@@ -70,7 +70,7 @@
   "dl.note": "최신 안정 버전입니다. 이전 릴리스는 옛 이름을 사용할 수 있습니다.",
   "dl.releases": "모든 릴리스 보기",
   "hero.description": "파일, 토렌트, 스트림을 위한 데스크톱 다운로드 관리자.",
-  "connect.tagline": "흐름을 따라, 빈틈을 잇다.",
+  "connect.tagline": "연동 브라우저 확장 프로그램을 새롭게 정의합니다.",
   "features.media.title": "HLS / DASH",
   "a11y.close": "닫기",
   "a11y.language": "언어",

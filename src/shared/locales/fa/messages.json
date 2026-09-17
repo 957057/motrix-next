@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "وب‌سایت",
     "license": "مجوز",
     "release": "یادداشت‌های انتشار",
     "support": "پشتیبانی",
@@ -10,7 +11,7 @@
     "aria2-version": "نسخه Aria2 Next",
     "loading": "در حال بارگذاری…",
     "unavailable": "در دسترس نیست",
-    "tagline": "پرتو را بگیر، واقعیت را بساز.",
+    "tagline": "بازتعریف مدیر دانلود متن‌باز.",
     "tech-stack": "فناوری‌ها",
     "developed-by": "توسعه‌یافته توسط {author}"
   },

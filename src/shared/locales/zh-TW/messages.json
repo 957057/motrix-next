@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "官方網站",
     "license": "開源授權",
     "release": "更新日誌",
     "support": "說明與支援",
@@ -10,7 +11,7 @@
     "aria2-version": "Aria2 Next 版本",
     "loading": "載入中…",
     "unavailable": "不可用",
-    "tagline": "捕光捉影，化虛為實。",
+    "tagline": "重新定義開源下載器。",
     "tech-stack": "技術堆疊",
     "developed-by": "由 {author} 開發"
   },

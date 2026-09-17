@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "公式サイト",
     "license": "ライセンス",
     "release": "リリースノート",
     "support": "サポート",
@@ -10,7 +11,7 @@
     "aria2-version": "Aria2 Next バージョン",
     "loading": "読み込み中…",
     "unavailable": "利用不可",
-    "tagline": "光を捉え、かたちにする。",
+    "tagline": "オープンソースのダウンロードマネージャーを再定義する。",
     "tech-stack": "使用技術",
     "developed-by": "{author} が開発"
   },

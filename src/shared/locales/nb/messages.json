@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "Nettsted",
     "license": "Lisens",
     "release": "Utgivelsesmerknader",
     "support": "Brukerstøtte",
@@ -10,7 +11,7 @@
     "aria2-version": "Aria2 Next-versjon",
     "loading": "Laster…",
     "unavailable": "Utilgjengelig",
-    "tagline": "Fang strålen, form det virkelige.",
+    "tagline": "Vi redefinerer nedlastingsbehandleren med åpen kildekode.",
     "tech-stack": "Teknologier",
     "developed-by": "Utviklet av {author}"
   },

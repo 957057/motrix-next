@@ -1,6 +1,6 @@
 {
   "nav.download": "Pobierz",
-  "hero.tagline": "Uchwyć promień, wykuj rzeczywistość.",
+  "hero.tagline": "Definiujemy na nowo menedżer pobierania o otwartym kodzie.",
   "hero.github": "GitHub",
   "hero.sponsor": "Sponsoruj",
   "hero.download": "Pobierz",
@@ -70,7 +70,7 @@
   "dl.note": "Najnowsza stabilna wersja. Starsze wydania mogą nadal używać poprzedniej nazwy.",
   "dl.releases": "Zobacz wszystkie wydania",
   "hero.description": "Menedżer pobierania plików, torrentów i strumieni multimedialnych na komputer.",
-  "connect.tagline": "Podążaj za strumieniem, połącz odległe światy.",
+  "connect.tagline": "Definiujemy na nowo towarzyszące rozszerzenie przeglądarki.",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Zamknij",
   "a11y.language": "Język",

@@ -1,6 +1,6 @@
 {
   "nav.download": "تنزيل",
-  "hero.tagline": "أمسك بالشعاع، وصُغ الواقع.",
+  "hero.tagline": "نعيد تعريف مدير التنزيل مفتوح المصدر.",
   "hero.github": "GitHub",
   "hero.sponsor": "رعاية",
   "hero.download": "تنزيل",
@@ -70,7 +70,7 @@
   "dl.note": "أحدث إصدار مستقر. قد تستخدم الإصدارات الأقدم الاسم السابق.",
   "dl.releases": "عرض جميع الإصدارات",
   "hero.description": "مدير تنزيلات لسطح المكتب للملفات والتورنت وتدفقات الوسائط.",
-  "connect.tagline": "تتبّع التدفق، وصِل ما تباعد.",
+  "connect.tagline": "نعيد تعريف إضافة المتصفح المرافقة.",
   "features.media.title": "HLS / DASH",
   "a11y.close": "إغلاق",
   "a11y.language": "اللغة",

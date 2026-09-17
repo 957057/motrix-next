@@ -1,6 +1,6 @@
 {
   "nav.download": "Scarica",
-  "hero.tagline": "Cattura il raggio, forgia il reale.",
+  "hero.tagline": "Ridefiniamo il gestore di download open source.",
   "hero.github": "GitHub",
   "hero.sponsor": "Sponsorizza",
   "hero.download": "Scarica",
@@ -70,7 +70,7 @@
   "dl.note": "Ultima versione stabile. Le versioni precedenti potrebbero usare ancora il vecchio nome.",
   "dl.releases": "Vedi tutte le versioni",
   "hero.description": "Un gestore di download desktop per file, torrent e flussi multimediali.",
-  "connect.tagline": "Segui il flusso, colma il vuoto.",
+  "connect.tagline": "Ridefiniamo l’estensione complementare del browser.",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Chiudi",
   "a11y.language": "Lingua",

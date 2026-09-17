@@ -1,6 +1,6 @@
 {
   "nav.download": "Last ned",
-  "hero.tagline": "Fang strålen, form det virkelige.",
+  "hero.tagline": "Vi redefinerer nedlastingsbehandleren med åpen kildekode.",
   "hero.github": "GitHub",
   "hero.sponsor": "Sponsor",
   "hero.download": "Last ned",
@@ -70,7 +70,7 @@
   "dl.note": "Nyeste stabile utgave. Eldre utgaver kan fortsatt bruke det gamle navnet.",
   "dl.releases": "Se alle utgivelser",
   "hero.description": "En nedlastingsbehandler for filer, torrenter og mediestrømmer på skrivebordet.",
-  "connect.tagline": "Følg strømmen, bygg bro over tomrommet.",
+  "connect.tagline": "Vi redefinerer den tilhørende nettleserutvidelsen.",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Lukk",
   "a11y.language": "Språk",

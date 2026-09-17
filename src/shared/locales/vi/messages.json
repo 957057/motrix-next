@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "Trang web",
     "license": "Giấy phép",
     "release": "Ghi chú phát hành",
     "support": "Hỗ trợ",
@@ -10,7 +11,7 @@
     "aria2-version": "Phiên bản Aria2 Next",
     "loading": "Đang tải…",
     "unavailable": "Không khả dụng",
-    "tagline": "Nắm bắt tia sáng, biến ảo thành thật.",
+    "tagline": "Định nghĩa lại trình quản lý tải xuống mã nguồn mở.",
     "tech-stack": "Công nghệ",
     "developed-by": "Phát triển bởi {author}"
   },

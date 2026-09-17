@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "Site oficial",
     "license": "Licença",
     "release": "Notas da versão",
     "support": "Suporte",
@@ -10,7 +11,7 @@
     "aria2-version": "Versão do Aria2 Next",
     "loading": "Carregando…",
     "unavailable": "Indisponível",
-    "tagline": "Capture o raio, forje o real.",
+    "tagline": "Redefinindo o gerenciador de downloads de código aberto.",
     "tech-stack": "Tecnologias",
     "developed-by": "Desenvolvido por {author}"
   },

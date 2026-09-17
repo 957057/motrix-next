@@ -1,6 +1,6 @@
 {
   "nav.download": "Télécharger",
-  "hero.tagline": "Captez le rayon, façonnez le réel.",
+  "hero.tagline": "Nous redéfinissons le gestionnaire de téléchargements open source.",
   "hero.github": "GitHub",
   "hero.sponsor": "Sponsoriser",
   "hero.download": "Télécharger",
@@ -70,7 +70,7 @@
   "dl.note": "Dernière version stable. Les anciennes versions peuvent conserver le nom précédent.",
   "dl.releases": "Voir toutes les versions",
   "hero.description": "Un gestionnaire de téléchargements pour les fichiers, les torrents et les flux multimédias.",
-  "connect.tagline": "Suivez le flux, franchissez le vide.",
+  "connect.tagline": "Nous redéfinissons l’extension de navigateur complémentaire.",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Fermer",
   "a11y.language": "Langue",

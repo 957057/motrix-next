@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "Site web",
     "license": "Licence",
     "release": "Notes de version",
     "support": "Assistance",
@@ -10,7 +11,7 @@
     "aria2-version": "Version d'Aria2 Next",
     "loading": "Chargement…",
     "unavailable": "Indisponible",
-    "tagline": "Captez le rayon, façonnez le réel.",
+    "tagline": "Nous redéfinissons le gestionnaire de téléchargements open source.",
     "tech-stack": "Technologies",
     "developed-by": "Développé par {author}"
   },

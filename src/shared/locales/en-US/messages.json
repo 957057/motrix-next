@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "Website",
     "license": "License",
     "release": "Release Notes",
     "support": "Support",
@@ -10,7 +11,7 @@
     "aria2-version": "Aria2 Next Version",
     "loading": "Loading…",
     "unavailable": "Unavailable",
-    "tagline": "Seize the ray, forge the real.",
+    "tagline": "Redefining the open-source download manager.",
     "tech-stack": "Tech Stack",
     "developed-by": "Developed by {author}"
   },

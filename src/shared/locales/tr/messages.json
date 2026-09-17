@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "Web sitesi",
     "license": "Lisans",
     "release": "Sürüm notları",
     "support": "Destek",
@@ -10,7 +11,7 @@
     "aria2-version": "Aria2 Next Sürümü",
     "loading": "Yükleniyor…",
     "unavailable": "Kullanılamıyor",
-    "tagline": "Işığı yakala, gerçeğe dönüştür.",
+    "tagline": "Açık kaynaklı indirme yöneticisini yeniden tanımlıyoruz.",
     "tech-stack": "Teknolojiler",
     "developed-by": "Geliştiren: {author}"
   },

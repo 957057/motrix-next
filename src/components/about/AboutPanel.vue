@@ -5,7 +5,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NModal, NIcon } from 'naive-ui'
 import MTooltip from '@/components/common/MTooltip.vue'
-import { LogoGithub, HeartOutline, DocumentTextOutline, RocketOutline } from '@vicons/ionicons5'
+import { LogoGithub, HeartOutline, GlobeOutline, RocketOutline } from '@vicons/ionicons5'
 import { openUrl as openExternalUrl } from '@tauri-apps/plugin-opener'
 import { getVersion } from '@tauri-apps/api/app'
 import { getVersion as getAria2Version } from '@/api/aria2'
@@ -85,6 +85,12 @@ const techStack = [
 
 const links = [
   {
+    key: 'website',
+    i18n: 'about.website',
+    icon: GlobeOutline,
+    url: 'https://rayburst.pages.dev/',
+  },
+  {
     key: 'github',
     label: 'GitHub',
     icon: LogoGithub,
@@ -95,12 +101,6 @@ const links = [
     i18n: 'about.release',
     icon: RocketOutline,
     url: 'https://github.com/AnInsomniacy/rayburst/releases',
-  },
-  {
-    key: 'license',
-    i18n: 'about.license',
-    icon: DocumentTextOutline,
-    url: 'https://github.com/AnInsomniacy/rayburst/blob/main/LICENSE',
   },
   {
     key: 'support',
@@ -149,13 +149,6 @@ function openUrl(url: string) {
 
       <!-- Title -->
       <div class="about-title stagger stagger-2">Rayburst</div>
-      <a
-        class="about-website stagger stagger-2"
-        href="https://rayburst.pages.dev/"
-        @click.prevent="openUrl('https://rayburst.pages.dev/')"
-      >
-        rayburst.pages.dev
-      </a>
 
       <!-- Version Badges (stacked, prominent) -->
       <div class="about-versions stagger stagger-2">
@@ -234,10 +227,16 @@ function openUrl(url: string) {
 
       <!-- Links Grid -->
       <div class="about-links stagger stagger-5">
-        <button v-for="link in links" :key="link.key" class="about-link-card" @click="openUrl(link.url)">
-          <NIcon :size="18"><component :is="link.icon" /></NIcon>
+        <a
+          v-for="link in links"
+          :key="link.key"
+          class="about-link-card"
+          :href="link.url"
+          @click.prevent="openUrl(link.url)"
+        >
+          <NIcon :size="18" aria-hidden="true"><component :is="link.icon" /></NIcon>
           <span>{{ link.i18n ? t(link.i18n) : link.label }}</span>
-        </button>
+        </a>
       </div>
 
       <!-- Footer -->
@@ -247,34 +246,21 @@ function openUrl(url: string) {
             <a class="about-link" @click="openUrl('https://github.com/AnInsomniacy')">AnInsomniacy</a>
           </template>
         </i18n-t>
-        <span>&copy; {{ year }} AnInsomniacy</span>
+        <div class="about-legal">
+          <span>&copy; {{ year }} AnInsomniacy</span>
+          <a
+            class="about-link"
+            href="https://github.com/AnInsomniacy/rayburst/blob/main/LICENSE"
+            @click.prevent="openUrl('https://github.com/AnInsomniacy/rayburst/blob/main/LICENSE')"
+            >{{ t('about.license') }}</a
+          >
+        </div>
       </div>
     </div>
   </NModal>
 </template>
 
 <style scoped>
-.about-website {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--m3-primary);
-  font-size: 13px;
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 4px;
-  border-radius: 4px;
-}
-
-.about-website:hover {
-  text-decoration-color: currentColor;
-}
-
-.about-website:focus-visible {
-  outline: 2px solid var(--m3-primary);
-  outline-offset: 3px;
-}
-
 /* ── Glass Container ──────────────────────────────────────────────── */
 .about-glass {
   position: relative;
@@ -443,6 +429,8 @@ function openUrl(url: string) {
   align-items: center;
   justify-content: center;
   gap: 6px;
+  min-height: 40px;
+  text-decoration: none;
   padding: 10px 0;
   border: 1px solid var(--m3-outline-variant);
   border-radius: 10px;
@@ -457,6 +445,19 @@ function openUrl(url: string) {
   border-color: var(--m3-primary);
   color: var(--m3-primary);
   background: var(--about-card-hover-bg);
+}
+.about-link-card:focus-visible,
+.about-link:focus-visible {
+  outline: 2px solid var(--m3-primary);
+  outline-offset: 3px;
+}
+
+.about-legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 12px;
 }
 
 /* ── Footer ───────────────────────────────────────────────────────── */

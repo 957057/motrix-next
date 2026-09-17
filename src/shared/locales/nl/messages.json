@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "Website",
     "license": "Licentie",
     "release": "Releaseopmerkingen",
     "support": "Ondersteuning",
@@ -10,7 +11,7 @@
     "aria2-version": "Aria2 Next versie",
     "loading": "Laden…",
     "unavailable": "Niet beschikbaar",
-    "tagline": "Vang de straal, vorm de werkelijkheid.",
+    "tagline": "We geven de opensource-downloadmanager een nieuwe betekenis.",
     "tech-stack": "Technologieën",
     "developed-by": "Ontwikkeld door {author}"
   },

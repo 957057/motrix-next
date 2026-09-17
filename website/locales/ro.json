@@ -1,6 +1,6 @@
 {
   "nav.download": "Descarcă",
-  "hero.tagline": "Prinde raza, făurește realul.",
+  "hero.tagline": "Redefinim managerul de descărcări cu sursă deschisă.",
   "hero.github": "GitHub",
   "hero.sponsor": "Sponsorizare",
   "hero.download": "Descarcă",
@@ -70,7 +70,7 @@
   "dl.note": "Cea mai recentă versiune stabilă. Versiunile mai vechi pot folosi numele anterior.",
   "dl.releases": "Vezi toate versiunile",
   "hero.description": "Un manager de descărcări pentru fișiere, torrente și fluxuri media, pe desktop.",
-  "connect.tagline": "Urmărește fluxul, unește depărtările.",
+  "connect.tagline": "Redefinim extensia de browser complementară.",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Închide",
   "a11y.language": "Limbă",

@@ -1,6 +1,6 @@
 {
   "nav.download": "Letöltés",
-  "hero.tagline": "Ragadd meg a fényt, formálj valóságot.",
+  "hero.tagline": "Újradefiniáljuk a nyílt forráskódú letöltéskezelőt.",
   "hero.github": "GitHub",
   "hero.sponsor": "Támogatás",
   "hero.download": "Letöltés",
@@ -70,7 +70,7 @@
   "dl.note": "Legújabb stabil kiadás. A korábbi kiadások még a régi nevet használhatják.",
   "dl.releases": "Összes kiadás",
   "hero.description": "Asztali letöltéskezelő fájlokhoz, torrentekhez és médiafolyamokhoz.",
-  "connect.tagline": "Kövesd az áramlatot, hidald át az űrt.",
+  "connect.tagline": "Újradefiniáljuk a kiegészítő böngészőbővítményt.",
   "features.media.title": "HLS / DASH",
   "a11y.close": "Bezárás",
   "a11y.language": "Nyelv",

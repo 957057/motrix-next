@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "الموقع الرسمي",
     "license": "الرخصة",
     "release": "ملاحظات الإصدار",
     "support": "الدعم",
@@ -10,7 +11,7 @@
     "aria2-version": "إصدار Aria2 Next",
     "loading": "جارٍ التحميل…",
     "unavailable": "غير متاح",
-    "tagline": "أمسك بالشعاع، وصُغ الواقع.",
+    "tagline": "نعيد تعريف مدير التنزيل مفتوح المصدر.",
     "tech-stack": "التقنيات المستخدمة",
     "developed-by": "طوّره {author}"
   },

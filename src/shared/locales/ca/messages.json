@@ -1,5 +1,6 @@
 {
   "about": {
+    "website": "Lloc web",
     "license": "Llicència",
     "release": "Notes de la versió",
     "support": "Suport",
@@ -10,7 +11,7 @@
     "aria2-version": "Versió d'Aria2 Next",
     "loading": "Carregant…",
     "unavailable": "No disponible",
-    "tagline": "Captura el raig, forja la realitat.",
+    "tagline": "Redefinim el gestor de baixades de codi obert.",
     "tech-stack": "Tecnologies",
     "developed-by": "Desenvolupat per {author}"
   },
