@@ -39,7 +39,7 @@ pub async fn service(app: &AppHandle) -> Result<Arc<MediaService>, Error> {
                         log::warn!("media: operation reconciliation failed code={code}");
                     }
                     worker.flush_events(&app).await;
-                    if maintenance_ticks % 720 == 0 {
+                    if maintenance_ticks.is_multiple_of(720) {
                         if let Ok(tasks) = worker.engine.tell_task_snapshot(true).await {
                             let mut protected: std::collections::HashSet<_> = worker
                                 .operations
