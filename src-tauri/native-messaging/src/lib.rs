@@ -9,16 +9,8 @@ pub const ACTIVATION_URL: &str = "rayburst://";
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct BrowserIdentity {
-    chromium_id: String,
+    chromium_ids: Vec<String>,
     firefox_id: String,
-    stores: StoreIdentity,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct StoreIdentity {
-    chrome_id: Option<String>,
-    edge_id: Option<String>,
 }
 
 fn browser_identity() -> &'static BrowserIdentity {
@@ -30,9 +22,7 @@ fn browser_identity() -> &'static BrowserIdentity {
 
 fn chromium_origins() -> Vec<String> {
     let identity = browser_identity();
-    let mut ids = vec![identity.chromium_id.as_str()];
-    ids.extend(identity.stores.chrome_id.as_deref());
-    ids.extend(identity.stores.edge_id.as_deref());
+    let mut ids: Vec<&str> = identity.chromium_ids.iter().map(String::as_str).collect();
     ids.sort_unstable();
     ids.dedup();
     ids.into_iter()

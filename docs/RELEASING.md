@@ -36,14 +36,13 @@ sidecars in the checkout are not a substitute for release preparation.
 
 ## Browser identities
 
-`src-tauri/native-messaging/identity.json` lists allowed browser identities.
-The local Chromium identity is derived from the public key in the file; the Firefox
-ID is explicit. The checked-in store IDs are unset. Native Messaging is activation-only.
+`src-tauri/native-messaging/identity.json` owns the allowed Chromium IDs and Firefox
+ID. Native Messaging is activation-only. Chrome and Edge retain their published
+store identities; Firefox uses the new Rayburst Connect identity.
 
-When Rayburst Connect receives actual store identities, update this file and the
-extension's independently maintained `browser-identity.json` in the same delivery.
-Regenerate packaged manifests with `pnpm build:native-launcher` and rebuild the app.
-No wildcard extension origins are allowed.
+When an identity changes, update this allowlist and the extension configuration in
+the same delivery. Regenerate packaged manifests with `pnpm build:native-launcher`
+and distribute the rebuilt app before the extension. No wildcard origins are allowed.
 
 ## Platform distribution
 
