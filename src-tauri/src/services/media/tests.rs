@@ -234,7 +234,7 @@ async fn confirmed_selection_starts_the_probed_gid_once_and_persists_receipt() {
     assert_eq!(options["media-request-contexts"], "[]");
     assert_eq!(
         fixture.service.capabilities().await.expect("capabilities")["sourceKinds"],
-        json!(["hls", "dash"])
+        json!(["hls", "dash", "collection"])
     );
     let submission = SubmitRequest {
         submission_id: Uuid::new_v4(),
