@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const brandLogo = '/logo.svg'
 /** @fileoverview About panel with staggered entrance animations and glass effect. */
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { NModal, NIcon } from 'naive-ui'
 import MTooltip from '@/components/common/MTooltip.vue'
@@ -83,10 +83,10 @@ const techStack = [
   },
 ]
 
-const links = [
+const links = computed(() => [
   {
     key: 'website',
-    i18n: 'about.website',
+    label: t('about.website'),
     icon: GlobeOutline,
     url: 'https://rayburst.pages.dev/',
   },
@@ -98,17 +98,17 @@ const links = [
   },
   {
     key: 'release',
-    i18n: 'about.release',
+    label: t('about.release'),
     icon: RocketOutline,
     url: 'https://github.com/AnInsomniacy/rayburst/releases',
   },
   {
     key: 'support',
-    i18n: 'about.support',
+    label: t('about.support'),
     icon: HeartOutline,
     url: 'https://github.com/AnInsomniacy/AnInsomniacy/blob/main/SPONSOR.md',
   },
-]
+])
 
 async function copyToClipboard(text: string, label: string) {
   try {
@@ -234,7 +234,7 @@ function openUrl(url: string) {
           @click.prevent="openUrl(link.url)"
         >
           <NIcon :size="18" aria-hidden="true"><component :is="link.icon" /></NIcon>
-          <span>{{ link.i18n ? t(link.i18n) : link.label }}</span>
+          <span>{{ link.label }}</span>
         </a>
       </div>
 
