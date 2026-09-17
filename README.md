@@ -256,7 +256,7 @@ PRs and issues are welcome! Please read the [Contributing Guide](docs/CONTRIBUTI
 
 Built in the hours I should've been writing my thesis — I'm a PhD student surviving on instant noodles 🍜
 
-This app is not code-signed on macOS or Windows — Apple charges $99/year, and a Windows Authenticode certificate costs $300–600/year. That's a lot of instant noodles.
+macOS builds are ad-hoc signed and not notarized. Windows signing is handled separately through SignPath.
 
 [Buy me a coffee ☕](https://github.com/AnInsomniacy/AnInsomniacy/blob/main/SPONSOR.md) — maybe one day I can afford those certificates, so antivirus software stops treating my app like a criminal 🥲
 

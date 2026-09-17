@@ -64,7 +64,7 @@
   "hero.downloads": "Downloads",
   "hero.version": "Estável",
   "rebrand.body": "Motrix Next agora se chama Rayburst, e sua extensão de navegador, Rayburst Connect. Recomendamos uma instalação limpa do aplicativo para desktop. Configurações, tarefas e histórico não são importados. A atualização pelo aplicativo pode manter as duas versões instaladas ou deixar atalhos antigos.",
-  "connect.description": "Detecte transmissões HLS/DASH e arquivos de áudio e vídeo enquanto navega. Envie uma fonte ao Rayburst pelo botão do player ou pela aba de mídia da extensão.",
+  "connect.description": "Encontre transmissões HLS/DASH e arquivos de mídia no detector, na barra lateral do navegador ou no espaço de trabalho em página inteira. Envie os recursos selecionados para o Rayburst.",
   "features.media.description": "Escolha vídeo, áudio e legendas, grave transmissões ao vivo e salve em MP4 ou MKV. Mídia protegida por DRM não é compatível.",
   "engine.description": "Os downloads são processados pelo {aria2Next}.",
   "dl.note": "Última versão estável. Versões anteriores podem manter o nome antigo.",

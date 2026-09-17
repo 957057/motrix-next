@@ -64,7 +64,7 @@
   "hero.downloads": "Lượt tải",
   "hero.version": "Ổn định",
   "rebrand.body": "Motrix Next nay là Rayburst, còn tiện ích trình duyệt là Rayburst Connect. Bạn nên cài mới ứng dụng máy tính. Cài đặt, tác vụ và lịch sử không được nhập lại. Cập nhật trong ứng dụng có thể giữ cả hai phiên bản hoặc các lối tắt cũ.",
-  "connect.description": "Phát hiện luồng HLS/DASH và tệp âm thanh, video khi duyệt web. Gửi nguồn đến Rayburst từ nút trên trình phát hoặc thẻ đa phương tiện của tiện ích.",
+  "connect.description": "Tìm luồng HLS/DASH và tệp phương tiện trong trình dò, thanh bên trình duyệt hoặc không gian làm việc toàn trang. Gửi tài nguyên đã chọn đến Rayburst.",
   "features.media.description": "Chọn video, âm thanh và phụ đề, ghi luồng trực tiếp rồi lưu thành MP4 hoặc MKV. Không hỗ trợ nội dung được bảo vệ bằng DRM.",
   "engine.description": "{aria2Next} xử lý các lượt tải.",
   "dl.note": "Bản ổn định mới nhất. Các bản cũ có thể vẫn dùng tên trước đây.",

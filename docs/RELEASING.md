@@ -47,8 +47,10 @@ No wildcard extension origins are allowed.
 
 ## Platform distribution
 
-Homebrew publication requires `HOMEBREW_ENABLED=true` and a configured
-Rayburst tap. Windows signing requires `SIGNPATH_ENABLED=true` and the existing
+Homebrew publication requires `HOMEBREW_ENABLED=true` and `HOMEBREW_TAP_TOKEN`
+with write access to `AnInsomniacy/homebrew-rayburst`. The tap owns `Casks/rayburst.rb`;
+the stable release job uses `brew bump-cask-pr --write-only` to update both architecture
+checksums without replacing its installation or cleanup rules. Windows signing requires `SIGNPATH_ENABLED=true` and the existing
 `SIGNPATH_API_TOKEN`, `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG` and
 `SIGNPATH_RELEASE_ARTIFACT_CONFIGURATION_SLUG` settings. Match the artifact
 configuration to the new installer names in the signing service.

@@ -64,7 +64,7 @@
   "hero.downloads": "Unduhan",
   "hero.version": "Stabil",
   "rebrand.body": "Motrix Next kini bernama Rayburst, dan ekstensi perambannya bernama Rayburst Connect. Disarankan melakukan instalasi baru aplikasi desktop. Pengaturan, tugas, dan riwayat tidak diimpor. Pembaruan dari dalam aplikasi dapat menyisakan kedua versi atau pintasan lama.",
-  "connect.description": "Temukan aliran HLS/DASH serta berkas audio dan video saat menjelajah. Kirim sumber ke Rayburst dari tombol pemutar atau tab Media ekstensi.",
+  "connect.description": "Temukan stream HLS/DASH dan file media di pengendus, bilah samping browser, atau ruang kerja satu halaman penuh. Kirim sumber yang dipilih ke Rayburst.",
   "features.media.description": "Pilih video, audio, dan takarir, rekam siaran langsung, lalu simpan sebagai MP4 atau MKV. Media yang dilindungi DRM tidak didukung.",
   "engine.description": "Unduhan ditangani oleh {aria2Next}.",
   "dl.note": "Rilis stabil terbaru. Rilis terdahulu mungkin masih memakai nama lama.",

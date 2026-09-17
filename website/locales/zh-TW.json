@@ -64,7 +64,7 @@
   "hero.downloads": "下載量",
   "hero.version": "正式版",
   "rebrand.body": "Motrix Next 已更名為 Rayburst，瀏覽器擴充功能更名為 Rayburst Connect。建議解除安裝舊版本後重新安裝桌面程式。設定、任務和歷史記錄不會自動移轉。透過程式內更新可能保留兩個版本或舊捷徑。",
-  "connect.description": "瀏覽網頁時探索 HLS/DASH 串流和影音檔案，透過播放器旁的按鈕或擴充功能的媒體分頁交給 Rayburst 下載。",
+  "connect.description": "在嗅探頁籤、瀏覽器側欄或獨立工作區中探索 HLS/DASH 串流和媒體檔案，將選取的資源傳送至 Rayburst。",
   "features.media.description": "選擇影片、音訊和字幕，錄製直播，儲存為 MP4 或 MKV。不支援受 DRM 保護的媒體。",
   "engine.description": "下載由 {aria2Next} 執行。",
   "dl.note": "最新穩定版。較早的發行版本可能仍使用舊名稱。",
