@@ -793,7 +793,7 @@ onUnmounted(() => {
       @maximize-toggled="onMaximizeToggled"
     />
     <footer class="content-footer">
-      <Transition name="footer-accessory" mode="out-in">
+      <Transition name="fade" mode="out-in" appear>
         <div v-if="!isTaskPage" id="preference-actions" key="preferences" :inert="isTaskPage">
           <PreferenceActionBar
             :is-dirty="activePreferenceActions?.isDirty ?? false"
@@ -1033,29 +1033,6 @@ onUnmounted(() => {
 .page-title-leave-to {
   opacity: 0;
   transform: translateY(-3px);
-}
-
-.footer-accessory-enter-active {
-  transition:
-    opacity 140ms cubic-bezier(0.2, 0, 0, 1),
-    transform 140ms cubic-bezier(0.2, 0, 0, 1);
-}
-.footer-accessory-leave-active {
-  pointer-events: none;
-  transition: opacity 80ms ease-out;
-}
-.footer-accessory-enter-from {
-  opacity: 0;
-  transform: translateY(3px);
-}
-.footer-accessory-leave-to {
-  opacity: 0;
-}
-@media (prefers-reduced-motion: reduce) {
-  .footer-accessory-enter-active,
-  .footer-accessory-leave-active {
-    transition: none;
-  }
 }
 
 .bottom-accessory-enter-active {

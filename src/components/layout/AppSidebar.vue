@@ -149,7 +149,7 @@ const isSettings = computed(() => route.matched.some((record) => record.name ===
   scale: 0.92;
 }
 .compact .sidebar-item {
-  padding-inline: 15px;
+  padding-inline: calc((var(--sidebar-width) - 34px) / 2);
   gap: 0;
 }
 .compact .sidebar-label {
