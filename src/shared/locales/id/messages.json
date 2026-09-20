@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Tugas",
-    "add-task": "Tambah tugas",
     "about": "Tentang Rayburst",
     "preferences": "Preferensi...",
     "check-updates-now": "Periksa sekarang",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Relatif terhadap folder bawaan",
     "file-category-fixed-directory": "Folder tetap"
   },
-  "subnav": {
-    "task-list": "Tugas",
-    "preferences": "Pengaturan"
-  },
   "task": {
     "scope-all": "Semua",
     "scope-progress": "Sedang berjalan",
@@ -889,7 +884,8 @@
     "favorite-folders": "Folder favorit",
     "recent-folders": "Folder terbaru",
     "dir-no-saved": "Tidak ada folder tersimpan",
-    "create": "Buat"
+    "create": "Buat",
+    "more-actions": "Tindakan lainnya"
   },
   "media": {
     "probing": "Memeriksa media",

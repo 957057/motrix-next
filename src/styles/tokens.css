@@ -82,17 +82,12 @@
   /* ── M3 Drop Zone ──────────────────────────────────────────────── */
   --m3-drop-zone-border: var(--m3-outline-variant);
 
-  --aside-bg: var(--m3-surface-container-highest);
-  --aside-icon-hover-bg: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
+  --sidebar-hover-bg: color-mix(in srgb, var(--m3-on-surface) 8%, transparent);
 
-  --subnav-bg: var(--m3-surface-container);
-  --subnav-title: var(--m3-on-surface);
-  --subnav-text: var(--m3-on-surface-variant);
-  --subnav-active-text: var(--m3-on-surface);
-  --subnav-active-bg: color-mix(in srgb, var(--m3-primary) 10%, var(--m3-surface-container-highest));
+  --sidebar-bg: var(--m3-surface-container);
+  --sidebar-active-bg: color-mix(in srgb, var(--m3-primary) 10%, var(--m3-surface-container-highest));
 
   --main-bg: var(--m3-surface-container-low);
-  --panel-title: var(--m3-on-surface);
   --panel-border: var(--m3-outline-variant);
 
   --task-item-bg: var(--m3-surface-container-lowest);
@@ -102,16 +97,8 @@
   --about-card-hover-bg: var(--m3-surface-container-high);
 
   /* ── Layout ────────────────────────────────────────────────────── */
-  --aside-width: 78px;
-  --subnav-width: 210px;
-  --subnav-width-compact: 64px;
-
-  /* Unified top offset for the three-column header row (sidebar logo,
-     subnav title, content title).  Sized to clear the macOS traffic-
-     light buttons (28 px system title bar + 24 px breathing room) and
-     keep all platforms visually consistent.  Every column references
-     this single token so alignment stays locked across refactors. */
-  --header-top-offset: 48px;
+  --sidebar-width: 224px;
+  --content-gutter: 24px;
 
   /* ── Typography ────────────────────────────────────────────────── */
   --font-family:
@@ -202,15 +189,20 @@
   --m3-status-error: #ffb2bc;
   --m3-status-success: #82d996;
 
-  --aside-bg: var(--m3-surface-container-lowest);
-  --aside-icon-hover-bg: color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
+  --sidebar-hover-bg: color-mix(in srgb, var(--m3-on-surface) 12%, transparent);
 
-  /* ── Dark gradient: aside(darkest) → subnav(dark) → main(lighter) ── */
-  --subnav-bg: var(--m3-surface-container-low);
+  /* ── Sidebar and content surfaces ── */
+  --sidebar-bg: var(--m3-surface-container-low);
   --main-bg: var(--m3-surface-container-high);
   --task-item-bg: var(--m3-surface-container);
   --task-action-bg: var(--m3-surface-container);
 
   --about-card-bg: var(--m3-surface-container);
   --about-card-hover-bg: var(--m3-surface-container-highest);
+}
+
+@media (max-width: 699px) {
+  :root {
+    --content-gutter: 16px;
+  }
 }

@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Feladatok",
-    "add-task": "Feladat hozzáadása",
     "about": "A Rayburst névjegye",
     "preferences": "Beállítások...",
     "check-updates-now": "Ellenőrzés most",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Az alapértelmezett mappához képest",
     "file-category-fixed-directory": "Rögzített mappa"
   },
-  "subnav": {
-    "task-list": "Feladatok",
-    "preferences": "Beállítások"
-  },
   "task": {
     "scope-all": "Összes",
     "scope-progress": "Folyamatban",
@@ -889,7 +884,8 @@
     "favorite-folders": "Kedvenc mappák",
     "recent-folders": "Legutóbbi mappák",
     "dir-no-saved": "Nincsenek mentett mappák",
-    "create": "Létrehozás"
+    "create": "Létrehozás",
+    "more-actions": "További műveletek"
   },
   "media": {
     "probing": "Média vizsgálata",

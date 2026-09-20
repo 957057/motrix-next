@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Завдання",
-    "add-task": "Додати завдання",
     "about": "Про Rayburst",
     "preferences": "Налаштування...",
     "check-updates-now": "Перевірити зараз",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Відносно типової теки",
     "file-category-fixed-directory": "Фіксована тека"
   },
-  "subnav": {
-    "task-list": "Завдання",
-    "preferences": "Налаштування"
-  },
   "task": {
     "scope-all": "Усі",
     "scope-progress": "Виконуються",
@@ -889,7 +884,8 @@
     "favorite-folders": "Обрані теки",
     "recent-folders": "Нещодавні теки",
     "dir-no-saved": "Немає збережених тек",
-    "create": "Створити"
+    "create": "Створити",
+    "more-actions": "Інші дії"
   },
   "media": {
     "probing": "Аналіз медіа",

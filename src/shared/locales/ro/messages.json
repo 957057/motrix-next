@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Sarcini",
-    "add-task": "Adaugă sarcină",
     "about": "Despre Rayburst",
     "preferences": "Preferințe...",
     "check-updates-now": "Verifică acum",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Relativ la dosarul implicit",
     "file-category-fixed-directory": "Dosar fix"
   },
-  "subnav": {
-    "task-list": "Sarcini",
-    "preferences": "Preferințe"
-  },
   "task": {
     "scope-all": "Toate",
     "scope-progress": "În desfășurare",
@@ -889,7 +884,8 @@
     "favorite-folders": "Foldere favorite",
     "recent-folders": "Foldere recente",
     "dir-no-saved": "Nu există foldere salvate",
-    "create": "Creează"
+    "create": "Creează",
+    "more-actions": "Mai multe acțiuni"
   },
   "media": {
     "probing": "Analizare conținut",

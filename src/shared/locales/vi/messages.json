@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Tác vụ",
-    "add-task": "Thêm tác vụ",
     "about": "Về Rayburst",
     "preferences": "Tùy chọn...",
     "check-updates-now": "Kiểm tra ngay",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Tương đối với thư mục mặc định",
     "file-category-fixed-directory": "Thư mục cố định"
   },
-  "subnav": {
-    "task-list": "Tác vụ",
-    "preferences": "Tùy chọn"
-  },
   "task": {
     "scope-all": "Tất cả",
     "scope-progress": "Đang thực hiện",
@@ -889,7 +884,8 @@
     "favorite-folders": "Thư mục yêu thích",
     "recent-folders": "Thư mục gần đây",
     "dir-no-saved": "Không có thư mục đã lưu",
-    "create": "Tạo"
+    "create": "Tạo",
+    "more-actions": "Thao tác khác"
   },
   "media": {
     "probing": "Đang phân tích nội dung",

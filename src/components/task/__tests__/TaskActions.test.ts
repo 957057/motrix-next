@@ -102,9 +102,11 @@ vi.mock('naive-ui', () => ({
   NIcon: { template: '<span :class="$attrs.class"><slot /></span>' },
   NTooltip: { template: '<span><slot /><slot name="trigger" /></span>' },
   NCheckbox: { template: '<label><slot /></label>', props: ['checked'] },
-  NPopover: {
-    template: '<div><slot name="trigger" /></div>',
-    props: ['show', 'trigger', 'placement', 'showArrow', 'raw'],
+  NDropdown: {
+    name: 'NDropdown',
+    template: `<div><slot /><template v-if="options.some(option => option.key === 'resume' || option.key === 'purge')"><button v-for="option in options" :key="option.key" data-menuitem :disabled="option.disabled" @click="$emit('select', option.key)">{{ option.label }}</button></template></div>`,
+    props: ['options', 'value'],
+    emits: ['select'],
   },
   useDialog: () => ({
     error: mockDialogWarning,
@@ -120,6 +122,7 @@ vi.mock('naive-ui', () => ({
 }))
 
 vi.mock('@vicons/ionicons5', () => ({
+  EllipsisHorizontalOutline: { template: '<i />' },
   AddOutline: { template: '<i />' },
   PlayOutline: { template: '<i />' },
   PauseOutline: { template: '<i />' },
@@ -164,13 +167,13 @@ import { useTaskStore } from '@/stores/task'
 
 const createWrapper = () => mount(TaskActions)
 
-/**
- * Click the Nth button in the component (0-indexed).
- * Button order in progress: Add, Sort, Refresh, Resume, Pause, Stop sharing, Delete.
- * Terminal scopes render Add, Sort, Refresh, and Purge.
- */
+/** Exclude the menu trigger while exercising batch actions through dropdown selection. */
+function actionButtons(wrapper: ReturnType<typeof createWrapper>) {
+  return wrapper.findAll('button').filter((button) => button.attributes('aria-label') !== 'task.more-actions')
+}
+
 async function clickButton(wrapper: ReturnType<typeof createWrapper>, index: number) {
-  const buttons = wrapper.findAll('button')
+  const buttons = actionButtons(wrapper)
   await buttons[index].trigger('click')
 }
 
@@ -208,10 +211,31 @@ describe('TaskActions', () => {
     expect(wrapper.find('.task-actions').exists()).toBe(true)
   })
 
-  it('renders all seven progress actions', () => {
+  it('exposes progress operations through the batch menu', () => {
     const wrapper = createWrapper()
-    const buttons = wrapper.findAll('button')
+    const buttons = actionButtons(wrapper)
     expect(buttons.length).toBe(7)
+  })
+
+  it('dispatches sort selections through the dropdown and rejects unsupported fields', async () => {
+    const store = useTaskStore()
+    const changeSort = vi.spyOn(store, 'changeCurrentSort').mockResolvedValue(undefined)
+    const wrapper = createWrapper()
+    const dropdown = wrapper.findAllComponents({ name: 'NDropdown' })[0]
+    dropdown.vm.$emit('select', 'name')
+    expect(changeSort).toHaveBeenCalledWith('name')
+    dropdown.vm.$emit('select', 'unsupported')
+    expect(changeSort).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+    changeSort.mockRestore()
+  })
+
+  it('rejects disabled batch actions even when selected programmatically', () => {
+    const wrapper = createWrapper()
+    wrapper.findAllComponents({ name: 'NDropdown' })[1].vm.$emit('select', 'resume')
+    expect(mockDialogWarning).not.toHaveBeenCalled()
+    expect(mockResumeAllTask).not.toHaveBeenCalled()
+    wrapper.unmount()
   })
 
   // ── Engine Guard ────────────────────────────────────────────────
@@ -295,13 +319,13 @@ describe('TaskActions', () => {
   describe('disabled state guards', () => {
     it('Resume All button is disabled when taskList is empty', () => {
       const wrapper = createWrapper()
-      const resumeBtn = wrapper.findAll('button')[3]
+      const resumeBtn = actionButtons(wrapper)[3]
       expect(resumeBtn.attributes('disabled')).toBeDefined()
     })
 
     it('Pause All button is disabled when taskList is empty', () => {
       const wrapper = createWrapper()
-      const pauseBtn = wrapper.findAll('button')[4]
+      const pauseBtn = actionButtons(wrapper)[4]
       expect(pauseBtn.attributes('disabled')).toBeDefined()
     })
 
@@ -312,7 +336,7 @@ describe('TaskActions', () => {
         { gid: 'a2', status: 'active' },
       ] as never
       const wrapper = createWrapper()
-      const resumeBtn = wrapper.findAll('button')[3]
+      const resumeBtn = actionButtons(wrapper)[3]
       expect(resumeBtn.attributes('disabled')).toBeDefined()
     })
 
@@ -323,7 +347,7 @@ describe('TaskActions', () => {
         { gid: 'p2', status: 'paused' },
       ] as never
       const wrapper = createWrapper()
-      const pauseBtn = wrapper.findAll('button')[4]
+      const pauseBtn = actionButtons(wrapper)[4]
       expect(pauseBtn.attributes('disabled')).toBeDefined()
     })
 
@@ -334,7 +358,7 @@ describe('TaskActions', () => {
         { gid: 'p1', status: 'paused' },
       ] as never
       const wrapper = createWrapper()
-      const resumeBtn = wrapper.findAll('button')[3]
+      const resumeBtn = actionButtons(wrapper)[3]
       expect(resumeBtn.attributes('disabled')).toBeUndefined()
     })
 
@@ -345,7 +369,7 @@ describe('TaskActions', () => {
         { gid: 'p1', status: 'paused' },
       ] as never
       const wrapper = createWrapper()
-      const pauseBtn = wrapper.findAll('button')[4]
+      const pauseBtn = actionButtons(wrapper)[4]
       expect(pauseBtn.attributes('disabled')).toBeUndefined()
     })
 
@@ -353,7 +377,7 @@ describe('TaskActions', () => {
       const taskStore = useTaskStore()
       taskStore.taskList = [{ gid: 'w1', status: 'waiting' }] as never
       const wrapper = createWrapper()
-      const pauseBtn = wrapper.findAll('button')[4]
+      const pauseBtn = actionButtons(wrapper)[4]
       expect(pauseBtn.attributes('disabled')).toBeUndefined()
     })
 
@@ -365,7 +389,7 @@ describe('TaskActions', () => {
         { gid: 's1', status: 'active', bittorrent: { info: { name: 'x' } }, seeder: 'true' },
       ] as never
       const wrapper = createWrapper()
-      const resumeBtn = wrapper.findAll('button')[3]
+      const resumeBtn = actionButtons(wrapper)[3]
       expect(resumeBtn.attributes('disabled')).toBeDefined()
     })
 
@@ -390,7 +414,7 @@ describe('TaskActions', () => {
         { gid: 'bt', status: 'paused', seeder: 'true', bittorrent: { info: { name: 'x' } } },
       ] as never
       const wrapper = createWrapper()
-      expect(wrapper.findAll('button')[5].attributes('disabled')).toBeUndefined()
+      expect(actionButtons(wrapper)[5].attributes('disabled')).toBeUndefined()
     })
   })
 
@@ -418,12 +442,12 @@ describe('TaskActions', () => {
       await clickButton(wrapper, 2)
       await clickButton(wrapper, 2)
       expect(mockFetchList).toHaveBeenCalledOnce()
-      expect(wrapper.findAll('button')[2].attributes('disabled')).toBeDefined()
+      expect(actionButtons(wrapper)[2].attributes('disabled')).toBeDefined()
 
       resolveFetch?.()
       await Promise.resolve()
       await wrapper.vm.$nextTick()
-      expect(wrapper.findAll('button')[2].attributes('disabled')).toBeUndefined()
+      expect(actionButtons(wrapper)[2].attributes('disabled')).toBeUndefined()
     })
 
     it('shows success message when fetchList succeeds', async () => {
@@ -536,7 +560,7 @@ describe('TaskActions', () => {
     it('does nothing when task list is empty', async () => {
       const wrapper = createWrapper()
       // taskList is empty by default — the delete-all button should be disabled
-      const deleteBtn = wrapper.findAll('button')[6]
+      const deleteBtn = actionButtons(wrapper)[6]
       expect(deleteBtn.attributes('disabled')).toBeDefined()
     })
 

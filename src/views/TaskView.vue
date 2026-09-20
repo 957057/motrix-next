@@ -11,7 +11,6 @@ import { useTaskActions } from '@/composables/useTaskActions'
 import { useDialog } from 'naive-ui'
 import { useAppMessage } from '@/composables/useAppMessage'
 import TaskList from '@/components/task/TaskList.vue'
-import TaskActions from '@/components/task/TaskActions.vue'
 import TaskDetail from '@/components/task/TaskDetail.vue'
 import TaskEmptyBrand from '@/components/task/TaskEmptyBrand.vue'
 
@@ -47,18 +46,6 @@ const {
   requestMagnetSelection: (gid) => useTaskSelectionStore().request({ kind: 'bt', gid }),
 })
 
-const subnavs = computed(() => [
-  { key: 'all', title: t('task.scope-all') || 'All' },
-  { key: 'progress', title: t('task.scope-progress') || 'In Progress' },
-  { key: 'failed', title: t('task.scope-failed') || 'Failed' },
-  { key: 'completed', title: t('task.scope-completed') || 'Completed' },
-])
-
-const title = computed(() => {
-  const sub = subnavs.value.find((s) => s.key === props.status)
-  return sub?.title ?? props.status
-})
-
 watch(
   () => props.status,
   (status) => {
@@ -70,10 +57,6 @@ watch(
 
 <template>
   <div class="task-view">
-    <header class="panel-header" data-tauri-drag-region>
-      <h4 :key="status" class="task-title">{{ title }}</h4>
-      <TaskActions />
-    </header>
     <div class="panel-body">
       <TaskEmptyBrand :show="showEmptyBrand" />
       <div class="panel-content">
@@ -108,24 +91,6 @@ watch(
   height: 100%;
   display: flex;
   flex-direction: column;
-}
-.panel-header {
-  position: relative;
-  padding: var(--header-top-offset) 0 12px;
-  margin: 0 36px;
-  border-bottom: 2px solid var(--panel-border);
-  user-select: none;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-}
-.task-title {
-  margin: 0;
-  color: var(--panel-title);
-  font-size: 16px;
-  font-weight: normal;
-  line-height: 24px;
-  align-self: flex-start;
 }
 .panel-body {
   position: relative;

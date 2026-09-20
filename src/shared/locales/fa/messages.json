@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "وظایف",
-    "add-task": "افزودن وظیفه",
     "about": "درباره Rayburst",
     "preferences": "تنظیمات...",
     "check-updates-now": "بررسی اکنون",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "نسبت به پوشهٔ پیش‌فرض",
     "file-category-fixed-directory": "پوشهٔ ثابت"
   },
-  "subnav": {
-    "task-list": "وظایف",
-    "preferences": "تنظیمات"
-  },
   "task": {
     "scope-all": "همه",
     "scope-progress": "در حال انجام",
@@ -889,7 +884,8 @@
     "favorite-folders": "پوشه‌های مورد علاقه",
     "recent-folders": "پوشه‌های اخیر",
     "dir-no-saved": "پوشه ذخیره‌شده‌ای وجود ندارد",
-    "create": "ایجاد"
+    "create": "ایجاد",
+    "more-actions": "عملیات بیشتر"
   },
   "media": {
     "probing": "در حال بررسی رسانه",

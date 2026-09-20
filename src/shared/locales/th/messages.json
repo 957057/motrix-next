@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "งาน",
-    "add-task": "เพิ่มงาน",
     "about": "เกี่ยวกับ Rayburst",
     "preferences": "การตั้งค่า...",
     "check-updates-now": "ตรวจสอบตอนนี้",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "เทียบกับโฟลเดอร์เริ่มต้น",
     "file-category-fixed-directory": "โฟลเดอร์คงที่"
   },
-  "subnav": {
-    "task-list": "รายการงาน",
-    "preferences": "การตั้งค่า"
-  },
   "task": {
     "scope-all": "ทั้งหมด",
     "scope-progress": "กำลังดำเนินการ",
@@ -889,7 +884,8 @@
     "favorite-folders": "โฟลเดอร์โปรด",
     "recent-folders": "โฟลเดอร์ล่าสุด",
     "dir-no-saved": "ไม่มีโฟลเดอร์ที่บันทึกไว้",
-    "create": "สร้าง"
+    "create": "สร้าง",
+    "more-actions": "การดำเนินการเพิ่มเติม"
   },
   "media": {
     "probing": "กำลังตรวจสอบสื่อ",

@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Görevler",
-    "add-task": "Görev ekle",
     "about": "Rayburst Hakkında",
     "preferences": "Tercihler...",
     "check-updates-now": "Şimdi kontrol et",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Varsayılan klasöre göre",
     "file-category-fixed-directory": "Sabit klasör"
   },
-  "subnav": {
-    "task-list": "Görevler",
-    "preferences": "Ayarlar"
-  },
   "task": {
     "scope-all": "Tümü",
     "scope-progress": "Devam ediyor",
@@ -889,7 +884,8 @@
     "favorite-folders": "Favori klasörler",
     "recent-folders": "Son klasörler",
     "dir-no-saved": "Kayıtlı klasör yok",
-    "create": "Oluştur"
+    "create": "Oluştur",
+    "more-actions": "Diğer işlemler"
   },
   "media": {
     "probing": "Medya inceleniyor",

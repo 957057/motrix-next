@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Tarefas",
-    "add-task": "Adicionar tarefa",
     "about": "Sobre o Rayburst",
     "preferences": "Preferências...",
     "check-updates-now": "Verificar agora",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Relativa à pasta padrão",
     "file-category-fixed-directory": "Pasta fixa"
   },
-  "subnav": {
-    "task-list": "Tarefas",
-    "preferences": "Preferências"
-  },
   "task": {
     "scope-all": "Todas",
     "scope-progress": "Em andamento",
@@ -889,7 +884,8 @@
     "favorite-folders": "Pastas favoritas",
     "recent-folders": "Pastas recentes",
     "dir-no-saved": "Nenhuma pasta salva",
-    "create": "Criar"
+    "create": "Criar",
+    "more-actions": "Mais ações"
   },
   "media": {
     "probing": "Analisando mídia",

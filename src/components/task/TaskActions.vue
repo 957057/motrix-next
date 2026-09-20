@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** @fileoverview Native-backed task toolbar actions and confirmations. */
-import { ref, computed, h, nextTick } from 'vue'
+import { ref, computed, h, nextTick, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
@@ -15,7 +15,7 @@ import { deleteTaskFiles } from '@/composables/useFileDelete'
 
 import { logger } from '@shared/logger'
 import { getErrorMessage } from '@shared/utils/errorMessage'
-import { NButton, NIcon, NCheckbox, NPopover, useDialog } from 'naive-ui'
+import { NButton, NIcon, NCheckbox, NDropdown, useDialog, type DropdownOption } from 'naive-ui'
 import MTooltip from '@/components/common/MTooltip.vue'
 import { useAppMessage } from '@/composables/useAppMessage'
 import { usePreferenceStore } from '@/stores/preference'
@@ -39,6 +39,7 @@ import {
   SwapVerticalOutline,
   ArrowUpOutline,
   ArrowDownOutline,
+  EllipsisHorizontalOutline,
 } from '@vicons/ionicons5'
 
 const { t } = useI18n()
@@ -87,10 +88,7 @@ const currentSortFields = computed(() => {
   }
 })
 
-const sortPopoverVisible = ref(false)
-
 async function onSortSelect(key: ProgressSortField | TerminalSortField | AllSortField) {
-  sortPopoverVisible.value = false
   await taskStore.changeCurrentSort(key)
 }
 const message = useAppMessage()
@@ -399,6 +397,92 @@ function purgeRecord() {
     },
   })
 }
+function menuIcon(icon: Component) {
+  return () => h(NIcon, null, { default: () => h(icon) })
+}
+
+const sortOptions = computed<DropdownOption[]>(() =>
+  currentSortFields.value.map((field) => ({
+    key: field,
+    label: t(SORT_LABELS[field]),
+    icon:
+      field === currentSort.value.field
+        ? menuIcon(
+            field === 'manual'
+              ? SwapVerticalOutline
+              : currentSort.value.direction === 'asc'
+                ? ArrowUpOutline
+                : ArrowDownOutline,
+          )
+        : undefined,
+  })),
+)
+
+function selectSort(key: string | number) {
+  const field = currentSortFields.value.find((field) => field === key)
+  if (field) void onSortSelect(field)
+}
+
+type BatchAction = DropdownOption & {
+  key: string
+  action: () => unknown
+}
+
+const batchOptions = computed<BatchAction[]>(() => {
+  const options: BatchAction[] = []
+  if (showActiveActions.value) {
+    options.push(
+      {
+        key: 'resume',
+        label: t('task.resume-all-task'),
+        icon: menuIcon(PlayOutline),
+        disabled: !hasPausedTasks.value,
+        action: resumeAll,
+      },
+      {
+        key: 'pause',
+        label: t('task.pause-all-task'),
+        icon: menuIcon(PauseOutline),
+        disabled: !hasActiveTasks.value,
+        action: pauseAll,
+      },
+      {
+        key: 'sharing',
+        label: t('task.finish-all-sharing'),
+        icon: menuIcon(StopCircleOutline),
+        disabled: !sharingGids.value.length,
+        action: finishAllSharing,
+      },
+    )
+    if (recordingGids.value.length)
+      options.push({
+        key: 'recording',
+        label: `${t('media.finish')} (${recordingGids.value.length})`,
+        disabled: finishingMedia.value,
+        action: () => void finishRecordings(),
+      })
+    options.push({
+      key: 'delete',
+      label: t('task.delete-all-task'),
+      icon: menuIcon(CloseOutline),
+      disabled: deleteAllDisabled.value,
+      action: onDeleteAll,
+    })
+  }
+  if (showStoppedActions.value)
+    options.push({
+      key: 'purge',
+      label: t('task.purge-record'),
+      icon: menuIcon(TrashOutline),
+      disabled: !terminalTasks.value.length,
+      action: purgeRecord,
+    })
+  return options
+})
+function selectBatchAction(key: string | number) {
+  const option = batchOptions.value.find((option) => option.key === key)
+  if (option && !option.disabled) void option.action()
+}
 </script>
 
 <template>
@@ -413,41 +497,19 @@ function purgeRecord() {
       </template>
       {{ t('task.new-task') || 'New Task' }}
     </MTooltip>
-    <NPopover
-      v-model:show="sortPopoverVisible"
+    <NDropdown
       trigger="click"
-      placement="bottom-start"
-      :show-arrow="false"
-      raw
-      style="padding: 0"
+      placement="bottom-end"
+      :options="sortOptions"
+      :value="currentSort.field"
+      @select="selectSort"
     >
-      <template #trigger>
-        <NButton quaternary circle size="small" :aria-label="t('task.sort-by')">
-          <template #icon>
-            <NIcon><SwapVerticalOutline /></NIcon>
-          </template>
-        </NButton>
-      </template>
-      <div class="sort-panel">
-        <div class="sort-panel-header">{{ t('task.sort-by') }}</div>
-        <button
-          v-for="field in currentSortFields"
-          :key="field"
-          class="sort-item"
-          :class="{ active: field === currentSort.field }"
-          @click="onSortSelect(field)"
-        >
-          <span class="sort-item-label">{{ t(SORT_LABELS[field]) }}</span>
-          <span v-if="field === currentSort.field" class="sort-item-dir">
-            <NIcon :size="14">
-              <SwapVerticalOutline v-if="field === 'manual'" />
-              <ArrowUpOutline v-else-if="currentSort.direction === 'asc'" />
-              <ArrowDownOutline v-else />
-            </NIcon>
-          </span>
-        </button>
-      </div>
-    </NPopover>
+      <NButton quaternary circle size="small" :aria-label="t('task.sort-by')">
+        <template #icon
+          ><NIcon><SwapVerticalOutline /></NIcon
+        ></template>
+      </NButton>
+    </NDropdown>
     <MTooltip>
       <template #trigger>
         <NButton
@@ -466,98 +528,13 @@ function purgeRecord() {
       </template>
       {{ t('task.refresh-list') || 'Refresh' }}
     </MTooltip>
-    <NButton
-      v-if="showActiveActions && recordingGids.length"
-      size="small"
-      :loading="finishingMedia"
-      @click="finishRecordings"
-      >{{ t('media.finish') }} ({{ recordingGids.length }})</NButton
-    >
-    <MTooltip v-if="showActiveActions">
-      <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :aria-label="t('task.resume-all-task')"
-          :disabled="!hasPausedTasks"
-          @click="resumeAll"
-        >
-          <template #icon>
-            <NIcon><PlayOutline /></NIcon>
-          </template>
-        </NButton>
-      </template>
-      {{ t('task.resume-all-task') || 'Resume All' }}
-    </MTooltip>
-    <MTooltip v-if="showActiveActions">
-      <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :aria-label="t('task.pause-all-task')"
-          :disabled="!hasActiveTasks"
-          @click="pauseAll"
-        >
-          <template #icon>
-            <NIcon><PauseOutline /></NIcon>
-          </template>
-        </NButton>
-      </template>
-      {{ t('task.pause-all-task') || 'Pause All' }}
-    </MTooltip>
-    <MTooltip v-if="showActiveActions">
-      <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :aria-label="t('task.finish-all-sharing')"
-          :disabled="sharingGids.length === 0"
-          @click="finishAllSharing"
-        >
-          <template #icon>
-            <NIcon><StopCircleOutline /></NIcon>
-          </template>
-        </NButton>
-      </template>
-      {{ t('task.finish-all-sharing') }}
-    </MTooltip>
-    <MTooltip v-if="showActiveActions">
-      <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :aria-label="t('task.delete-all-task')"
-          :disabled="deleteAllDisabled"
-          @click="onDeleteAll"
-        >
-          <template #icon>
-            <NIcon><CloseOutline /></NIcon>
-          </template>
-        </NButton>
-      </template>
-      {{ t('task.delete-all-task') }}
-    </MTooltip>
-    <MTooltip v-if="showStoppedActions">
-      <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :aria-label="t('task.purge-record')"
-          :disabled="terminalTasks.length === 0"
-          @click="purgeRecord"
-        >
-          <template #icon>
-            <NIcon><TrashOutline /></NIcon>
-          </template>
-        </NButton>
-      </template>
-      {{ t('task.purge-record') || 'Purge Records' }}
-    </MTooltip>
+    <NDropdown trigger="click" placement="bottom-end" :options="batchOptions" @select="selectBatchAction">
+      <NButton quaternary circle size="small" :aria-label="t('task.more-actions')">
+        <template #icon
+          ><NIcon><EllipsisHorizontalOutline /></NIcon
+        ></template>
+      </NButton>
+    </NDropdown>
   </div>
 </template>
 
@@ -566,75 +543,5 @@ function purgeRecord() {
   display: flex;
   gap: 4px;
   align-items: center;
-}
-</style>
-
-<!-- Sort panel renders in teleported popover — must be unscoped -->
-<style>
-.sort-panel {
-  min-width: 160px;
-  padding: 6px;
-  background: var(--m3-surface-container-highest);
-  border: 1px solid var(--m3-outline-variant);
-  border-radius: 12px;
-  box-shadow: 0 4px 16px var(--m3-shadow);
-}
-
-.sort-panel-header {
-  padding: 6px 10px 4px;
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  color: var(--m3-outline);
-  letter-spacing: 0.02em;
-}
-
-.sort-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 7px 10px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--m3-on-surface);
-  font-size: var(--font-size-sm);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background-color 0.15s cubic-bezier(0.2, 0, 0, 1),
-    color 0.15s cubic-bezier(0.2, 0, 0, 1);
-}
-
-.sort-item:hover {
-  background: var(--m3-surface-container-highest);
-}
-
-.sort-item:active {
-  background: var(--m3-outline-variant);
-  transition: background-color 0.05s ease;
-}
-
-.sort-item.active {
-  background: color-mix(in srgb, var(--m3-primary) 10%, transparent);
-  color: var(--m3-on-surface);
-  font-weight: 500;
-}
-
-.sort-item.active:hover {
-  background: color-mix(in srgb, var(--m3-primary) 14%, transparent);
-  color: var(--m3-on-surface);
-}
-
-.sort-item-label {
-  flex: 1;
-}
-
-.sort-item-dir {
-  display: flex;
-  align-items: center;
-  margin-left: 8px;
-  color: var(--m3-on-surface);
-  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
 }
 </style>

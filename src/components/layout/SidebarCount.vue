@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/** @fileoverview Animated numeric counter for secondary navigation rows. */
+/** @fileoverview Animated numeric counter for sidebar rows. */
 import { computed } from 'vue'
 import { TransitionPresets, usePreferredReducedMotion, useTransition } from '@vueuse/core'
 
@@ -18,16 +18,15 @@ const display = computed(() => Math.round(animated.value).toLocaleString())
 </script>
 
 <template>
-  <span class="subnav-count" aria-hidden="true">
+  <span class="sidebar-count" aria-hidden="true">
     {{ display }}
   </span>
 </template>
 
 <style scoped>
-.subnav-count {
+.sidebar-count {
   flex: 0 0 auto;
   min-width: 2.25em;
-  margin-left: 10px;
   padding: 1px 7px;
   border-radius: 999px;
   text-align: center;

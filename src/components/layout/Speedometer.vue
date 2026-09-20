@@ -344,9 +344,7 @@ async function handleScheduleToggle(enabled: boolean) {
 /* ── Base: capsule (outer shell receives min-width) ───────────────── */
 .speedometer {
   font-size: 12px;
-  position: fixed;
-  right: 12px;
-  bottom: 12px;
+  position: relative;
   z-index: 20;
   display: flex;
   align-items: center;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-/** @fileoverview Main application layout with sidebar, subnav, and IPC event handling. */
+/** @fileoverview Main application layout with application shell and IPC event handling. */
 import { computed, ref, nextTick, watch } from 'vue'
-import { useIntervalFn } from '@vueuse/core'
+import { useIntervalFn, useMediaQuery } from '@vueuse/core'
 import { TASK_REFRESH_INTERVAL } from '@shared/timing'
 import { useRoute } from 'vue-router'
 import { onMounted, onUnmounted } from 'vue'
@@ -26,9 +26,10 @@ import { useBtSelection } from '@/composables/useBtSelection'
 import aria2Api from '@/api/aria2'
 import { usePlatform } from '@/composables/usePlatform'
 import { throttledResizeHandler, cancelPendingResize } from '@/layouts/resizeThrottle'
-import AsideBar from '@/components/layout/AsideBar.vue'
-import TaskSubnav from '@/components/layout/TaskSubnav.vue'
-import PreferenceSubnav from '@/components/layout/PreferenceSubnav.vue'
+import AppSidebar from '@/components/layout/AppSidebar.vue'
+import TaskActions from '@/components/task/TaskActions.vue'
+import { useTaskDestinations } from '@/components/layout/navigation'
+import { MenuOutline } from '@vicons/ionicons5'
 import Speedometer from '@/components/layout/Speedometer.vue'
 import WindowControls from '@/components/layout/WindowControls.vue'
 import EngineRecoveryDialog from '@/components/layout/EngineRecoveryDialog.vue'
@@ -39,7 +40,7 @@ import TaskSelectionHost from '@/components/task/TaskSelectionHost.vue'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceStore } from '@/stores/preference'
 import { useAppMessage } from '@/composables/useAppMessage'
-import { NModal, NButton, NCheckbox, NProgress, NPagination, useDialog } from 'naive-ui'
+import { NModal, NButton, NCheckbox, NProgress, NPagination, NIcon, NDrawer, NDrawerContent, useDialog } from 'naive-ui'
 
 import { useAppEvents } from '@/composables/useAppEvents'
 import { loadAddedAtFromRecords } from '@/composables/useTaskOrder'
@@ -69,8 +70,28 @@ watch(
   { immediate: true, flush: 'post' },
 )
 const isTaskPage = computed(() => route.path.startsWith('/task'))
-const isPreferencePage = computed(() => route.path.startsWith('/preference'))
+const compactNavigation = useMediaQuery('(max-width: 699px)')
+const sidebarOpen = ref(false)
+const taskDestinations = useTaskDestinations()
+const pageTitle = computed(() =>
+  isTaskPage.value
+    ? (taskDestinations.value.find((item) => item.key === (route.params.status || 'all'))?.label ?? t('task.scope-all'))
+    : t('app.preferences'),
+)
+watch(
+  () => route.fullPath,
+  () => {
+    sidebarOpen.value = false
+  },
+)
+watch(compactNavigation, () => {
+  sidebarOpen.value = false
+})
 const showAbout = ref(false)
+function openAbout() {
+  sidebarOpen.value = false
+  showAbout.value = true
+}
 const showExitDialog = ref(false)
 const isExiting = ref(false)
 const rememberChoice = ref(false)
@@ -82,31 +103,6 @@ const taskPaginationPage = computed(() => taskStore.taskPagination[taskPaginatio
 const taskPaginationPageSize = computed(() => taskStore.taskPagination.pageSize)
 const taskPaginationPageCount = computed(() => taskStore.currentTaskPageCount())
 const taskPaginationPageSizes = [5, 20, 40, 80, 100]
-const showTaskPaginationControl = ref(isTaskPage.value)
-
-watch(
-  () => route.path,
-  (path, oldPath) => {
-    const nextIsTaskPage = path.startsWith('/task')
-    const previousIsTaskPage = oldPath?.startsWith('/task') ?? nextIsTaskPage
-    if (!nextIsTaskPage) {
-      showTaskPaginationControl.value = false
-      return
-    }
-    if (previousIsTaskPage) {
-      showTaskPaginationControl.value = true
-    } else {
-      showTaskPaginationControl.value = false
-    }
-  },
-)
-
-function handleMainContentBeforeEnter() {
-  if (isTaskPage.value) {
-    showTaskPaginationControl.value = true
-  }
-}
-
 // ── Auto-shutdown countdown state ──────────────────────────────────
 const showShutdownCountdown = ref(false)
 const shutdownCountdown = ref(60)
@@ -757,24 +753,38 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div id="container" :class="{ 'native-frame': isMac }">
+  <div id="container">
     <!-- Minimal progress bar during engine initialization / restart -->
     <Transition name="engine-slide">
       <div v-if="engineStore.isBusy" class="engine-banner">
         <div class="engine-progress" />
       </div>
     </Transition>
-    <AsideBar @show-about="showAbout = true" />
-    <div class="subnav-slot">
-      <Transition name="fade" mode="out-in">
-        <TaskSubnav v-if="isTaskPage" key="task-subnav" />
-        <PreferenceSubnav v-else-if="isPreferencePage" key="pref-subnav" />
-      </Transition>
+    <div class="window-chrome" data-tauri-drag-region />
+    <div v-if="!compactNavigation" class="sidebar-heading" data-tauri-drag-region>
+      <h2 data-tauri-drag-region>{{ t('app.task-list') }}</h2>
     </div>
+    <AppSidebar v-if="!compactNavigation" class="sidebar-slot" @show-about="openAbout" />
+    <header class="page-header" data-tauri-drag-region>
+      <NButton v-if="compactNavigation" quaternary circle :aria-label="t('app.task-list')" @click="sidebarOpen = true">
+        <template #icon
+          ><NIcon><MenuOutline /></NIcon
+        ></template>
+      </NButton>
+      <Transition name="page-title" mode="out-in">
+        <h1 :key="pageTitle" data-tauri-drag-region>{{ pageTitle }}</h1>
+      </Transition>
+      <TaskActions v-if="isTaskPage" :inert="taskStore.currentList !== (route.params.status || 'all')" />
+    </header>
+    <NDrawer v-if="compactNavigation" v-model:show="sidebarOpen" placement="left" width="var(--sidebar-width)">
+      <NDrawerContent :title="t('app.task-list')" closable :body-content-style="{ padding: 0, height: '100%' }">
+        <AppSidebar @show-about="openAbout" />
+      </NDrawerContent>
+    </NDrawer>
     <main class="content">
       <router-view v-slot="{ Component, route: viewRoute }">
-        <Transition name="fade" mode="out-in" appear @before-enter="handleMainContentBeforeEnter">
-          <component :is="Component" :key="viewRoute.path" />
+        <Transition name="fade" mode="out-in" appear>
+          <component :is="Component" :key="isTaskPage ? viewRoute.path : 'preferences'" />
         </Transition>
       </router-view>
     </main>
@@ -785,21 +795,24 @@ onUnmounted(() => {
       @close="showExitDialog = true"
       @maximize-toggled="onMaximizeToggled"
     />
-    <Speedometer />
-    <Transition name="bottom-accessory">
-      <div v-if="showTaskPaginationControl" class="task-pagination-control">
-        <NPagination
-          :page="taskPaginationPage"
-          :page-size="taskPaginationPageSize"
-          :page-count="taskPaginationPageCount"
-          :page-sizes="taskPaginationPageSizes"
-          size="small"
-          show-size-picker
-          @update:page="taskStore.setCurrentTaskPage"
-          @update:page-size="taskStore.setTaskPageSize"
-        />
-      </div>
-    </Transition>
+    <footer class="content-footer">
+      <Transition name="bottom-accessory">
+        <div v-if="isTaskPage" class="task-pagination-control">
+          <NPagination
+            :page="taskPaginationPage"
+            :page-size="taskPaginationPageSize"
+            :page-count="taskPaginationPageCount"
+            :page-sizes="taskPaginationPageSizes"
+            size="small"
+            :page-slot="compactNavigation ? 3 : 7"
+            :show-size-picker="!compactNavigation"
+            @update:page="taskStore.setCurrentTaskPage"
+            @update:page-size="taskStore.setTaskPageSize"
+          />
+        </div>
+      </Transition>
+      <Speedometer />
+    </footer>
     <AboutPanel :show="showAbout" @close="showAbout = false" />
     <AddTask
       :show="appStore.addTaskVisible"
@@ -815,6 +828,7 @@ onUnmounted(() => {
         taskStore.taskDetailVisible ||
         taskStore.taskDetailClosing ||
         showAbout ||
+        sidebarOpen ||
         showExitDialog ||
         engineStore.isBusy
       "
@@ -883,42 +897,114 @@ onUnmounted(() => {
 
 <style scoped>
 #container {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  grid-template-rows: 32px 56px minmax(0, 1fr) auto;
   height: 100vh;
   position: relative;
   overflow: hidden;
+  background: var(--main-bg);
 }
-.subnav-slot {
-  width: var(--subnav-width);
-  flex-shrink: 0;
-  background-color: var(--subnav-bg);
-  transition: width 0.25s cubic-bezier(0.2, 0, 0, 1);
+.window-chrome {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  background: linear-gradient(to right, var(--sidebar-bg) var(--sidebar-width), var(--main-bg) var(--sidebar-width));
 }
-.content {
+.sidebar-heading {
+  grid-column: 1;
+  grid-row: 2;
+  padding-inline: 24px;
+  background: var(--sidebar-bg);
+}
+.sidebar-heading,
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--panel-border);
+  min-width: 0;
+}
+.sidebar-heading h2,
+.page-header h1 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+}
+.sidebar-heading h2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebar-slot {
+  grid-column: 1;
+  grid-row: 3 / 5;
+  min-height: 0;
+}
+.page-header {
+  grid-column: 2;
+  grid-row: 2;
+  padding-inline: var(--content-gutter);
+}
+.page-header h1 {
   flex: 1;
   min-width: 0;
-  overflow-y: auto;
-  background-color: var(--main-bg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.page-header :deep(.task-actions) {
+  flex-shrink: 0;
+}
+.content {
+  grid-column: 2;
+  grid-row: 3;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.content-footer {
+  flex-wrap: wrap;
+  grid-column: 2;
+  grid-row: 4;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px var(--content-gutter) 12px;
+}
+.content-footer :deep(.speedometer) {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 .window-controls {
   z-index: 100;
 }
 .task-pagination-control {
-  position: fixed;
-  left: calc(var(--aside-width) + var(--subnav-width) + 36px);
-  bottom: 16px;
-  z-index: 20;
-  min-height: 36px;
+  flex: 0 0 auto;
+  max-width: 100%;
+  overflow-x: auto;
+  min-width: 0;
   padding: 3px 6px;
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
   border: 1px solid var(--m3-outline-variant);
   border-radius: 12px;
   background: var(--m3-surface-container);
-  max-width: calc(100vw - var(--aside-width) - var(--subnav-width) - 280px);
-  overflow: hidden;
 }
+.page-title-enter-active,
+.page-title-leave-active {
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+.page-title-enter-from {
+  opacity: 0;
+  transform: translateY(3px);
+}
+.page-title-leave-to {
+  opacity: 0;
+  transform: translateY(-3px);
+}
+
 .bottom-accessory-enter-active {
   transition:
     opacity 0.18s cubic-bezier(0.2, 0, 0, 1),
@@ -980,23 +1066,18 @@ onUnmounted(() => {
   }
 }
 
-@media (max-width: 799px) {
-  .subnav-slot {
-    width: var(--subnav-width-compact);
+@media (max-width: 699px) {
+  #container {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .task-pagination-control {
-    left: calc(var(--aside-width) + var(--subnav-width-compact) + 36px);
-    max-width: calc(100vw - var(--aside-width) - var(--subnav-width-compact) - 280px);
+  .window-chrome {
+    background: var(--main-bg);
   }
-}
-
-@media (max-width: 600px) {
-  .subnav-slot {
-    display: none;
-  }
-  .task-pagination-control {
-    left: calc(var(--aside-width) + 24px);
-    max-width: calc(100vw - var(--aside-width) - 268px);
+  .page-header,
+  .content,
+  .content-footer {
+    flex-wrap: wrap;
+    grid-column: 1;
   }
 }
 

@@ -294,7 +294,7 @@ function handleCardBeforeLeave(element: Element) {
 <style scoped>
 .task-list {
   --task-list-bottom-safety: 54px;
-  padding: 16px 36px 16px;
+  padding: 16px var(--content-gutter);
   min-height: 100%;
   box-sizing: border-box;
   display: flex;

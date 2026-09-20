@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "المهام",
-    "add-task": "إضافة مهمة",
     "about": "حول Rayburst",
     "preferences": "التفضيلات...",
     "check-updates-now": "تحقق الآن",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "بالنسبة إلى مجلد التنزيل الافتراضي",
     "file-category-fixed-directory": "مجلد ثابت"
   },
-  "subnav": {
-    "task-list": "المهام",
-    "preferences": "التفضيلات"
-  },
   "task": {
     "scope-all": "الكل",
     "scope-progress": "قيد التنفيذ",
@@ -889,7 +884,8 @@
     "favorite-folders": "المجلدات المفضلة",
     "recent-folders": "المجلدات الأخيرة",
     "dir-no-saved": "لا توجد مجلدات محفوظة",
-    "create": "إنشاء"
+    "create": "إنشاء",
+    "more-actions": "المزيد من الإجراءات"
   },
   "media": {
     "probing": "جارٍ فحص الوسائط",

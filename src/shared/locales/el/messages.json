@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Εργασίες",
-    "add-task": "Προσθήκη εργασίας",
     "about": "Σχετικά με το Rayburst",
     "preferences": "Προτιμήσεις...",
     "check-updates-now": "Έλεγχος τώρα",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Σχετικά με τον προεπιλεγμένο φάκελο",
     "file-category-fixed-directory": "Σταθερός φάκελος"
   },
-  "subnav": {
-    "task-list": "Εργασίες",
-    "preferences": "Προτιμήσεις"
-  },
   "task": {
     "scope-all": "Όλα",
     "scope-progress": "Σε εξέλιξη",
@@ -889,7 +884,8 @@
     "favorite-folders": "Αγαπημένοι φάκελοι",
     "recent-folders": "Πρόσφατοι φάκελοι",
     "dir-no-saved": "Δεν υπάρχουν αποθηκευμένοι φάκελοι",
-    "create": "Δημιουργία"
+    "create": "Δημιουργία",
+    "more-actions": "Περισσότερες ενέργειες"
   },
   "media": {
     "probing": "Ανάλυση πολυμέσων",

@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Tareas",
-    "add-task": "Agregar tarea",
     "about": "Acerca de Rayburst",
     "preferences": "Preferencias...",
     "check-updates-now": "Comprobar ahora",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Relativa a la carpeta predeterminada",
     "file-category-fixed-directory": "Carpeta fija"
   },
-  "subnav": {
-    "task-list": "Tareas",
-    "preferences": "Preferencias"
-  },
   "task": {
     "scope-all": "Todas",
     "scope-progress": "En curso",
@@ -889,7 +884,8 @@
     "favorite-folders": "Carpetas favoritas",
     "recent-folders": "Carpetas recientes",
     "dir-no-saved": "No hay carpetas guardadas",
-    "create": "Crear"
+    "create": "Crear",
+    "more-actions": "Más acciones"
   },
   "media": {
     "probing": "Analizando el contenido",

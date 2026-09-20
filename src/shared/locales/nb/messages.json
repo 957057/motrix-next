@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Oppgaver",
-    "add-task": "Legg til oppgave",
     "about": "Om Rayburst",
     "preferences": "Innstillinger...",
     "check-updates-now": "Sjekk nå",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Relativt til standardmappen",
     "file-category-fixed-directory": "Fast mappe"
   },
-  "subnav": {
-    "task-list": "Oppgaver",
-    "preferences": "Innstillinger"
-  },
   "task": {
     "scope-all": "Alle",
     "scope-progress": "Pågår",
@@ -889,7 +884,8 @@
     "favorite-folders": "Favorittmapper",
     "recent-folders": "Nylige mapper",
     "dir-no-saved": "Ingen lagrede mapper",
-    "create": "Opprett"
+    "create": "Opprett",
+    "more-actions": "Flere handlinger"
   },
   "media": {
     "probing": "Undersøker medier",

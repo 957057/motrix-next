@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "कार्य",
-    "add-task": "कार्य जोड़ें",
     "about": "Rayburst के बारे में",
     "preferences": "प्राथमिकताएं...",
     "check-updates-now": "अभी जांचें",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "डिफ़ॉल्ट फ़ोल्डर के सापेक्ष",
     "file-category-fixed-directory": "निश्चित फ़ोल्डर"
   },
-  "subnav": {
-    "task-list": "कार्य",
-    "preferences": "प्राथमिकताएं"
-  },
   "task": {
     "scope-all": "सभी",
     "scope-progress": "प्रगति में",
@@ -889,7 +884,8 @@
     "favorite-folders": "Favorites",
     "recent-folders": "Recent",
     "dir-no-saved": "कोई सहेजा गया फ़ोल्डर नहीं",
-    "create": "बनाएँ"
+    "create": "बनाएँ",
+    "more-actions": "और कार्रवाइयाँ"
   },
   "media": {
     "probing": "मीडिया की जाँच जारी",

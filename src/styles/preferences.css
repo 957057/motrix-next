@@ -21,7 +21,7 @@
   max-width: none;
   box-sizing: border-box;
   flex: none;
-  padding: 16px 30px 64px 36px;
+  padding: 16px var(--content-gutter);
 }
 
 .form-preference .n-form-item {

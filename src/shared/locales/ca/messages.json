@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Tasques",
-    "add-task": "Afegir tasca",
     "about": "Quant a Rayburst",
     "preferences": "Preferències...",
     "check-updates-now": "Comprova ara",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Relatiu a la carpeta per defecte",
     "file-category-fixed-directory": "Carpeta fixa"
   },
-  "subnav": {
-    "task-list": "Tasques",
-    "preferences": "Preferències"
-  },
   "task": {
     "scope-all": "Totes",
     "scope-progress": "En curs",
@@ -889,7 +884,8 @@
     "favorite-folders": "Carpetes preferides",
     "recent-folders": "Carpetes recents",
     "dir-no-saved": "No hi ha carpetes desades",
-    "create": "Crea"
+    "create": "Crea",
+    "more-actions": "Més accions"
   },
   "media": {
     "probing": "Analitzant el contingut",

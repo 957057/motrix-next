@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Aufgaben",
-    "add-task": "Aufgabe hinzufügen",
     "about": "Über Rayburst",
     "preferences": "Einstellungen...",
     "check-updates-now": "Jetzt prüfen",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Relativ zum Standardordner",
     "file-category-fixed-directory": "Fester Ordner"
   },
-  "subnav": {
-    "task-list": "Aufgaben",
-    "preferences": "Einstellungen"
-  },
   "task": {
     "scope-all": "Alle",
     "scope-progress": "In Bearbeitung",
@@ -889,7 +884,8 @@
     "favorite-folders": "Favorisierte Ordner",
     "recent-folders": "Zuletzt verwendete Ordner",
     "dir-no-saved": "Keine gespeicherten Ordner",
-    "create": "Erstellen"
+    "create": "Erstellen",
+    "more-actions": "Weitere Aktionen"
   },
   "media": {
     "probing": "Medium wird untersucht",

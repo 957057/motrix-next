@@ -16,7 +16,7 @@ defineProps<{ show: boolean }>()
   --empty-brand-leave-duration: 160ms;
   --empty-brand-easing: cubic-bezier(0.2, 0, 0, 1);
   position: absolute;
-  inset: 16px 36px 70px;
+  inset: 16px var(--content-gutter);
   display: grid;
   place-items: center;
   container-type: size;

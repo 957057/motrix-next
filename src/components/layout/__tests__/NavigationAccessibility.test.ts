@@ -1,118 +1,100 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { reactive } from 'vue'
+import { createMemoryHistory, createRouter } from 'vue-router'
+import AppSidebar from '../AppSidebar.vue'
+import PreferenceView from '@/views/PreferenceView.vue'
 
-const pushMock = vi.fn(() => Promise.resolve())
-const showAddTaskDialogMock = vi.fn()
-const routeState = reactive({
-  path: '/task/progress',
-})
-
-vi.mock('vue-i18n', () => ({
-  useI18n: () => ({
-    t: (key: string) => key,
-  }),
+const preferences = reactive({ config: { sidebarTaskCounts: true } })
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (key: string) => key }) }))
+vi.mock('@/stores/task', () => ({
+  useTaskStore: () => ({ taskCounts: { all: 8, progress: 3, failed: 1, completed: 4 } }),
 }))
-
-vi.mock('vue-router', () => ({
-  useRouter: () => ({
-    push: pushMock,
-  }),
-  useRoute: () => routeState,
+vi.mock('@/stores/preference', () => ({ usePreferenceStore: () => preferences }))
+vi.mock('../SidebarCount.vue', () => ({
+  default: { props: ['value'], template: '<span class="count">{{ value }}</span>' },
 }))
-
 vi.mock('naive-ui', () => ({
   NIcon: { template: '<span><slot /></span>' },
+  NTabs: { name: 'NTabs', props: ['value'], emits: ['update:value'], template: '<div><slot /></div>' },
+  NTab: { props: ['name'], template: '<span><slot /></span>' },
 }))
 
-vi.mock('@/stores/app', () => ({
-  useAppStore: () => ({
-    showAddTaskDialog: showAddTaskDialogMock,
-    stat: {
-      numActive: 2,
-      numWaiting: 1,
-    },
-  }),
-}))
+async function setup(path: string) {
+  const page = { template: '<div />' }
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/task/:status', name: 'task', component: page },
+      {
+        path: '/preference',
+        name: 'preference',
+        component: PreferenceView,
+        children: [
+          { path: 'general', name: 'preference-general', component: page },
+          { path: 'network', name: 'preference-network', component: page },
+        ],
+      },
+    ],
+  })
+  await router.push(path)
+  await router.isReady()
+  return router
+}
 
-vi.mock('@/stores/task', () => ({
-  useTaskStore: () => ({
-    taskCounts: { all: 8, progress: 3, failed: 1, completed: 4 },
-  }),
-}))
+beforeEach(() => {
+  preferences.config.sidebarTaskCounts = true
+})
 
-vi.mock('@/stores/preference', () => ({
-  usePreferenceStore: () => ({
-    config: {
-      sidebarTaskCounts: true,
-    },
-  }),
-}))
-
-vi.mock('@/components/common/MTooltip.vue', () => ({
-  default: {
-    template: '<div><slot name="trigger" /><slot /></div>',
-  },
-}))
-
-vi.mock('@vicons/ionicons5', () => ({
-  ListOutline: { template: '<i />' },
-  AddOutline: { template: '<i />' },
-  SettingsOutline: { template: '<i />' },
-  HelpCircleOutline: { template: '<i />' },
-  PlayOutline: { template: '<i />' },
-  AlertCircleOutline: { template: '<i />' },
-  CheckmarkDoneOutline: { template: '<i />' },
-  ConstructOutline: { template: '<i />' },
-  DownloadOutline: { template: '<i />' },
-  MagnetOutline: { template: '<i />' },
-  GitNetworkOutline: { template: '<i />' },
-  GlobeOutline: { template: '<i />' },
-}))
-
-import AsideBar from '../AsideBar.vue'
-import TaskSubnav from '../TaskSubnav.vue'
-import PreferenceSubnav from '../PreferenceSubnav.vue'
-
-describe('keyboard-accessible navigation', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    routeState.path = '/task/progress'
+describe('unified navigation', () => {
+  it('uses links with the current task scope and optional counts', async () => {
+    const router = await setup('/task/progress')
+    const wrapper = mount(AppSidebar, { global: { plugins: [router] } })
+    expect(wrapper.get('a[aria-current="page"]').attributes('href')).toBe('/task/progress')
+    expect(wrapper.findAll('.count').map((count) => count.text())).toEqual(['8', '3', '1', '4'])
+    await wrapper.get('a[href="/task/failed"]').trigger('click')
+    await flushPromises()
+    expect(router.currentRoute.value.params.status).toBe('failed')
+    preferences.config.sidebarTaskCounts = false
+    await flushPromises()
+    expect(wrapper.findAll('.count')).toHaveLength(0)
+    wrapper.unmount()
   })
 
-  it('renders AsideBar actions as keyboard-focusable buttons', async () => {
-    const wrapper = mount(AsideBar)
-    const buttons = wrapper.findAll('button')
-
-    expect(buttons).toHaveLength(4)
-
-    await buttons[0].trigger('click')
-    expect(pushMock).toHaveBeenCalledWith({ path: '/task/all' })
-
-    await buttons[1].trigger('click')
-    expect(showAddTaskDialogMock).toHaveBeenCalledTimes(1)
+  it('keeps settings selected throughout its child routes and opens About', async () => {
+    const router = await setup('/preference/network')
+    const wrapper = mount(AppSidebar, { global: { plugins: [router] } })
+    expect(wrapper.get('a.active').text()).toBe('app.preferences')
+    expect(wrapper.get('a.active').attributes('aria-current')).toBe('page')
+    await wrapper.get('button').trigger('click')
+    expect(wrapper.emitted('show-about')).toHaveLength(1)
+    wrapper.unmount()
   })
 
-  it('renders TaskSubnav routes as buttons and marks the active route', async () => {
-    const wrapper = mount(TaskSubnav)
-    const buttons = wrapper.findAll('button')
-
-    expect(buttons).toHaveLength(4)
-    expect(buttons[1].attributes('aria-current')).toBe('page')
-
-    await buttons[2].trigger('click')
-    expect(pushMock).toHaveBeenCalledWith({ path: '/task/failed' })
+  it('respects a cancelled route leave when returning to tasks', async () => {
+    const router = await setup('/preference/network')
+    router.beforeEach(() => false)
+    const wrapper = mount(AppSidebar, { global: { plugins: [router] } })
+    await wrapper.get('a[href="/task/all"]').trigger('click')
+    await flushPromises()
+    expect(router.currentRoute.value.name).toBe('preference-network')
+    expect(wrapper.get('a.active').text()).toBe('app.preferences')
+    wrapper.unmount()
   })
 
-  it('renders PreferenceSubnav routes as buttons and marks the active route', async () => {
-    routeState.path = '/preference/general'
-    const wrapper = mount(PreferenceSubnav)
-    const buttons = wrapper.findAll('button')
-
-    expect(buttons).toHaveLength(6)
-    expect(buttons[0].attributes('aria-current')).toBe('page')
-
-    await buttons[5].trigger('click')
-    expect(pushMock).toHaveBeenCalledWith({ path: '/preference/advanced' })
+  it('changes the selected settings tab only after navigation succeeds', async () => {
+    const router = await setup('/preference/general')
+    let allowNavigation = false
+    router.beforeEach(() => allowNavigation)
+    const wrapper = mount(PreferenceView, { global: { plugins: [router] } })
+    const tabs = wrapper.getComponent({ name: 'NTabs' })
+    tabs.vm.$emit('update:value', 'preference-network')
+    await flushPromises()
+    expect(tabs.props('value')).toBe('preference-general')
+    allowNavigation = true
+    tabs.vm.$emit('update:value', 'preference-network')
+    await flushPromises()
+    expect(tabs.props('value')).toBe('preference-network')
+    wrapper.unmount()
   })
 })

@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Задачи",
-    "add-task": "Добави задача",
     "about": "За Rayburst",
     "preferences": "Настройки...",
     "check-updates-now": "Провери сега",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Спрямо папката по подразбиране",
     "file-category-fixed-directory": "Фиксирана папка"
   },
-  "subnav": {
-    "task-list": "Задачи",
-    "preferences": "Настройки"
-  },
   "task": {
     "scope-all": "Всички",
     "scope-progress": "В процес",
@@ -889,7 +884,8 @@
     "favorite-folders": "Любими папки",
     "recent-folders": "Скорошни папки",
     "dir-no-saved": "Няма запазени папки",
-    "create": "Създаване"
+    "create": "Създаване",
+    "more-actions": "Още действия"
   },
   "media": {
     "probing": "Анализ на медията",

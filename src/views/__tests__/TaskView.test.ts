@@ -79,10 +79,6 @@ vi.mock('@/components/task/TaskList.vue', () => ({
   default: { template: '<div class="task-list-stub" />' },
 }))
 
-vi.mock('@/components/task/TaskActions.vue', () => ({
-  default: { template: '<div class="task-actions-stub" />' },
-}))
-
 vi.mock('@/components/task/TaskDetail.vue', () => ({
   default: { template: '<div class="task-detail-stub" />' },
 }))

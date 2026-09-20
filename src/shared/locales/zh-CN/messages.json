@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "任务列表",
-    "add-task": "新建任务",
     "about": "关于 Rayburst",
     "preferences": "偏好设置...",
     "check-updates-now": "立即检查",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "相对于默认文件夹",
     "file-category-fixed-directory": "固定文件夹"
   },
-  "subnav": {
-    "task-list": "任务列表",
-    "preferences": "偏好设置"
-  },
   "task": {
     "scope-all": "全部",
     "scope-progress": "进行中",
@@ -889,7 +884,8 @@
     "favorite-folders": "收藏夹",
     "recent-folders": "最近使用",
     "dir-no-saved": "没有已保存目录",
-    "create": "新建"
+    "create": "新建",
+    "more-actions": "更多操作"
   },
   "media": {
     "probing": "正在探测媒体",

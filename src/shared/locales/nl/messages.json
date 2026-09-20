@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "Taken",
-    "add-task": "Taak toevoegen",
     "about": "Over Rayburst",
     "preferences": "Instellingen...",
     "check-updates-now": "Nu controleren",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "Relatief aan de standaardmap",
     "file-category-fixed-directory": "Vaste map"
   },
-  "subnav": {
-    "task-list": "Taken",
-    "preferences": "Instellingen"
-  },
   "task": {
     "scope-all": "Alle",
     "scope-progress": "Bezig",
@@ -889,7 +884,8 @@
     "favorite-folders": "Favorietemappen",
     "recent-folders": "Recente mappen",
     "dir-no-saved": "Geen opgeslagen mappen",
-    "create": "Aanmaken"
+    "create": "Aanmaken",
+    "more-actions": "Meer acties"
   },
   "media": {
     "probing": "Media onderzoeken",

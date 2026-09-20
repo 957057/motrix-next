@@ -16,7 +16,6 @@
   },
   "app": {
     "task-list": "작업 목록",
-    "add-task": "작업 추가",
     "about": "Rayburst 정보",
     "preferences": "환경설정...",
     "check-updates-now": "지금 확인",
@@ -587,10 +586,6 @@
     "file-category-relative-directory": "기본 폴더 기준 상대 경로",
     "file-category-fixed-directory": "고정 폴더"
   },
-  "subnav": {
-    "task-list": "작업 목록",
-    "preferences": "환경설정"
-  },
   "task": {
     "scope-all": "전체",
     "scope-progress": "진행 중",
@@ -889,7 +884,8 @@
     "favorite-folders": "즐겨찾기 폴더",
     "recent-folders": "최근 폴더",
     "dir-no-saved": "저장된 폴더 없음",
-    "create": "만들기"
+    "create": "만들기",
+    "more-actions": "추가 작업"
   },
   "media": {
     "probing": "미디어 분석 중",
