@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, ref, watch, type ComputedRef } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import { TASK_STATUS } from '@shared/constants'
 import { logger } from '@shared/logger'
-import { resolveTaskFilePath, recheckTrigger } from '@/composables/useArchivedPaths'
+import { resolveTaskFilePath, recheckTrigger } from '@/composables/useTaskPaths'
 import type { Aria2Task } from '@shared/types'
 
 const FILE_CHECK_THROTTLE_MS = 120

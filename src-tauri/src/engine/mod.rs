@@ -13,7 +13,7 @@ mod log_level;
 mod state;
 pub mod supervisor;
 #[cfg(windows)]
-mod windows_process;
+pub(crate) mod windows_process;
 
 pub(crate) use cleanup::clear_engine_runtime_state;
 pub(crate) use config::{non_hot_reloadable_keys, runtime_config_path, supported_engine_keys};

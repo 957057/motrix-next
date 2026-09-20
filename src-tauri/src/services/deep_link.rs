@@ -1,5 +1,4 @@
 use std::sync::Mutex;
-use std::time::Duration;
 
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -136,7 +135,7 @@ fn route_external_inputs_with_intent(
 
     let frontend_ready = is_frontend_ready(app);
     if window_was_alive && frontend_ready {
-        wake_main_window(app, source, silent);
+        crate::tray::request_main_window(app, source, !silent);
         let payload = PendingDeepLinksPayload {
             urls: urls.clone(),
             silent,
@@ -150,7 +149,7 @@ fn route_external_inputs_with_intent(
     }
 
     queue_pending_deep_links(app, &urls, source, silent);
-    schedule_main_window_wake(app, source, silent);
+    crate::tray::request_main_window(app, source, !silent);
 }
 
 fn queue_pending_deep_links(app: &AppHandle, urls: &[String], source: &'static str, silent: bool) {
@@ -205,33 +204,6 @@ fn is_frontend_ready(app: &AppHandle) -> bool {
     app.try_state::<PendingDeepLinkState>()
         .map(|state| state.frontend_ready())
         .unwrap_or(false)
-}
-
-fn schedule_main_window_wake(app: &AppHandle, source: &'static str, silent: bool) {
-    let app_for_task = app.clone();
-    tauri::async_runtime::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(50)).await;
-        let app_for_main = app_for_task.clone();
-        if let Err(e) = app_for_task.run_on_main_thread(move || {
-            wake_main_window(&app_for_main, source, silent);
-        }) {
-            log::error!("deep_link:wake-schedule-failed source={source} error={e}");
-        }
-    });
-}
-
-fn wake_main_window(app: &AppHandle, source: &'static str, silent: bool) {
-    log::debug!("deep_link:wake-start source={source} silent={silent}");
-    let outcome = if silent {
-        crate::tray::ensure_main_window(app, source)
-    } else {
-        crate::tray::activate_main_window(app, source)
-    };
-    if outcome == crate::tray::WindowActivationOutcome::Activated {
-        log::debug!("deep_link:wake-done source={source} silent={silent}");
-    } else {
-        log::error!("deep_link:wake-failed source={source}");
-    }
 }
 
 #[cfg(test)]

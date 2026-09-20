@@ -1,6 +1,7 @@
 /** @fileoverview Current AppConfig defaults and validation. */
 import {
   DEFAULT_APP_CONFIG,
+  buildDefaultCategories,
   FILE_ALLOCATION_OPTIONS,
   APP_LOG_LEVELS,
   ARIA2_LOG_LEVELS,
@@ -328,11 +329,13 @@ function normalizeFileCategories(config: AppConfig, repairs: string[]): void {
           return (
             typeof category.label === 'string' &&
             Array.isArray(category.extensions) &&
-            typeof category.directory === 'string'
+            typeof category.directory === 'string' &&
+            (category.directoryMode === 'relative' || category.directoryMode === 'absolute')
           )
         })
         .map(normalizeFileCategory)
     : []
+  if (before !== '[]' && config.fileCategories.length === 0) config.fileCategories = buildDefaultCategories()
   if (JSON.stringify(config.fileCategories) !== before) repairs.push('fileCategories')
 }
 

@@ -5,6 +5,7 @@ import { mount } from '@vue/test-utils'
 const listenMock = vi.fn()
 const invokeMock = vi.fn()
 const routerBeforeEachMock = vi.fn()
+const routerPushMock = vi.fn().mockResolvedValue(undefined)
 const dragDropListenerMock = vi.fn()
 const openDialogMock = vi.fn()
 const openUrlMock = vi.fn()
@@ -49,7 +50,7 @@ vi.mock('@tauri-apps/plugin-opener', () => ({
 vi.mock('vue-router', () => ({
   useRouter: () => ({
     beforeEach: (...args: unknown[]) => routerBeforeEachMock(...args),
-    push: vi.fn().mockResolvedValue(undefined),
+    push: (...args: unknown[]) => routerPushMock(...args),
   }),
   useRoute: () => ({
     path: '/task/all',
@@ -382,6 +383,19 @@ describe('useAppEvents', () => {
     })
 
     expect(message.warning).toHaveBeenCalledWith('preferences.port-auto-switch-disabled')
+  })
+
+  it('opens Downloads for a submitted native task after WebView recreation', async () => {
+    invokeMock.mockImplementation(async (command: string) => {
+      return command === 'take_pending_frontend_actions'
+        ? [{ channel: 'tray-menu-action', action: 'show-downloads' }]
+        : []
+    })
+    const { deps, appStore } = createDeps()
+    const { setupListeners } = mountComposable(deps)
+    await setupListeners()
+    expect(routerPushMock).toHaveBeenCalledWith('/task/all')
+    expect(appStore.showAddTaskDialog).not.toHaveBeenCalled()
   })
 
   it('opens the add-task dialog from a pending tray action after listeners are ready', async () => {

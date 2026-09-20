@@ -112,6 +112,29 @@ describe('TaskStore', () => {
   })
 
   // ─── fetchList ──────────────────────────────────────────
+  it('reuses terminal history during idle refreshes and reloads it after invalidation', async () => {
+    store.currentList = 'all'
+    mockApi.fetchTaskList.mockResolvedValue([])
+    const saved: HistoryRecord = {
+      gid: 'saved',
+      name: 'saved.zip',
+      status: 'complete',
+      added_at: '2026-09-01T00:00:00Z',
+      completed_at: '2026-09-01T01:00:00Z',
+    }
+    mockHistoryFns.getRecords.mockResolvedValue([saved])
+    await store.fetchList()
+    await vi.waitFor(() => expect(store.taskList.map((task) => task.gid)).toEqual(['saved']))
+    for (let tick = 0; tick < 10; tick += 1) await store.fetchList(false)
+    expect(mockHistoryFns.getRecords).toHaveBeenCalledTimes(1)
+    expect(store.taskList.map((task) => task.gid)).toEqual(['saved'])
+
+    mockHistoryFns.getRecords.mockResolvedValue([])
+    await store.fetchList()
+    await vi.waitFor(() => expect(store.taskList).toEqual([]))
+    expect(mockHistoryFns.getRecords).toHaveBeenCalledTimes(2)
+  })
+
   it('keeps live progress updating while history is unavailable', async () => {
     mockHistoryFns.getRecords.mockImplementationOnce(() => new Promise(() => {}))
     mockApi.fetchTaskList.mockResolvedValueOnce([makeMockTask('live', 'active', { completedLength: '750' })])
@@ -521,7 +544,7 @@ describe('TaskStore', () => {
       options: { dir: '/dl' },
       fileCategory: {
         enabled: true,
-        categories: [{ label: 'Videos', extensions: ['mkv'], directory: '/dl/Videos' }],
+        categories: [{ label: 'Videos', extensions: ['mkv'], directory: '/dl/Videos', directoryMode: 'absolute' }],
       },
     })
 

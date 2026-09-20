@@ -4,7 +4,6 @@ import { invoke } from '@tauri-apps/api/core'
 import { useDatabaseStore } from '@/stores/database'
 import type { HistoryRecord } from '@shared/types'
 
-export type HistoryRecordSortField = 'name' | 'status' | 'total_length' | 'task_type' | 'completed_at'
 export type HistoryRecordSortOrder = 'ascend' | 'descend' | false
 
 export interface HistoryRecordsPageInput {
@@ -29,7 +28,7 @@ export const useHistoryStore = defineStore('history', () => {
   return {
     init: database.init,
     addRecord: (record: HistoryRecord) => call<void>('history_add_record', { record }),
-    getRecords: (status?: string, limit?: number) => call<HistoryRecord[]>('history_get_records', { status, limit }),
+    getRecords: (status?: string) => call<HistoryRecord[]>('history_get_records', { status }),
     getRecordsPage: (input: HistoryRecordsPageInput) =>
       call<HistoryRecordsPage>('history_get_page', {
         input: { ...input, sortOrder: input.sortOrder || null },

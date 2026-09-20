@@ -223,7 +223,7 @@
     "proxy": "Прокси",
     "proxy-bypass": "Исключения прокси",
     "proxy-scope": "Область прокси",
-    "proxy-bypass-input-tips": "Обходить прокси для этих хостов, один на строку",
+    "proxy-bypass-input-tips": "Один хост, домен, IP или CIDR на строку; * исключает все хосты\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Загрузки",
     "proxy-scope-update-app": "Обновления приложения",
     "proxy-scope-update-trackers": "Обновление сетевых данных",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "Не удалось назначить обработчик {protocol}: {reason}",
     "protocol-unregister-failed": "Не удалось удалить привязку {protocol}: {reason}",
     "protocol-unchanged": "Привязка {protocol} не изменена",
-    "protocol-manual-required": "Система не позволяет Rayburst удалить привязку, выберите другое приложение по умолчанию",
+    "protocol-manual-required": "Выберите приложение по умолчанию для этого протокола в настройках системы",
     "protocol-query-failed": "Не удалось проверить привязку {protocol}. Повторите попытку",
     "copied-to-clipboard": "{label} скопировано",
     "color-scheme": "Цветовая схема",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Пользовательский цвет",
     "color-scheme-switched": "Переключено на цветовую схему {name}",
     "default-programs": "Программы по умолчанию",
-    "protocol-rayburst": "Расширения браузера [ rayburst:// ]",
     "detect-system-proxy": "Обнаружить системный прокси",
     "proxy-detected-success": "Прокси обнаружен из настроек системы",
     "proxy-system-not-detected": "Системный прокси не обнаружен",
@@ -584,7 +583,9 @@
     "media-downloads": "Загрузка медиа",
     "media-select-before-download": "Выбирать содержимое перед загрузкой",
     "media-default-format": "Формат по умолчанию",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Относительно папки по умолчанию",
+    "file-category-fixed-directory": "Фиксированная папка"
   },
   "subnav": {
     "task-list": "Задачи",

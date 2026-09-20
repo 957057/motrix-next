@@ -378,8 +378,9 @@ export interface FileCategory {
   urlPatterns?: string[]
   /** Matching mode for urlPatterns. */
   urlPatternMode?: FileCategoryUrlPatternMode
-  /** Absolute directory path where matching files are saved. */
+  /** Relative to the default directory, or an explicitly fixed absolute path. */
   directory: string
+  directoryMode: 'relative' | 'absolute'
   /** Whether this is a built-in category (cannot be deleted, label resolved via i18n). */
   builtIn?: boolean
 }

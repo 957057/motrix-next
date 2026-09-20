@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Proxy-Ausnahmen",
     "proxy-scope": "Proxy-Bereich",
-    "proxy-bypass-input-tips": "Proxy für diese Hosts umgehen, einer pro Zeile",
+    "proxy-bypass-input-tips": "Ein Host, eine Domain, IP oder CIDR pro Zeile; * umgeht alle Hosts\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Downloads",
     "proxy-scope-update-app": "App-Updates",
     "proxy-scope-update-trackers": "Netzwerkdaten-Updates",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "{protocol}-Zuordnung fehlgeschlagen: {reason}",
     "protocol-unregister-failed": "{protocol}-Zuordnung konnte nicht aufgehoben werden: {reason}",
     "protocol-unchanged": "{protocol}-Zuordnung wurde nicht geändert",
-    "protocol-manual-required": "Das System erlaubt Rayburst nicht, die Zuordnung aufzuheben; legen Sie eine andere Standard-App fest",
+    "protocol-manual-required": "Wählen Sie die Standardanwendung für dieses Protokoll in den Systemeinstellungen",
     "protocol-query-failed": "{protocol}-Zuordnung konnte nicht geprüft werden. Bitte erneut versuchen",
     "copied-to-clipboard": "{label} kopiert",
     "color-scheme": "Farbschema",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Benutzerdefinierte Farbe",
     "color-scheme-switched": "Zu Farbschema {name} gewechselt",
     "default-programs": "Standardprogramme",
-    "protocol-rayburst": "Browser-Erweiterungen [ rayburst:// ]",
     "detect-system-proxy": "Systemproxy erkennen",
     "proxy-detected-success": "Proxy aus Systemeinstellungen erkannt",
     "proxy-system-not-detected": "Kein System-Proxy erkannt",
@@ -584,7 +583,9 @@
     "media-downloads": "Mediendownloads",
     "media-select-before-download": "Inhalt vor dem Download auswählen",
     "media-default-format": "Standardformat",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Relativ zum Standardordner",
+    "file-category-fixed-directory": "Fester Ordner"
   },
   "subnav": {
     "task-list": "Aufgaben",

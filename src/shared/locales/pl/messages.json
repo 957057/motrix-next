@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Wyjątki proxy",
     "proxy-scope": "Zakres proxy",
-    "proxy-bypass-input-tips": "Pomiń proxy dla tych hostów, jeden na linię",
+    "proxy-bypass-input-tips": "Jeden host, domena, IP lub CIDR na wiersz; * pomija proxy dla wszystkich hostów\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Pobieranie",
     "proxy-scope-update-app": "Aktualizacje aplikacji",
     "proxy-scope-update-trackers": "Aktualizacje danych sieciowych",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "Nie udało się ustawić obsługi {protocol}: {reason}",
     "protocol-unregister-failed": "Nie udało się usunąć skojarzenia {protocol}: {reason}",
     "protocol-unchanged": "Skojarzenie {protocol} nie zostało zmienione",
-    "protocol-manual-required": "System nie pozwala Rayburst usunąć skojarzenia, ustaw inną aplikację domyślną",
+    "protocol-manual-required": "Wybierz domyślną aplikację dla tego protokołu w ustawieniach systemu",
     "protocol-query-failed": "Nie można sprawdzić skojarzenia {protocol}. Spróbuj ponownie",
     "copied-to-clipboard": "{label} skopiowano",
     "color-scheme": "Schemat kolorów",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Kolor niestandardowy",
     "color-scheme-switched": "Przełączono na schemat kolorów {name}",
     "default-programs": "Programy domyślne",
-    "protocol-rayburst": "Rozszerzenia przeglądarki [ rayburst:// ]",
     "detect-system-proxy": "Wykryj proxy systemu",
     "proxy-detected-success": "Proxy wykryto z ustawień systemowych",
     "proxy-system-not-detected": "Nie wykryto systemowego proxy",
@@ -584,7 +583,9 @@
     "media-downloads": "Pobieranie multimediów",
     "media-select-before-download": "Wybierz zawartość przed pobraniem",
     "media-default-format": "Domyślny format",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Względem folderu domyślnego",
+    "file-category-fixed-directory": "Stały folder"
   },
   "subnav": {
     "task-list": "Zadania",

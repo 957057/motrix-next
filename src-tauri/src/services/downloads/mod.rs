@@ -1,4 +1,5 @@
 //! Download intent, submission receipts and native task creation.
+pub mod category;
 pub mod contracts;
 mod native;
 mod preferences;
@@ -73,7 +74,16 @@ pub async fn dispatch(app: &AppHandle, request: AddRequest) -> Result<AddRespons
         )
         .await?;
         if !prefs.silent_auto_submit_from_extension {
-            crate::tray::activate_main_window(app, "http-api");
+            if prefs.new_task_show_downloading {
+                super::frontend_action::dispatch_frontend_action(
+                    app,
+                    super::frontend_action::FrontendActionChannel::TrayMenuAction,
+                    super::frontend_action::FrontendActionKind::ShowDownloads,
+                    "http-api",
+                );
+            } else {
+                crate::tray::request_main_window(app, "http-api", true);
+            }
         }
         return Ok(AddResponse {
             id: request.id,

@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Proxy-uitzondering",
     "proxy-scope": "Proxy-bereik",
-    "proxy-bypass-input-tips": "Proxy overslaan voor deze hosts, één per regel",
+    "proxy-bypass-input-tips": "Eén host, domein, IP of CIDR per regel; * omzeilt de proxy voor alle hosts\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Downloads",
     "proxy-scope-update-app": "App-updates",
     "proxy-scope-update-trackers": "Updates van netwerkgegevens",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "Handler voor {protocol} instellen mislukt: {reason}",
     "protocol-unregister-failed": "Koppeling voor {protocol} verwijderen mislukt: {reason}",
     "protocol-unchanged": "De koppeling voor {protocol} is niet gewijzigd",
-    "protocol-manual-required": "Het systeem staat Rayburst niet toe de koppeling te verwijderen, stel een andere standaardapp in",
+    "protocol-manual-required": "Kies de standaardapp voor dit protocol in de systeeminstellingen",
     "protocol-query-failed": "Kan de koppeling voor {protocol} niet controleren. Probeer opnieuw",
     "copied-to-clipboard": "{label} gekopieerd",
     "color-scheme": "Kleurenschema",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Aangepaste kleur",
     "color-scheme-switched": "Overgeschakeld naar kleurenschema {name}",
     "default-programs": "Standaardprogramma's",
-    "protocol-rayburst": "Browserextensies [ rayburst:// ]",
     "detect-system-proxy": "Systeemproxy detecteren",
     "proxy-detected-success": "Proxy gedetecteerd uit systeeminstellingen",
     "proxy-system-not-detected": "Geen systeemproxy gedetecteerd",
@@ -584,7 +583,9 @@
     "media-downloads": "Mediadownloads",
     "media-select-before-download": "Inhoud kiezen vóór downloaden",
     "media-default-format": "Standaardformaat",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Relatief aan de standaardmap",
+    "file-category-fixed-directory": "Vaste map"
   },
   "subnav": {
     "task-list": "Taken",

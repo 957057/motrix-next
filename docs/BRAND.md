@@ -5,8 +5,10 @@ Product: **Rayburst**. Package: `rayburst`. Application ID: `dev.aninsomniacy.ra
 Redefining the open-source download manager
 
 `public/logo.svg` is the artwork source. Run `pnpm icons` to generate desktop icons
-with the Tauri CLI. The tray uses the same mark; macOS renders its alpha channel as
-a native template image. `docs/brand/banner.png` is the English README banner with the current slogan. Use no terminal punctuation in slogans, including translations.
+with the Tauri CLI. The macOS `.icns` adds a white rounded-square plate around the
+master artwork. Windows `.ico` and Linux PNG icons retain transparent backgrounds.
+The tray uses the unplated mark; macOS renders its alpha channel as a native template
+image. `docs/brand/banner.png` is the English README banner with the current slogan. Use no terminal punctuation in slogans, including translations.
 
 The default interface seed is `#946ECE`, softened from the original purple while
 preserving its hue. Material Color Utilities generates both themes through the

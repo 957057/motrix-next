@@ -147,7 +147,7 @@ export async function addUri(params: {
     // Smart file classification: resolve per-URI download directory
     if (fileCategory?.enabled && fileCategory.categories.length > 0) {
       const context = fileCategory.contexts?.[uri]
-      opts.dir = resolveDownloadDir(
+      opts.dir = await resolveDownloadDir(
         mediaOutputHint(uri, opts.out || extractDecodedFilename(uri) || uri, opts.media, opts['media-format']),
         opts.dir || '',
         true,

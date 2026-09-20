@@ -7,6 +7,7 @@
  * - submitBatchItems: batch routing to torrent store
  * - submitManualUris: multi-URI handling with rename
  */
+import { invoke } from '@tauri-apps/api/core'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // ── Mock external dependencies ──────────────────────────────────────
@@ -383,9 +384,10 @@ describe('submitBatchItems', () => {
       }),
     ]
 
+    vi.mocked(invoke).mockResolvedValueOnce({ directory: '/dl/Videos' })
     await submitBatchItems(items, baseOptions, mockTaskStore, {
       enabled: true,
-      categories: [{ label: 'Videos', extensions: ['mkv'], directory: '/dl/Videos' }],
+      categories: [{ label: 'Videos', extensions: ['mkv'], directory: '/dl/Videos', directoryMode: 'absolute' }],
     })
 
     expect(mockTaskStore.addTorrent).toHaveBeenCalledWith({
@@ -616,6 +618,7 @@ describe('submitManualUris', () => {
   })
 
   it('submits tab-separated aria2 input-file mirrors as one atomic URI task', async () => {
+    vi.mocked(invoke).mockResolvedValueOnce({ directory: '/dl/Archives' })
     await submitManualUris(
       {
         ...baseForm,
@@ -624,7 +627,7 @@ describe('submitManualUris', () => {
       mockTaskStore,
       {
         enabled: true,
-        categories: [{ label: 'Archives', extensions: ['zip'], directory: '/dl/Archives' }],
+        categories: [{ label: 'Archives', extensions: ['zip'], directory: '/dl/Archives', directoryMode: 'absolute' }],
       },
     )
 

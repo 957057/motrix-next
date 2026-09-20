@@ -23,7 +23,7 @@ use windows_sys::Win32::System::Threading::{
 
 use super::cleanup::decode_windows_tcp_port;
 
-const PROCESS_EXIT_TIMEOUT_MS: u32 = 1_000;
+const PROCESS_EXIT_TIMEOUT_MS: u32 = 5_000;
 const MAX_WINDOWS_PATH_CHARS: usize = 32_768;
 
 struct OwnedHandle(HANDLE);
@@ -184,16 +184,21 @@ fn paths_match(actual: &Path, expected: &Path) -> bool {
         .eq_ignore_ascii_case(&normalized_path(expected).to_string_lossy())
 }
 
-fn terminate_engine_process(pid: u32, expected_path: &Path) -> Result<bool, String> {
+fn terminate_process_at_path(
+    pid: u32,
+    expected_path: &Path,
+    grace_ms: u32,
+) -> Result<bool, String> {
     let access = PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_TERMINATE | PROCESS_SYNCHRONIZE;
     // SAFETY: OpenProcess takes value parameters only and returns an owned
     // handle, which is immediately wrapped for deterministic cleanup.
     let handle = unsafe { OpenProcess(access, 0, pid) };
     if handle.is_null() {
-        return Err(format!(
-            "OpenProcess failed for PID {pid}: {}",
-            std::io::Error::last_os_error()
-        ));
+        let error = std::io::Error::last_os_error();
+        if error.raw_os_error() == Some(87) {
+            return Ok(false); // The process exited after enumeration.
+        }
+        return Err(format!("OpenProcess failed for PID {pid}: {error}"));
     }
     let handle = OwnedHandle(handle);
     let actual_path = process_path(handle.0)?;
@@ -207,7 +212,7 @@ fn terminate_engine_process(pid: u32, expected_path: &Path) -> Result<bool, Stri
     }
 
     // SAFETY: handle remains valid for the complete wait/terminate sequence.
-    if unsafe { WaitForSingleObject(handle.0, 0) } == WAIT_OBJECT_0 {
+    if unsafe { WaitForSingleObject(handle.0, grace_ms) } == WAIT_OBJECT_0 {
         return Ok(false);
     }
     // SAFETY: The full executable path was verified on this exact process
@@ -234,7 +239,7 @@ pub(super) fn cleanup_listener(port: u16) -> Result<bool, String> {
     let expected_path = expected_engine_path()?;
     let mut terminated = false;
     for pid in listener_pids(port)? {
-        match terminate_engine_process(pid, &expected_path) {
+        match terminate_process_at_path(pid, &expected_path, 0) {
             Ok(true) => {
                 log::debug!(
                     "terminated leftover engine process on port {}: PID {}",
@@ -255,6 +260,65 @@ pub(super) fn cleanup_listener(port: u16) -> Result<bool, String> {
         }
     }
     Ok(terminated)
+}
+
+pub(super) fn stop_owned_engine(pid: u32) -> Result<(), String> {
+    terminate_process_at_path(pid, &expected_engine_path()?, 0).map(|_| ())
+}
+
+/// Run from the installer's temporary copy, before replacing installed files.
+/// Stop the supervisor first so it cannot restart a sidecar during installation.
+pub fn prepare_install(directory: &Path) -> Result<(), String> {
+    use windows_sys::Win32::Foundation::{ERROR_NO_MORE_FILES, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::System::Diagnostics::ToolHelp::{
+        CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
+        TH32CS_SNAPPROCESS,
+    };
+    if !directory.is_absolute() {
+        return Err("Installation directory must be absolute".into());
+    }
+    for name in [
+        "rayburst.exe",
+        "aria2-next.exe",
+        "rayburst-browser-launcher.exe",
+    ] {
+        // SAFETY: Snapshot handles are owned and closed exactly once below.
+        let snapshot = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) };
+        if snapshot == INVALID_HANDLE_VALUE {
+            return Err(std::io::Error::last_os_error().to_string());
+        }
+        let snapshot = OwnedHandle(snapshot);
+        // SAFETY: PROCESSENTRY32W contains integers and a UTF-16 array; zero is valid for every field.
+        let mut entry: PROCESSENTRY32W = unsafe { std::mem::zeroed() };
+        entry.dwSize = size_of::<PROCESSENTRY32W>() as u32;
+        // SAFETY: entry is correctly sized writable storage and snapshot is live.
+        let mut found = unsafe { Process32FirstW(snapshot.0, &mut entry) };
+        while found != 0 {
+            let end = entry
+                .szExeFile
+                .iter()
+                .position(|ch| *ch == 0)
+                .unwrap_or(entry.szExeFile.len());
+            if String::from_utf16_lossy(&entry.szExeFile[..end]).eq_ignore_ascii_case(name) {
+                terminate_process_at_path(
+                    entry.th32ProcessID,
+                    &directory.join(name),
+                    if name == "aria2-next.exe" {
+                        PROCESS_EXIT_TIMEOUT_MS
+                    } else {
+                        0
+                    },
+                )?;
+            }
+            // SAFETY: Same live snapshot and initialized output structure.
+            found = unsafe { Process32NextW(snapshot.0, &mut entry) };
+        }
+        let error = std::io::Error::last_os_error();
+        if error.raw_os_error() != Some(ERROR_NO_MORE_FILES as i32) {
+            return Err(format!("Process enumeration failed: {error}"));
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]

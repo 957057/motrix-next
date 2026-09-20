@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Eccezione proxy",
     "proxy-scope": "Ambito proxy",
-    "proxy-bypass-input-tips": "Ignora proxy per questi host, uno per riga",
+    "proxy-bypass-input-tips": "Un host, dominio, IP o CIDR per riga; * esclude tutti gli host\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Download",
     "proxy-scope-update-app": "Aggiornamenti app",
     "proxy-scope-update-trackers": "Aggiornamenti dati di rete",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "Impossibile impostare l’associazione {protocol}: {reason}",
     "protocol-unregister-failed": "Impossibile rimuovere l’associazione {protocol}: {reason}",
     "protocol-unchanged": "L’associazione {protocol} non è cambiata",
-    "protocol-manual-required": "Il sistema non consente a Rayburst di rimuovere l’associazione, imposta un’altra app predefinita",
+    "protocol-manual-required": "Scegli l’applicazione predefinita per questo protocollo nelle impostazioni di sistema",
     "protocol-query-failed": "Impossibile verificare l’associazione {protocol}. Riprova",
     "copied-to-clipboard": "{label} copiato",
     "color-scheme": "Schema colori",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Colore personalizzato",
     "color-scheme-switched": "Passato alla combinazione colori {name}",
     "default-programs": "Programmi predefiniti",
-    "protocol-rayburst": "Estensioni del browser [ rayburst:// ]",
     "detect-system-proxy": "Rileva proxy di sistema",
     "proxy-detected-success": "Proxy rilevato dalle impostazioni di sistema",
     "proxy-system-not-detected": "Nessun proxy di sistema rilevato",
@@ -584,7 +583,9 @@
     "media-downloads": "Download multimediali",
     "media-select-before-download": "Scegli i contenuti prima del download",
     "media-default-format": "Formato predefinito",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Relativa alla cartella predefinita",
+    "file-category-fixed-directory": "Cartella fissa"
   },
   "subnav": {
     "task-list": "Attività",

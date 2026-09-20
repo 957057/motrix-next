@@ -3,7 +3,7 @@ import { parseInt } from 'lodash-es'
 import { join } from '@tauri-apps/api/path'
 import type { Aria2Task, Aria2File } from '@shared/types'
 import type { I18nKey } from '@shared/i18nTypes'
-import { resolveTaskFilePath } from '@/composables/useArchivedPaths'
+import { resolveTaskFilePath } from '@/composables/useTaskPaths'
 
 /** Calculates download progress as a percentage. */
 export const calcProgress = (totalLength: string | number, completedLength: string | number, decimal = 2): number => {

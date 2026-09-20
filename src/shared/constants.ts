@@ -132,7 +132,7 @@ export const SCHEDULE_DAY = {
 /** Built-in file category templates for smart path classification (Issue #94).
  *  Extensions are lowercase without dot prefix.  `subdirName` is a fixed English
  *  directory name (filesystem paths should not change with locale).
- *  Use `buildDefaultCategories(baseDir)` to produce runtime FileCategory[]. */
+ *  Use `buildDefaultCategories()` to produce runtime FileCategory[]. */
 export const BUILTIN_CATEGORY_TEMPLATES = [
   {
     label: 'file-category-videos',
@@ -166,24 +166,19 @@ export const BUILTIN_CATEGORY_TEMPLATES = [
   },
 ] as const
 
-/** Builds the default FileCategory[] with absolute directory paths derived from `baseDir`.
- *  Called when the user first enables classification or clicks "Restore Defaults". */
-export function buildDefaultCategories(baseDir: string): import('@shared/types').FileCategory[] {
-  const normalizedBase = baseDir.replace(/\\/g, '/').replace(/\/+$/, '')
-  return BUILTIN_CATEGORY_TEMPLATES.map((t) => ({
-    label: t.label,
-    extensions: [...t.extensions],
-    directory: `${normalizedBase}/${t.subdirName}`,
+/** Built-in categories follow the current default directory without path rewriting. */
+export function buildDefaultCategories(): import('@shared/types').FileCategory[] {
+  return BUILTIN_CATEGORY_TEMPLATES.map((template) => ({
+    label: template.label,
+    extensions: [...template.extensions],
+    directory: template.subdirName,
+    directoryMode: 'relative',
     builtIn: true,
   }))
 }
 
 /** Maximum number of file categories a user can create (built-in + custom). */
 export const MAX_FILE_CATEGORIES = 20
-
-/** Set of built-in category label keys — used to hydrate the `builtIn` flag
- *  on categories loaded from persisted config (which may lack the field). */
-export const BUILTIN_CATEGORY_LABELS: ReadonlySet<string> = new Set(BUILTIN_CATEGORY_TEMPLATES.map((t) => t.label))
 
 /** Official, independently hosted tracker-list sources. */
 export const TRACKER_SOURCE_OPTIONS = [

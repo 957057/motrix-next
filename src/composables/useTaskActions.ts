@@ -20,7 +20,7 @@ import {
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { invoke } from '@tauri-apps/api/core'
 import { deleteTaskFiles } from '@/composables/useFileDelete'
-import { resolveTaskFilePath, requestFileRecheck } from '@/composables/useArchivedPaths'
+import { resolveTaskFilePath, requestFileRecheck } from '@/composables/useTaskPaths'
 import { logger } from '@shared/logger'
 import { NCheckbox, useDialog } from 'naive-ui'
 import type { Aria2Task, AppConfig } from '@shared/types'

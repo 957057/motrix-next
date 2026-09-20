@@ -274,3 +274,21 @@ describe('hydrateAppConfig', () => {
     expect(DEFAULT_APP_CONFIG.proxy.scope).toEqual(PROXY_SCOPE_OPTIONS)
   })
 })
+
+describe('current category directory schema', () => {
+  it('requires an explicit path mode instead of guessing from an old absolute path', () => {
+    // Deliberately pass a persisted object from the removed schema.
+    const persisted: unknown = {
+      fileCategoryEnabled: true,
+      fileCategories: [
+        { label: 'file-category-programs', directory: '/old/Programs', extensions: ['exe'], builtIn: true },
+      ],
+    }
+    const result = hydrateAppConfig(persisted as Partial<AppConfig>)
+    expect(result.config.fileCategories.every((category) => category.directoryMode === 'relative')).toBe(true)
+    expect(result.config.fileCategories.find((category) => category.extensions.includes('exe'))?.directory).toBe(
+      'Programs',
+    )
+    expect(result.repairs).toContain('fileCategories')
+  })
+})

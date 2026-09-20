@@ -12,14 +12,13 @@ pub async fn history_add_record(
     state.0.add_record(&record).await
 }
 
-/// Query history records, optionally filtered by status and limited.
+/// Read an unordered history snapshot, optionally filtered by status.
 #[tauri::command]
 pub async fn history_get_records(
     state: State<'_, DatabaseState>,
     status: Option<String>,
-    limit: Option<u32>,
 ) -> Result<Vec<HistoryRecord>, AppError> {
-    state.0.get_records(status.as_deref(), limit).await
+    state.0.get_records(status.as_deref()).await
 }
 
 /// Remove a single record by GID.

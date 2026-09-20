@@ -7,7 +7,7 @@
 <br>
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue.svg)
 
-[![Website](https://img.shields.io/badge/Website-946ECE?style=for-the-badge)](https://rayburst.pages.dev/)
+[![Website](docs/brand/website-badge.svg)](https://rayburst.pages.dev/)
 [![Extension](https://img.shields.io/badge/Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/AnInsomniacy/rayburst-connect)
 
 </div>
@@ -111,6 +111,17 @@ chmod +x Rayburst_x.x.x_amd64.AppImage
 ```
 
 All formats are available for both x64 and ARM64.
+
+**Flatpak (FlatPark, x64):**
+
+[FlatPark](https://flatpark.org/apps/dev.aninsomniacy.rayburst/) provides a developer-approved, community-maintained Flatpak package.
+
+```bash
+flatpak remote-add --if-not-exists flatpark https://dl.flatpark.org/flatpark.flatpakrepo
+flatpak install flatpark dev.aninsomniacy.rayburst
+```
+
+Update with `flatpak update dev.aninsomniacy.rayburst`; the in-app updater cannot update this package. Start Rayburst manually before connecting Rayburst Connect; the package does not register the browser's native-messaging host. See the [package page](https://flatpark.org/apps/dev.aninsomniacy.rayburst/) for sandbox permissions and packaging support.
 
 ## FAQ
 

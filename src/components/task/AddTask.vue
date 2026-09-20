@@ -283,21 +283,22 @@ const categoryEnabled = computed(() => preferenceStore.config.fileCategoryEnable
 /** Dynamic label: switches between original 'Save to' and 'Custom Path' based on classification state. */
 const dirLabel = computed(() => (categoryEnabled.value ? t('task.task-custom-dir') : t('task.task-dir')))
 
-function resolveCategoryMatches(): Map<string, { label: string; directory: string }> {
+async function resolveCategoryMatches(): Promise<Map<string, { label: string; directory: string }>> {
   const uris = normalizeUriLines(form.value.uris).filter((uri) => !isMagnetUri(uri))
   const outs = uris.length > 1 && form.value.out ? buildOuts(uris, form.value.out) : []
   const matched = new Map<string, { label: string; directory: string }>()
 
   for (const [index, uri] of uris.entries()) {
     const context = form.value.uriRequestContexts?.[uri]
-    const category = resolveDownloadCategory(
+    const category = await resolveDownloadCategory(
       mediaOutputHint(
         uri,
-        outs[index] || form.value.out || extractDecodedFilename(uri),
+        outs[index] || form.value.out || extractDecodedFilename(uri) || uri,
         form.value.media?.mode,
         form.value.media?.format,
       ),
       preferenceStore.config.fileCategories,
+      preferenceStore.config.dir,
       {
         urls: [uri, context?.finalUrl ?? '', context?.url ?? '', context?.referer ?? ''],
       },
@@ -310,16 +311,17 @@ function resolveCategoryMatches(): Map<string, { label: string; directory: strin
   return matched
 }
 
-function resolveSelectedTorrentCategory(): { label: string; directory: string } | undefined {
+async function resolveSelectedTorrentCategory(): Promise<{ label: string; directory: string } | undefined> {
   const item = selectedItem.value
   if (!item?.torrentMeta) return undefined
 
   const selectedIndices = new Set(item.selectedFileIndices ?? [])
-  const category = resolveFileSetCategory(
+  const category = await resolveFileSetCategory(
     item.torrentMeta.files
       .filter((file) => selectedIndices.has(Number(file.index)) && Number(file.length) > 0)
       .map((file) => ({ path: file.path })),
     preferenceStore.config.fileCategories,
+    preferenceStore.config.dir,
     { urls: [item.source] },
   )
   if (!category) return undefined
@@ -330,14 +332,43 @@ function resolveSelectedTorrentCategory(): { label: string; directory: string } 
   }
 }
 
-const categoryMatches = computed(() => {
-  if (!categoryEnabled.value || dirUserModified.value) return new Map<string, { label: string; directory: string }>()
-  if (activeTab.value === ADD_TASK_TYPE.TORRENT) {
-    const category = resolveSelectedTorrentCategory()
-    return category ? new Map([[category.directory, category]]) : new Map()
-  }
-  return resolveCategoryMatches()
-})
+const categoryMatches = ref(new Map<string, { label: string; directory: string }>())
+watch(
+  () => [
+    props.show,
+    categoryEnabled.value,
+    dirUserModified.value,
+    activeTab.value,
+    form.value.uris,
+    form.value.out,
+    form.value.media,
+    form.value.uriRequestContexts,
+    selectedItem.value,
+    preferenceStore.config.fileCategories,
+    preferenceStore.config.dir,
+  ],
+  async (_, __, onCleanup) => {
+    let current = true
+    onCleanup(() => {
+      current = false
+    })
+    categoryMatches.value = new Map()
+    if (!props.show || !categoryEnabled.value || dirUserModified.value) return
+    try {
+      let matches: Map<string, { label: string; directory: string }>
+      if (activeTab.value === ADD_TASK_TYPE.TORRENT) {
+        const category = await resolveSelectedTorrentCategory()
+        matches = category ? new Map([[category.directory, category]]) : new Map()
+      } else {
+        matches = await resolveCategoryMatches()
+      }
+      if (current) categoryMatches.value = matches
+    } catch (error) {
+      logger.warn('AddTask.categoryPreview', getErrorMessage(error))
+    }
+  },
+  { deep: true },
+)
 
 const categoryMatchPreview = computed(() => {
   const matched = categoryMatches.value

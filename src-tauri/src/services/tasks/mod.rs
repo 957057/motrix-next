@@ -282,8 +282,9 @@ impl TaskService {
     /// Changes global aria2 options at runtime.
     pub async fn change_global_option(
         &self,
-        opts: serde_json::Map<String, serde_json::Value>,
+        mut opts: serde_json::Map<String, serde_json::Value>,
     ) -> Result<String, AppError> {
+        crate::proxy_bypass::normalize_options(&mut opts)?;
         self.call("changeGlobalOption", vec![serde_json::Value::Object(opts)])
             .await
     }
@@ -337,8 +338,11 @@ impl TaskService {
     pub async fn add_uri(
         &self,
         uris: Vec<String>,
-        opts: serde_json::Value,
+        mut opts: serde_json::Value,
     ) -> Result<String, AppError> {
+        if let Some(options) = opts.as_object_mut() {
+            crate::proxy_bypass::normalize_options(options)?;
+        }
         self.call("addUri", vec![serde_json::json!(uris), opts])
             .await
     }
@@ -347,8 +351,11 @@ impl TaskService {
     pub async fn add_torrent(
         &self,
         base64: &str,
-        opts: serde_json::Value,
+        mut opts: serde_json::Value,
     ) -> Result<String, AppError> {
+        if let Some(options) = opts.as_object_mut() {
+            crate::proxy_bypass::normalize_options(options)?;
+        }
         self.call(
             "addTorrent",
             vec![base64.into(), serde_json::json!([]), opts],
@@ -375,8 +382,11 @@ impl TaskService {
     pub async fn change_option(
         &self,
         gid: &str,
-        opts: serde_json::Value,
+        mut opts: serde_json::Value,
     ) -> Result<String, AppError> {
+        if let Some(options) = opts.as_object_mut() {
+            crate::proxy_bypass::normalize_options(options)?;
+        }
         self.call("changeOption", vec![gid.into(), opts]).await
     }
 

@@ -40,8 +40,7 @@ src/
 │       ├── config.ts           # Config key-value transform utilities
 │       ├── tracker.ts          # BT tracker fetching with proxy support
 │       ├── geoip.ts            # GeoIP peer lookup (country code → flag)
-│       ├── fileCategory.ts     # File type classification by extension
-│       ├── autoArchive.ts      # Auto-archive completed tasks
+│       ├── fileCategory.ts     # Category editing and native preview requests
 │       ├── format.ts           # Number/date/speed formatting (bytesToSize, localeDateTimeFormat)
 │       ├── task.ts             # Task status helpers (checkTaskIsBT, getTaskName)
 │       ├── peer.ts             # Peer ID parsing and client identification

@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Exceção de proxy",
     "proxy-scope": "Escopo do proxy",
-    "proxy-bypass-input-tips": "Ignorar proxy para estes hosts, um por linha",
+    "proxy-bypass-input-tips": "Um host, domínio, IP ou CIDR por linha; * ignora o proxy para todos os hosts\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Downloads",
     "proxy-scope-update-app": "Atualizações do app",
     "proxy-scope-update-trackers": "Atualizações de dados de rede",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "Não foi possível associar {protocol}: {reason}",
     "protocol-unregister-failed": "Não foi possível remover a associação de {protocol}: {reason}",
     "protocol-unchanged": "A associação de {protocol} não foi alterada",
-    "protocol-manual-required": "O sistema não permite que o Rayburst remova a associação, defina outro aplicativo como padrão",
+    "protocol-manual-required": "Escolha o aplicativo padrão para este protocolo nas configurações do sistema",
     "protocol-query-failed": "Não foi possível verificar a associação de {protocol}. Tente novamente",
     "copied-to-clipboard": "{label} copiado",
     "color-scheme": "Esquema de cores",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Cor personalizada",
     "color-scheme-switched": "Alterado para o esquema de cores {name}",
     "default-programs": "Programas padrão",
-    "protocol-rayburst": "Extensões do navegador [ rayburst:// ]",
     "detect-system-proxy": "Detectar proxy do sistema",
     "proxy-detected-success": "Proxy detectado nas configurações do sistema",
     "proxy-system-not-detected": "Nenhum proxy do sistema detectado",
@@ -584,7 +583,9 @@
     "media-downloads": "Downloads de mídia",
     "media-select-before-download": "Escolher conteúdo antes de baixar",
     "media-default-format": "Formato padrão",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Relativa à pasta padrão",
+    "file-category-fixed-directory": "Pasta fixa"
   },
   "subnav": {
     "task-list": "Tarefas",

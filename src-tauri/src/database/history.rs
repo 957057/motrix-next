@@ -4,6 +4,8 @@ use crate::error::AppError;
 use rusqlite::{params, OptionalExtension};
 use serde::{Deserialize, Serialize};
 
+const HISTORY_PAGE_ORDER: &str = "COALESCE(added_at, completed_at) DESC, id DESC";
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HistoryRecord {
     pub id: Option<i64>,
@@ -52,24 +54,31 @@ impl Database {
         let mut conn = self.connection().await?;
         let transaction = conn.transaction()?;
         let column = match input.sort_field.as_deref() {
-            Some("name") => "name",
-            Some("status") => "status",
-            Some("total_length") => "total_length",
-            Some("task_type") => "task_type",
-            Some("completed_at") => "completed_at",
-            _ => "COALESCE(added_at, completed_at)",
+            Some("name") => Some("name"),
+            Some("status") => Some("status"),
+            Some("total_length") => Some("total_length"),
+            Some("task_type") => Some("task_type"),
+            Some("completed_at") => Some("completed_at"),
+            _ => None,
         };
         let direction = if input.sort_order.as_deref() == Some("ascend") {
             "ASC"
         } else {
             "DESC"
         };
+        let order = match column {
+            Some(column) => format!("{column} {direction}, {HISTORY_PAGE_ORDER}"),
+            None => HISTORY_PAGE_ORDER.to_string(),
+        };
         let size = input.page_size.clamp(1, 100);
         let offset = u64::from(input.page.saturating_sub(1)) * u64::from(size);
         let filter = "WHERE (?1 IS NULL OR status=?1)";
-        let records = transaction.prepare(&format!(
-            "SELECT * FROM download_history {filter} ORDER BY {column} {direction}, COALESCE(added_at, completed_at) DESC, id DESC LIMIT ?2 OFFSET ?3"
-        ))?.query_map(params![input.status, size, offset], Self::row_to_record)?.collect::<Result<Vec<_>, _>>()?;
+        let records = transaction
+            .prepare(&format!(
+                "SELECT * FROM download_history {filter} ORDER BY {order} LIMIT ?2 OFFSET ?3"
+            ))?
+            .query_map(params![input.status, size, offset], Self::row_to_record)?
+            .collect::<Result<Vec<_>, _>>()?;
         let total = transaction.query_row(
             &format!("SELECT COUNT(*) FROM download_history {filter}"),
             params![input.status],
@@ -145,34 +154,19 @@ impl Database {
         Ok(exists)
     }
 
-    /// Query records, optionally filtered by status.
-    ///
-    /// Sorted by `COALESCE(added_at, completed_at) DESC`.
-    pub async fn get_records(
-        &self,
-        status: Option<&str>,
-        limit: Option<u32>,
-    ) -> Result<Vec<HistoryRecord>, AppError> {
+    /// Read an unordered history snapshot. Presentation owns list ordering.
+    pub async fn get_records(&self, status: Option<&str>) -> Result<Vec<HistoryRecord>, AppError> {
         let conn = self.connection().await?;
-        let order = "ORDER BY COALESCE(added_at, completed_at) DESC";
-        let limit_clause = limit
-            .map(|l| format!(" LIMIT {}", l.min(10_000)))
-            .unwrap_or_default();
-
-        if let Some(status) = status {
-            let sql =
-                format!("SELECT * FROM download_history WHERE status = ?1 {order}{limit_clause}");
-            let mut stmt = conn.prepare(&sql)?;
-            let rows = stmt.query_map(params![status], Self::row_to_record)?;
-            let records: Vec<HistoryRecord> = rows.collect::<Result<Vec<_>, _>>()?;
-            Ok(records)
+        let sql = if status.is_some() {
+            "SELECT * FROM download_history WHERE status = ?1"
         } else {
-            let sql = format!("SELECT * FROM download_history {order}{limit_clause}");
-            let mut stmt = conn.prepare(&sql)?;
-            let rows = stmt.query_map([], Self::row_to_record)?;
-            let records: Vec<HistoryRecord> = rows.collect::<Result<Vec<_>, _>>()?;
-            Ok(records)
-        }
+            "SELECT * FROM download_history"
+        };
+        let mut statement = conn.prepare(sql)?;
+        let records = statement
+            .query_map(rusqlite::params_from_iter(status), Self::row_to_record)?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(records)
     }
 
     /// Remove a single record by GID.
@@ -352,7 +346,7 @@ mod tests {
         db.close().await;
         db.initialize(&path).await.unwrap();
         assert_eq!(
-            db.get_records(None, None).await.unwrap()[0].name,
+            db.get_records(None).await.unwrap()[0].name,
             "literal%20.txt"
         );
         assert_eq!(db.schema_version().await.unwrap(), 4);
@@ -392,6 +386,47 @@ mod tests {
         );
     }
 
+    #[tokio::test]
+    async fn default_pages_use_the_native_index_and_preserve_ties() {
+        let db = Database::open_in_memory().unwrap();
+        for gid in ["first", "second", "third"] {
+            let mut record = make_record(gid, gid, "complete");
+            record.meta = Some(serde_json::json!({"payload": "x".repeat(32_768)}).to_string());
+            db.add_record(&record).await.unwrap();
+        }
+        let conn = db.connection().await.unwrap();
+        let mut statement = conn.prepare(&format!(
+            "SELECT * FROM download_history WHERE (?1 IS NULL OR status=?1) ORDER BY {HISTORY_PAGE_ORDER} LIMIT ?2 OFFSET ?3"
+        )).unwrap();
+        for status in [None, Some("complete")] {
+            let records = statement
+                .query_map(params![status, 1, 1], Database::row_to_record)
+                .unwrap()
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap();
+            assert_eq!(records[0].gid, "second");
+            assert_eq!(statement.get_status(rusqlite::StatementStatus::Sort), 0);
+        }
+        drop(statement);
+        drop(conn);
+        let mut gids = Vec::new();
+        for page in 1..=3 {
+            let result = db
+                .get_records_page(HistoryPageInput {
+                    status: None,
+                    page,
+                    page_size: 1,
+                    sort_field: None,
+                    sort_order: None,
+                })
+                .await
+                .unwrap();
+            assert_eq!(result.total, 3);
+            gids.push(result.records[0].gid.clone());
+        }
+        assert_eq!(gids, ["third", "second", "first"]);
+    }
+
     fn make_record(gid: &str, name: &str, status: &str) -> HistoryRecord {
         HistoryRecord {
             id: None,
@@ -417,7 +452,7 @@ mod tests {
         let rec = make_record("gid001", "test.zip", "complete");
         db.add_record(&rec).await.unwrap();
 
-        let records = db.get_records(None, None).await.unwrap();
+        let records = db.get_records(None).await.unwrap();
         assert_eq!(records.len(), 1);
         assert_eq!(records[0].gid, "gid001");
         assert_eq!(records[0].name, "test.zip");
@@ -457,7 +492,7 @@ mod tests {
         };
         db.add_record(&rec2).await.unwrap();
 
-        let records = db.get_records(None, None).await.unwrap();
+        let records = db.get_records(None).await.unwrap();
         assert_eq!(records.len(), 1);
         assert_eq!(records[0].name, "test-updated.zip");
         assert_eq!(records[0].status, "complete");
@@ -485,25 +520,12 @@ mod tests {
             .await
             .unwrap();
 
-        let complete = db.get_records(Some("complete"), None).await.unwrap();
+        let complete = db.get_records(Some("complete")).await.unwrap();
         assert_eq!(complete.len(), 2);
 
-        let errors = db.get_records(Some("error"), None).await.unwrap();
+        let errors = db.get_records(Some("error")).await.unwrap();
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].gid, "g2");
-    }
-
-    #[tokio::test]
-    async fn get_records_respects_limit() {
-        let db = Database::open_in_memory().unwrap();
-        for i in 0..10 {
-            let mut rec = make_record(&format!("g{i}"), &format!("file{i}.zip"), "complete");
-            rec.added_at = Some(format!("2025-01-{:02}T00:00:00Z", i + 1));
-            db.add_record(&rec).await.unwrap();
-        }
-
-        let limited = db.get_records(None, Some(3)).await.unwrap();
-        assert_eq!(limited.len(), 3);
     }
 
     #[tokio::test]
@@ -518,7 +540,7 @@ mod tests {
 
         db.remove_record("g1").await.unwrap();
 
-        let records = db.get_records(None, None).await.unwrap();
+        let records = db.get_records(None).await.unwrap();
         assert_eq!(records.len(), 1);
         assert_eq!(records[0].gid, "g2");
     }
@@ -535,7 +557,7 @@ mod tests {
 
         db.remove_task_records("gid001", None).await.unwrap();
 
-        assert!(db.get_records(None, None).await.unwrap().is_empty());
+        assert!(db.get_records(None).await.unwrap().is_empty());
         assert_eq!(db.get_task_birth("gid001").await.unwrap(), None);
     }
 
@@ -557,7 +579,7 @@ mod tests {
 
         db.clear_records(Some("error")).await.unwrap();
 
-        let records = db.get_records(None, None).await.unwrap();
+        let records = db.get_records(None).await.unwrap();
         assert_eq!(records.len(), 1);
         assert_eq!(records[0].gid, "g1");
         assert_eq!(
@@ -579,7 +601,7 @@ mod tests {
 
         db.clear_records(None).await.unwrap();
 
-        let records = db.get_records(None, None).await.unwrap();
+        let records = db.get_records(None).await.unwrap();
         assert!(records.is_empty());
     }
 
@@ -600,7 +622,7 @@ mod tests {
             .await
             .unwrap();
 
-        let records = db.get_records(None, None).await.unwrap();
+        let records = db.get_records(None).await.unwrap();
         assert_eq!(records.len(), 1);
         assert_eq!(records[0].gid, "g2");
     }
@@ -612,7 +634,7 @@ mod tests {
             .await
             .unwrap();
         db.remove_stale_records(&[]).await.unwrap();
-        assert_eq!(db.get_records(None, None).await.unwrap().len(), 1);
+        assert_eq!(db.get_records(None).await.unwrap().len(), 1);
     }
 
     // ── InfoHash operations ─────────────────────────────────────────
@@ -631,7 +653,7 @@ mod tests {
         // Remove all with infoHash abc123, excluding g2
         db.remove_by_info_hash("abc123", Some("g2")).await.unwrap();
 
-        let records = db.get_records(None, None).await.unwrap();
+        let records = db.get_records(None).await.unwrap();
         assert_eq!(records.len(), 1);
         assert_eq!(records[0].gid, "g2");
     }
@@ -643,7 +665,7 @@ mod tests {
             .await
             .unwrap();
         db.remove_by_info_hash("", None).await.unwrap();
-        assert_eq!(db.get_records(None, None).await.unwrap().len(), 1);
+        assert_eq!(db.get_records(None).await.unwrap().len(), 1);
     }
 
     // ── Task birth tracking ─────────────────────────────────────────

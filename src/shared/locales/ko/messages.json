@@ -223,7 +223,7 @@
     "proxy": "프록시",
     "proxy-bypass": "프록시 우회",
     "proxy-scope": "프록시 범위",
-    "proxy-bypass-input-tips": "프록시를 사용하지 않을 호스트 (줄당 하나)",
+    "proxy-bypass-input-tips": "한 줄에 호스트, 도메인, IP 또는 CIDR 하나 입력. *는 모든 호스트 제외\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "다운로드",
     "proxy-scope-update-app": "앱 업데이트",
     "proxy-scope-update-trackers": "네트워크 데이터 업데이트",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "{protocol} 연결 설정 실패: {reason}",
     "protocol-unregister-failed": "{protocol} 연결 해제 실패: {reason}",
     "protocol-unchanged": "{protocol} 연결이 변경되지 않았습니다",
-    "protocol-manual-required": "시스템에서 Rayburst의 연결 해제를 허용하지 않으므로 다른 앱을 기본 앱으로 설정하세요",
+    "protocol-manual-required": "시스템 설정에서 이 프로토콜의 기본 앱을 선택하세요",
     "protocol-query-failed": "{protocol} 연결 상태를 확인할 수 없습니다. 다시 시도하세요",
     "copied-to-clipboard": "{label} 복사됨",
     "color-scheme": "색상 테마",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "사용자 지정 색상",
     "color-scheme-switched": "{name} 색상 테마로 전환됨",
     "default-programs": "기본 프로그램",
-    "protocol-rayburst": "브라우저 확장 프로그램 [ rayburst:// ]",
     "detect-system-proxy": "시스템 프록시 감지",
     "proxy-detected-success": "시스템 설정에서 프록시가 감지되었습니다",
     "proxy-system-not-detected": "시스템 프록시가 감지되지 않았습니다",
@@ -584,7 +583,9 @@
     "media-downloads": "미디어 다운로드",
     "media-select-before-download": "다운로드 전 콘텐츠 선택",
     "media-default-format": "기본 형식",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "기본 폴더 기준 상대 경로",
+    "file-category-fixed-directory": "고정 폴더"
   },
   "subnav": {
     "task-list": "작업 목록",

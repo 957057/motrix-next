@@ -149,6 +149,7 @@ describe('aria2 API (invoke transport)', () => {
 
     it('addUri classifies extensionless downloads by the resolved output filename', async () => {
       mockInvoke.mockResolvedValue('gid1')
+      mockInvoke.mockResolvedValueOnce({ directory: '/downloads/Documents' })
 
       await addUri({
         uris: ['https://mail-attachment.googleusercontent.com/attachment/u/0/'],
@@ -156,7 +157,9 @@ describe('aria2 API (invoke transport)', () => {
         options: { dir: '/downloads' },
         fileCategory: {
           enabled: true,
-          categories: [{ label: 'Documents', extensions: ['xlsx'], directory: '/downloads/Documents' }],
+          categories: [
+            { label: 'Documents', extensions: ['xlsx'], directory: '/downloads/Documents', directoryMode: 'absolute' },
+          ],
         },
       })
 
@@ -168,6 +171,7 @@ describe('aria2 API (invoke transport)', () => {
 
     it('addUri classifies ED2K downloads by the canonical link filename', async () => {
       mockInvoke.mockResolvedValue('gid1')
+      mockInvoke.mockResolvedValueOnce({ directory: '/downloads/Archives' })
       const uri = 'ed2k://|file|Ubuntu%2026.04.iso|123456789|0123456789abcdef0123456789abcdef|/'
 
       await addUri({
@@ -176,7 +180,9 @@ describe('aria2 API (invoke transport)', () => {
         options: { dir: '/downloads' },
         fileCategory: {
           enabled: true,
-          categories: [{ label: 'Archives', extensions: ['iso'], directory: '/downloads/Archives' }],
+          categories: [
+            { label: 'Archives', extensions: ['iso'], directory: '/downloads/Archives', directoryMode: 'absolute' },
+          ],
         },
       })
 
@@ -188,6 +194,7 @@ describe('aria2 API (invoke transport)', () => {
 
     it('addUri classifies downloads by extension and URL context', async () => {
       mockInvoke.mockResolvedValue('gid1')
+      mockInvoke.mockResolvedValueOnce({ directory: '/downloads/Logs' })
 
       await addUri({
         uris: ['https://cdn.example.net/export/file.zip'],
@@ -202,6 +209,7 @@ describe('aria2 API (invoke transport)', () => {
               urlPatterns: ['*://reports.example.com/logs/*'],
               urlPatternMode: 'wildcard',
               directory: '/downloads/Logs',
+              directoryMode: 'absolute',
             },
           ],
           contexts: {

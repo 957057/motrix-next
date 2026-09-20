@@ -1,5 +1,4 @@
 use std::sync::Mutex;
-use std::time::Duration;
 
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
@@ -65,6 +64,7 @@ pub enum FrontendActionKind {
     #[cfg(target_os = "macos")]
     About,
     NewTask,
+    ShowDownloads,
     #[cfg(target_os = "macos")]
     OpenTorrent,
     #[cfg(target_os = "macos")]
@@ -81,6 +81,7 @@ impl FrontendActionKind {
             #[cfg(target_os = "macos")]
             Self::About => "about",
             Self::NewTask => "new-task",
+            Self::ShowDownloads => "show-downloads",
             #[cfg(target_os = "macos")]
             Self::OpenTorrent => "open-torrent",
             #[cfg(target_os = "macos")]
@@ -157,7 +158,7 @@ pub fn dispatch_frontend_action(
     );
 
     if window_was_alive && frontend_ready {
-        wake_main_window(app, source);
+        crate::tray::request_main_window(app, source, true);
         match app.emit(channel.event_name(), action.as_str()) {
             Ok(()) => return,
             Err(e) => {
@@ -171,7 +172,7 @@ pub fn dispatch_frontend_action(
     }
 
     queue_pending_frontend_action(app, PendingFrontendAction::new(channel, action), source);
-    schedule_main_window_wake(app, source);
+    crate::tray::request_main_window(app, source, true);
 }
 
 fn queue_pending_frontend_action(
@@ -207,30 +208,6 @@ fn is_frontend_ready(app: &AppHandle) -> bool {
     app.try_state::<PendingFrontendActionState>()
         .map(|state| state.frontend_ready())
         .unwrap_or(false)
-}
-
-fn schedule_main_window_wake(app: &AppHandle, source: &'static str) {
-    let app_for_task = app.clone();
-    tauri::async_runtime::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(50)).await;
-        let app_for_main = app_for_task.clone();
-        if let Err(e) = app_for_task.run_on_main_thread(move || {
-            wake_main_window(&app_for_main, source);
-        }) {
-            log::error!("frontend_action:wake-schedule-failed source={source} error={e}");
-        }
-    });
-}
-
-fn wake_main_window(app: &AppHandle, source: &'static str) {
-    log::debug!("frontend_action:wake-start source={source}");
-    if crate::tray::activate_main_window(app, source)
-        == crate::tray::WindowActivationOutcome::Activated
-    {
-        log::debug!("frontend_action:wake-done source={source}");
-    } else {
-        log::error!("frontend_action:wake-failed source={source}");
-    }
 }
 
 #[cfg(test)]

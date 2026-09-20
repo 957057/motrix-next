@@ -1,5 +1,4 @@
 use std::sync::Mutex;
-use std::time::Duration;
 
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -112,7 +111,7 @@ pub fn route_external_inputs(
     );
 
     if window_was_alive && is_frontend_ready(app) {
-        wake_main_window(app, source, silent);
+        crate::tray::request_main_window(app, source, !silent);
         let payload = PendingExternalInputsPayload {
             inputs: inputs.clone(),
             silent,
@@ -124,7 +123,7 @@ pub fn route_external_inputs(
     }
 
     queue_pending_external_inputs(app, &inputs, source, silent);
-    schedule_main_window_wake(app, source, silent);
+    crate::tray::request_main_window(app, source, !silent);
 }
 
 fn take_pending_payload(inner: &mut PendingExternalInputs) -> PendingExternalInputsPayload {
@@ -174,33 +173,6 @@ fn queue_pending_external_inputs(
             "external_input:queue-unavailable source={source} count={}",
             inputs.len()
         ),
-    }
-}
-
-fn schedule_main_window_wake(app: &AppHandle, source: &'static str, silent: bool) {
-    let app_for_task = app.clone();
-    tauri::async_runtime::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(50)).await;
-        let app_for_main = app_for_task.clone();
-        if let Err(e) = app_for_task.run_on_main_thread(move || {
-            wake_main_window(&app_for_main, source, silent);
-        }) {
-            log::error!("external_input:wake-schedule-failed source={source} error={e}");
-        }
-    });
-}
-
-fn wake_main_window(app: &AppHandle, source: &'static str, silent: bool) {
-    log::debug!("external_input:wake-start source={source} silent={silent}");
-    let outcome = if silent {
-        crate::tray::ensure_main_window(app, source)
-    } else {
-        crate::tray::activate_main_window(app, source)
-    };
-    if outcome == crate::tray::WindowActivationOutcome::Activated {
-        log::debug!("external_input:wake-done source={source} silent={silent}");
-    } else {
-        log::error!("external_input:wake-failed source={source}");
     }
 }
 

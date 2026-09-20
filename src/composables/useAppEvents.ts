@@ -364,6 +364,9 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
 
   async function handleTrayAction(action: string) {
     switch (action) {
+      case 'show-downloads':
+        await router.push('/task/all')
+        break
       case 'show':
         await surfaceMainWindow()
         break

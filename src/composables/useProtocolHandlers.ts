@@ -3,12 +3,12 @@ import { invoke } from '@tauri-apps/api/core'
 import { logger } from '@shared/logger'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 
-export type ProtocolKey = 'magnet' | 'ed2k' | 'thunder' | 'rayburst'
+export type ProtocolKey = 'magnet' | 'ed2k' | 'thunder'
 type ProtocolResult =
   | { kind: 'success' | 'unchanged' | 'manual' | 'cancelled' | 'query-failed' | 'ignored' }
   | { kind: 'failed'; reason: string }
 
-const protocolKeys: ProtocolKey[] = ['magnet', 'ed2k', 'thunder', 'rayburst']
+const protocolKeys: ProtocolKey[] = ['magnet', 'ed2k', 'thunder']
 
 function errorReason(error: unknown): string {
   if (typeof error === 'object' && error !== null && 'Protocol' in error) return String(error.Protocol)
@@ -21,7 +21,6 @@ export function useProtocolHandlers() {
     magnet: undefined,
     ed2k: undefined,
     thunder: undefined,
-    rayburst: undefined,
   })
   const pending = ref<ProtocolKey | null>(null)
   const refreshing = ref(false)

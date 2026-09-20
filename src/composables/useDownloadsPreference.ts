@@ -6,13 +6,7 @@
  * experience tab — most fields map to aria2 engine options.
  */
 import type { AppConfig, FileCategory, FileDeletionMode } from '@shared/types'
-import {
-  DEFAULT_APP_CONFIG as D,
-  buildDefaultCategories,
-  BUILTIN_CATEGORY_LABELS,
-  BUILTIN_CATEGORY_TEMPLATES,
-  COMPLETED_RECORD_RETENTION_OPTIONS,
-} from '@shared/constants'
+import { DEFAULT_APP_CONFIG as D, buildDefaultCategories, COMPLETED_RECORD_RETENTION_OPTIONS } from '@shared/constants'
 import { normalizeFileCategory } from '@shared/utils/fileCategory'
 
 // ── Types ───────────────────────────────────────────────────────────
@@ -54,33 +48,6 @@ export interface DownloadsForm {
   completedRecordRetentionDays: number
 }
 
-// ── Internals ───────────────────────────────────────────────────────
-
-/**
- * Hydrates categories loaded from persisted config with missing fields.
- * - `builtIn`: inferred from label matching against BUILTIN_CATEGORY_TEMPLATES
- * - `directory`: filled from baseDir + template subdirName (built-in) or baseDir (custom)
- * Empty directories would cause aria2 to fail, so this is safety-critical.
- */
-function hydrateCategories(categories: FileCategory[], baseDir: string): FileCategory[] {
-  const normalizedBase = baseDir.replace(/\\/g, '/').replace(/\/+$/, '')
-  const templateMap: ReadonlyMap<string, string> = new Map(
-    BUILTIN_CATEGORY_TEMPLATES.map((t) => [t.label, t.subdirName]),
-  )
-
-  return categories
-    .map((cat) => {
-      const isBuiltIn = cat.builtIn ?? BUILTIN_CATEGORY_LABELS.has(cat.label)
-      let directory = cat.directory
-      if (!directory) {
-        const subdirName = templateMap.get(cat.label)
-        directory = subdirName ? `${normalizedBase}/${subdirName}` : normalizedBase
-      }
-      return { ...cat, builtIn: isBuiltIn, directory }
-    })
-    .map(normalizeFileCategory)
-}
-
 // ── Pure Functions ──────────────────────────────────────────────────
 
 /**
@@ -93,8 +60,8 @@ export function buildDownloadsForm(config: AppConfig, defaultDir: string = ''): 
     fileCategoryEnabled: config.fileCategoryEnabled ?? D.fileCategoryEnabled,
     fileCategories:
       config.fileCategories && config.fileCategories.length > 0
-        ? hydrateCategories(config.fileCategories, config.dir || defaultDir)
-        : buildDefaultCategories(config.dir || defaultDir),
+        ? config.fileCategories.map(normalizeFileCategory)
+        : buildDefaultCategories(),
     maxConcurrentDownloads: config.maxConcurrentDownloads ?? D.maxConcurrentDownloads,
     streamMaxConnections: config.streamMaxConnections ?? D.streamMaxConnections,
     sharingMode: (config.keepSharing ?? D.keepSharing) ? 'manual-stop' : 'stop-by-condition',
@@ -163,7 +130,7 @@ export function transformDownloadsForStore(f: DownloadsForm): Partial<AppConfig>
   // Guard: auto-populate default categories when classification is enabled but
   // the categories array is empty (edge case from GitHub issue #229).
   if (f.fileCategoryEnabled && (!f.fileCategories || f.fileCategories.length === 0)) {
-    data.fileCategories = buildDefaultCategories(f.dir)
+    data.fileCategories = buildDefaultCategories()
   } else {
     data.fileCategories = f.fileCategories.map(normalizeFileCategory)
   }

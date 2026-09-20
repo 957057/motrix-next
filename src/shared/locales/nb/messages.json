@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Proxy-unntak",
     "proxy-scope": "Proxy-omfang",
-    "proxy-bypass-input-tips": "Omgå proxy for disse vertene, én per linje",
+    "proxy-bypass-input-tips": "Én vert, ett domene, IP eller CIDR per linje; * unntar alle verter\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Nedlastinger",
     "proxy-scope-update-app": "App-oppdateringer",
     "proxy-scope-update-trackers": "Oppdatering av nettverksdata",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "Kunne ikke angi behandler for {protocol}: {reason}",
     "protocol-unregister-failed": "Kunne ikke fjerne tilknytningen for {protocol}: {reason}",
     "protocol-unchanged": "Tilknytningen for {protocol} ble ikke endret",
-    "protocol-manual-required": "Systemet lar ikke Rayburst fjerne tilknytningen, velg en annen standardapp",
+    "protocol-manual-required": "Velg standardprogrammet for denne protokollen i systeminnstillingene",
     "protocol-query-failed": "Kunne ikke kontrollere tilknytningen for {protocol}. Prøv igjen",
     "copied-to-clipboard": "{label} kopiert",
     "color-scheme": "Fargevalg",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Egendefinert farge",
     "color-scheme-switched": "Byttet til fargevalget {name}",
     "default-programs": "Standardprogrammer",
-    "protocol-rayburst": "Nettleserutvidelser [ rayburst:// ]",
     "detect-system-proxy": "Oppdag systemproxy",
     "proxy-detected-success": "Proxy oppdaget fra systeminnstillinger",
     "proxy-system-not-detected": "Ingen system-proxy oppdaget",
@@ -584,7 +583,9 @@
     "media-downloads": "Medienedlastinger",
     "media-select-before-download": "Velg innhold før nedlasting",
     "media-default-format": "Standardformat",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Relativt til standardmappen",
+    "file-category-fixed-directory": "Fast mappe"
   },
   "subnav": {
     "task-list": "Oppgaver",

@@ -11,8 +11,8 @@ import { useEngineStore } from '@/stores/engine'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
 import { logger } from '@shared/logger'
-import { isMetadataTask, updateHistoryFilePath } from '@/composables/useTaskLifecycle'
-import { setArchivedPath, resolveTaskFilePath, requestFileRecheck } from '@/composables/useArchivedPaths'
+import { isMetadataTask } from '@/composables/useTaskLifecycle'
+import { resolveTaskFilePath, requestFileRecheck } from '@/composables/useTaskPaths'
 import { handleTaskComplete, handleP2pDownloadComplete, handleTaskError } from '@/composables/useTaskNotifyHandlers'
 import { shouldDeleteTorrent, trashTorrentFile } from '@/composables/useDownloadCleanup'
 import { getTaskName, resolveOpenTarget, checkTaskIsSharing, getTaskSharingKind } from '@shared/utils'
@@ -43,7 +43,6 @@ import { NModal, NButton, NCheckbox, NProgress, NPagination, useDialog } from 'n
 
 import { useAppEvents } from '@/composables/useAppEvents'
 import { loadAddedAtFromRecords } from '@/composables/useTaskOrder'
-import { resolveArchiveAction } from '@shared/utils/autoArchive'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -567,43 +566,6 @@ onMounted(async () => {
       onOpenFile: openFileFromNotification,
       onShowInFolder: showInFolderFromNotification,
     })
-
-    // ── Auto-archive: move file to category directory if applicable ──
-    logger.debug(
-      'AutoArchive.input',
-      `gid=${task.gid} enabled=${preferenceStore.config.fileCategoryEnabled} ` +
-        `categories=${preferenceStore.config.fileCategories?.length ?? 0} ` +
-        `baseDir=${preferenceStore.config.dir}`,
-    )
-    const archiveAction = resolveArchiveAction(
-      task,
-      preferenceStore.config.fileCategoryEnabled,
-      preferenceStore.config.fileCategories,
-      preferenceStore.config.dir,
-    )
-    if (archiveAction) {
-      try {
-        const { invoke } = await import('@tauri-apps/api/core')
-        const newPath = await invoke<string>('move_file', {
-          source: archiveAction.source,
-          targetDir: archiveAction.targetDir,
-        })
-        logger.info('AutoArchive.moved', `${archiveAction.source} → ${newPath}`)
-
-        // Persist the new path so all consumers resolve to the archived location.
-        // Runtime Map — effective immediately for this session.
-        setArchivedPath(task.gid, newPath)
-        // History DB — effective after app restart (meta.files path update).
-        updateHistoryFilePath(historyStore, task.gid, archiveAction.source, newPath).catch((e) =>
-          logger.debug('AutoArchive.historyUpdate', e),
-        )
-      } catch (e) {
-        // Archive failure is non-critical — file remains at download location
-        logger.warn('AutoArchive.failed', e instanceof Error ? e.message : String(e))
-      }
-    } else {
-      logger.debug('AutoArchive.result', `gid=${task.gid} action=none`)
-    }
 
     // ── Auto-shutdown: check after task completion ──
     checkShutdownCondition()

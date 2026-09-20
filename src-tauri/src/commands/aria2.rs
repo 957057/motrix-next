@@ -850,3 +850,20 @@ pub async fn aria2_batch_finish_media(
 pub async fn cancel_download_request(app: AppHandle, id: String) -> Result<(), AppError> {
     crate::services::downloads::cancel(&app, &id).await
 }
+
+#[tauri::command]
+pub fn resolve_file_category(
+    candidates: Vec<crate::services::downloads::category::Candidate>,
+    categories: Vec<crate::services::downloads::category::Category>,
+    base_dir: String,
+) -> Result<Option<crate::services::downloads::category::Category>, AppError> {
+    crate::services::downloads::category::resolve(&candidates, &categories, &base_dir)
+}
+
+#[tauri::command]
+pub fn validate_file_categories(
+    categories: Vec<crate::services::downloads::category::Category>,
+    base_dir: String,
+) -> Result<(), AppError> {
+    crate::services::downloads::category::validate(&categories, &base_dir)
+}

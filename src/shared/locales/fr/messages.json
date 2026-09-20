@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Contournement du proxy",
     "proxy-scope": "Portée du proxy",
-    "proxy-bypass-input-tips": "Ignorer le proxy pour ces hôtes, un par ligne",
+    "proxy-bypass-input-tips": "Un hôte, domaine, IP ou CIDR par ligne ; * exclut tous les hôtes\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Téléchargements",
     "proxy-scope-update-app": "Mises à jour de l'application",
     "proxy-scope-update-trackers": "Mises à jour des données réseau",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "Impossible de définir l’association {protocol} : {reason}",
     "protocol-unregister-failed": "Impossible de supprimer l’association {protocol} : {reason}",
     "protocol-unchanged": "L’association {protocol} n’a pas été modifiée",
-    "protocol-manual-required": "Le système empêche Rayburst de supprimer l’association, choisissez une autre application par défaut",
+    "protocol-manual-required": "Choisissez l’application par défaut pour ce protocole dans les paramètres système",
     "protocol-query-failed": "Impossible de vérifier l’association {protocol}. Réessayez",
     "copied-to-clipboard": "{label} copié",
     "color-scheme": "Palette de couleurs",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Couleur personnalisée",
     "color-scheme-switched": "Schéma de couleurs {name} appliqué",
     "default-programs": "Programmes par défaut",
-    "protocol-rayburst": "Extensions de navigateur [ rayburst:// ]",
     "detect-system-proxy": "Détecter le proxy système",
     "proxy-detected-success": "Proxy détecté depuis les paramètres système",
     "proxy-system-not-detected": "Aucun proxy système détecté",
@@ -584,7 +583,9 @@
     "media-downloads": "Téléchargements multimédias",
     "media-select-before-download": "Choisir le contenu avant le téléchargement",
     "media-default-format": "Format par défaut",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Relatif au dossier par défaut",
+    "file-category-fixed-directory": "Dossier fixe"
   },
   "subnav": {
     "task-list": "Tâches",

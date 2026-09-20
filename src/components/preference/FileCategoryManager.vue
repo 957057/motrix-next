@@ -1,5 +1,7 @@
 <script setup lang="ts">
 /** @fileoverview Single-layer file category manager modal. */
+import { invoke } from '@tauri-apps/api/core'
+import { getErrorMessage } from '@shared/utils/errorMessage'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
@@ -130,10 +132,16 @@ function validateUrlRules(): boolean {
   return true
 }
 
-function handleSave() {
+async function handleSave() {
   if (!validateUrlRules()) return
   handleUrlPatternChange(urlPatternText.value)
   draft.value = draft.value.map(normalizeFileCategory)
+  try {
+    await invoke('validate_file_categories', { categories: draft.value, baseDir: props.baseDir })
+  } catch (error) {
+    urlRuleError.value = getErrorMessage(error)
+    return
+  }
   emit('save', cloneCategories(draft.value))
   closeModal()
 }
@@ -148,6 +156,7 @@ function handleAddCategory() {
       urlPatterns: [],
       urlPatternMode: 'wildcard',
       directory: baseDir,
+      directoryMode: 'absolute',
       builtIn: false,
     }),
   )
@@ -182,7 +191,7 @@ function handleResetCategories() {
     return
   }
   stopResetConfirm()
-  draft.value = cloneCategories(buildDefaultCategories(props.baseDir))
+  draft.value = cloneCategories(buildDefaultCategories())
   selectedIndex.value = 0
   syncUrlPatternText()
 }
@@ -243,7 +252,10 @@ function moveCategory(oldIndex: number, newIndex: number) {
 async function handleSelectCategoryDir() {
   if (!selectedCategory.value) return
   const selected = await openDialog({ directory: true, multiple: false })
-  if (typeof selected === 'string') selectedCategory.value.directory = selected
+  if (typeof selected === 'string') {
+    selectedCategory.value.directory = selected
+    selectedCategory.value.directoryMode = 'absolute'
+  }
 }
 
 function syncUrlPatternText() {
@@ -390,9 +402,7 @@ watch(
       return
     }
     removeCategoryDragArtifacts()
-    draft.value = cloneCategories(
-      props.categories.length > 0 ? props.categories : buildDefaultCategories(props.baseDir),
-    )
+    draft.value = cloneCategories(props.categories.length > 0 ? props.categories : buildDefaultCategories())
     selectedIndex.value = 0
     stopResetConfirm()
     syncUrlPatternText()
@@ -556,6 +566,14 @@ onUnmounted(() => {
 
               <div class="category-manager-field">
                 <span>{{ t('preferences.download-path') }}</span>
+                <NSelect
+                  v-model:value="selectedCategory.directoryMode"
+                  size="small"
+                  :options="[
+                    { label: t('preferences.file-category-relative-directory'), value: 'relative' },
+                    { label: t('preferences.file-category-fixed-directory'), value: 'absolute' },
+                  ]"
+                />
                 <NInputGroup>
                   <NInput
                     :value="selectedCategory.directory"

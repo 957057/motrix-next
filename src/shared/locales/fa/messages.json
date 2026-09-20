@@ -223,7 +223,7 @@
     "proxy": "پروکسی",
     "proxy-bypass": "دور زدن پروکسی",
     "proxy-scope": "محدوده پروکسی",
-    "proxy-bypass-input-tips": "دور زدن پروکسی برای این میزبان‌ها، یکی در هر خط",
+    "proxy-bypass-input-tips": "در هر خط یک میزبان، دامنه، IP یا CIDR؛ * همهٔ میزبان‌ها را مستثنا می‌کند\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "دانلودها",
     "proxy-scope-update-app": "به‌روزرسانی برنامه",
     "proxy-scope-update-trackers": "به‌روزرسانی داده‌های شبکه",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "تنظیم برنامهٔ پیش‌فرض {protocol} ناموفق بود: {reason}",
     "protocol-unregister-failed": "حذف ارتباط {protocol} ناموفق بود: {reason}",
     "protocol-unchanged": "ارتباط {protocol} تغییر نکرد",
-    "protocol-manual-required": "سیستم به Rayburst اجازهٔ حذف این ارتباط را نمی‌دهد، برنامهٔ دیگری را به‌عنوان پیش‌فرض انتخاب کنید",
+    "protocol-manual-required": "برنامهٔ پیش‌فرض این پروتکل را در تنظیمات سیستم انتخاب کنید",
     "protocol-query-failed": "بررسی ارتباط {protocol} ممکن نیست. دوباره تلاش کنید",
     "copied-to-clipboard": "{label} کپی شد",
     "color-scheme": "طرح رنگ",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "رنگ سفارشی",
     "color-scheme-switched": "به طرح رنگ {name} تغییر کرد",
     "default-programs": "برنامه‌های پیش‌فرض",
-    "protocol-rayburst": "افزونه‌های مرورگر [ rayburst:// ]",
     "detect-system-proxy": "شناسایی پروکسی سیستم",
     "proxy-detected-success": "پروکسی از تنظیمات سیستم شناسایی شد",
     "proxy-system-not-detected": "پروکسی سیستم شناسایی نشد",
@@ -584,7 +583,9 @@
     "media-downloads": "بارگیری رسانه",
     "media-select-before-download": "انتخاب محتوا پیش از بارگیری",
     "media-default-format": "قالب پیش‌فرض",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "نسبت به پوشهٔ پیش‌فرض",
+    "file-category-fixed-directory": "پوشهٔ ثابت"
   },
   "subnav": {
     "task-list": "وظایف",

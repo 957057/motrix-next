@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { invoke } from '@tauri-apps/api/core'
 /** @fileoverview Downloads preference tab: paths, concurrency, speed limits, notifications, cleanup. */
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -8,6 +9,7 @@ import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumer
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { extractSpeedUnit } from '@shared/utils'
 import { logger } from '@shared/logger'
+import { getErrorMessage } from '@shared/utils/errorMessage'
 import { resolveUserVisibleDownloadDir } from '@shared/utils/userVisibleDirectory'
 import { toggleSpeedLimit } from '@/composables/useSpeedLimiter'
 import { changeGlobalOption, isEngineReady } from '@/api/aria2'
@@ -84,6 +86,15 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } =
   buildForm,
   buildSystemConfig: buildDownloadsSystemConfig,
   transformForStore: transformDownloadsForStore,
+  beforeSave: async (f) => {
+    try {
+      await invoke('validate_file_categories', { categories: f.fileCategories, baseDir: f.dir })
+      return true
+    } catch (error) {
+      message.error(getErrorMessage(error))
+      return false
+    }
+  },
   afterSave: (f) => {
     recordDownloadsDirectory(f, preferenceStore.recordHistoryDirectory)
   },

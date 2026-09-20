@@ -107,10 +107,16 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } =
   buildForm,
   buildSystemConfig: buildNetworkSystemConfig,
   transformForStore: transformNetworkForStore,
-  beforeSave: (f) => {
+  beforeSave: async (f) => {
     const validationKey = validateNetworkForm(f)
     if (validationKey) {
       message.error(t(validationKey))
+      return false
+    }
+    try {
+      f.proxy.bypass = await invoke<string>('normalize_proxy_bypass', { value: f.proxy.bypass })
+    } catch (error) {
+      message.error(getErrorMessage(error))
       return false
     }
     return true

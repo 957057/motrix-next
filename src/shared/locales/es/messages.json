@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Excepción de proxy",
     "proxy-scope": "Alcance del proxy",
-    "proxy-bypass-input-tips": "Omitir proxy para estos hosts, uno por línea",
+    "proxy-bypass-input-tips": "Un host, dominio, IP o CIDR por línea; * excluye todos los hosts\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Descargas",
     "proxy-scope-update-app": "Actualizaciones de la app",
     "proxy-scope-update-trackers": "Actualizaciones de datos de red",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "No se pudo asociar {protocol}: {reason}",
     "protocol-unregister-failed": "No se pudo eliminar la asociación de {protocol}: {reason}",
     "protocol-unchanged": "La asociación de {protocol} no cambió",
-    "protocol-manual-required": "El sistema no permite que Rayburst elimine la asociación, establezca otra aplicación predeterminada",
+    "protocol-manual-required": "Elige la aplicación predeterminada para este protocolo en la configuración del sistema",
     "protocol-query-failed": "No se pudo verificar la asociación de {protocol}. Reinténtelo",
     "copied-to-clipboard": "{label} copiado",
     "color-scheme": "Esquema de colores",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Color personalizado",
     "color-scheme-switched": "Cambiado al esquema de colores {name}",
     "default-programs": "Programas predeterminados",
-    "protocol-rayburst": "Extensiones del navegador [ rayburst:// ]",
     "detect-system-proxy": "Detectar proxy del sistema",
     "proxy-detected-success": "Proxy detectado desde la configuración del sistema",
     "proxy-system-not-detected": "No se detectó proxy del sistema",
@@ -584,7 +583,9 @@
     "media-downloads": "Descargas multimedia",
     "media-select-before-download": "Elegir contenido antes de descargar",
     "media-default-format": "Formato predeterminado",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Relativa a la carpeta predeterminada",
+    "file-category-fixed-directory": "Carpeta fija"
   },
   "subnav": {
     "task-list": "Tareas",

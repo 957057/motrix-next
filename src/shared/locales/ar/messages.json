@@ -223,7 +223,7 @@
     "proxy": "الوكيل",
     "proxy-bypass": "تجاوز الوكيل",
     "proxy-scope": "نطاق الوكيل",
-    "proxy-bypass-input-tips": "تجاوز الوكيل لهذه المضيفات، واحد لكل سطر",
+    "proxy-bypass-input-tips": "مضيف أو نطاق أو IP أو CIDR في كل سطر؛ * يستثني جميع المضيفين\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "التنزيلات",
     "proxy-scope-update-app": "تحديثات التطبيق",
     "proxy-scope-update-trackers": "تحديثات بيانات الشبكة",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "تعذر تعيين معالج {protocol}: {reason}",
     "protocol-unregister-failed": "تعذر إلغاء ارتباط {protocol}: {reason}",
     "protocol-unchanged": "لم يتغير ارتباط {protocol}",
-    "protocol-manual-required": "لا يسمح النظام لـ Rayburst بإلغاء الارتباط، عيّن تطبيقًا آخر كتطبيق افتراضي",
+    "protocol-manual-required": "اختر التطبيق الافتراضي لهذا البروتوكول في إعدادات النظام",
     "protocol-query-failed": "تعذر التحقق من ارتباط {protocol}. أعد المحاولة",
     "copied-to-clipboard": "{label} تم النسخ",
     "color-scheme": "نظام الألوان",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "لون مخصص",
     "color-scheme-switched": "تم التبديل إلى {name} كنظام ألوان",
     "default-programs": "البرامج الافتراضية",
-    "protocol-rayburst": "إضافات المتصفح [ rayburst:// ]",
     "detect-system-proxy": "كشف وكيل النظام",
     "proxy-detected-success": "تم اكتشاف الوكيل من إعدادات النظام",
     "proxy-system-not-detected": "لم يتم اكتشاف وكيل النظام",
@@ -584,7 +583,9 @@
     "media-downloads": "تنزيل الوسائط",
     "media-select-before-download": "اختيار المحتوى قبل التنزيل",
     "media-default-format": "التنسيق الافتراضي",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "بالنسبة إلى مجلد التنزيل الافتراضي",
+    "file-category-fixed-directory": "مجلد ثابت"
   },
   "subnav": {
     "task-list": "المهام",

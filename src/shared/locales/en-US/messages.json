@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Proxy bypass",
     "proxy-scope": "Proxy scope",
-    "proxy-bypass-input-tips": "Bypass proxy for these hosts, one per line",
+    "proxy-bypass-input-tips": "One host, domain, IP or CIDR per line; * bypasses every host\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Downloads",
     "proxy-scope-update-app": "App updates",
     "proxy-scope-update-trackers": "Network data updates",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "Could not set {protocol} handler: {reason}",
     "protocol-unregister-failed": "Could not clear {protocol} handler: {reason}",
     "protocol-unchanged": "{protocol} association was not changed",
-    "protocol-manual-required": "The system prevents Rayburst from removing this association; set another app as the default",
+    "protocol-manual-required": "Choose the default application for this protocol in system settings",
     "protocol-query-failed": "Could not verify {protocol} association. Please retry",
     "copied-to-clipboard": "{label} copied",
     "color-scheme": "Color Scheme",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Custom Color",
     "color-scheme-switched": "Switched to {name} color scheme",
     "default-programs": "Default Programs",
-    "protocol-rayburst": "Browser extensions [ rayburst:// ]",
     "detect-system-proxy": "Detect System Proxy",
     "proxy-detected-success": "Proxy detected from system settings",
     "proxy-system-not-detected": "No system proxy detected",
@@ -584,7 +583,9 @@
     "media-downloads": "Media downloads",
     "media-select-before-download": "Choose content before downloading",
     "media-default-format": "Default format",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Relative to default folder",
+    "file-category-fixed-directory": "Fixed folder"
   },
   "subnav": {
     "task-list": "Tasks",

@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Proxy istisnası",
     "proxy-scope": "Proxy kapsamı",
-    "proxy-bypass-input-tips": "Bu ana makineler için proxy atla, satır başına bir tane",
+    "proxy-bypass-input-tips": "Her satıra bir sunucu, alan adı, IP veya CIDR; * tüm sunucular için vekili atlar\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "İndirmeler",
     "proxy-scope-update-app": "Uygulama güncellemeleri",
     "proxy-scope-update-trackers": "Ağ verisi güncellemeleri",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "{protocol} işleyicisi ayarlanamadı: {reason}",
     "protocol-unregister-failed": "{protocol} ilişkilendirmesi kaldırılamadı: {reason}",
     "protocol-unchanged": "{protocol} ilişkilendirmesi değişmedi",
-    "protocol-manual-required": "Sistem, Rayburst’in ilişkilendirmeyi kaldırmasına izin vermiyor, başka bir varsayılan uygulama seçin",
+    "protocol-manual-required": "Sistem ayarlarında bu protokol için varsayılan uygulamayı seçin",
     "protocol-query-failed": "{protocol} ilişkilendirmesi doğrulanamadı. Tekrar deneyin",
     "copied-to-clipboard": "{label} kopyalandı",
     "color-scheme": "Renk şeması",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Özel renk",
     "color-scheme-switched": "{name} renk şemasına geçildi",
     "default-programs": "Varsayılan Programlar",
-    "protocol-rayburst": "Tarayıcı eklentileri [ rayburst:// ]",
     "detect-system-proxy": "Sistem Proxy Algıla",
     "proxy-detected-success": "Sistem ayarlarından proxy algılandı",
     "proxy-system-not-detected": "Sistem proxy algılanmadı",
@@ -584,7 +583,9 @@
     "media-downloads": "Medya indirmeleri",
     "media-select-before-download": "İndirmeden önce içerik seç",
     "media-default-format": "Varsayılan biçim",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Varsayılan klasöre göre",
+    "file-category-fixed-directory": "Sabit klasör"
   },
   "subnav": {
     "task-list": "Görevler",

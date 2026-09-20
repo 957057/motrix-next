@@ -223,7 +223,7 @@
     "proxy": "プロキシ",
     "proxy-bypass": "プロキシ除外",
     "proxy-scope": "プロキシ適用範囲",
-    "proxy-bypass-input-tips": "プロキシを使用しないホスト（1行に1つ）",
+    "proxy-bypass-input-tips": "1 行にホスト・ドメイン・IP・CIDR を 1 つ入力。* は全ホストを除外\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "ダウンロード",
     "proxy-scope-update-app": "アプリの更新",
     "proxy-scope-update-trackers": "ネットワークデータの更新",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "{protocol} の関連付けに失敗しました：{reason}",
     "protocol-unregister-failed": "{protocol} の関連付けを解除できませんでした：{reason}",
     "protocol-unchanged": "{protocol} の関連付けは変更されませんでした",
-    "protocol-manual-required": "システムの制限により Rayburst では関連付けを解除できないため、別のアプリを既定に設定してください",
+    "protocol-manual-required": "システム設定でこのプロトコルの既定のアプリを選択してください",
     "protocol-query-failed": "{protocol} の関連付けを確認できません。再試行してください",
     "copied-to-clipboard": "{label} をコピーしました",
     "color-scheme": "カラースキーム",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "カスタムカラー",
     "color-scheme-switched": "{name} カラースキームに変更しました",
     "default-programs": "既定のプログラム",
-    "protocol-rayburst": "ブラウザ拡張機能 [ rayburst:// ]",
     "detect-system-proxy": "システムプロキシを検出",
     "proxy-detected-success": "システム設定からプロキシを検出しました",
     "proxy-system-not-detected": "システムプロキシが検出されませんでした",
@@ -584,7 +583,9 @@
     "media-downloads": "メディアのダウンロード",
     "media-select-before-download": "ダウンロード前に内容を選択",
     "media-default-format": "既定の形式",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "既定フォルダーからの相対パス",
+    "file-category-fixed-directory": "固定フォルダー"
   },
   "subnav": {
     "task-list": "タスク一覧",

@@ -41,6 +41,29 @@ pub struct TrayMenuState {
     pub items: Mutex<HashMap<String, MenuItem<tauri::Wry>>>,
 }
 
+/// Serializes window creation without blocking native event callbacks.
+#[derive(Default)]
+pub struct MainWindowState(pub Mutex<()>);
+
+pub fn request_main_window(app: &AppHandle, source: &'static str, visible: bool) {
+    let app = app.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<MainWindowState>();
+        let _creation = state
+            .0
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        // WebView2 creation must run outside synchronous UI event handlers.
+        let Some(window) = get_or_create_main_window(&app) else {
+            log::error!("window:request-failed source={source}");
+            return;
+        };
+        if visible {
+            activate_main_window(&app, &window, source);
+        }
+    });
+}
+
 /// Returns the existing main window, or recreates it if it was destroyed.
 ///
 /// On Linux/Wayland + `decorations: false`, the compositor can destroy
@@ -48,14 +71,14 @@ pub struct TrayMenuState {
 /// clicks the tray icon or triggers macOS Reopen, the original window
 /// handle is gone.  This function detects that and rebuilds the window
 /// from the active platform configuration.
-pub fn get_or_create_main_window(app: &AppHandle) -> Option<tauri::WebviewWindow> {
+fn get_or_create_main_window(app: &AppHandle) -> Option<tauri::WebviewWindow> {
     if let Some(window) = app.get_webview_window("main") {
         return Some(window);
     }
 
     // Window was destroyed — recreate from the same merged platform config
     // that Tauri used for the initial window.
-    log::warn!("tray:window-not-found label=main — recreating after compositor force-close");
+    log::warn!("tray:window-not-found label=main — recreating");
     crate::services::deep_link::mark_frontend_unready(app);
     crate::services::external_input::mark_frontend_unready(app);
     crate::services::frontend_action::mark_frontend_actions_unready(app);
@@ -92,24 +115,7 @@ pub fn get_or_create_main_window(app: &AppHandle) -> Option<tauri::WebviewWindow
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum WindowActivationOutcome {
-    Activated,
-    WindowUnavailable,
-}
-
-pub fn ensure_main_window(app: &AppHandle, source: &'static str) -> WindowActivationOutcome {
-    log::debug!("window:ensure-start source={source}");
-    if get_or_create_main_window(app).is_some() {
-        log::debug!("window:ensure-done source={source}");
-        WindowActivationOutcome::Activated
-    } else {
-        log::error!("window:ensure-failed source={source} reason=window-unavailable");
-        WindowActivationOutcome::WindowUnavailable
-    }
-}
-
-pub fn activate_main_window(app: &AppHandle, source: &'static str) -> WindowActivationOutcome {
+fn activate_main_window(app: &AppHandle, window: &tauri::WebviewWindow, source: &'static str) {
     log::info!("window:activate-start source={source}");
     #[cfg(target_os = "macos")]
     {
@@ -118,11 +124,6 @@ pub fn activate_main_window(app: &AppHandle, source: &'static str) -> WindowActi
             log::warn!("window:activate-policy-failed source={source} error={e}");
         }
     }
-
-    let Some(window) = get_or_create_main_window(app) else {
-        log::error!("window:activate-failed source={source} reason=window-unavailable");
-        return WindowActivationOutcome::WindowUnavailable;
-    };
 
     if let Err(e) = window.unminimize() {
         log::warn!("window:activate-unminimize-failed source={source} error={e}");
@@ -135,7 +136,6 @@ pub fn activate_main_window(app: &AppHandle, source: &'static str) -> WindowActi
     }
 
     log::info!("window:activate-done source={source}");
-    WindowActivationOutcome::Activated
 }
 
 pub fn setup_tray(app: &AppHandle) -> Result<TrayMenuState, Box<dyn std::error::Error>> {
@@ -189,7 +189,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<TrayMenuState, Box<dyn std::error::
             {
                 let app = tray.app_handle();
                 log::info!("tray:left-click — showing main window");
-                activate_main_window(app, "tray-left-click");
+                request_main_window(app, "tray-left-click", true);
             }
         })
         .on_menu_event(|app, event| {
@@ -197,7 +197,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<TrayMenuState, Box<dyn std::error::
             match id {
                 "show" => {
                     log::info!("tray:menu-show — showing main window");
-                    activate_main_window(app, "tray-menu-show");
+                    request_main_window(app, "tray-menu-show", true);
                 }
                 "tray-pause-all" => {
                     log::info!("tray:pause-all — calling aria2 directly");

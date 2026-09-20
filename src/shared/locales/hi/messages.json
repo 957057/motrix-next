@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Proxy bypass",
     "proxy-scope": "Proxy दायरा",
-    "proxy-bypass-input-tips": "इन hosts के लिए proxy bypass करें, हर line में एक",
+    "proxy-bypass-input-tips": "हर पंक्ति में एक होस्ट, डोमेन, IP या CIDR; * सभी होस्ट के लिए प्रॉक्सी छोड़ता है\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "डाउनलोड",
     "proxy-scope-update-app": "App updates",
     "proxy-scope-update-trackers": "नेटवर्क डेटा अपडेट",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "{protocol} हैंडलर सेट नहीं हो सका: {reason}",
     "protocol-unregister-failed": "{protocol} का संबंध नहीं हट सका: {reason}",
     "protocol-unchanged": "{protocol} का संबंध नहीं बदला",
-    "protocol-manual-required": "सिस्टम Rayburst को यह संबंध हटाने की अनुमति नहीं देता, किसी अन्य ऐप को डिफ़ॉल्ट बनाएँ",
+    "protocol-manual-required": "सिस्टम सेटिंग में इस प्रोटोकॉल के लिए डिफ़ॉल्ट ऐप चुनें",
     "protocol-query-failed": "{protocol} का संबंध जाँचा नहीं जा सका। फिर प्रयास करें",
     "copied-to-clipboard": "{label} copied",
     "color-scheme": "Color scheme",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "कस्टम रंग",
     "color-scheme-switched": "{name} रंग योजना पर स्विच किया गया",
     "default-programs": "Default programs",
-    "protocol-rayburst": "Browser extensions [ rayburst:// ]",
     "detect-system-proxy": "System Proxy Detect करें",
     "proxy-detected-success": "System settings से proxy मिला",
     "proxy-system-not-detected": "कोई system proxy नहीं मिला",
@@ -584,7 +583,9 @@
     "media-downloads": "मीडिया डाउनलोड",
     "media-select-before-download": "डाउनलोड से पहले सामग्री चुनें",
     "media-default-format": "डिफ़ॉल्ट प्रारूप",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "डिफ़ॉल्ट फ़ोल्डर के सापेक्ष",
+    "file-category-fixed-directory": "निश्चित फ़ोल्डर"
   },
   "subnav": {
     "task-list": "कार्य",

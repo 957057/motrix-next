@@ -75,7 +75,6 @@ const protocolOptions = computed<{ key: ProtocolKey; label: string }[]>(() => [
   { key: 'magnet', label: t('preferences.protocol-magnet') },
   { key: 'ed2k', label: t('preferences.protocol-ed2k') },
   { key: 'thunder', label: t('preferences.protocol-thunder') },
-  { key: 'rayburst', label: t('preferences.protocol-rayburst') },
 ])
 
 useEventListener(window, 'focus', () => protocolHandlers.refreshAll())

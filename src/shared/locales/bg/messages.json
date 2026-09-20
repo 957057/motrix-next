@@ -223,7 +223,7 @@
     "proxy": "Прокси",
     "proxy-bypass": "Изключения за прокси",
     "proxy-scope": "Обхват на прокси",
-    "proxy-bypass-input-tips": "Заобиколи прокси за тези хостове, един на ред",
+    "proxy-bypass-input-tips": "Хост, домейн, IP или CIDR на ред; * изключва всички хостове\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Изтегляния",
     "proxy-scope-update-app": "Обновления на приложението",
     "proxy-scope-update-trackers": "Обновяване на мрежови данни",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "Неуспешно задаване на обработчик за {protocol}: {reason}",
     "protocol-unregister-failed": "Неуспешно премахване на асоциацията за {protocol}: {reason}",
     "protocol-unchanged": "Асоциацията за {protocol} не е променена",
-    "protocol-manual-required": "Системата не позволява на Rayburst да премахне асоциацията, задайте друго приложение по подразбиране",
+    "protocol-manual-required": "Изберете приложението по подразбиране за този протокол в системните настройки",
     "protocol-query-failed": "Асоциацията за {protocol} не може да се провери. Опитайте отново",
     "copied-to-clipboard": "{label} копирано",
     "color-scheme": "Цветова схема",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Персонализиран цвят",
     "color-scheme-switched": "Превключено към цветова схема {name}",
     "default-programs": "Програми по подразбиране",
-    "protocol-rayburst": "Разширения за браузър [ rayburst:// ]",
     "detect-system-proxy": "Откриване на системен прокси",
     "proxy-detected-success": "Прокси открит от системните настройки",
     "proxy-system-not-detected": "Не е открит системен прокси",
@@ -584,7 +583,9 @@
     "media-downloads": "Изтегляне на медия",
     "media-select-before-download": "Избор на съдържание преди изтегляне",
     "media-default-format": "Формат по подразбиране",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Спрямо папката по подразбиране",
+    "file-category-fixed-directory": "Фиксирана папка"
   },
   "subnav": {
     "task-list": "Задачи",

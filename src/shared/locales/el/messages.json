@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Παράκαμψη proxy",
     "proxy-scope": "Εύρος proxy",
-    "proxy-bypass-input-tips": "Παράκαμψη proxy για αυτούς τους κεντρικούς, ένας ανά γραμμή",
+    "proxy-bypass-input-tips": "Ένα όνομα κεντρικού υπολογιστή, τομέας, IP ή CIDR ανά γραμμή· * εξαιρεί όλους\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Λήψεις",
     "proxy-scope-update-app": "Ενημερώσεις εφαρμογής",
     "proxy-scope-update-trackers": "Ενημερώσεις δεδομένων δικτύου",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "Αποτυχία ορισμού χειριστή για {protocol}: {reason}",
     "protocol-unregister-failed": "Αποτυχία κατάργησης συσχέτισης {protocol}: {reason}",
     "protocol-unchanged": "Η συσχέτιση {protocol} δεν άλλαξε",
-    "protocol-manual-required": "Το σύστημα δεν επιτρέπει στο Rayburst να καταργήσει τη συσχέτιση, ορίστε άλλη προεπιλεγμένη εφαρμογή",
+    "protocol-manual-required": "Επιλέξτε την προεπιλεγμένη εφαρμογή για αυτό το πρωτόκολλο στις ρυθμίσεις συστήματος",
     "protocol-query-failed": "Αδυναμία επαλήθευσης της συσχέτισης {protocol}. Δοκιμάστε ξανά",
     "copied-to-clipboard": "{label} αντιγράφηκε",
     "color-scheme": "Χρωματικό σχήμα",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Προσαρμοσμένο χρώμα",
     "color-scheme-switched": "Έγινε αλλαγή στο χρωματικό σχήμα {name}",
     "default-programs": "Προεπιλεγμένα προγράμματα",
-    "protocol-rayburst": "Επεκτάσεις προγράμματος περιήγησης [ rayburst:// ]",
     "detect-system-proxy": "Ανίχνευση proxy συστήματος",
     "proxy-detected-success": "Εντοπίστηκε διακομιστής μεσολάβησης από τις ρυθμίσεις συστήματος",
     "proxy-system-not-detected": "Δεν εντοπίστηκε διακομιστής μεσολάβησης συστήματος",
@@ -584,7 +583,9 @@
     "media-downloads": "Λήψεις πολυμέσων",
     "media-select-before-download": "Επιλογή περιεχομένου πριν τη λήψη",
     "media-default-format": "Προεπιλεγμένη μορφή",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Σχετικά με τον προεπιλεγμένο φάκελο",
+    "file-category-fixed-directory": "Σταθερός φάκελος"
   },
   "subnav": {
     "task-list": "Εργασίες",

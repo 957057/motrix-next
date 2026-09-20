@@ -7,7 +7,6 @@ import {
   isPendingMagnetSelectionTask,
   parseFilesForSelection,
 } from '@/composables/useMagnetFlow'
-import { normalizeSep } from '@shared/utils/autoArchive'
 import { resolveFileSetCategory } from '@shared/utils/fileCategory'
 import type { Aria2Task, BtFileSelectionItem } from '@shared/types'
 
@@ -16,18 +15,21 @@ export function useBtSelection() {
   const tasks = useTaskStore()
   const { isWindows } = usePlatform()
 
-  function categoryDirectory(task: Aria2Task, files: readonly { path: string; length: number }[]) {
+  async function categoryDirectory(task: Aria2Task, files: readonly { path: string; length: number }[]) {
     const config = preferences.config
     if (!config.fileCategoryEnabled || !config.fileCategories.length) return undefined
     const normalize = (directory: string) => {
-      const path = normalizeSep(directory).replace(/\/+$/, '')
+      const path = directory.replace(/\\/g, '/').replace(/\/+$/, '')
       return isWindows.value ? path.toLowerCase() : path
     }
     if (normalize(task.dir) !== normalize(config.dir)) return undefined
-    return resolveFileSetCategory(
-      files.filter((file) => file.length > 0),
-      config.fileCategories,
-      { urls: [task.bittorrent?.magnetLink ?? ''] },
+    return (
+      await resolveFileSetCategory(
+        files.filter((file) => file.length > 0),
+        config.fileCategories,
+        config.dir,
+        { urls: [task.bittorrent?.magnetLink ?? ''] },
+      )
     )?.directory
   }
 
@@ -37,7 +39,7 @@ export function useBtSelection() {
     await tasks.applyMagnetFileSelection(
       task,
       buildSelectFileOption(indices),
-      categoryDirectory(
+      await categoryDirectory(
         task,
         files.filter((file) => selected.has(file.index)),
       ),

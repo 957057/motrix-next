@@ -223,7 +223,7 @@
     "proxy": "พร็อกซี",
     "proxy-bypass": "ข้ามพร็อกซี",
     "proxy-scope": "ขอบเขตพร็อกซี",
-    "proxy-bypass-input-tips": "ข้ามพร็อกซีสำหรับโฮสต์เหล่านี้ หนึ่งรายการต่อบรรทัด",
+    "proxy-bypass-input-tips": "หนึ่งโฮสต์ โดเมน IP หรือ CIDR ต่อบรรทัด; * ข้ามพร็อกซีสำหรับทุกโฮสต์\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "ดาวน์โหลด",
     "proxy-scope-update-app": "อัปเดตแอป",
     "proxy-scope-update-trackers": "การอัปเดตข้อมูลเครือข่าย",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "ตั้งค่าตัวจัดการ {protocol} ไม่สำเร็จ: {reason}",
     "protocol-unregister-failed": "ยกเลิกการเชื่อมโยง {protocol} ไม่สำเร็จ: {reason}",
     "protocol-unchanged": "การเชื่อมโยง {protocol} ไม่ได้เปลี่ยนแปลง",
-    "protocol-manual-required": "ระบบไม่อนุญาตให้ Rayburst ยกเลิกการเชื่อมโยงนี้ โปรดตั้งแอปอื่นเป็นค่าเริ่มต้น",
+    "protocol-manual-required": "เลือกแอปเริ่มต้นสำหรับโปรโตคอลนี้ในการตั้งค่าระบบ",
     "protocol-query-failed": "ตรวจสอบการเชื่อมโยง {protocol} ไม่ได้ โปรดลองอีกครั้ง",
     "copied-to-clipboard": "คัดลอก {label} แล้ว",
     "color-scheme": "ชุดสี",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "สีที่กำหนดเอง",
     "color-scheme-switched": "เปลี่ยนเป็นชุดสี {name} แล้ว",
     "default-programs": "โปรแกรมเริ่มต้น",
-    "protocol-rayburst": "ส่วนขยายเบราว์เซอร์ [ rayburst:// ]",
     "detect-system-proxy": "ตรวจจับพร็อกซีระบบ",
     "proxy-detected-success": "ตรวจพบพร็อกซีจากการตั้งค่าระบบ",
     "proxy-system-not-detected": "ไม่พบพร็อกซีระบบ",
@@ -584,7 +583,9 @@
     "media-downloads": "ดาวน์โหลดสื่อ",
     "media-select-before-download": "เลือกเนื้อหาก่อนดาวน์โหลด",
     "media-default-format": "รูปแบบเริ่มต้น",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "เทียบกับโฟลเดอร์เริ่มต้น",
+    "file-category-fixed-directory": "โฟลเดอร์คงที่"
   },
   "subnav": {
     "task-list": "รายการงาน",

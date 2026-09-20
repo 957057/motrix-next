@@ -223,7 +223,7 @@
     "proxy": "Proxy",
     "proxy-bypass": "Excepție proxy",
     "proxy-scope": "Domeniu proxy",
-    "proxy-bypass-input-tips": "Ocolește proxy pentru aceste gazde, una pe linie",
+    "proxy-bypass-input-tips": "O gazdă, un domeniu, IP sau CIDR pe linie; * exclude toate gazdele\nlocalhost, example.com, 10.0.0.0/8, ::1",
     "proxy-scope-download": "Descărcări",
     "proxy-scope-update-app": "Actualizări aplicație",
     "proxy-scope-update-trackers": "Actualizări de date de rețea",
@@ -436,7 +436,7 @@
     "protocol-register-failed": "Nu s-a putut seta gestionarul pentru {protocol}: {reason}",
     "protocol-unregister-failed": "Nu s-a putut elimina asocierea pentru {protocol}: {reason}",
     "protocol-unchanged": "Asocierea pentru {protocol} nu s-a schimbat",
-    "protocol-manual-required": "Sistemul nu permite aplicației Rayburst să elimine asocierea, setați altă aplicație implicită",
+    "protocol-manual-required": "Alegeți aplicația implicită pentru acest protocol în setările sistemului",
     "protocol-query-failed": "Nu se poate verifica asocierea pentru {protocol}. Încercați din nou",
     "copied-to-clipboard": "{label} copiat",
     "color-scheme": "Schemă de culori",
@@ -459,7 +459,6 @@
     "custom-color-scheme": "Culoare personalizată",
     "color-scheme-switched": "S-a schimbat la schema de culori {name}",
     "default-programs": "Programe implicite",
-    "protocol-rayburst": "Extensii de browser [ rayburst:// ]",
     "detect-system-proxy": "Detectare proxy sistem",
     "proxy-detected-success": "Proxy detectat din setările sistemului",
     "proxy-system-not-detected": "Nu a fost detectat niciun proxy de sistem",
@@ -584,7 +583,9 @@
     "media-downloads": "Descărcări media",
     "media-select-before-download": "Alege conținutul înainte de descărcare",
     "media-default-format": "Format implicit",
-    "color-scheme-rayburst": "Rayburst"
+    "color-scheme-rayburst": "Rayburst",
+    "file-category-relative-directory": "Relativ la dosarul implicit",
+    "file-category-fixed-directory": "Dosar fix"
   },
   "subnav": {
     "task-list": "Sarcini",

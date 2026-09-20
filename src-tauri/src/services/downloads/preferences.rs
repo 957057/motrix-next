@@ -1,5 +1,8 @@
 //! Apply desktop preferences to browser download intent.
-use super::contracts::AddRequest;
+use super::{
+    category::{self, Candidate, Category},
+    contracts::AddRequest,
+};
 use crate::error::AppError;
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -13,6 +16,8 @@ pub(super) struct Preferences {
     pub auto_submit_from_extension: bool,
     #[serde(default = "enabled")]
     pub silent_auto_submit_from_extension: bool,
+    #[serde(default = "enabled")]
+    pub new_task_show_downloading: bool,
     dir: String,
     file_category_enabled: bool,
     file_categories: Vec<Category>,
@@ -22,16 +27,6 @@ pub(super) struct Preferences {
 }
 fn enabled() -> bool {
     true
-}
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Category {
-    directory: String,
-    extensions: Vec<String>,
-    #[serde(default)]
-    url_patterns: Vec<String>,
-    #[serde(default)]
-    url_pattern_mode: String,
 }
 #[derive(Deserialize)]
 struct Profile {
@@ -56,12 +51,8 @@ pub(super) fn load(app: &AppHandle) -> Result<Preferences, AppError> {
     Ok(serde_json::from_value(value)?)
 }
 
-fn matches(pattern: &str, value: &str, regex: bool) -> bool {
-    let expression = if regex {
-        pattern.to_owned()
-    } else {
-        format!("^{}$", regex::escape(pattern).replace("\\*", ".*"))
-    };
+fn matches(pattern: &str, value: &str) -> bool {
+    let expression = format!("^{}$", regex::escape(pattern).replace("\\*", ".*"));
     regex::RegexBuilder::new(&expression)
         .case_insensitive(true)
         .build()
@@ -96,28 +87,15 @@ pub(super) fn options(prefs: &Preferences, request: &AddRequest) -> Result<Value
                 })
                 .unwrap_or_default()
         });
-        let extension = std::path::Path::new(&name)
-            .extension()
-            .and_then(|ext| ext.to_str())
-            .unwrap_or("");
-        if let Some(category) = prefs.file_categories.iter().find(|category| {
-            !(category.extensions.is_empty() && category.url_patterns.is_empty())
-                && (category.extensions.is_empty()
-                    || category
-                        .extensions
-                        .iter()
-                        .any(|ext| ext.eq_ignore_ascii_case(extension)))
-                && (category.url_patterns.is_empty()
-                    || category.url_patterns.iter().any(|pattern| {
-                        urls.iter()
-                            .any(|url| matches(pattern, url, category.url_pattern_mode == "regex"))
-                    }))
-        }) {
-            options["dir"] = std::path::Path::new(&prefs.dir)
-                .join(&category.directory)
-                .to_string_lossy()
-                .into_owned()
-                .into();
+        if let Some(category) = category::resolve(
+            &[Candidate {
+                path: name,
+                urls: urls.iter().map(|url| (*url).to_owned()).collect(),
+            }],
+            &prefs.file_categories,
+            &prefs.dir,
+        )? {
+            options["dir"] = category.directory.into();
         }
     }
     let rule = prefs
@@ -130,7 +108,7 @@ pub(super) fn options(prefs: &Preferences, request: &AddRequest) -> Result<Value
                 .filter_map(|value| url::Url::parse(value).ok())
                 .any(|url| {
                     url.host_str()
-                        .is_some_and(|host| matches(&rule.host_pattern, host, false))
+                        .is_some_and(|host| matches(&rule.host_pattern, host))
                 });
             matched
                 .then(|| {
@@ -195,10 +173,10 @@ mod tests {
     #[test]
     fn browser_intent_uses_matching_preferences_and_one_value_per_header() {
         let prefs: Preferences = serde_json::from_value(json!({
-            "dir":"downloads",
+            "dir":std::env::temp_dir().to_string_lossy(),
             "fileCategoryEnabled":true,
             "fileCategories":[{
-                "directory":"documents", "extensions":["pdf"],
+                "directory":"documents", "directoryMode":"relative", "label":"Documents", "extensions":["pdf"],
                 "urlPatterns":["https://*.example.test/*"]
             }],
             "userAgentProfiles":[{"id":"site", "value":"Site agent"}],
@@ -224,7 +202,7 @@ mod tests {
         assert_eq!(options["filename-hint-source"], "browser");
         assert_eq!(
             std::path::Path::new(options["dir"].as_str().unwrap()),
-            std::path::Path::new("downloads").join("documents")
+            std::env::temp_dir().join("documents")
         );
         let headers: Vec<_> = options["header"].as_str().unwrap().lines().collect();
         assert_eq!(headers.len(), 3);

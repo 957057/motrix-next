@@ -86,17 +86,19 @@ export interface FileCategoryPolicy {
   categories: FileCategory[]
 }
 
-function buildTorrentTaskOptions(
+async function buildTorrentTaskOptions(
   item: BatchItem,
   options: Aria2EngineOptions,
   fileCategory?: FileCategoryPolicy,
-): Aria2EngineOptions {
+): Promise<Aria2EngineOptions> {
   const selectedIndices = new Set(item.selectedFileIndices ?? [])
   const selectedFiles = (item.torrentMeta?.files ?? [])
     .filter((file) => selectedIndices.has(Number(file.index)) && Number(file.length) > 0)
     .map((file) => ({ path: file.path }))
   const category = fileCategory?.enabled
-    ? resolveFileSetCategory(selectedFiles, fileCategory.categories, { urls: [item.source] })
+    ? await resolveFileSetCategory(selectedFiles, fileCategory.categories, String(options.dir ?? ''), {
+        urls: [item.source],
+      })
     : undefined
 
   return {
@@ -226,7 +228,7 @@ export async function submitBatchItems(
     }
     try {
       if (item.kind === 'torrent') {
-        const opts = buildTorrentTaskOptions(item, options, fileCategory)
+        const opts = await buildTorrentTaskOptions(item, options, fileCategory)
         const gid = await taskStore.addTorrent({
           torrent: item.payload,
           options: opts,
@@ -310,7 +312,7 @@ export async function submitManualUris(
         const atomicOptions = { ...entryOptions }
         if (fileCategory?.enabled) {
           const candidate = getScalarOption(atomicOptions, 'out') || extractDecodedFilename(entry.uris[0])
-          atomicOptions.dir = resolveDownloadDir(
+          atomicOptions.dir = await resolveDownloadDir(
             candidate || entry.uris[0],
             getScalarOption(atomicOptions, 'dir'),
             true,

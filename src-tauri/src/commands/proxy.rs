@@ -793,3 +793,8 @@ mod tests {
         assert_eq!(parse_gnome_ignore_hosts("[]"), "");
     }
 }
+
+#[tauri::command]
+pub fn normalize_proxy_bypass(value: String) -> Result<String, crate::error::AppError> {
+    crate::proxy_bypass::normalize(&value)
+}

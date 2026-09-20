@@ -14,16 +14,13 @@ mod log_policy;
 #[cfg(target_os = "macos")]
 mod menu;
 mod native_messaging;
+mod proxy_bypass;
 mod services;
 mod tray;
 mod upnp;
 
-// Re-export the Windows elevation entry point at the crate root so that
-// main.rs can call it before Tauri initialises.  The `commands` module
-// is intentionally private — only this single function needs to be
-// accessible from the binary crate.
 #[cfg(windows)]
-pub use commands::protocol::try_run_elevated;
+pub use engine::windows_process::prepare_install;
 
 use crate::commands::power::ShutdownCancelState;
 use crate::commands::updater::{DownloadedUpdate, UpdateCancelState};
@@ -240,11 +237,13 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         "app_started"
     );
     native_messaging::schedule_repair(app.handle());
+    commands::protocol::repair_activation_protocol(app.handle());
     #[cfg(target_os = "macos")]
     {
         let m = menu::build_menu(handle)?;
         app.set_menu(m)?;
     }
+    app.manage(tray::MainWindowState::default());
     let tray_state = tray::setup_tray(handle)?;
     app.manage(tray_state);
 
@@ -534,7 +533,7 @@ fn handle_run_event(app: &tauri::AppHandle, event: tauri::RunEvent) {
         #[cfg(target_os = "macos")]
         tauri::RunEvent::Reopen { .. } => {
             log::info!("app:reopen — restoring main window");
-            tray::activate_main_window(app, "macos-reopen");
+            tray::request_main_window(app, "macos-reopen", true);
         }
         _ => {}
     }
@@ -642,12 +641,7 @@ pub fn run() {
                 return;
             }
 
-            let app_handle = app.clone();
-            if let Err(e) = app.run_on_main_thread(move || {
-                tray::activate_main_window(&app_handle, "single-instance-launch");
-            }) {
-                log::warn!("single-instance:activate-schedule-failed error={e}");
-            }
+            tray::request_main_window(app, "single-instance-launch", true);
         }));
     }
 
@@ -714,7 +708,6 @@ pub fn run() {
             commands::show_item_in_dir,
             commands::open_path_normalized,
             commands::delete_path,
-            commands::move_file,
             commands::get_engine_conf_path,
             commands::set_window_alpha,
             commands::is_default_protocol_client,
@@ -722,6 +715,7 @@ pub fn run() {
             commands::remove_as_default_protocol_client,
             commands::fetch_remote_bytes,
             commands::get_system_proxy,
+            commands::normalize_proxy_bypass,
             commands::lookup_peer_ips,
             commands::refresh_runtime_config,
             commands::restart_http_api,
@@ -766,6 +760,8 @@ pub fn run() {
             commands::aria2_change_option,
             commands::aria2_get_files,
             commands::aria2_add_uri,
+            commands::resolve_file_category,
+            commands::validate_file_categories,
             commands::cancel_download_request,
             commands::aria2_add_torrent,
             commands::aria2_inspect_torrent,

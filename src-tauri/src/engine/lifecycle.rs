@@ -335,53 +335,32 @@ pub fn start_engine(app: &tauri::AppHandle) -> Result<StartEngineOutcome, String
     Ok(StartEngineOutcome::Started)
 }
 
-/// Stops the running engine process.
-///
-/// Two modes are available, selected by `for_exit`:
-///
-/// - **`for_exit = true`** (app shutdown): uses `CommandChild::kill()`
-///   (`TerminateProcess` on Windows, `SIGKILL` on Unix).  Returns in < 1 ms
-///   because the OS reclaims all child resources when the main process exits
-///   moments later.  No sleep is needed — we will never reuse the port.
-///
-/// - **`for_exit = false`** (restart / command): terminates the owned child
-///   directly on Windows and sends `SIGTERM` on Unix, then sleeps 100 ms for
-///   the OS to release the RPC port before a new engine instance binds to it.
-///
-/// Aria2 Next is a single-process, multi-threaded binary — it never spawns child
-/// processes, so direct child ownership covers the Windows process lifetime
-/// without launching an additional system command.
+/// Stop the owned sidecar. Parent-process monitoring also covers abrupt app exit.
 pub fn stop_engine(app: &tauri::AppHandle, for_exit: bool) -> Result<(), String> {
     let state = app.state::<EngineState>();
     state.invalidate_generation();
     let mut child_lock = state.child.lock().map_err(|e| e.to_string())?;
 
-    if for_exit {
-        // Fast path: app is exiting — OS will reclaim all child resources.
-        if let Some(child) = child_lock.take() {
-            let pid = child.pid();
-            let _ = child.kill(); // best-effort; ignore errors
-            log::info!("stopped engine process: PID {} (fast exit)", pid);
+    #[cfg(windows)]
+    {
+        let _ = for_exit;
+        if let Some(pid) = child_lock.as_ref().map(CommandChild::pid) {
+            super::windows_process::stop_owned_engine(pid)?;
+            *child_lock = None;
+            log::info!("stopped engine process: PID {pid}");
         }
-    } else {
-        // Thorough path: must guarantee process tree is dead and port is free.
-        #[cfg(windows)]
-        if let Some(child) = child_lock.take() {
-            let pid = child.pid();
+    }
+    #[cfg(not(windows))]
+    if let Some(child) = child_lock.take() {
+        let pid = child.pid();
+        if for_exit {
             child
                 .kill()
-                .map_err(|error| format!("Failed to terminate engine PID {pid}: {error}"))?;
-            log::info!("stopped engine process: PID {}", pid);
-            std::thread::sleep(std::time::Duration::from_millis(100));
-        }
-        #[cfg(not(windows))]
-        if let Some(child) = child_lock.as_ref() {
-            let pid = child.pid();
+                .map_err(|error| format!("Failed to stop engine PID {pid}: {error}"))?;
+        } else {
             kill_process_by_pid(pid)?;
-            *child_lock = None;
-            log::info!("stopped engine process: PID {}", pid);
-            std::thread::sleep(std::time::Duration::from_millis(100));
         }
+        log::info!("stopped engine process: PID {pid}");
     }
 
     Ok(())

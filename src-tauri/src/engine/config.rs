@@ -46,6 +46,7 @@ const MANAGED_KEYS: &[&str] = &[
     "save-session",
     "show-console-readout",
     "state-dir",
+    "stop-with-process",
     "summary-interval",
 ];
 
@@ -197,6 +198,11 @@ pub(crate) fn build_runtime_config(
                 continue;
             }
 
+            let value = if key == "no-proxy" {
+                crate::proxy_bypass::normalize(&value).map_err(|error| error.to_string())?
+            } else {
+                value
+            };
             insert_option(&mut options, key, value)?;
         }
     }
@@ -205,6 +211,11 @@ pub(crate) fn build_runtime_config(
         insert_option(&mut options, "seed-ratio", "0")?;
     }
 
+    insert_option(
+        &mut options,
+        "stop-with-process",
+        std::process::id().to_string(),
+    )?;
     insert_option(&mut options, "enable-rpc", "true")?;
     insert_option(&mut options, "rpc-max-request-size", "16M")?;
     insert_option(

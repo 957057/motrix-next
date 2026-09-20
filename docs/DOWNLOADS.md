@@ -38,8 +38,15 @@ For media, `filename-hint-source=title` preserves dots in a page title and appen
 the selected container extension. Filename hints and explicit `out` values have
 their extension replaced by the selected container. The engine owns publication
 and collision handling. Vue never rewrites the native output name on selection.
-Directory classification is an application preference based on the available URL
-or hint; it does not predict a later server-selected filename.
+Directory classification uses the native `services/downloads/category.rs` policy
+for browser submissions and frontend previews/submissions. Rules declare a
+`directoryMode` of `relative` (under the current default directory) or `absolute`
+(a fixed directory). Built-in rules store relative subdirectories. An explicit
+per-task directory bypasses classification. File sets must resolve to one directory;
+mixed or unclassified content keeps its base directory. Classification uses the
+available URL, filename hint or torrent metadata, without a separate naming request.
+Completed files are never moved by the WebView, and native output paths remain
+authoritative. Rules without the current directory mode must be configured again.
 
 The header rules follow [RFC 6266](https://www.rfc-editor.org/rfc/rfc6266.html).
 The existing aria2 header parser and libcurl handle protocol decoding. A bounded
@@ -102,6 +109,9 @@ Frontend stores expose named IPC operations and never execute SQL. The media
 operation journal remains separate because it has a different lifecycle and lease.
 
 SQLite transactions serialize history page/count queries and submission updates.
+History snapshots are unordered; the task store owns presentation sorting and reuses
+the snapshot during periodic live refreshes. Only explicit invalidation reloads history.
+Database browsing uses indexed default ordering with an ID tie-breaker for stable pages.
 The current database layout is retained when opening existing data; unsupported
 layouts fail explicitly. There is no legacy migration runner or automatic reset.
 Only the user's explicit reset removes the database.
@@ -144,3 +154,28 @@ continue to authenticate with the Extension API secret.
 
 The `rayburst://` scheme activates the desktop only. It never creates a download or
 transports cookies. Downloads use the authenticated HTTP handoff and its receipts.
+
+## Activation and installation
+
+The application repairs its own `rayburst` activation scheme at startup on Windows
+and Linux. Public download schemes remain explicit user choices. Windows queries
+the effective Shell association instead of inferring it from an application registry
+key. Protocol state is included in the Windows diagnostic export.
+
+All native wake requests use one serialized background window creation path.
+WebView readiness controls delivery of pending UI actions; creating a window never
+blocks a browser download receipt. Non-silent automatic submissions honor the
+Open Downloads preference.
+
+The engine receives `stop-with-process` for the desktop PID. Windows installer hooks
+run a temporary copy of the new executable in maintenance mode before replacing
+files. The hooks replace Tauri's basename-only process check. Maintenance verifies
+full process paths, stops this installation's supervisor before
+its sidecars, and waits for native process handles to signal exit. It does not kill
+other installations by executable name. Normal application exit still saves the
+session through the existing supervisor.
+
+Proxy bypass entries are validated and normalized once in Rust for runtime config,
+global option updates and task options. libcurl performs host/IP/CIDR matching.
+Newlines, commas and system-list semicolons separate entries; unsupported wildcard
+expressions and `<local>` are rejected rather than silently misinterpreted.
