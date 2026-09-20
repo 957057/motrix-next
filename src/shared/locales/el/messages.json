@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "Εργασίες",
-    "about": "Σχετικά με το Rayburst",
-    "preferences": "Προτιμήσεις...",
     "check-updates-now": "Έλεγχος τώρα",
     "checking-for-updates": "Γίνεται έλεγχος...",
     "hide": "Απόκρυψη Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "Αρχή (δευτερόλεπτα)",
     "end-time": "Τέλος (0: τέλος πηγής)",
     "aes-key": "Κλειδί AES-128"
+  },
+  "navigation": {
+    "about": "Σχετικά",
+    "settings": "Ρυθμίσεις"
   }
 }

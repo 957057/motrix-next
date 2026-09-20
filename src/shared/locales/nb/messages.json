@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "Oppgaver",
-    "about": "Om Rayburst",
-    "preferences": "Innstillinger...",
     "check-updates-now": "Sjekk nå",
     "checking-for-updates": "Ser etter oppdateringer...",
     "hide": "Skjul Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "Start (sekunder)",
     "end-time": "Slutt (0: kildens slutt)",
     "aes-key": "AES-128-nøkkel"
+  },
+  "navigation": {
+    "about": "Om",
+    "settings": "Innstillinger"
   }
 }

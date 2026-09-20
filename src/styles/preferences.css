@@ -28,17 +28,6 @@
   padding-left: 50px;
 }
 
-.form-preference .n-divider.n-divider--title-position-left .n-divider__line--left {
-  width: 28px;
-  flex: 0 0 28px;
-}
-
-.form-preference .n-divider.n-divider--title-position-left .n-divider__line--right {
-  width: auto;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
 .form-preference .collapse-indent {
   position: relative;
   margin-left: 16px;

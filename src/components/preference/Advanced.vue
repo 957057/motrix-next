@@ -54,7 +54,7 @@ import {
   CopyOutline,
 } from '@vicons/ionicons5'
 import { logger } from '@shared/logger'
-import PreferenceActionBar from './PreferenceActionBar.vue'
+import PreferenceActionRegistration from './PreferenceActionRegistration.vue'
 import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 
@@ -741,7 +741,12 @@ onMounted(async () => {
         </NDataTable>
       </NCard>
     </NModal>
-    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionRegistration
+      :is-dirty="isDirty"
+      :is-valid="numericFieldsValid"
+      @save="handleSave"
+      @discard="handleReset"
+    />
   </div>
 </template>
 

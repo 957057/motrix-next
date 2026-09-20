@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "タスク一覧",
-    "about": "Rayburst について",
-    "preferences": "環境設定...",
     "check-updates-now": "今すぐ確認",
     "checking-for-updates": "更新を確認中...",
     "hide": "Rayburst を隠す",
@@ -923,5 +921,9 @@
     "start-time": "開始位置（秒）",
     "end-time": "終了位置（0：末尾）",
     "aes-key": "AES-128 キー"
+  },
+  "navigation": {
+    "about": "このアプリについて",
+    "settings": "設定"
   }
 }

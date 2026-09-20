@@ -8,7 +8,7 @@ Redefining the open-source download manager
 with the Tauri CLI. Windows ICO and Linux PNG icons retain transparent backgrounds.
 The same command synchronizes the master into `src-tauri/icons/Rayburst.icon`.
 macOS uses this Icon Composer asset through Tauri's native bundler, with mist
-lavender (`#F3F0FA`) and ink violet (`#211A30`) backgrounds for default and dark
+lavender (`#E9E4F2`) and ink violet (`#211A30`) backgrounds for default and dark
 appearances. Apple renders the enclosure and appearance variants; the logo stays
 opaque and undistorted. Edit appearance settings in Icon Composer. Packaging
 requires Xcode 26 or later. The tray remains a separate transparent template image.
@@ -49,3 +49,9 @@ release under the new brand. Localize website copy in all 27 languages.
 Product names belong in visible copy and distributable filenames. Internal symbols
 use their responsibility, and published protocol and storage identities stay fixed.
 Rebranding does not rotate signing keys, rename update channels or change engine APIs.
+
+On macOS, `pnpm icons` also exports `macos-dev.icns` through Apple’s `ictool`
+for the development Dock icon. Install Icon Composer first, or set
+`ICON_COMPOSER_TOOL` to its executable path. Restart `pnpm tauri dev` after
+regenerating icons. This preview uses the default appearance; packaged apps use
+the Icon Composer appearance variants.

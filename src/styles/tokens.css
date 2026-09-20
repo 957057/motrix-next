@@ -97,7 +97,9 @@
   --about-card-hover-bg: var(--m3-surface-container-high);
 
   /* ── Layout ────────────────────────────────────────────────────── */
-  --sidebar-width: 224px;
+  --sidebar-width: 176px;
+  --navigation-duration: 220ms;
+  --navigation-easing: cubic-bezier(0.2, 0, 0, 1);
   --content-gutter: 24px;
 
   /* ── Typography ────────────────────────────────────────────────── */
@@ -204,5 +206,6 @@
 @media (max-width: 699px) {
   :root {
     --content-gutter: 16px;
+    --sidebar-width: 64px;
   }
 }

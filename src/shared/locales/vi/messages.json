@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "Tác vụ",
-    "about": "Về Rayburst",
-    "preferences": "Tùy chọn...",
     "check-updates-now": "Kiểm tra ngay",
     "checking-for-updates": "Đang kiểm tra cập nhật...",
     "hide": "Ẩn Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "Bắt đầu (giây)",
     "end-time": "Kết thúc (0: cuối nguồn)",
     "aes-key": "Khóa AES-128"
+  },
+  "navigation": {
+    "about": "Giới thiệu",
+    "settings": "Cài đặt"
   }
 }

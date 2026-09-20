@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "Görevler",
-    "about": "Rayburst Hakkında",
-    "preferences": "Tercihler...",
     "check-updates-now": "Şimdi kontrol et",
     "checking-for-updates": "Güncellemeler kontrol ediliyor...",
     "hide": "Rayburst'i gizle",
@@ -923,5 +921,9 @@
     "start-time": "Başlangıç (saniye)",
     "end-time": "Bitiş (0: kaynağın sonu)",
     "aes-key": "AES-128 anahtarı"
+  },
+  "navigation": {
+    "about": "Hakkında",
+    "settings": "Ayarlar"
   }
 }

@@ -40,7 +40,7 @@ import { resolveAppProxyUrl } from '@shared/utils/proxy'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { logger } from '@shared/logger'
 import type { Ed2kSearchResult } from '@shared/types'
-import PreferenceActionBar from './PreferenceActionBar.vue'
+import PreferenceActionRegistration from './PreferenceActionRegistration.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 
 const { t } = useI18n()
@@ -493,7 +493,12 @@ onMounted(() => {
         </NFormItem>
       </NForm>
     </div>
-    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionRegistration
+      :is-dirty="isDirty"
+      :is-valid="numericFieldsValid"
+      @save="handleSave"
+      @discard="handleReset"
+    />
   </div>
 </template>
 

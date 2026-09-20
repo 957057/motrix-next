@@ -41,7 +41,7 @@ import {
   NText,
   useDialog,
 } from 'naive-ui'
-import PreferenceActionBar from './PreferenceActionBar.vue'
+import PreferenceActionRegistration from './PreferenceActionRegistration.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 import { SyncOutline, AddCircleOutline, CloseCircleOutline, DiceOutline } from '@vicons/ionicons5'
 
@@ -749,7 +749,12 @@ onMounted(() => {
         </NFormItem>
       </NForm>
     </div>
-    <PreferenceActionBar :is-dirty="isDirty" :is-valid="formFieldsValid" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionRegistration
+      :is-dirty="isDirty"
+      :is-valid="formFieldsValid"
+      @save="handleSave"
+      @discard="handleReset"
+    />
   </div>
 </template>
 

@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "وظایف",
-    "about": "درباره Rayburst",
-    "preferences": "تنظیمات...",
     "check-updates-now": "بررسی اکنون",
     "checking-for-updates": "در حال بررسی به‌روزرسانی‌ها...",
     "hide": "مخفی کردن Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "شروع (ثانیه)",
     "end-time": "پایان (0: انتهای منبع)",
     "aes-key": "کلید AES-128"
+  },
+  "navigation": {
+    "about": "درباره",
+    "settings": "تنظیمات"
   }
 }

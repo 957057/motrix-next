@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "कार्य",
-    "about": "Rayburst के बारे में",
-    "preferences": "प्राथमिकताएं...",
     "check-updates-now": "अभी जांचें",
     "checking-for-updates": "अपडेट जांचे जा रहे हैं...",
     "hide": "Rayburst छिपाएं",
@@ -923,5 +921,9 @@
     "start-time": "शुरुआत (सेकंड)",
     "end-time": "अंत (0: स्रोत का अंत)",
     "aes-key": "AES-128 कुंजी"
+  },
+  "navigation": {
+    "about": "परिचय",
+    "settings": "सेटिंग्स"
   }
 }

@@ -3,12 +3,15 @@
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import MTooltip from '@/components/common/MTooltip.vue'
 import { NIcon } from 'naive-ui'
 import { InformationCircleOutline, SettingsOutline } from '@vicons/ionicons5'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceStore } from '@/stores/preference'
 import SidebarCount from './SidebarCount.vue'
 import { useTaskDestinations } from './navigation'
+
+defineProps<{ compact?: boolean }>()
 
 const emit = defineEmits<{ 'show-about': [] }>()
 const { t } = useI18n()
@@ -20,37 +23,57 @@ const isSettings = computed(() => route.matched.some((record) => record.name ===
 </script>
 
 <template>
-  <nav class="sidebar" :aria-label="t('app.task-list')">
+  <nav
+    class="sidebar"
+    :class="{ compact, counts: preferences.config.sidebarTaskCounts }"
+    :aria-label="t('app.task-list')"
+  >
     <div class="sidebar-scopes">
-      <RouterLink
-        v-for="item in taskDestinations"
-        :key="item.key"
-        :to="{ name: 'task', params: { status: item.key } }"
-        class="sidebar-item"
-        active-class="active"
-        :aria-label="preferences.config.sidebarTaskCounts ? `${item.label} ${tasks.taskCounts[item.key]}` : item.label"
-      >
-        <NIcon :size="18" aria-hidden="true"><component :is="item.icon" /></NIcon>
-        <span class="sidebar-label">{{ item.label }}</span>
-        <Transition name="sidebar-count">
-          <SidebarCount v-if="preferences.config.sidebarTaskCounts" :value="tasks.taskCounts[item.key]" />
-        </Transition>
-      </RouterLink>
+      <MTooltip v-for="item in taskDestinations" :key="item.key" placement="right" :disabled="!compact">
+        <template #trigger>
+          <RouterLink
+            :to="{ name: 'task', params: { status: item.key } }"
+            class="sidebar-item"
+            active-class="active"
+            :aria-label="
+              preferences.config.sidebarTaskCounts ? `${item.label} ${tasks.taskCounts[item.key]}` : item.label
+            "
+          >
+            <NIcon :size="18" aria-hidden="true"><component :is="item.icon" /></NIcon>
+            <span class="sidebar-label">{{ item.label }}</span>
+            <Transition name="sidebar-count">
+              <SidebarCount v-if="preferences.config.sidebarTaskCounts" :value="tasks.taskCounts[item.key]" />
+            </Transition>
+          </RouterLink>
+        </template>
+        {{ item.label }}
+      </MTooltip>
     </div>
     <div class="sidebar-bottom">
-      <button type="button" class="sidebar-item" @click="emit('show-about')">
-        <NIcon :size="18" aria-hidden="true"><InformationCircleOutline /></NIcon>
-        <span class="sidebar-label">{{ t('app.about') }}</span>
-      </button>
-      <RouterLink
-        :to="{ name: 'preference-general' }"
-        class="sidebar-item"
-        :class="{ active: isSettings }"
-        :aria-current="isSettings ? 'page' : undefined"
-      >
-        <NIcon :size="18" aria-hidden="true"><SettingsOutline /></NIcon>
-        <span class="sidebar-label">{{ t('app.preferences') }}</span>
-      </RouterLink>
+      <MTooltip placement="right" :disabled="!compact">
+        <template #trigger>
+          <button type="button" class="sidebar-item" :aria-label="t('navigation.about')" @click="emit('show-about')">
+            <NIcon :size="18" aria-hidden="true"><InformationCircleOutline /></NIcon>
+            <span class="sidebar-label">{{ t('navigation.about') }}</span>
+          </button>
+        </template>
+        {{ t('navigation.about') }}
+      </MTooltip>
+      <MTooltip placement="right" :disabled="!compact">
+        <template #trigger>
+          <RouterLink
+            :to="{ name: 'preference-general' }"
+            class="sidebar-item"
+            :class="{ active: isSettings }"
+            :aria-label="t('navigation.settings')"
+            :aria-current="isSettings ? 'page' : undefined"
+          >
+            <NIcon :size="18" aria-hidden="true"><SettingsOutline /></NIcon>
+            <span class="sidebar-label">{{ t('navigation.settings') }}</span>
+          </RouterLink>
+        </template>
+        {{ t('navigation.settings') }}
+      </MTooltip>
     </div>
   </nav>
 </template>
@@ -61,7 +84,7 @@ const isSettings = computed(() => route.matched.some((record) => record.name ===
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  padding: 8px;
   gap: 16px;
   background: var(--sidebar-bg);
 }
@@ -76,15 +99,19 @@ const isSettings = computed(() => route.matched.some((record) => record.name ===
 .sidebar-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 40px;
+  gap: 10px;
+  min-height: 38px;
+  position: relative;
+  overflow: hidden;
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 10px;
   margin-bottom: 4px;
   border-radius: 8px;
   color: var(--m3-on-surface-variant);
   text-align: left;
   transition:
+    padding var(--navigation-duration) var(--navigation-easing),
+    gap var(--navigation-duration) var(--navigation-easing),
     background-color 180ms ease,
     color 180ms ease;
 }
@@ -94,7 +121,10 @@ const isSettings = computed(() => route.matched.some((record) => record.name ===
 .sidebar-label {
   flex: 1;
   min-width: 0;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity var(--navigation-duration) var(--navigation-easing);
 }
 .sidebar-item:hover {
   background: var(--sidebar-hover-bg);
@@ -116,6 +146,47 @@ const isSettings = computed(() => route.matched.some((record) => record.name ===
 .sidebar-count-enter-from,
 .sidebar-count-leave-to {
   opacity: 0;
-  transform: scale(0.92);
+  scale: 0.92;
+}
+.compact .sidebar-item {
+  padding-inline: 15px;
+  gap: 0;
+}
+.compact .sidebar-label {
+  opacity: 0;
+}
+.counts .sidebar-scopes .sidebar-label {
+  padding-inline-end: 30px;
+}
+.sidebar :deep(.sidebar-count) {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  transition:
+    scale var(--navigation-duration) var(--navigation-easing),
+    top var(--navigation-duration) var(--navigation-easing),
+    right var(--navigation-duration) var(--navigation-easing),
+    transform var(--navigation-duration) var(--navigation-easing),
+    opacity var(--navigation-duration) var(--navigation-easing),
+    font-size var(--navigation-duration) var(--navigation-easing);
+}
+.compact :deep(.sidebar-count) {
+  transform: translateY(0);
+  top: 1px;
+  right: 1px;
+  min-width: 14px;
+  max-width: 30px;
+  overflow: hidden;
+  padding: 0 3px;
+  font-size: 9px;
+  line-height: 13px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-item,
+  .sidebar :deep(.sidebar-count),
+  .sidebar-label {
+    transition-duration: 1ms;
+  }
 }
 </style>

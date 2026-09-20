@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "Tugas",
-    "about": "Tentang Rayburst",
-    "preferences": "Preferensi...",
     "check-updates-now": "Periksa sekarang",
     "checking-for-updates": "Memeriksa pembaruan...",
     "hide": "Sembunyikan Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "Awal (detik)",
     "end-time": "Akhir (0: akhir sumber)",
     "aes-key": "Kunci AES-128"
+  },
+  "navigation": {
+    "about": "Tentang",
+    "settings": "Pengaturan"
   }
 }

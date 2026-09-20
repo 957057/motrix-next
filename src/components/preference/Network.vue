@@ -37,7 +37,7 @@ import {
   NText,
 } from 'naive-ui'
 const showUserAgentManager = ref(false)
-import PreferenceActionBar from './PreferenceActionBar.vue'
+import PreferenceActionRegistration from './PreferenceActionRegistration.vue'
 import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 import UserAgentManager from './UserAgentManager.vue'
@@ -417,7 +417,12 @@ onMounted(() => {
       :recent-profile-ids="form.recentUserAgentProfileIds"
       @save="handleUserAgentManagerSave"
     />
-    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionRegistration
+      :is-dirty="isDirty"
+      :is-valid="numericFieldsValid"
+      @save="handleSave"
+      @discard="handleReset"
+    />
   </div>
 </template>
 

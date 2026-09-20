@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "المهام",
-    "about": "حول Rayburst",
-    "preferences": "التفضيلات...",
     "check-updates-now": "تحقق الآن",
     "checking-for-updates": "جارٍ التحقق من التحديثات...",
     "hide": "إخفاء Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "البداية (ثوانٍ)",
     "end-time": "النهاية (0: نهاية المصدر)",
     "aes-key": "مفتاح AES-128"
+  },
+  "navigation": {
+    "about": "حول",
+    "settings": "الإعدادات"
   }
 }

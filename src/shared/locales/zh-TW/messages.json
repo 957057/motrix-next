@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "任務列表",
-    "about": "關於 Rayburst",
-    "preferences": "偏好設定...",
     "check-updates-now": "立即檢查",
     "checking-for-updates": "正在檢查更新...",
     "hide": "隱藏 Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "起點（秒）",
     "end-time": "終點（0 表示結尾）",
     "aes-key": "AES-128 金鑰"
+  },
+  "navigation": {
+    "about": "關於",
+    "settings": "設定"
   }
 }

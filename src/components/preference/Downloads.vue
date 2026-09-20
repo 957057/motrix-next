@@ -40,7 +40,7 @@ import {
   NRadioButton,
   NRadioGroup,
 } from 'naive-ui'
-import PreferenceActionBar from './PreferenceActionBar.vue'
+import PreferenceActionRegistration from './PreferenceActionRegistration.vue'
 import PreferenceCheckboxGrid from './PreferenceCheckboxGrid.vue'
 import PreferenceHintLabel from './PreferenceHintLabel.vue'
 import DirectoryPopover from '@/components/common/DirectoryPopover.vue'
@@ -559,7 +559,12 @@ onMounted(async () => {
         </NCollapseTransition>
       </NForm>
     </div>
-    <PreferenceActionBar :is-dirty="isDirty" :is-valid="numericFieldsValid" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionRegistration
+      :is-dirty="isDirty"
+      :is-valid="numericFieldsValid"
+      @save="handleSave"
+      @discard="handleReset"
+    />
     <FileCategoryManager
       v-model:show="showCategoryManager"
       :categories="form.fileCategories"

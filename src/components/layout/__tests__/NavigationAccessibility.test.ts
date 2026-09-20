@@ -14,6 +14,7 @@ vi.mock('@/stores/preference', () => ({ usePreferenceStore: () => preferences })
 vi.mock('../SidebarCount.vue', () => ({
   default: { props: ['value'], template: '<span class="count">{{ value }}</span>' },
 }))
+vi.mock('@/components/common/MTooltip.vue', () => ({ default: { template: '<slot name="trigger" />' } }))
 vi.mock('naive-ui', () => ({
   NIcon: { template: '<span><slot /></span>' },
   NTabs: { name: 'NTabs', props: ['value'], emits: ['update:value'], template: '<div><slot /></div>' },
@@ -61,10 +62,24 @@ describe('unified navigation', () => {
     wrapper.unmount()
   })
 
+  it('preserves navigation and counter instances when compact mode changes', async () => {
+    const router = await setup('/task/progress')
+    const wrapper = mount(AppSidebar, { props: { compact: false }, global: { plugins: [router] } })
+    const link = wrapper.get('a[href="/task/progress"]').element
+    const counter = wrapper.get('.count').element
+    await wrapper.setProps({ compact: true })
+    expect(wrapper.get('a[href="/task/progress"]').element).toBe(link)
+    expect(wrapper.get('.count').element).toBe(counter)
+    expect(wrapper.get('a[href="/task/progress"]').attributes('aria-label')).toBe('task.scope-progress 3')
+    await wrapper.setProps({ compact: false })
+    expect(wrapper.get('a[href="/task/progress"]').element).toBe(link)
+    wrapper.unmount()
+  })
+
   it('keeps settings selected throughout its child routes and opens About', async () => {
     const router = await setup('/preference/network')
     const wrapper = mount(AppSidebar, { global: { plugins: [router] } })
-    expect(wrapper.get('a.active').text()).toBe('app.preferences')
+    expect(wrapper.get('a.active').attributes('aria-label')).toBe('navigation.settings')
     expect(wrapper.get('a.active').attributes('aria-current')).toBe('page')
     await wrapper.get('button').trigger('click')
     expect(wrapper.emitted('show-about')).toHaveLength(1)
@@ -78,7 +93,7 @@ describe('unified navigation', () => {
     await wrapper.get('a[href="/task/all"]').trigger('click')
     await flushPromises()
     expect(router.currentRoute.value.name).toBe('preference-network')
-    expect(wrapper.get('a.active').text()).toBe('app.preferences')
+    expect(wrapper.get('a.active').attributes('aria-label')).toBe('navigation.settings')
     wrapper.unmount()
   })
 

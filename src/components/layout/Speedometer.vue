@@ -636,3 +636,16 @@ async function handleScheduleToggle(enabled: boolean) {
   max-height: 40px;
 }
 </style>
+
+<style scoped>
+/* Keep the shared footer usable at the minimum window width. */
+@container footer (max-width: 400px) {
+  .speedometer {
+    max-width: 128px;
+  }
+  .speedometer:not(.idle) .mode,
+  .speedometer:not(.idle) .limit-zone {
+    display: none;
+  }
+}
+</style>

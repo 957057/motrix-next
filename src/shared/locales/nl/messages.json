@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "Taken",
-    "about": "Over Rayburst",
-    "preferences": "Instellingen...",
     "check-updates-now": "Nu controleren",
     "checking-for-updates": "Controleren...",
     "hide": "Rayburst verbergen",
@@ -923,5 +921,9 @@
     "start-time": "Begin (seconden)",
     "end-time": "Einde (0: broneinde)",
     "aes-key": "AES-128-sleutel"
+  },
+  "navigation": {
+    "about": "Over",
+    "settings": "Instellingen"
   }
 }

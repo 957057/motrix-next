@@ -38,7 +38,7 @@ import {
   NIcon,
   useDialog,
 } from 'naive-ui'
-import PreferenceActionBar from './PreferenceActionBar.vue'
+import PreferenceActionRegistration from './PreferenceActionRegistration.vue'
 import MTooltip from '@/components/common/MTooltip.vue'
 import { CloudDownloadOutline } from '@vicons/ionicons5'
 import type { UpdateChannel } from '@shared/types'
@@ -474,7 +474,7 @@ onMounted(async () => {
         </NFormItem>
       </NForm>
     </div>
-    <PreferenceActionBar :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
+    <PreferenceActionRegistration :is-dirty="isDirty" @save="handleSave" @discard="handleReset" />
   </div>
 </template>
 

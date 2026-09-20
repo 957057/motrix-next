@@ -39,16 +39,16 @@ import {
   SwapVerticalOutline,
   ArrowUpOutline,
   ArrowDownOutline,
-  EllipsisHorizontalOutline,
 } from '@vicons/ionicons5'
 
+const props = defineProps<{ scope: 'all' | 'progress' | 'failed' | 'completed' }>()
 const { t } = useI18n()
 const appStore = useAppStore()
 const taskStore = useTaskStore()
 const preferenceStore = usePreferenceStore()
 
 // ── Sort dropdown ─────────────────────────────────────────────────
-const currentTab = computed(() => taskStore.currentList)
+const currentTab = computed(() => props.scope)
 
 /** Map sort field key to its i18n label. */
 const SORT_LABELS: Record<ProgressSortField | TerminalSortField | AllSortField, I18nKey> = {
@@ -104,7 +104,7 @@ async function lockDialog(d: ReturnType<typeof dialog.info>) {
   await nextTick()
 }
 
-const currentList = computed(() => taskStore.currentList)
+const currentList = computed(() => props.scope)
 const allGids = computed(() => taskStore.taskList.map((t: { gid: string }) => t.gid))
 const hasActiveTasks = computed(() =>
   taskStore.taskList.some((t: Aria2Task) => t.status === TASK_STATUS.ACTIVE || t.status === TASK_STATUS.WAITING),
@@ -486,62 +486,109 @@ function selectBatchAction(key: string | number) {
 </script>
 
 <template>
-  <div class="task-actions">
-    <MTooltip>
-      <template #trigger>
-        <NButton type="primary" circle size="small" :aria-label="t('task.new-task')" @click="showAddTask">
-          <template #icon>
-            <NIcon><AddOutline /></NIcon>
-          </template>
-        </NButton>
-      </template>
-      {{ t('task.new-task') || 'New Task' }}
-    </MTooltip>
-    <NDropdown
-      trigger="click"
-      placement="bottom-end"
-      :options="sortOptions"
-      :value="currentSort.field"
-      @select="selectSort"
+  <TransitionGroup name="toolbar-action" tag="div" class="task-actions">
+    <span key="add" class="toolbar-action"
+      ><MTooltip>
+        <template #trigger>
+          <NButton type="primary" circle size="small" :aria-label="t('task.new-task')" @click="showAddTask">
+            <template #icon>
+              <NIcon><AddOutline /></NIcon>
+            </template>
+          </NButton>
+        </template>
+        {{ t('task.new-task') || 'New Task' }}
+      </MTooltip></span
     >
-      <NButton quaternary circle size="small" :aria-label="t('task.sort-by')">
-        <template #icon
-          ><NIcon><SwapVerticalOutline /></NIcon
-        ></template>
-      </NButton>
-    </NDropdown>
-    <MTooltip>
-      <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :aria-label="t('task.refresh-list')"
-          :loading="refreshing"
-          :disabled="refreshing"
-          @click="onRefresh"
-        >
-          <template #icon>
-            <NIcon><RefreshOutline /></NIcon>
-          </template>
-        </NButton>
-      </template>
-      {{ t('task.refresh-list') || 'Refresh' }}
-    </MTooltip>
-    <NDropdown trigger="click" placement="bottom-end" :options="batchOptions" @select="selectBatchAction">
-      <NButton quaternary circle size="small" :aria-label="t('task.more-actions')">
-        <template #icon
-          ><NIcon><EllipsisHorizontalOutline /></NIcon
-        ></template>
-      </NButton>
-    </NDropdown>
-  </div>
+    <span key="sort" class="toolbar-action"
+      ><NDropdown
+        trigger="click"
+        placement="bottom-end"
+        :options="sortOptions"
+        :value="currentSort.field"
+        @select="selectSort"
+      >
+        <NButton quaternary circle size="small" :aria-label="t('task.sort-by')">
+          <template #icon
+            ><NIcon><SwapVerticalOutline /></NIcon
+          ></template>
+        </NButton> </NDropdown
+    ></span>
+    <span key="refresh" class="toolbar-action"
+      ><MTooltip>
+        <template #trigger>
+          <NButton
+            quaternary
+            circle
+            size="small"
+            :aria-label="t('task.refresh-list')"
+            :loading="refreshing"
+            :disabled="refreshing"
+            @click="onRefresh"
+          >
+            <template #icon>
+              <NIcon><RefreshOutline /></NIcon>
+            </template>
+          </NButton>
+        </template>
+        {{ t('task.refresh-list') || 'Refresh' }}
+      </MTooltip></span
+    >
+    <span v-for="action in batchOptions" :key="action.key" class="toolbar-action">
+      <MTooltip>
+        <template #trigger>
+          <NButton
+            quaternary
+            circle
+            size="small"
+            :aria-label="String(action.label)"
+            :disabled="Boolean(action.disabled)"
+            @click="selectBatchAction(action.key)"
+          >
+            <template #icon>
+              <component :is="action.icon" v-if="action.icon" />
+              <NIcon v-else><StopCircleOutline /></NIcon>
+            </template>
+          </NButton>
+        </template>
+        {{ action.label }}
+      </MTooltip>
+    </span>
+  </TransitionGroup>
 </template>
 
 <style scoped>
 .task-actions {
+  position: relative;
   display: flex;
-  gap: 4px;
+  flex-shrink: 0;
   align-items: center;
+  gap: 4px;
+}
+.toolbar-action {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.toolbar-action-move,
+.toolbar-action-enter-active,
+.toolbar-action-leave-active {
+  transition:
+    transform 180ms cubic-bezier(0.2, 0, 0, 1),
+    opacity 140ms ease;
+}
+.toolbar-action-leave-active {
+  position: absolute;
+  pointer-events: none;
+}
+.toolbar-action-enter-from,
+.toolbar-action-leave-to {
+  opacity: 0;
+  transform: translateY(3px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .toolbar-action-move,
+  .toolbar-action-enter-active,
+  .toolbar-action-leave-active {
+    transition: none;
+  }
 }
 </style>

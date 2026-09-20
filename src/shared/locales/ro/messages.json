@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "Sarcini",
-    "about": "Despre Rayburst",
-    "preferences": "Preferințe...",
     "check-updates-now": "Verifică acum",
     "checking-for-updates": "Se verifică actualizările...",
     "hide": "Ascunde Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "Început (secunde)",
     "end-time": "Sfârșit (0: sfârșitul sursei)",
     "aes-key": "Cheie AES-128"
+  },
+  "navigation": {
+    "about": "Despre",
+    "settings": "Setări"
   }
 }

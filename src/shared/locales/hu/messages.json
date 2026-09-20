@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "Feladatok",
-    "about": "A Rayburst névjegye",
-    "preferences": "Beállítások...",
     "check-updates-now": "Ellenőrzés most",
     "checking-for-updates": "Frissítések keresése...",
     "hide": "Rayburst elrejtése",
@@ -923,5 +921,9 @@
     "start-time": "Kezdet (másodperc)",
     "end-time": "Vég (0: forrás vége)",
     "aes-key": "AES-128-kulcs"
+  },
+  "navigation": {
+    "about": "Névjegy",
+    "settings": "Beállítások"
   }
 }

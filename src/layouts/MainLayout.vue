@@ -27,9 +27,10 @@ import aria2Api from '@/api/aria2'
 import { usePlatform } from '@/composables/usePlatform'
 import { throttledResizeHandler, cancelPendingResize } from '@/layouts/resizeThrottle'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
+import PreferenceActionBar from '@/components/preference/PreferenceActionBar.vue'
+import { providePreferenceActions } from '@/composables/usePreferenceActions'
 import TaskActions from '@/components/task/TaskActions.vue'
 import { useTaskDestinations } from '@/components/layout/navigation'
-import { MenuOutline } from '@vicons/ionicons5'
 import Speedometer from '@/components/layout/Speedometer.vue'
 import WindowControls from '@/components/layout/WindowControls.vue'
 import EngineRecoveryDialog from '@/components/layout/EngineRecoveryDialog.vue'
@@ -40,7 +41,7 @@ import TaskSelectionHost from '@/components/task/TaskSelectionHost.vue'
 import { useTaskStore } from '@/stores/task'
 import { usePreferenceStore } from '@/stores/preference'
 import { useAppMessage } from '@/composables/useAppMessage'
-import { NModal, NButton, NCheckbox, NProgress, NPagination, NIcon, NDrawer, NDrawerContent, useDialog } from 'naive-ui'
+import { NModal, NButton, NCheckbox, NProgress, NPagination, useDialog } from 'naive-ui'
 
 import { useAppEvents } from '@/composables/useAppEvents'
 import { loadAddedAtFromRecords } from '@/composables/useTaskOrder'
@@ -70,26 +71,24 @@ watch(
   { immediate: true, flush: 'post' },
 )
 const isTaskPage = computed(() => route.path.startsWith('/task'))
+const preferenceActions = providePreferenceActions()
+const activePreferenceActions = computed(() =>
+  preferenceActions.value?.routeName === route.name ? preferenceActions.value : null,
+)
+const taskScope = computed(() => {
+  const status = route.params.status
+  return status === 'progress' || status === 'failed' || status === 'completed' ? status : 'all'
+})
+
 const compactNavigation = useMediaQuery('(max-width: 699px)')
-const sidebarOpen = ref(false)
 const taskDestinations = useTaskDestinations()
 const pageTitle = computed(() =>
   isTaskPage.value
     ? (taskDestinations.value.find((item) => item.key === (route.params.status || 'all'))?.label ?? t('task.scope-all'))
-    : t('app.preferences'),
+    : t('navigation.settings'),
 )
-watch(
-  () => route.fullPath,
-  () => {
-    sidebarOpen.value = false
-  },
-)
-watch(compactNavigation, () => {
-  sidebarOpen.value = false
-})
 const showAbout = ref(false)
 function openAbout() {
-  sidebarOpen.value = false
   showAbout.value = true
 }
 const showExitDialog = ref(false)
@@ -761,26 +760,24 @@ onUnmounted(() => {
       </div>
     </Transition>
     <div class="window-chrome" data-tauri-drag-region />
-    <div v-if="!compactNavigation" class="sidebar-heading" data-tauri-drag-region>
+    <div class="sidebar-heading" data-tauri-drag-region>
       <h2 data-tauri-drag-region>{{ t('app.task-list') }}</h2>
     </div>
-    <AppSidebar v-if="!compactNavigation" class="sidebar-slot" @show-about="openAbout" />
+    <AppSidebar :compact="compactNavigation" class="sidebar-slot" @show-about="openAbout" />
     <header class="page-header" data-tauri-drag-region>
-      <NButton v-if="compactNavigation" quaternary circle :aria-label="t('app.task-list')" @click="sidebarOpen = true">
-        <template #icon
-          ><NIcon><MenuOutline /></NIcon
-        ></template>
-      </NButton>
-      <Transition name="page-title" mode="out-in">
-        <h1 :key="pageTitle" data-tauri-drag-region>{{ pageTitle }}</h1>
+      <div class="page-title-slot" data-tauri-drag-region>
+        <Transition name="page-title" mode="out-in">
+          <h1 :key="pageTitle" data-tauri-drag-region>{{ pageTitle }}</h1>
+        </Transition>
+      </div>
+      <Transition name="bottom-accessory">
+        <TaskActions
+          v-if="isTaskPage"
+          :scope="taskScope"
+          :inert="taskStore.currentList !== (route.params.status || 'all')"
+        />
       </Transition>
-      <TaskActions v-if="isTaskPage" :inert="taskStore.currentList !== (route.params.status || 'all')" />
     </header>
-    <NDrawer v-if="compactNavigation" v-model:show="sidebarOpen" placement="left" width="var(--sidebar-width)">
-      <NDrawerContent :title="t('app.task-list')" closable :body-content-style="{ padding: 0, height: '100%' }">
-        <AppSidebar @show-about="openAbout" />
-      </NDrawerContent>
-    </NDrawer>
     <main class="content">
       <router-view v-slot="{ Component, route: viewRoute }">
         <Transition name="fade" mode="out-in" appear>
@@ -796,15 +793,24 @@ onUnmounted(() => {
       @maximize-toggled="onMaximizeToggled"
     />
     <footer class="content-footer">
-      <Transition name="bottom-accessory">
-        <div v-if="isTaskPage" class="task-pagination-control">
+      <Transition name="footer-accessory" mode="out-in">
+        <div v-if="!isTaskPage" id="preference-actions" key="preferences" :inert="isTaskPage">
+          <PreferenceActionBar
+            :is-dirty="activePreferenceActions?.isDirty ?? false"
+            :is-valid="activePreferenceActions?.isValid ?? false"
+            @save="activePreferenceActions?.save()"
+            @discard="activePreferenceActions?.discard()"
+          />
+        </div>
+        <div v-else key="tasks" class="task-pagination-control" :inert="!isTaskPage">
           <NPagination
             :page="taskPaginationPage"
             :page-size="taskPaginationPageSize"
             :page-count="taskPaginationPageCount"
             :page-sizes="taskPaginationPageSizes"
             size="small"
-            :page-slot="compactNavigation ? 3 : 7"
+            :page-slot="compactNavigation ? 3 : 5"
+            :simple="compactNavigation"
             :show-size-picker="!compactNavigation"
             @update:page="taskStore.setCurrentTaskPage"
             @update:page-size="taskStore.setTaskPageSize"
@@ -828,7 +834,6 @@ onUnmounted(() => {
         taskStore.taskDetailVisible ||
         taskStore.taskDetailClosing ||
         showAbout ||
-        sidebarOpen ||
         showExitDialog ||
         engineStore.isBusy
       "
@@ -900,6 +905,7 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   grid-template-rows: 32px 56px minmax(0, 1fr) auto;
+  transition: grid-template-columns var(--navigation-duration) var(--navigation-easing);
   height: 100vh;
   position: relative;
   overflow: hidden;
@@ -908,12 +914,17 @@ onUnmounted(() => {
 .window-chrome {
   grid-column: 1 / -1;
   grid-row: 1;
-  background: linear-gradient(to right, var(--sidebar-bg) var(--sidebar-width), var(--main-bg) var(--sidebar-width));
+  background: linear-gradient(
+    to right,
+    var(--sidebar-bg) 0 var(--sidebar-width),
+    var(--main-bg) var(--sidebar-width) 100%
+  );
 }
 .sidebar-heading {
   grid-column: 1;
   grid-row: 2;
-  padding-inline: 24px;
+  padding-inline: 20px;
+  overflow: hidden;
   background: var(--sidebar-bg);
 }
 .sidebar-heading,
@@ -921,7 +932,6 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid var(--panel-border);
   min-width: 0;
 }
 .sidebar-heading h2,
@@ -932,6 +942,7 @@ onUnmounted(() => {
   font-weight: 500;
 }
 .sidebar-heading h2 {
+  transition: opacity var(--navigation-duration) var(--navigation-easing);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -944,10 +955,16 @@ onUnmounted(() => {
 .page-header {
   grid-column: 2;
   grid-row: 2;
-  padding-inline: var(--content-gutter);
+  margin-inline: var(--content-gutter);
+  padding-bottom: 12px;
+  align-items: flex-end;
+  border-bottom: 2px solid var(--panel-border);
+}
+.page-title-slot {
+  flex: 1;
+  min-width: 0;
 }
 .page-header h1 {
-  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -964,16 +981,29 @@ onUnmounted(() => {
   overflow: hidden;
 }
 .content-footer {
-  flex-wrap: wrap;
+  container: footer / inline-size;
+  min-height: 64px;
   grid-column: 2;
   grid-row: 4;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   min-width: 0;
-  padding: 8px var(--content-gutter) 12px;
+  padding: 8px var(--content-gutter) 10px;
+}
+#preference-actions,
+.task-pagination-control {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+#preference-actions {
+  width: 100%;
 }
 .content-footer :deep(.speedometer) {
+  grid-column: 2;
+  grid-row: 1;
   margin-left: auto;
   flex-shrink: 0;
 }
@@ -981,7 +1011,7 @@ onUnmounted(() => {
   z-index: 100;
 }
 .task-pagination-control {
-  flex: 0 0 auto;
+  justify-self: start;
   max-width: 100%;
   overflow-x: auto;
   min-width: 0;
@@ -1005,12 +1035,37 @@ onUnmounted(() => {
   transform: translateY(-3px);
 }
 
+.footer-accessory-enter-active {
+  transition:
+    opacity 140ms cubic-bezier(0.2, 0, 0, 1),
+    transform 140ms cubic-bezier(0.2, 0, 0, 1);
+}
+.footer-accessory-leave-active {
+  pointer-events: none;
+  transition: opacity 80ms ease-out;
+}
+.footer-accessory-enter-from {
+  opacity: 0;
+  transform: translateY(3px);
+}
+.footer-accessory-leave-to {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .footer-accessory-enter-active,
+  .footer-accessory-leave-active {
+    transition: none;
+  }
+}
+
 .bottom-accessory-enter-active {
+  transform-origin: left center;
   transition:
     opacity 0.18s cubic-bezier(0.2, 0, 0, 1),
     transform 0.18s cubic-bezier(0.2, 0, 0, 1);
 }
 .bottom-accessory-leave-active {
+  transform-origin: left center;
   pointer-events: none;
   transition:
     opacity 0.12s cubic-bezier(0.3, 0, 0.8, 0.15),
@@ -1067,17 +1122,20 @@ onUnmounted(() => {
 }
 
 @media (max-width: 699px) {
-  #container {
-    grid-template-columns: minmax(0, 1fr);
+  .sidebar-heading h2 {
+    opacity: 0;
+    pointer-events: none;
   }
-  .window-chrome {
-    background: var(--main-bg);
+  .page-header {
+    gap: 8px;
   }
-  .page-header,
-  .content,
-  .content-footer {
-    flex-wrap: wrap;
-    grid-column: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bottom-accessory-enter-active,
+  .bottom-accessory-leave-active,
+  #container,
+  .sidebar-heading h2 {
+    transition-duration: 1ms;
   }
 }
 

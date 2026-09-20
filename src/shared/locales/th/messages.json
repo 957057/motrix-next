@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "งาน",
-    "about": "เกี่ยวกับ Rayburst",
-    "preferences": "การตั้งค่า...",
     "check-updates-now": "ตรวจสอบตอนนี้",
     "checking-for-updates": "กำลังตรวจสอบอัปเดต...",
     "hide": "ซ่อน Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "เริ่มต้น (วินาที)",
     "end-time": "สิ้นสุด (0: จบแหล่งข้อมูล)",
     "aes-key": "คีย์ AES-128"
+  },
+  "navigation": {
+    "about": "เกี่ยวกับ",
+    "settings": "การตั้งค่า"
   }
 }

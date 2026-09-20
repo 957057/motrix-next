@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "Tasques",
-    "about": "Quant a Rayburst",
-    "preferences": "Preferències...",
     "check-updates-now": "Comprova ara",
     "checking-for-updates": "Comprovant actualitzacions...",
     "hide": "Amagar Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "Inici (segons)",
     "end-time": "Final (0: final de la font)",
     "aes-key": "Clau AES-128"
+  },
+  "navigation": {
+    "about": "Quant a",
+    "settings": "Configuració"
   }
 }

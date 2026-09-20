@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "Завдання",
-    "about": "Про Rayburst",
-    "preferences": "Налаштування...",
     "check-updates-now": "Перевірити зараз",
     "checking-for-updates": "Перевірка оновлень...",
     "hide": "Сховати Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "Початок (секунди)",
     "end-time": "Кінець (0: кінець джерела)",
     "aes-key": "Ключ AES-128"
+  },
+  "navigation": {
+    "about": "Про програму",
+    "settings": "Налаштування"
   }
 }

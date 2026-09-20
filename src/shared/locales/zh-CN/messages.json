@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "任务列表",
-    "about": "关于 Rayburst",
-    "preferences": "偏好设置...",
     "check-updates-now": "立即检查",
     "checking-for-updates": "正在检查更新...",
     "hide": "隐藏 Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "起点（秒）",
     "end-time": "终点（0 表示末尾）",
     "aes-key": "AES-128 密钥"
+  },
+  "navigation": {
+    "about": "关于",
+    "settings": "设置"
   }
 }

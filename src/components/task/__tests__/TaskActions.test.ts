@@ -165,7 +165,7 @@ import { useTaskStore } from '@/stores/task'
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
-const createWrapper = () => mount(TaskActions)
+const createWrapper = (scope = useTaskStore().currentList) => mount(TaskActions, { props: { scope } })
 
 /** Exclude the menu trigger while exercising batch actions through dropdown selection. */
 function actionButtons(wrapper: ReturnType<typeof createWrapper>) {
@@ -217,6 +217,18 @@ describe('TaskActions', () => {
     expect(buttons.length).toBe(7)
   })
 
+  it('renders the destination scope before the store catches up', async () => {
+    const store = useTaskStore()
+    store.currentList = 'all'
+    const wrapper = createWrapper('completed')
+    expect(wrapper.find('button[aria-label="task.resume-all-task"]').exists()).toBe(false)
+    expect(wrapper.find('button[aria-label="Clear History Records"]').exists()).toBe(true)
+    await wrapper.setProps({ scope: 'progress' })
+    expect(wrapper.find('button[aria-label="task.resume-all-task"]').exists()).toBe(true)
+    expect(wrapper.find('button[aria-label="Clear History Records"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
   it('dispatches sort selections through the dropdown and rejects unsupported fields', async () => {
     const store = useTaskStore()
     const changeSort = vi.spyOn(store, 'changeCurrentSort').mockResolvedValue(undefined)
@@ -230,9 +242,9 @@ describe('TaskActions', () => {
     changeSort.mockRestore()
   })
 
-  it('rejects disabled batch actions even when selected programmatically', () => {
+  it('does not dispatch disabled batch buttons', () => {
     const wrapper = createWrapper()
-    wrapper.findAllComponents({ name: 'NDropdown' })[1].vm.$emit('select', 'resume')
+    wrapper.find<HTMLButtonElement>('button[aria-label="task.resume-all-task"]').element.click()
     expect(mockDialogWarning).not.toHaveBeenCalled()
     expect(mockResumeAllTask).not.toHaveBeenCalled()
     wrapper.unmount()

@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "Tarefas",
-    "about": "Sobre o Rayburst",
-    "preferences": "Preferências...",
     "check-updates-now": "Verificar agora",
     "checking-for-updates": "Verificando atualizações...",
     "hide": "Ocultar Rayburst",
@@ -923,5 +921,9 @@
     "start-time": "Início (segundos)",
     "end-time": "Fim (0: fim da fonte)",
     "aes-key": "Chave AES-128"
+  },
+  "navigation": {
+    "about": "Sobre",
+    "settings": "Configurações"
   }
 }

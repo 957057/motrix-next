@@ -16,8 +16,6 @@
   },
   "app": {
     "task-list": "작업 목록",
-    "about": "Rayburst 정보",
-    "preferences": "환경설정...",
     "check-updates-now": "지금 확인",
     "checking-for-updates": "업데이트 확인 중...",
     "hide": "Rayburst 숨기기",
@@ -923,5 +921,9 @@
     "start-time": "시작 위치(초)",
     "end-time": "끝 위치(0: 소스 끝)",
     "aes-key": "AES-128 키"
+  },
+  "navigation": {
+    "about": "정보",
+    "settings": "설정"
   }
 }
