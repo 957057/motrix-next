@@ -20,6 +20,7 @@ coverage
 # Tauri / Rust build artifacts
 src-tauri/target
 src-tauri/gen
+src-tauri/generated-icons/
 src-tauri/generated-binaries/*
 !src-tauri/generated-binaries/README.md
 

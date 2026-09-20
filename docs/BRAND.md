@@ -7,11 +7,15 @@ Redefining the open-source download manager
 `public/logo.svg` is the artwork source. Run `pnpm icons` to generate desktop icons
 with the Tauri CLI. Windows ICO and Linux PNG icons retain transparent backgrounds.
 The same command synchronizes the master into `src-tauri/icons/Rayburst.icon`.
-macOS uses this Icon Composer asset through Tauri's native bundler, with mist
+macOS compiles this Icon Composer asset with Apple's `actool`, with mist
 lavender (`#E9E4F2`) and ink violet (`#211A30`) backgrounds for default and dark
 appearances. Apple renders the enclosure and appearance variants; the logo stays
 opaque and undistorted. Edit appearance settings in Icon Composer. Packaging
-requires Xcode 26 or later. The tray remains a separate transparent template image.
+requires Xcode 26 or later. The macOS `beforeBundleCommand` compiles the source
+into `generated-icons/Assets.car`; Tauri bundles that catalog directly. The hook
+gives `actool` an explicit standard input to avoid the Node CLI descriptor issue
+tracked in [tauri#15991](https://github.com/tauri-apps/tauri/pull/15991).
+The tray remains a separate transparent template image.
 `docs/brand/banner.png` is the English README banner with the current slogan. Use no terminal punctuation in slogans, including translations.
 
 The default interface seed is `#946ECE`, softened from the original purple while
