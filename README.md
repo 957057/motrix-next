@@ -7,7 +7,7 @@
 <br>
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue.svg)
 
-[![Website](https://img.shields.io/badge/Website-946ECE?style=for-the-badge&logo=googleearth&logoColor=white)](https://rayburst.pages.dev/)
+[![Website](https://img.shields.io/badge/Website-946ECE?style=for-the-badge&logo=safari&logoColor=white)](https://rayburst.pages.dev/)
 [![Extension](https://img.shields.io/badge/Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/AnInsomniacy/rayburst-connect)
 
 </div>
