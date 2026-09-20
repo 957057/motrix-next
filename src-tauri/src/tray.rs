@@ -59,7 +59,7 @@ pub fn request_main_window(app: &AppHandle, source: &'static str, visible: bool)
             return;
         };
         if visible {
-            activate_main_window(&app, &window, source);
+            activate_main_window(&window, source);
         }
     });
 }
@@ -115,12 +115,15 @@ fn get_or_create_main_window(app: &AppHandle) -> Option<tauri::WebviewWindow> {
     }
 }
 
-fn activate_main_window(app: &AppHandle, window: &tauri::WebviewWindow, source: &'static str) {
+fn activate_main_window(window: &tauri::WebviewWindow, source: &'static str) {
     log::info!("window:activate-start source={source}");
     #[cfg(target_os = "macos")]
     {
         use tauri::ActivationPolicy;
-        if let Err(e) = app.set_activation_policy(ActivationPolicy::Regular) {
+        if let Err(e) = window
+            .app_handle()
+            .set_activation_policy(ActivationPolicy::Regular)
+        {
             log::warn!("window:activate-policy-failed source={source} error={e}");
         }
     }
