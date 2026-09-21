@@ -92,12 +92,10 @@ useEventListener(window, 'focus', refreshAll)
 </script>
 
 <template>
-  <NDivider title-placement="left">
-    <span class="association-heading">
-      <span>{{ t('preferences.default-programs') }}</span>
-      <span v-if="developmentMode" class="association-development">{{ t('preferences.association-development') }}</span>
-    </span>
-  </NDivider>
+  <NDivider title-placement="left">{{ t('preferences.default-programs') }}</NDivider>
+  <p v-if="developmentMode" class="association-development pref-section-note">
+    {{ t('preferences.association-development') }}
+  </p>
   <NFormItem v-for="option in options" :key="option.key" :label="option.label">
     <div class="association-row" :aria-busy="!status[option.key] || pending === option.key">
       <div class="association-actions">
@@ -183,12 +181,6 @@ useEventListener(window, 'focus', refreshAll)
 </template>
 
 <style scoped>
-.association-heading {
-  display: inline-flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 12px;
-}
 .association-row {
   display: flex;
   align-items: center;
@@ -208,6 +200,8 @@ useEventListener(window, 'focus', refreshAll)
   color: var(--m3-on-surface-variant);
 }
 .association-development {
+  margin: 0 0 16px;
+  text-align: start;
   font-size: 12px;
   color: var(--m3-on-surface-variant);
 }

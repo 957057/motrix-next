@@ -24,7 +24,8 @@
   padding: 16px var(--content-gutter);
 }
 
-.form-preference .n-form-item {
+.form-preference .n-form-item,
+.form-preference .pref-section-note {
   padding-left: 50px;
 }
 
