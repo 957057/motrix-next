@@ -429,9 +429,7 @@
     "protocol-magnet": "Magnetlinks [ magnet:// ]",
     "protocol-thunder": "Thunder-links [ thunder:// ]",
     "protocol-registered": "Handler voor {protocol} ingesteld",
-    "protocol-unregistered": "Koppeling voor {protocol} verwijderd",
     "protocol-register-failed": "Handler voor {protocol} instellen mislukt: {reason}",
-    "protocol-unregister-failed": "Koppeling voor {protocol} verwijderen mislukt: {reason}",
     "protocol-unchanged": "De koppeling voor {protocol} is niet gewijzigd",
     "protocol-manual-required": "Kies de standaardapp voor dit protocol in de systeeminstellingen",
     "protocol-query-failed": "Kan de koppeling voor {protocol} niet controleren. Probeer opnieuw",
@@ -582,7 +580,16 @@
     "media-default-format": "Standaardformaat",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Relatief aan de standaardmap",
-    "file-category-fixed-directory": "Vaste map"
+    "file-category-fixed-directory": "Vaste map",
+    "association-current": "Standaard",
+    "association-other": "Andere app",
+    "association-unassigned": "Niet ingesteld",
+    "association-unavailable": "App niet beschikbaar",
+    "association-error": "Controle mislukt",
+    "association-set": "Standaard instellen",
+    "association-repair": "Herstellen",
+    "association-development": "Niet beschikbaar in ontwikkelmodus",
+    "association-settings": "Systeeminstellingen openen"
   },
   "task": {
     "scope-all": "Alle",

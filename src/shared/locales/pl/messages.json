@@ -429,9 +429,7 @@
     "protocol-magnet": "Linki magnet [ magnet:// ]",
     "protocol-thunder": "Linki Thunder [ thunder:// ]",
     "protocol-registered": "Ustawiono obsługę {protocol}",
-    "protocol-unregistered": "Usunięto skojarzenie {protocol}",
     "protocol-register-failed": "Nie udało się ustawić obsługi {protocol}: {reason}",
-    "protocol-unregister-failed": "Nie udało się usunąć skojarzenia {protocol}: {reason}",
     "protocol-unchanged": "Skojarzenie {protocol} nie zostało zmienione",
     "protocol-manual-required": "Wybierz domyślną aplikację dla tego protokołu w ustawieniach systemu",
     "protocol-query-failed": "Nie można sprawdzić skojarzenia {protocol}. Spróbuj ponownie",
@@ -582,7 +580,16 @@
     "media-default-format": "Domyślny format",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Względem folderu domyślnego",
-    "file-category-fixed-directory": "Stały folder"
+    "file-category-fixed-directory": "Stały folder",
+    "association-current": "Domyślna",
+    "association-other": "Inna aplikacja",
+    "association-unassigned": "Nie ustawiono",
+    "association-unavailable": "Aplikacja niedostępna",
+    "association-error": "Nie można sprawdzić",
+    "association-set": "Ustaw domyślną",
+    "association-repair": "Napraw",
+    "association-development": "Niedostępne w trybie deweloperskim",
+    "association-settings": "Otwórz ustawienia systemu"
   },
   "task": {
     "scope-all": "Wszystkie",

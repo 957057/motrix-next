@@ -429,9 +429,7 @@
     "protocol-magnet": "Magnet-Links [ magnet:// ]",
     "protocol-thunder": "Thunder-Links [ thunder:// ]",
     "protocol-registered": "{protocol}-Zuordnung eingerichtet",
-    "protocol-unregistered": "{protocol}-Zuordnung aufgehoben",
     "protocol-register-failed": "{protocol}-Zuordnung fehlgeschlagen: {reason}",
-    "protocol-unregister-failed": "{protocol}-Zuordnung konnte nicht aufgehoben werden: {reason}",
     "protocol-unchanged": "{protocol}-Zuordnung wurde nicht geändert",
     "protocol-manual-required": "Wählen Sie die Standardanwendung für dieses Protokoll in den Systemeinstellungen",
     "protocol-query-failed": "{protocol}-Zuordnung konnte nicht geprüft werden. Bitte erneut versuchen",
@@ -582,7 +580,16 @@
     "media-default-format": "Standardformat",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Relativ zum Standardordner",
-    "file-category-fixed-directory": "Fester Ordner"
+    "file-category-fixed-directory": "Fester Ordner",
+    "association-current": "Standard",
+    "association-other": "Andere App",
+    "association-unassigned": "Nicht festgelegt",
+    "association-unavailable": "App nicht verfügbar",
+    "association-error": "Prüfung fehlgeschlagen",
+    "association-set": "Standard festlegen",
+    "association-repair": "Reparieren",
+    "association-development": "Im Entwicklungsmodus nicht verfügbar",
+    "association-settings": "Systemeinstellungen öffnen"
   },
   "task": {
     "scope-all": "Alle",

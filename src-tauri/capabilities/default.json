@@ -2,9 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": [
-    "main"
-  ],
+  "windows": ["main"],
   "permissions": [
     "core:default",
     "core:window:allow-start-dragging",
@@ -42,9 +40,6 @@
     "autostart:default",
     "updater:default",
     "deep-link:default",
-    "deep-link:allow-register",
-    "deep-link:allow-unregister",
-    "deep-link:allow-is-registered",
     "locale:default",
     "log:default"
   ]

@@ -429,9 +429,7 @@
     "protocol-magnet": "Enllaços magnet [ magnet:// ]",
     "protocol-thunder": "Enllaços Thunder [ thunder:// ]",
     "protocol-registered": "Associació de {protocol} establerta",
-    "protocol-unregistered": "Associació de {protocol} eliminada",
     "protocol-register-failed": "No s’ha pogut associar {protocol}: {reason}",
-    "protocol-unregister-failed": "No s’ha pogut eliminar l’associació de {protocol}: {reason}",
     "protocol-unchanged": "L’associació de {protocol} no ha canviat",
     "protocol-manual-required": "Trieu l’aplicació per defecte d’aquest protocol a la configuració del sistema",
     "protocol-query-failed": "No s’ha pogut verificar l’associació de {protocol}. Torneu-ho a provar",
@@ -582,7 +580,16 @@
     "media-default-format": "Format predeterminat",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Relatiu a la carpeta per defecte",
-    "file-category-fixed-directory": "Carpeta fixa"
+    "file-category-fixed-directory": "Carpeta fixa",
+    "association-current": "Predeterminada",
+    "association-other": "Una altra aplicació",
+    "association-unassigned": "Sense configurar",
+    "association-unavailable": "Aplicació no disponible",
+    "association-error": "No es pot comprovar",
+    "association-set": "Estableix per defecte",
+    "association-repair": "Repara",
+    "association-development": "No disponible en mode de desenvolupament",
+    "association-settings": "Obre la configuració del sistema"
   },
   "task": {
     "scope-all": "Totes",

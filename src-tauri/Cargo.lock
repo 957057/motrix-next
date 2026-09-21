@@ -4501,10 +4501,10 @@ dependencies = [
 name = "rayburst-browser-launcher"
 version = "0.1.0"
 dependencies = [
- "open",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

@@ -429,9 +429,7 @@
     "protocol-magnet": "マグネットリンク [ magnet:// ]",
     "protocol-thunder": "Thunder リンク [ thunder:// ]",
     "protocol-registered": "{protocol} の関連付けを設定しました",
-    "protocol-unregistered": "{protocol} の関連付けを解除しました",
     "protocol-register-failed": "{protocol} の関連付けに失敗しました：{reason}",
-    "protocol-unregister-failed": "{protocol} の関連付けを解除できませんでした：{reason}",
     "protocol-unchanged": "{protocol} の関連付けは変更されませんでした",
     "protocol-manual-required": "システム設定でこのプロトコルの既定のアプリを選択してください",
     "protocol-query-failed": "{protocol} の関連付けを確認できません。再試行してください",
@@ -582,7 +580,16 @@
     "media-default-format": "既定の形式",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "既定フォルダーからの相対パス",
-    "file-category-fixed-directory": "固定フォルダー"
+    "file-category-fixed-directory": "固定フォルダー",
+    "association-current": "既定のアプリ",
+    "association-other": "別のアプリ",
+    "association-unassigned": "未設定",
+    "association-unavailable": "アプリを利用できません",
+    "association-error": "確認できません",
+    "association-set": "既定に設定",
+    "association-repair": "修復",
+    "association-development": "開発モードでは変更できません",
+    "association-settings": "システム設定を開く"
   },
   "task": {
     "scope-all": "すべて",

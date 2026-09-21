@@ -429,9 +429,7 @@
     "protocol-magnet": "Magnet links [ magnet:// ]",
     "protocol-thunder": "Thunder links [ thunder:// ]",
     "protocol-registered": "{protocol} handler set",
-    "protocol-unregistered": "{protocol} handler cleared",
     "protocol-register-failed": "Could not set {protocol} handler: {reason}",
-    "protocol-unregister-failed": "Could not clear {protocol} handler: {reason}",
     "protocol-unchanged": "{protocol} association was not changed",
     "protocol-manual-required": "Choose the default application for this protocol in system settings",
     "protocol-query-failed": "Could not verify {protocol} association. Please retry",
@@ -582,7 +580,16 @@
     "media-default-format": "Default format",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Relative to default folder",
-    "file-category-fixed-directory": "Fixed folder"
+    "file-category-fixed-directory": "Fixed folder",
+    "association-current": "Default",
+    "association-other": "Another app",
+    "association-unassigned": "Not set",
+    "association-unavailable": "App unavailable",
+    "association-error": "Could not check",
+    "association-set": "Set default",
+    "association-repair": "Repair",
+    "association-development": "Unavailable in development mode",
+    "association-settings": "Open system settings"
   },
   "task": {
     "scope-all": "All",

@@ -429,9 +429,7 @@
     "protocol-magnet": "Magnet bağlantıları [ magnet:// ]",
     "protocol-thunder": "Thunder bağlantıları [ thunder:// ]",
     "protocol-registered": "{protocol} işleyicisi ayarlandı",
-    "protocol-unregistered": "{protocol} ilişkilendirmesi kaldırıldı",
     "protocol-register-failed": "{protocol} işleyicisi ayarlanamadı: {reason}",
-    "protocol-unregister-failed": "{protocol} ilişkilendirmesi kaldırılamadı: {reason}",
     "protocol-unchanged": "{protocol} ilişkilendirmesi değişmedi",
     "protocol-manual-required": "Sistem ayarlarında bu protokol için varsayılan uygulamayı seçin",
     "protocol-query-failed": "{protocol} ilişkilendirmesi doğrulanamadı. Tekrar deneyin",
@@ -582,7 +580,16 @@
     "media-default-format": "Varsayılan biçim",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Varsayılan klasöre göre",
-    "file-category-fixed-directory": "Sabit klasör"
+    "file-category-fixed-directory": "Sabit klasör",
+    "association-current": "Varsayılan",
+    "association-other": "Başka uygulama",
+    "association-unassigned": "Ayarlanmadı",
+    "association-unavailable": "Uygulama kullanılamıyor",
+    "association-error": "Kontrol edilemedi",
+    "association-set": "Varsayılanı ayarla",
+    "association-repair": "Onar",
+    "association-development": "Geliştirme modunda kullanılamaz",
+    "association-settings": "Sistem ayarlarını aç"
   },
   "task": {
     "scope-all": "Tümü",

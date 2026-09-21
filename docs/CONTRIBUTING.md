@@ -21,6 +21,11 @@ pnpm install
 pnpm tauri dev    # Start dev server (Tauri + Vite)
 ```
 
+Development mode does not register Native Messaging hosts or change URL protocol
+associations. Start the desktop manually when testing the extension API. Test
+browser activation with an installed build; development must not replace its
+system registrations. This uses Tauri's development mode, not the Rust debug profile.
+
 Rust backend (standalone):
 
 ```bash

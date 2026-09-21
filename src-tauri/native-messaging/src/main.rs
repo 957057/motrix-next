@@ -3,47 +3,111 @@
 use std::io::{stdin, stdout};
 use std::process::ExitCode;
 
-use rayburst_browser_launcher::{run_session, write_error_response, ACTIVATION_URL};
+use rayburst_browser_launcher::{run_session, write_error_response};
 
 fn activate() -> std::io::Result<()> {
+    let launcher = std::env::current_exe()?;
+    let directory = launcher.parent().ok_or_else(|| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "Launcher has no parent directory",
+        )
+    })?;
+    #[cfg(windows)]
+    {
+        activate_windows(&directory.join("rayburst.exe"))
+    }
+    #[cfg(target_os = "macos")]
+    {
+        // LaunchServices opens this exact bundle, not whichever app owns a URL scheme.
+        let bundle = directory
+            .parent()
+            .and_then(std::path::Path::parent)
+            .filter(|path| path.extension().is_some_and(|ext| ext == "app"))
+            .ok_or_else(|| {
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    "Launcher is outside an application bundle",
+                )
+            })?;
+        let status = std::process::Command::new("/usr/bin/open")
+            .arg("-a")
+            .arg(bundle)
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()?;
+        if status.success() {
+            Ok(())
+        } else {
+            Err(std::io::Error::other(format!(
+                "LaunchServices exited with {status}"
+            )))
+        }
+    }
     #[cfg(target_os = "linux")]
     {
-        run_activation_commands(open::commands(ACTIVATION_URL))
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        open::that(ACTIVATION_URL)
+        use std::os::unix::process::CommandExt;
+        // AppImage registration places a persistent symlink beside the copied host.
+        let application = directory.join("rayburst").canonicalize()?;
+        std::process::Command::new(application)
+            .env_remove("EGL_PLATFORM")
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .process_group(0)
+            .spawn()?;
+        Ok(())
     }
 }
 
-#[cfg(any(target_os = "linux", test))]
-fn run_activation_commands(
-    commands: impl IntoIterator<Item = std::process::Command>,
-) -> std::io::Result<()> {
-    use std::io;
-    use std::process::Stdio;
-
-    let mut last_error = io::Error::new(io::ErrorKind::NotFound, "No desktop opener available");
-    for mut command in commands {
-        // Browser EGL overrides must not select the desktop app's graphics backend.
-        // Keep Native Messaging streams exclusive to the host protocol.
-        match command
-            .env_remove("EGL_PLATFORM")
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status()
-        {
-            Ok(status) if status.success() => return Ok(()),
-            Ok(status) => {
-                return Err(io::Error::other(format!(
-                    "Desktop opener exited with {status}"
-                )))
-            }
-            Err(error) => last_error = error,
-        }
+#[cfg(windows)]
+fn activate_windows(application: &std::path::Path) -> std::io::Result<()> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::{
+        System::Com::{
+            CoInitializeEx, CoUninitialize, COINIT_APARTMENTTHREADED, COINIT_DISABLE_OLE1DDE,
+        },
+        UI::{
+            Shell::{ShellExecuteExW, SEE_MASK_FLAG_NO_UI, SEE_MASK_NOASYNC, SHELLEXECUTEINFOW},
+            WindowsAndMessaging::SW_SHOWNORMAL,
+        },
+    };
+    if !application.is_file() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "The paired Rayburst executable is missing",
+        ));
     }
-    Err(last_error)
+    let file: Vec<u16> = application
+        .as_os_str()
+        .encode_wide()
+        .chain(Some(0))
+        .collect();
+    // SAFETY: This one-shot host owns the thread; all Shell strings outlive the call.
+    unsafe {
+        let result = CoInitializeEx(
+            std::ptr::null(),
+            (COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) as u32,
+        );
+        if result < 0 {
+            return Err(std::io::Error::other(format!(
+                "COM initialization failed: 0x{result:08x}"
+            )));
+        }
+        let mut info: SHELLEXECUTEINFOW = std::mem::zeroed();
+        info.cbSize = std::mem::size_of::<SHELLEXECUTEINFOW>() as u32;
+        info.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC;
+        info.lpFile = file.as_ptr();
+        info.nShow = SW_SHOWNORMAL;
+        let result = if ShellExecuteExW(&mut info) == 0 {
+            Err(std::io::Error::last_os_error())
+        } else {
+            Ok(())
+        };
+        CoUninitialize();
+        result
+    }
 }
 
 fn main() -> ExitCode {
@@ -51,7 +115,10 @@ fn main() -> ExitCode {
     let mut input = stdin().lock();
     let mut output = stdout().lock();
     match run_session(&args, &mut input, &mut output, || {
-        activate().map_err(|error| error.to_string())
+        activate().map_err(|error| {
+            eprintln!("Desktop activation failed: {error}");
+            error.to_string()
+        })
     }) {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
@@ -59,61 +126,5 @@ fn main() -> ExitCode {
             eprintln!("Native messaging request failed: {}", error.code());
             ExitCode::FAILURE
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::run_activation_commands;
-    use std::process::Command;
-
-    fn fixture(name: &str) -> Command {
-        let mut command = Command::new(std::env::current_exe().expect("test executable"));
-        command.args(["--ignored", "--exact", name, "--nocapture"]);
-        command
-    }
-
-    #[test]
-    fn filters_inherited_egl_without_changing_parent_or_protocol_streams() {
-        let output = fixture("tests::inherited_environment_fixture")
-            .env("EGL_PLATFORM", "wayland")
-            .env("XDG_SESSION_TYPE", "wayland")
-            .output()
-            .expect("run isolated parent");
-        assert!(output.status.success(), "{output:?}");
-        for stream in [&output.stdout, &output.stderr] {
-            assert!(!String::from_utf8_lossy(stream).contains("DESKTOP_OUTPUT"));
-        }
-    }
-
-    #[test]
-    #[ignore = "subprocess fixture"]
-    fn inherited_environment_fixture() {
-        let inherited = std::env::var_os("EGL_PLATFORM").expect("inherited EGL override");
-        run_activation_commands([fixture("tests::desktop_environment_fixture")])
-            .expect("activate with isolated environment");
-        assert_eq!(std::env::var_os("EGL_PLATFORM"), Some(inherited));
-    }
-
-    #[test]
-    #[ignore = "subprocess fixture"]
-    fn desktop_environment_fixture() {
-        assert!(std::env::var_os("EGL_PLATFORM").is_none());
-        assert_eq!(std::env::var("XDG_SESSION_TYPE").as_deref(), Ok("wayland"));
-        println!("DESKTOP_OUTPUT");
-        eprintln!("DESKTOP_OUTPUT");
-    }
-
-    #[test]
-    fn reports_missing_openers_and_nonzero_exit_status() {
-        let missing = std::env::current_exe()
-            .expect("test executable")
-            .join("missing-opener");
-        assert!(run_activation_commands([Command::new(missing)]).is_err());
-
-        let mut failing = Command::new(std::env::current_exe().expect("test executable"));
-        failing.arg("--invalid-test-harness-option");
-        let error = run_activation_commands([failing]).expect_err("opener failure");
-        assert_eq!(error.kind(), std::io::ErrorKind::Other);
     }
 }

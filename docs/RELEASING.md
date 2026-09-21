@@ -44,6 +44,29 @@ When an identity changes, update this allowlist and the extension configuration 
 the same delivery. Regenerate packaged manifests with `pnpm build:native-launcher`
 and distribute the rebuilt app before the extension. No wildcard origins are allowed.
 
+## Native activation and associations
+
+The browser host activates its paired desktop installation, independently of URL
+protocol defaults: Windows uses ShellExecuteEx with the sibling executable, macOS
+opens the containing application bundle, and Linux starts the sibling executable.
+AppImage startup copies the host to persistent app data and atomically updates an
+adjacent `rayburst` symlink to the actual AppImage. Moving an AppImage requires one
+manual launch to refresh that link. The host never launches a path supplied by an
+extension or searches for other installations.
+
+The desktop owns `.torrent`, `magnet`, `ed2k`, `thunder`, and `rayburst` association
+status. Windows registers a candidate and requests the association without changing
+protected UserChoice values. If verification fails, the user can open Settings
+with an explicit button; macOS uses LaunchServices and Linux uses GIO. Registration alone is
+not proof of the effective default. Development mode does not modify associations
+or browser registrations. Native Messaging permissions remain activation-only.
+
+Before release, verify cold activation, existing-window activation, tray-only
+activation, file opening, protocol opening, unavailable handlers, another default
+application, and uninstall ownership on installed Windows, macOS and Linux builds.
+Include AppImage relocation and paths containing spaces. An application launch
+response confirms dispatch; the extension still verifies API readiness separately.
+
 ## Platform distribution
 
 Homebrew publication requires `HOMEBREW_ENABLED=true` and `HOMEBREW_TAP_TOKEN`

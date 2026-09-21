@@ -6,55 +6,7 @@ use tauri::AppHandle;
 // ── macOS native implementation ─────────────────────────────────────
 
 #[cfg(target_os = "macos")]
-mod macos {
-    use objc2_app_kit::NSWorkspace;
-    use objc2_foundation::{NSBundle, NSString, NSURL};
-
-    /// Returns the bundle identifier of the app registered as the default
-    /// handler for the given URL scheme, or `None` if no handler is set.
-    pub fn get_default_handler_bundle_id(protocol: &str) -> Option<String> {
-        let workspace = NSWorkspace::sharedWorkspace();
-        let url_str = format!("{protocol}://test");
-        let ns_url_str = NSString::from_str(&url_str);
-        let test_url = NSURL::URLWithString(&ns_url_str)?;
-        let handler_url = workspace.URLForApplicationToOpenURL(&test_url)?;
-        let handler_bundle = NSBundle::bundleWithURL(&handler_url)?;
-        let bundle_id = handler_bundle.bundleIdentifier()?;
-        Some(bundle_id.to_string())
-    }
-
-    /// Registers this application as the default handler for the given URL
-    /// scheme using `LSSetDefaultHandlerForURLScheme`.
-    pub fn set_as_default_handler(protocol: &str, bundle_id: &str) -> Result<(), String> {
-        use core_foundation::base::TCFType;
-        use core_foundation::string::CFString;
-
-        let scheme = CFString::new(protocol);
-        let handler = CFString::new(bundle_id);
-
-        let status = unsafe {
-            core_foundation::base::OSStatus::from(LSSetDefaultHandlerForURLScheme(
-                scheme.as_concrete_TypeRef(),
-                handler.as_concrete_TypeRef(),
-            ))
-        };
-        if status == 0 {
-            Ok(())
-        } else if status == -128 {
-            // LaunchServices userCanceledErr is a normal dismissal.
-            Err("cancelled".into())
-        } else {
-            Err(format!("LSSetDefaultHandlerForURLScheme returned {status}"))
-        }
-    }
-
-    extern "C" {
-        fn LSSetDefaultHandlerForURLScheme(
-            scheme: core_foundation::string::CFStringRef,
-            handler: core_foundation::string::CFStringRef,
-        ) -> i32;
-    }
-}
+mod macos;
 
 // Query the effective Shell association, not an application-owned registry key.
 #[cfg(windows)]
@@ -96,11 +48,81 @@ pub(crate) async fn protocol_diagnostics(app: &AppHandle) -> serde_json::Value {
     }
 }
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AssociationStatus {
+    state: &'static str,
+    handler: Option<String>,
+    error: Option<String>,
+    can_change: bool,
+}
+
+#[tauri::command]
+pub async fn get_association_status(
+    app: AppHandle,
+    protocol: String,
+) -> Result<AssociationStatus, AppError> {
+    validate_protocol(&protocol)?;
+    let can_change = !tauri::is_dev();
+    #[cfg(windows)]
+    let result = windows::handler(&protocol).map(|handler| {
+        let current = std::env::current_exe().ok();
+        let state = match &handler.path {
+            None if handler.unavailable => "unavailable",
+            None => "unassigned",
+            Some(path) if !path.is_file() => "unavailable",
+            Some(path)
+                if current.as_ref().is_some_and(|expected| {
+                    dunce::simplified(path)
+                        .to_string_lossy()
+                        .eq_ignore_ascii_case(&dunce::simplified(expected).to_string_lossy())
+                }) =>
+            {
+                "current"
+            }
+            Some(_) => "other",
+        };
+        (
+            state,
+            handler.path.map(|path| path.to_string_lossy().into_owned()),
+        )
+    });
+    #[cfg(target_os = "macos")]
+    let result = Ok::<_, AppError>(match macos::get_default_handler_bundle_id(&protocol) {
+        Some(handler) => (
+            if handler == app.config().identifier {
+                "current"
+            } else {
+                "other"
+            },
+            Some(handler),
+        ),
+        None => ("unassigned", None),
+    });
+    #[cfg(target_os = "linux")]
+    let result =
+        with_linux_associations(&app, move |associations| associations.status(&protocol)).await;
+    let _ = app;
+    Ok(match result {
+        Ok((state, handler)) => AssociationStatus {
+            state,
+            handler,
+            error: None,
+            can_change,
+        },
+        Err(error) => AssociationStatus {
+            state: "error",
+            handler: None,
+            error: Some(error.to_string()),
+            can_change,
+        },
+    })
+}
+
 // ── Cross-platform Tauri commands ───────────────────────────────────
 
 /// Returns `true` when this application is the OS-level default handler
 /// for the given URL scheme (e.g. `"magnet"`, `"thunder"`).
-#[tauri::command]
 pub async fn is_default_protocol_client(
     app: AppHandle,
     protocol: String,
@@ -130,7 +152,7 @@ pub async fn is_default_protocol_client(
 /// given URL scheme.
 #[tauri::command]
 pub async fn set_default_protocol_client(app: AppHandle, protocol: String) -> Result<(), AppError> {
-    validate_protocol(&protocol)?;
+    validate_protocol_change(&protocol)?;
     #[cfg(target_os = "macos")]
     {
         let bundle_id = &app.config().identifier;
@@ -149,87 +171,57 @@ pub async fn set_default_protocol_client(app: AppHandle, protocol: String) -> Re
     }
     #[cfg(windows)]
     {
-        use tauri_plugin_deep_link::DeepLinkExt;
-        if protocol != "rayburst" {
-            windows::register_candidate(&app, &protocol)?;
-        }
-        app.deep_link()
-            .register(&protocol)
-            .map_err(|error| AppError::Protocol(error.to_string()))?;
-        if windows::is_default(&protocol)? {
-            Ok(())
+        windows::register_candidate(&app, &protocol)?;
+        if protocol == ".torrent" {
+            windows::register_file_default(&app)?;
         } else {
-            if protocol != "rayburst" {
-                open_windows_defaults(&app)?;
-            }
-            Err(AppError::Protocol("manual_change_required".into()))
-        }
-    }
-    #[cfg(target_os = "linux")]
-    {
-        with_linux_associations(&app, move |associations| {
-            associations.set_enabled(&protocol, true)
-        })
-        .await
-    }
-}
-
-/// Removes this application as the OS-level default handler for the
-/// given URL scheme.
-#[tauri::command]
-pub async fn remove_as_default_protocol_client(
-    app: AppHandle,
-    protocol: String,
-) -> Result<(), AppError> {
-    validate_protocol(&protocol)?;
-    if protocol == "rayburst" {
-        return Err(AppError::Protocol(
-            "The application activation protocol cannot be disabled".into(),
-        ));
-    }
-    #[cfg(target_os = "macos")]
-    {
-        const MANUAL_CHANGE_REQUIRED: &str = "manual_change_required";
-        let _ = (&app, &protocol);
-        Err(AppError::Protocol(MANUAL_CHANGE_REQUIRED.into()))
-    }
-    #[cfg(windows)]
-    {
-        use tauri_plugin_deep_link::DeepLinkExt;
-        if app
-            .deep_link()
-            .is_registered(&protocol)
-            .map_err(|error| AppError::Protocol(error.to_string()))?
-        {
+            use tauri_plugin_deep_link::DeepLinkExt;
             app.deep_link()
-                .unregister(&protocol)
+                .register(&protocol)
                 .map_err(|error| AppError::Protocol(error.to_string()))?;
         }
+        windows::notify_changed();
         if windows::is_default(&protocol)? {
-            open_windows_defaults(&app)?;
-            Err(AppError::Protocol("manual_change_required".into()))
-        } else {
             Ok(())
+        } else {
+            // Protected user choices require an explicit visit to Settings.
+            Err(AppError::Protocol("manual_change_required".into()))
         }
     }
     #[cfg(target_os = "linux")]
     {
         with_linux_associations(&app, move |associations| {
-            associations.set_enabled(&protocol, false)
+            associations.set_default(&protocol)
         })
         .await
     }
 }
 
 fn validate_protocol(protocol: &str) -> Result<(), AppError> {
-    if matches!(protocol, "rayburst" | "magnet" | "ed2k" | "thunder") {
+    if matches!(
+        protocol,
+        ".torrent" | "rayburst" | "magnet" | "ed2k" | "thunder"
+    ) {
         Ok(())
     } else {
         Err(AppError::Protocol("Unsupported protocol".into()))
     }
 }
 
+fn validate_protocol_change(protocol: &str) -> Result<(), AppError> {
+    validate_protocol(protocol)?;
+    if tauri::is_dev() {
+        return Err(AppError::Protocol(
+            "Protocol registration is disabled in development mode. Use an installed build.".into(),
+        ));
+    }
+    Ok(())
+}
+
 pub(crate) fn repair_activation_protocol(app: &AppHandle) {
+    if tauri::is_dev() {
+        return;
+    }
     #[cfg(any(windows, target_os = "linux"))]
     {
         let app = app.clone();
@@ -242,6 +234,18 @@ pub(crate) fn repair_activation_protocol(app: &AppHandle) {
                 }
                 // A broken association can fail the query itself. Registration
                 // remains idempotent and its result is verified by the Shell.
+                #[cfg(windows)]
+                {
+                    use tauri_plugin_deep_link::DeepLinkExt;
+                    app.deep_link()
+                        .register("rayburst")
+                        .map_err(|error| AppError::Protocol(error.to_string()))?;
+                    windows::notify_changed();
+                    if !windows::is_default("rayburst")? {
+                        return Err(AppError::Protocol("manual_change_required".into()));
+                    }
+                }
+                #[cfg(target_os = "linux")]
                 set_default_protocol_client(app.clone(), "rayburst".into()).await?;
                 log::info!("protocol:activation-repaired");
                 Ok::<_, AppError>(())
@@ -259,10 +263,11 @@ pub(crate) fn repair_activation_protocol(app: &AppHandle) {
 #[cfg(windows)]
 pub(crate) async fn protocol_diagnostics(_app: &AppHandle) -> serde_json::Value {
     let mut protocols = serde_json::Map::new();
-    for scheme in ["rayburst", "magnet", "ed2k", "thunder"] {
+    for scheme in [".torrent", "rayburst", "magnet", "ed2k", "thunder"] {
         let snapshot = match windows::handler(scheme) {
             Ok(handler) => serde_json::json!({
-                "handler": handler,
+                "handler": handler.path,
+                "unavailable": handler.unavailable,
                 "currentApplication": windows::is_default(scheme).ok(),
             }),
             Err(error) => serde_json::json!({ "error": error.to_string() }),
@@ -272,10 +277,57 @@ pub(crate) async fn protocol_diagnostics(_app: &AppHandle) -> serde_json::Value 
     serde_json::Value::Object(protocols)
 }
 
-#[cfg(windows)]
-fn open_windows_defaults(app: &AppHandle) -> Result<(), AppError> {
-    use tauri_plugin_opener::OpenerExt;
-    app.opener()
-        .open_url("ms-settings:defaultapps", None::<String>)
-        .map_err(|error| AppError::Protocol(error.to_string()))
+#[cfg(target_os = "macos")]
+pub(crate) async fn protocol_diagnostics(app: &AppHandle) -> serde_json::Value {
+    let mut associations = serde_json::Map::new();
+    for scheme in [".torrent", "rayburst", "magnet", "ed2k", "thunder"] {
+        let snapshot = match get_association_status(app.clone(), scheme.into()).await {
+            Ok(status) => serde_json::json!(status),
+            Err(error) => serde_json::json!({ "error": error.to_string() }),
+        };
+        associations.insert(scheme.into(), snapshot);
+    }
+    serde_json::Value::Object(associations)
+}
+
+#[tauri::command]
+pub fn open_default_apps_settings(app: AppHandle) -> Result<(), AppError> {
+    #[cfg(windows)]
+    {
+        use tauri_plugin_opener::OpenerExt;
+        app.opener()
+            .open_url(
+                format!(
+                    "ms-settings:defaultapps?registeredAppUser={}",
+                    urlencoding::encode(&app.config().identifier)
+                ),
+                None::<String>,
+            )
+            .map_err(|error| AppError::Protocol(error.to_string()))
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = app;
+        Err(AppError::Protocol(
+            "Default Apps settings are only available on Windows".into(),
+        ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::validate_protocol_change;
+
+    #[test]
+    fn protocol_changes_require_a_production_build_and_supported_scheme() {
+        for scheme in [".torrent", "rayburst", "magnet", "ed2k", "thunder"] {
+            let result = validate_protocol_change(scheme);
+            if tauri::is_dev() {
+                assert!(result.unwrap_err().to_string().contains("development mode"));
+            } else {
+                assert!(result.is_ok());
+            }
+        }
+        assert!(validate_protocol_change("https").is_err());
+    }
 }

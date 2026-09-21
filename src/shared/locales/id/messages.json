@@ -429,9 +429,7 @@
     "protocol-magnet": "Tautan magnet [ magnet:// ]",
     "protocol-thunder": "Tautan Thunder [ thunder:// ]",
     "protocol-registered": "Penangan {protocol} ditetapkan",
-    "protocol-unregistered": "Asosiasi {protocol} dihapus",
     "protocol-register-failed": "Gagal menetapkan penangan {protocol}: {reason}",
-    "protocol-unregister-failed": "Gagal menghapus asosiasi {protocol}: {reason}",
     "protocol-unchanged": "Asosiasi {protocol} tidak berubah",
     "protocol-manual-required": "Pilih aplikasi bawaan untuk protokol ini di pengaturan sistem",
     "protocol-query-failed": "Tidak dapat memverifikasi asosiasi {protocol}. Coba lagi",
@@ -582,7 +580,16 @@
     "media-default-format": "Format bawaan",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Relatif terhadap folder bawaan",
-    "file-category-fixed-directory": "Folder tetap"
+    "file-category-fixed-directory": "Folder tetap",
+    "association-current": "Default",
+    "association-other": "Aplikasi lain",
+    "association-unassigned": "Belum diatur",
+    "association-unavailable": "Aplikasi tidak tersedia",
+    "association-error": "Tidak dapat memeriksa",
+    "association-set": "Atur default",
+    "association-repair": "Perbaiki",
+    "association-development": "Tidak tersedia dalam mode pengembangan",
+    "association-settings": "Buka pengaturan sistem"
   },
   "task": {
     "scope-all": "Semua",

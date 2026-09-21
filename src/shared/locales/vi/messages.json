@@ -429,9 +429,7 @@
     "protocol-magnet": "Liên kết magnet [ magnet:// ]",
     "protocol-thunder": "Liên kết Thunder [ thunder:// ]",
     "protocol-registered": "Đã đặt trình xử lý {protocol}",
-    "protocol-unregistered": "Đã bỏ liên kết {protocol}",
     "protocol-register-failed": "Không thể đặt trình xử lý {protocol}: {reason}",
-    "protocol-unregister-failed": "Không thể bỏ liên kết {protocol}: {reason}",
     "protocol-unchanged": "Liên kết {protocol} chưa thay đổi",
     "protocol-manual-required": "Chọn ứng dụng mặc định cho giao thức này trong cài đặt hệ thống",
     "protocol-query-failed": "Không thể xác minh liên kết {protocol}. Vui lòng thử lại",
@@ -582,7 +580,16 @@
     "media-default-format": "Định dạng mặc định",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Tương đối với thư mục mặc định",
-    "file-category-fixed-directory": "Thư mục cố định"
+    "file-category-fixed-directory": "Thư mục cố định",
+    "association-current": "Mặc định",
+    "association-other": "Ứng dụng khác",
+    "association-unassigned": "Chưa thiết lập",
+    "association-unavailable": "Ứng dụng không khả dụng",
+    "association-error": "Không thể kiểm tra",
+    "association-set": "Đặt mặc định",
+    "association-repair": "Sửa chữa",
+    "association-development": "Không khả dụng trong chế độ phát triển",
+    "association-settings": "Mở cài đặt hệ thống"
   },
   "task": {
     "scope-all": "Tất cả",

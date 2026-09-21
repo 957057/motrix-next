@@ -162,10 +162,7 @@ pub(crate) async fn runtime_snapshot(app: &tauri::AppHandle, raw_config: Option<
         };
     let preferences = raw_config.and_then(|value| value.get("preferences"));
     let native_messaging = crate::native_messaging::diagnostic_snapshot(app).await;
-    #[cfg(any(target_os = "linux", windows))]
     let protocol_handlers = crate::commands::protocol::protocol_diagnostics(app).await;
-    #[cfg(not(any(target_os = "linux", windows)))]
-    let protocol_handlers = Value::Null;
     serde_json::json!({
         "schema_version": crate::log_policy::LOG_SCHEMA_VERSION,
         "exported_at": chrono::Local::now().to_rfc3339(),

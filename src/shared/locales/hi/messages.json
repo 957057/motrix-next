@@ -429,9 +429,7 @@
     "protocol-magnet": "Magnet links [ magnet:// ]",
     "protocol-thunder": "Thunder links [ thunder:// ]",
     "protocol-registered": "{protocol} हैंडलर सेट हो गया",
-    "protocol-unregistered": "{protocol} का संबंध हटा दिया गया",
     "protocol-register-failed": "{protocol} हैंडलर सेट नहीं हो सका: {reason}",
-    "protocol-unregister-failed": "{protocol} का संबंध नहीं हट सका: {reason}",
     "protocol-unchanged": "{protocol} का संबंध नहीं बदला",
     "protocol-manual-required": "सिस्टम सेटिंग में इस प्रोटोकॉल के लिए डिफ़ॉल्ट ऐप चुनें",
     "protocol-query-failed": "{protocol} का संबंध जाँचा नहीं जा सका। फिर प्रयास करें",
@@ -582,7 +580,16 @@
     "media-default-format": "डिफ़ॉल्ट प्रारूप",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "डिफ़ॉल्ट फ़ोल्डर के सापेक्ष",
-    "file-category-fixed-directory": "निश्चित फ़ोल्डर"
+    "file-category-fixed-directory": "निश्चित फ़ोल्डर",
+    "association-current": "डिफ़ॉल्ट",
+    "association-other": "दूसरा ऐप",
+    "association-unassigned": "सेट नहीं है",
+    "association-unavailable": "ऐप उपलब्ध नहीं है",
+    "association-error": "जाँच नहीं हो सकी",
+    "association-set": "डिफ़ॉल्ट सेट करें",
+    "association-repair": "सुधारें",
+    "association-development": "डेवलपमेंट मोड में उपलब्ध नहीं",
+    "association-settings": "सिस्टम सेटिंग खोलें"
   },
   "task": {
     "scope-all": "सभी",

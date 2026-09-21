@@ -1,56 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-
 const mockInvoke = vi.hoisted(() => vi.fn())
 vi.mock('@tauri-apps/api/core', () => ({ invoke: mockInvoke }))
 vi.mock('@shared/logger', () => ({ logger: { debug: vi.fn(), warn: vi.fn() } }))
+import { useProtocolHandlers, type AssociationStatus } from '../useProtocolHandlers'
+const snapshot = (state: AssociationStatus['state']): AssociationStatus => ({
+  state,
+  handler: null,
+  error: null,
+  canChange: true,
+})
 
-import { useProtocolHandlers } from '../useProtocolHandlers'
-
-describe('protocol associations', () => {
+describe('native associations', () => {
   beforeEach(() => {
     mockInvoke.mockReset()
   })
 
-  it.each([
-    { enabled: true, actual: true, failure: undefined, kind: 'success' },
-    { enabled: true, actual: false, failure: undefined, kind: 'unchanged' },
-    { enabled: true, actual: false, failure: 'access denied', kind: 'failed' },
-    { enabled: false, actual: true, failure: 'manual_change_required', kind: 'manual' },
-    { enabled: true, actual: false, failure: 'cancelled', kind: 'cancelled' },
-  ])('uses the OS result: $enabled / $actual / $failure', async ({ enabled, actual, failure, kind }) => {
-    mockInvoke.mockImplementation(async (command: string) => {
-      if (command === 'is_default_protocol_client') return actual
-      if (failure) throw { Protocol: failure }
-    })
-    const protocols = useProtocolHandlers()
-    expect(await protocols.setProtocolEnabled('magnet', enabled)).toEqual(
-      kind === 'failed' ? { kind, reason: failure } : { kind },
-    )
-    expect(protocols.status.value.magnet).toBe(actual)
-    expect(protocols.busy.value).toBe(false)
+  it('reports a protected default without claiming success', async () => {
+    mockInvoke.mockRejectedValueOnce({ Protocol: 'manual_change_required' }).mockResolvedValueOnce(snapshot('other'))
+    const associations = useProtocolHandlers()
+    expect(await associations.setDefault('.torrent')).toEqual({ kind: 'manual' })
+    expect(associations.status.value['.torrent']?.state).toBe('other')
   })
 
-  it('distinguishes failed queries from off and recovers on retry', async () => {
-    mockInvoke.mockImplementation(async (_command: string, { protocol }: { protocol: string }) => {
-      if (protocol === 'ed2k') throw new Error('query failed')
-      return true
-    })
-    const protocols = useProtocolHandlers()
-    expect(protocols.status.value.ed2k).toBeUndefined()
-    await protocols.refreshAll()
-    expect(protocols.status.value).toEqual({ magnet: true, ed2k: null, thunder: true })
-
-    mockInvoke.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('query failed'))
-    expect(await protocols.setProtocolEnabled('magnet', false)).toEqual({ kind: 'query-failed' })
-    expect(protocols.status.value.magnet).toBeNull()
-    expect(protocols.pending.value).toBeNull()
-
-    mockInvoke.mockResolvedValue(false)
-    await protocols.refreshAll()
-    expect(protocols.status.value).toEqual({ magnet: false, ed2k: false, thunder: false })
-  })
-
-  it('serializes changes and verifies before releasing the pending state', async () => {
+  it('serializes mutations until native verification completes', async () => {
     let complete!: () => void
     mockInvoke
       .mockReturnValueOnce(
@@ -58,16 +30,14 @@ describe('protocol associations', () => {
           complete = resolve
         }),
       )
-      .mockResolvedValueOnce(false)
-    const protocols = useProtocolHandlers()
-    const operation = protocols.setProtocolEnabled('magnet', false)
-    expect(await protocols.setProtocolEnabled('ed2k', true)).toEqual({ kind: 'ignored' })
-    await protocols.refreshAll()
+      .mockResolvedValueOnce(snapshot('unassigned'))
+    const associations = useProtocolHandlers()
+    const operation = associations.setDefault('magnet')
+    expect(await associations.setDefault('ed2k')).toEqual({ kind: 'ignored' })
+    await associations.refreshAll()
     expect(mockInvoke).toHaveBeenCalledTimes(1)
-    expect(protocols.pending.value).toBe('magnet')
     complete()
-    expect(await operation).toEqual({ kind: 'success' })
-    expect(mockInvoke).toHaveBeenLastCalledWith('is_default_protocol_client', { protocol: 'magnet' })
-    expect(protocols.busy.value).toBe(false)
+    expect(await operation).toEqual({ kind: 'unchanged' })
+    expect(associations.busy.value).toBe(false)
   })
 })

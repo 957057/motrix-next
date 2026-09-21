@@ -274,6 +274,10 @@ struct Installation {
 }
 
 pub fn schedule_repair(app: &AppHandle) {
+    // Development must never replace the installed application's browser host.
+    if tauri::is_dev() {
+        return;
+    }
     app.manage(RegistrationState::default());
     let app = app.clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -283,6 +287,14 @@ pub fn schedule_repair(app: &AppHandle) {
             if installation.bundled != installation.launcher {
                 copy_executable_if_changed(&installation.bundled, &installation.launcher)?;
                 check_executable(&installation.launcher)?;
+                let application = PathBuf::from(app.env().appimage.ok_or_else(|| {
+                    RegistrationError::new(
+                        "resolve_appimage",
+                        &installation.launcher,
+                        io::Error::other("AppImage path is unavailable"),
+                    )
+                })?);
+                register_appimage_target(&installation.launcher, &application)?;
             }
             Ok(repair_targets(
                 &installation.targets,
@@ -302,6 +314,31 @@ pub fn schedule_repair(app: &AppHandle) {
         };
         let _ = app.state::<RegistrationState>().0.set(report);
     });
+}
+
+#[cfg(target_os = "linux")]
+fn register_appimage_target(launcher: &Path, application: &Path) -> Result<(), RegistrationError> {
+    let target = launcher.with_file_name("rayburst");
+    let application = operation("resolve_appimage", application, application.canonicalize())?;
+    if fs::read_link(&target).ok().as_ref() == Some(&application) {
+        return Ok(());
+    }
+    let directory = operation(
+        "create_target_directory",
+        &target,
+        tempfile::tempdir_in(target.parent().expect("launcher directory")),
+    )?;
+    let link = directory.path().join("rayburst");
+    operation(
+        "link_appimage",
+        &link,
+        std::os::unix::fs::symlink(application, &link),
+    )?;
+    operation(
+        "replace_appimage_target",
+        &target,
+        fs::rename(link, &target),
+    )
 }
 
 fn repair_targets(targets: &[ManifestDestination], launcher: &Path) -> RegistrationReport {
@@ -346,6 +383,12 @@ fn repair_targets(targets: &[ManifestDestination], launcher: &Path) -> Registrat
 
 /// Inspect only our own files. Export must never perform registration or activation.
 pub async fn diagnostic_snapshot(app: &AppHandle) -> Value {
+    if tauri::is_dev() {
+        return json!({
+            "host": HOST_NAME,
+            "startup": { "status": "skipped", "reason": "development_mode" },
+        });
+    }
     let app = app.clone();
     match tauri::async_runtime::spawn_blocking(move || {
         let startup = app.try_state::<RegistrationState>().and_then(|state| {
@@ -648,6 +691,22 @@ mod tests {
     use std::path::Path;
 
     use super::*;
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn appimage_target_tracks_relocation_without_using_a_mount_path() {
+        let root = tempfile::tempdir().expect("isolated registration");
+        let launcher = root.path().join(LAUNCHER_FILE_STEM);
+        let original = root.path().join("Rayburst original.AppImage");
+        let moved = root.path().join("Rayburst moved.AppImage");
+        fs::write(&original, b"fixture").expect("original image");
+        register_appimage_target(&launcher, &original).expect("register target");
+        let target = root.path().join("rayburst");
+        assert_eq!(fs::read_link(&target).expect("symlink"), original);
+        fs::rename(&original, &moved).expect("move image");
+        register_appimage_target(&launcher, &moved).expect("refresh target");
+        assert_eq!(target.canonicalize().expect("resolved target"), moved);
+    }
 
     #[cfg(not(windows))]
     #[test]

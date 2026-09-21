@@ -5,7 +5,7 @@ use gio::{glib, prelude::*, AppInfo, DesktopAppInfo};
 use std::path::{Path, PathBuf};
 
 pub const DESKTOP_ID: &str = "Rayburst.desktop";
-pub const PROTOCOLS: [&str; 4] = ["magnet", "ed2k", "thunder", "rayburst"];
+pub const PROTOCOLS: [&str; 5] = [".torrent", "magnet", "ed2k", "thunder", "rayburst"];
 const DEFAULTS: &str = "Default Applications";
 
 fn failure(context: &str, error: impl std::fmt::Display) -> AppError {
@@ -40,9 +40,23 @@ impl Associations {
             .is_some_and(|path| path == self.executable)
     }
 
+    pub fn status(&self, protocol: &str) -> Result<(&'static str, Option<String>), AppError> {
+        validate(protocol)?;
+        let handler = default_handler(protocol);
+        let state = match &handler {
+            None => "unassigned",
+            Some(info) if self.owns(info) => "current",
+            Some(_) => "other",
+        };
+        Ok((
+            state,
+            handler.and_then(|info| info.id()).map(|id| id.to_string()),
+        ))
+    }
+
     pub fn is_default(&self, protocol: &str) -> Result<bool, AppError> {
         validate(protocol)?;
-        let actual = AppInfo::default_for_uri_scheme(protocol);
+        let actual = default_handler(protocol);
         let enabled = actual.as_ref().is_some_and(|info| self.owns(info));
         log::debug!(
             "protocol:query scheme={protocol} expected={DESKTOP_ID} actual={:?} enabled={enabled}",
@@ -114,54 +128,32 @@ impl Associations {
             .ok_or_else(|| failure("load saved desktop entry", path.display()))
     }
 
-    pub fn set_enabled(&self, protocol: &str, enabled: bool) -> Result<(), AppError> {
+    pub fn set_default(&self, protocol: &str) -> Result<(), AppError> {
         validate(protocol)?;
-        let mime = format!("x-scheme-handler/{protocol}");
-        let before = AppInfo::default_for_uri_scheme(protocol).and_then(|info| info.id());
-        if enabled {
-            let entry = self.entry()?;
+        let mime = if protocol == ".torrent" {
+            "application/x-bittorrent".to_string()
+        } else {
+            format!("x-scheme-handler/{protocol}")
+        };
+        let before = default_handler(protocol).and_then(|info| info.id());
+        let entry = self.entry()?;
+        entry
+            .set_as_default_for_type(&mime)
+            .map_err(|error| failure("set default application", error))?;
+        if !self.is_default(protocol)? && update_user_defaults(&mime, DESKTOP_ID)? {
             entry
                 .set_as_default_for_type(&mime)
-                .map_err(|error| failure("set default application", error))?;
-            if AppInfo::default_for_uri_scheme(protocol)
-                .and_then(|info| info.id())
-                .as_deref()
-                != Some(DESKTOP_ID)
-                && update_user_defaults(&mime, Some(DESKTOP_ID), &[])?
-            {
-                // GIO invalidates its user-config cache when an association is changed.
-                entry
-                    .set_as_default_for_type(&mime)
-                    .map_err(|error| failure("refresh default application", error))?;
-            }
-        } else {
-            // Multiple desktop entries can launch the same executable. Remove only this
-            // application's association, without resetting anyone else's default choices.
-            let entries: Vec<AppInfo> = AppInfo::all()
-                .into_iter()
-                .filter(|info| self.owns(info))
-                .collect();
-            let ids: Vec<String> = entries
-                .iter()
-                .filter_map(|info| info.id().map(|id| id.to_string()))
-                .collect();
-            for info in &entries {
-                info.remove_supports_type(&mime)
-                    .map_err(|error| failure("remove application association", error))?;
-            }
-            if update_user_defaults(&mime, None, &ids)? {
-                for info in &entries {
-                    info.remove_supports_type(&mime)
-                        .map_err(|error| failure("refresh application association", error))?;
-                }
-            }
+                .map_err(|error| failure("refresh default application", error))?;
         }
-        let after = AppInfo::default_for_uri_scheme(protocol);
+        let after = default_handler(protocol);
         let actual = after.as_ref().is_some_and(|info| self.owns(info));
         let after_id = after.and_then(|info| info.id());
-        log::info!("protocol:change scheme={protocol} enabled={enabled} expected={DESKTOP_ID} before={before:?} after={after_id:?} actual={actual}");
-        if actual != enabled {
-            return Err(failure("association unchanged", format!("scheme={protocol}, handler={after_id:?}, expected={DESKTOP_ID}, enabled={enabled}")));
+        log::info!("protocol:change scheme={protocol} expected={DESKTOP_ID} before={before:?} after={after_id:?} actual={actual}");
+        if !actual {
+            return Err(failure(
+                "association unchanged",
+                format!("scheme={protocol}, handler={after_id:?}, expected={DESKTOP_ID}"),
+            ));
         }
         Ok(())
     }
@@ -170,7 +162,7 @@ impl Associations {
         let protocols: Vec<_> = PROTOCOLS
             .iter()
             .map(|protocol| {
-                let handler = AppInfo::default_for_uri_scheme(protocol);
+                let handler = default_handler(protocol);
                 serde_json::json!({
                     "scheme": protocol,
                     "is_default": handler.as_ref().is_some_and(|info| self.owns(info)),
@@ -186,6 +178,14 @@ impl Associations {
             "data_directory": glib::user_data_dir(),
             "protocols": protocols,
         })
+    }
+}
+
+fn default_handler(protocol: &str) -> Option<AppInfo> {
+    if protocol == ".torrent" {
+        AppInfo::default_for_type("application/x-bittorrent", false)
+    } else {
+        AppInfo::default_for_uri_scheme(protocol)
     }
 }
 
@@ -219,11 +219,7 @@ fn desktop_command(executable: &Path) -> Result<String, AppError> {
 
 /// GIO writes mimeapps.list. Only existing user desktop-specific overrides need
 /// explicit adjustment; system policy and unrelated associations remain untouched.
-fn update_user_defaults(
-    mime: &str,
-    preferred: Option<&str>,
-    removed: &[String],
-) -> Result<bool, AppError> {
+fn update_user_defaults(mime: &str, preferred: &str) -> Result<bool, AppError> {
     let directory = glib::user_config_dir();
     let mut paths = Vec::new();
     for desktop in std::env::var("XDG_CURRENT_DESKTOP")
@@ -237,9 +233,6 @@ fn update_user_defaults(
         {
             paths.push(directory.join(format!("{}-mimeapps.list", desktop.to_ascii_lowercase())));
         }
-    }
-    if preferred.is_none() {
-        paths.push(directory.join("mimeapps.list"));
     }
     paths.sort();
     paths.dedup();
@@ -272,22 +265,14 @@ fn update_user_defaults(
         };
         let mut next: Vec<_> = current
             .iter()
-            .filter(|id| !removed.contains(id) && preferred != Some(id.as_str()))
+            .filter(|id| id.as_str() != preferred)
             .cloned()
             .collect();
-        if let Some(id) = preferred {
-            next.insert(0, id.to_string());
-        }
+        next.insert(0, preferred.to_string());
         if next == current {
             continue;
         }
-        if next.is_empty() {
-            keyfile
-                .remove_key(DEFAULTS, mime)
-                .map_err(|error| failure("remove default application", error))?;
-        } else {
-            keyfile.set_string(DEFAULTS, mime, &format!("{};", next.join(";")));
-        }
+        keyfile.set_string(DEFAULTS, mime, &format!("{};", next.join(";")));
         file.replace_contents(
             keyfile.to_data().as_bytes(),
             etag.as_deref(),
@@ -359,7 +344,13 @@ mod tests {
                 .to_ascii_lowercase()
         ));
         let mimes = PROTOCOLS
-            .map(|protocol| format!("x-scheme-handler/{protocol};"))
+            .map(|protocol| {
+                if protocol == ".torrent" {
+                    "application/x-bittorrent;".to_string()
+                } else {
+                    format!("x-scheme-handler/{protocol};")
+                }
+            })
             .join("");
         let desktop_file = |executable: &str| {
             format!("[Desktop Entry]\nName=Test\nType=Application\nExec={executable} %U\nMimeType={mimes}\n")
@@ -395,14 +386,12 @@ mod tests {
         let associations = Associations::new(&executable).unwrap();
         if scenario == "conflict" {
             let original = std::fs::read(&user_entry).unwrap();
-            assert!(associations.set_enabled("magnet", true).is_err());
+            assert!(associations.set_default("magnet").is_err());
             assert_eq!(std::fs::read(&user_entry).unwrap(), original);
             return;
         }
         if scenario == "invalid-config" {
-            assert!(
-                update_user_defaults("x-scheme-handler/magnet", Some(DESKTOP_ID), &[]).is_err()
-            );
+            assert!(update_user_defaults("x-scheme-handler/magnet", DESKTOP_ID).is_err());
             assert_eq!(
                 std::fs::read_to_string(desktop_defaults).unwrap(),
                 "invalid key file"
@@ -410,8 +399,8 @@ mod tests {
             return;
         }
         if scenario == "installed" {
-            // A user-created entry for this executable must not reappear as the
-            // fallback after disabling the application's association.
+            // A user-created entry for this executable must resolve to the
+            // same application when querying the effective association.
             std::fs::write(
                 root.join("data/applications/custom-launcher.desktop"),
                 desktop_file("\"/usr/bin/true\"").replace("%U", "%u"),
@@ -420,7 +409,7 @@ mod tests {
             assert!(associations.is_default("ed2k").unwrap());
         }
         assert!(!associations.is_default("magnet").unwrap());
-        associations.set_enabled("magnet", true).unwrap();
+        associations.set_default("magnet").unwrap();
         assert!(associations.is_default("magnet").unwrap());
         let overrides = std::fs::read_to_string(&desktop_defaults).unwrap();
         assert!(overrides.contains("# Keep this comment"));
@@ -432,22 +421,15 @@ mod tests {
             .launch_uris(&["magnet:?xt=test"], gio::AppLaunchContext::NONE)
             .unwrap();
         for protocol in PROTOCOLS {
-            associations.set_enabled(protocol, true).unwrap();
+            associations.set_default(protocol).unwrap();
             assert!(associations.is_default(protocol).unwrap());
         }
-        associations.set_enabled("magnet", false).unwrap();
-        assert!(!associations.is_default("magnet").unwrap());
-        for protocol in ["ed2k", "thunder", "rayburst"] {
-            assert!(associations.is_default(protocol).unwrap());
-        }
-        associations.set_enabled("magnet", true).unwrap();
-        assert!(associations.is_default("magnet").unwrap());
-        assert!(associations.set_enabled("https", true).is_err());
+        assert!(associations.set_default("https").is_err());
         if scenario == "portable" {
             let moved = root.join("Moved Rayburst.AppImage");
             std::fs::rename(&executable, &moved).unwrap();
             let relocated = Associations::new(&moved).unwrap();
-            relocated.set_enabled("magnet", true).unwrap();
+            relocated.set_default("magnet").unwrap();
             assert!(relocated.is_default("magnet").unwrap());
         }
     }

@@ -429,9 +429,7 @@
     "protocol-magnet": "Σύνδεσμοι magnet [ magnet:// ]",
     "protocol-thunder": "Σύνδεσμοι Thunder [ thunder:// ]",
     "protocol-registered": "Ορίστηκε χειριστής για {protocol}",
-    "protocol-unregistered": "Καταργήθηκε η συσχέτιση {protocol}",
     "protocol-register-failed": "Αποτυχία ορισμού χειριστή για {protocol}: {reason}",
-    "protocol-unregister-failed": "Αποτυχία κατάργησης συσχέτισης {protocol}: {reason}",
     "protocol-unchanged": "Η συσχέτιση {protocol} δεν άλλαξε",
     "protocol-manual-required": "Επιλέξτε την προεπιλεγμένη εφαρμογή για αυτό το πρωτόκολλο στις ρυθμίσεις συστήματος",
     "protocol-query-failed": "Αδυναμία επαλήθευσης της συσχέτισης {protocol}. Δοκιμάστε ξανά",
@@ -582,7 +580,16 @@
     "media-default-format": "Προεπιλεγμένη μορφή",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Σχετικά με τον προεπιλεγμένο φάκελο",
-    "file-category-fixed-directory": "Σταθερός φάκελος"
+    "file-category-fixed-directory": "Σταθερός φάκελος",
+    "association-current": "Προεπιλογή",
+    "association-other": "Άλλη εφαρμογή",
+    "association-unassigned": "Δεν έχει οριστεί",
+    "association-unavailable": "Μη διαθέσιμη εφαρμογή",
+    "association-error": "Αδυναμία ελέγχου",
+    "association-set": "Ορισμός προεπιλογής",
+    "association-repair": "Επιδιόρθωση",
+    "association-development": "Μη διαθέσιμο σε λειτουργία ανάπτυξης",
+    "association-settings": "Άνοιγμα ρυθμίσεων συστήματος"
   },
   "task": {
     "scope-all": "Όλα",

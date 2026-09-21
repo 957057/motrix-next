@@ -1,7 +1,6 @@
 <script setup lang="ts">
 /** @fileoverview Advanced preference tab: RPC, extension, clipboard, default programs, engine, log, history, diagnostics. */
 import { ref, computed, onMounted } from 'vue'
-import { useEventListener } from '@vueuse/core'
 import { invoke } from '@tauri-apps/api/core'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { usePlatform } from '@/composables/usePlatform'
@@ -13,7 +12,7 @@ import { useEngineStore } from '@/stores/engine'
 import { useHistoryStore } from '@/stores/history'
 import { useAdvancedActions } from '@/composables/useAdvancedActions'
 import { useEngineRestart } from '@/composables/useEngineRestart'
-import { useProtocolHandlers, type ProtocolKey } from '@/composables/useProtocolHandlers'
+import PreferenceAssociations from './PreferenceAssociations.vue'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { appDataDir, appLogDir, join, tempDir } from '@tauri-apps/api/path'
 import { APP_LOG_LEVELS, ARIA2_LOG_LEVELS } from '@shared/constants'
@@ -67,18 +66,6 @@ const historyStore = useHistoryStore()
 const message = useAppMessage()
 const { constraint, configFieldProps, areConfigFieldsValid } = usePreferenceNumericValidation()
 const dialog = useDialog()
-const protocolHandlers = useProtocolHandlers()
-const protocolStatus = protocolHandlers.status
-const protocolPending = protocolHandlers.pending
-const protocolBusy = protocolHandlers.busy
-const protocolOptions = computed<{ key: ProtocolKey; label: string }[]>(() => [
-  { key: 'magnet', label: t('preferences.protocol-magnet') },
-  { key: 'ed2k', label: t('preferences.protocol-ed2k') },
-  { key: 'thunder', label: t('preferences.protocol-thunder') },
-])
-
-useEventListener(window, 'focus', () => protocolHandlers.refreshAll())
-
 const { isLinux } = usePlatform()
 
 import { diffConfig, checkIsNeedRestart } from '@shared/utils/config'
@@ -260,35 +247,6 @@ function loadForm() {
   Object.assign(form.value, buildForm())
 }
 
-async function handleProtocolToggle(protocol: ProtocolKey, enabled: boolean) {
-  const result = await protocolHandlers.setProtocolEnabled(protocol, enabled)
-  switch (result.kind) {
-    case 'success':
-      message.success(
-        enabled
-          ? t('preferences.protocol-registered', { protocol })
-          : t('preferences.protocol-unregistered', { protocol }),
-      )
-      break
-    case 'failed':
-      message.error(
-        enabled
-          ? t('preferences.protocol-register-failed', { protocol, reason: result.reason })
-          : t('preferences.protocol-unregister-failed', { protocol, reason: result.reason }),
-      )
-      break
-    case 'unchanged':
-      message.warning(t('preferences.protocol-unchanged', { protocol }))
-      break
-    case 'manual':
-      message.info(t('preferences.protocol-manual-required'))
-      break
-    case 'query-failed':
-      message.error(t('preferences.protocol-query-failed', { protocol }))
-      break
-  }
-}
-
 async function loadPaths() {
   try {
     aria2ConfPath.value = await invoke<string>('get_engine_conf_path')
@@ -384,8 +342,6 @@ onMounted(async () => {
   loadForm()
   resetSnapshot()
   loadPaths()
-
-  await protocolHandlers.refreshAll()
 })
 </script>
 
@@ -693,24 +649,7 @@ onMounted(async () => {
           </NFormItem>
         </NCollapseTransition>
 
-        <!-- Default programs reflect the current OS association, not a saved preference. -->
-        <NDivider title-placement="left">{{ t('preferences.default-programs') }}</NDivider>
-        <NFormItem v-for="protocol in protocolOptions" :key="protocol.key" :label="protocol.label">
-          <NSwitch
-            v-if="protocolStatus[protocol.key] !== null"
-            :value="protocolStatus[protocol.key] === true"
-            :disabled="protocolBusy || protocolStatus[protocol.key] === undefined"
-            :loading="protocolPending === protocol.key || protocolStatus[protocol.key] === undefined"
-            :aria-label="protocol.label"
-            @update:value="(value) => handleProtocolToggle(protocol.key, value)"
-          />
-          <NSpace v-else align="center">
-            <span role="status">{{ t('preferences.protocol-query-failed', { protocol: protocol.key }) }}</span>
-            <NButton size="small" :disabled="protocolBusy" @click="protocolHandlers.refreshAll()">
-              {{ t('app.retry') }}
-            </NButton>
-          </NSpace>
-        </NFormItem>
+        <PreferenceAssociations />
       </NForm>
     </div>
 

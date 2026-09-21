@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 
 pub const HOST_NAME: &str = "dev.aninsomniacy.rayburst.browser";
 pub const LAUNCHER_FILE_STEM: &str = "rayburst-browser-launcher";
-pub const ACTIVATION_URL: &str = "rayburst://";
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct BrowserIdentity {

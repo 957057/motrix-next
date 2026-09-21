@@ -429,9 +429,7 @@
     "protocol-magnet": "Magnetlenker [ magnet:// ]",
     "protocol-thunder": "Thunder-lenker [ thunder:// ]",
     "protocol-registered": "Behandler for {protocol} angitt",
-    "protocol-unregistered": "Tilknytning for {protocol} fjernet",
     "protocol-register-failed": "Kunne ikke angi behandler for {protocol}: {reason}",
-    "protocol-unregister-failed": "Kunne ikke fjerne tilknytningen for {protocol}: {reason}",
     "protocol-unchanged": "Tilknytningen for {protocol} ble ikke endret",
     "protocol-manual-required": "Velg standardprogrammet for denne protokollen i systeminnstillingene",
     "protocol-query-failed": "Kunne ikke kontrollere tilknytningen for {protocol}. Prøv igjen",
@@ -582,7 +580,16 @@
     "media-default-format": "Standardformat",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Relativt til standardmappen",
-    "file-category-fixed-directory": "Fast mappe"
+    "file-category-fixed-directory": "Fast mappe",
+    "association-current": "Standard",
+    "association-other": "Annen app",
+    "association-unassigned": "Ikke angitt",
+    "association-unavailable": "Appen er utilgjengelig",
+    "association-error": "Kunne ikke kontrollere",
+    "association-set": "Angi standard",
+    "association-repair": "Reparer",
+    "association-development": "Utilgjengelig i utviklingsmodus",
+    "association-settings": "Åpne systeminnstillinger"
   },
   "task": {
     "scope-all": "Alle",

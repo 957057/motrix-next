@@ -429,9 +429,7 @@
     "protocol-magnet": "磁力連結 [ magnet:// ]",
     "protocol-thunder": "迅雷連結 [ thunder:// ]",
     "protocol-registered": "{protocol} 連結已關聯",
-    "protocol-unregistered": "{protocol} 連結已取消關聯",
     "protocol-register-failed": "{protocol} 連結關聯失敗：{reason}",
-    "protocol-unregister-failed": "{protocol} 連結取消關聯失敗：{reason}",
     "protocol-unchanged": "{protocol} 連結關聯未變更",
     "protocol-manual-required": "請在系統設定中選擇此通訊協定的預設應用程式",
     "protocol-query-failed": "無法確認 {protocol} 連結關聯狀態，請重試",
@@ -582,7 +580,16 @@
     "media-default-format": "預設格式",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "相對於預設資料夾",
-    "file-category-fixed-directory": "固定資料夾"
+    "file-category-fixed-directory": "固定資料夾",
+    "association-current": "預設",
+    "association-other": "其他應用程式",
+    "association-unassigned": "未設定",
+    "association-unavailable": "應用程式無法使用",
+    "association-error": "無法確認",
+    "association-set": "設為預設",
+    "association-repair": "修復",
+    "association-development": "開發模式無法修改",
+    "association-settings": "開啟系統設定"
   },
   "task": {
     "scope-all": "全部",

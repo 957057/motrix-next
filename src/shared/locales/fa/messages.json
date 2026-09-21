@@ -429,9 +429,7 @@
     "protocol-magnet": "لینک‌های مگنت [ magnet:// ]",
     "protocol-thunder": "لینک‌های تاندر [ thunder:// ]",
     "protocol-registered": "برنامهٔ پیش‌فرض {protocol} تنظیم شد",
-    "protocol-unregistered": "ارتباط {protocol} حذف شد",
     "protocol-register-failed": "تنظیم برنامهٔ پیش‌فرض {protocol} ناموفق بود: {reason}",
-    "protocol-unregister-failed": "حذف ارتباط {protocol} ناموفق بود: {reason}",
     "protocol-unchanged": "ارتباط {protocol} تغییر نکرد",
     "protocol-manual-required": "برنامهٔ پیش‌فرض این پروتکل را در تنظیمات سیستم انتخاب کنید",
     "protocol-query-failed": "بررسی ارتباط {protocol} ممکن نیست. دوباره تلاش کنید",
@@ -582,7 +580,16 @@
     "media-default-format": "قالب پیش‌فرض",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "نسبت به پوشهٔ پیش‌فرض",
-    "file-category-fixed-directory": "پوشهٔ ثابت"
+    "file-category-fixed-directory": "پوشهٔ ثابت",
+    "association-current": "پیش‌فرض",
+    "association-other": "برنامه دیگر",
+    "association-unassigned": "تنظیم نشده",
+    "association-unavailable": "برنامه در دسترس نیست",
+    "association-error": "بررسی ممکن نیست",
+    "association-set": "تنظیم پیش‌فرض",
+    "association-repair": "ترمیم",
+    "association-development": "در حالت توسعه در دسترس نیست",
+    "association-settings": "باز کردن تنظیمات سیستم"
   },
   "task": {
     "scope-all": "همه",

@@ -429,9 +429,7 @@
     "protocol-magnet": "روابط المغناطيس [ magnet:// ]",
     "protocol-thunder": "روابط ثندر [ thunder:// ]",
     "protocol-registered": "تم تعيين معالج {protocol}",
-    "protocol-unregistered": "تم إلغاء ارتباط {protocol}",
     "protocol-register-failed": "تعذر تعيين معالج {protocol}: {reason}",
-    "protocol-unregister-failed": "تعذر إلغاء ارتباط {protocol}: {reason}",
     "protocol-unchanged": "لم يتغير ارتباط {protocol}",
     "protocol-manual-required": "اختر التطبيق الافتراضي لهذا البروتوكول في إعدادات النظام",
     "protocol-query-failed": "تعذر التحقق من ارتباط {protocol}. أعد المحاولة",
@@ -582,7 +580,16 @@
     "media-default-format": "التنسيق الافتراضي",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "بالنسبة إلى مجلد التنزيل الافتراضي",
-    "file-category-fixed-directory": "مجلد ثابت"
+    "file-category-fixed-directory": "مجلد ثابت",
+    "association-current": "الافتراضي",
+    "association-other": "تطبيق آخر",
+    "association-unassigned": "غير محدد",
+    "association-unavailable": "التطبيق غير متاح",
+    "association-error": "تعذر التحقق",
+    "association-set": "تعيين الافتراضي",
+    "association-repair": "إصلاح",
+    "association-development": "غير متاح في وضع التطوير",
+    "association-settings": "فتح إعدادات النظام"
   },
   "task": {
     "scope-all": "الكل",

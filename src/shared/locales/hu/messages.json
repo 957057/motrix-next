@@ -429,9 +429,7 @@
     "protocol-magnet": "Magnet linkek [ magnet:// ]",
     "protocol-thunder": "Thunder linkek [ thunder:// ]",
     "protocol-registered": "A(z) {protocol} kezelője beállítva",
-    "protocol-unregistered": "A(z) {protocol} társítása eltávolítva",
     "protocol-register-failed": "A(z) {protocol} kezelője nem állítható be: {reason}",
-    "protocol-unregister-failed": "A(z) {protocol} társítása nem távolítható el: {reason}",
     "protocol-unchanged": "A(z) {protocol} társítása nem változott",
     "protocol-manual-required": "Válassza ki a protokoll alapértelmezett alkalmazását a rendszerbeállításokban",
     "protocol-query-failed": "A(z) {protocol} társítása nem ellenőrizhető. Próbálja újra",
@@ -582,7 +580,16 @@
     "media-default-format": "Alapértelmezett formátum",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Az alapértelmezett mappához képest",
-    "file-category-fixed-directory": "Rögzített mappa"
+    "file-category-fixed-directory": "Rögzített mappa",
+    "association-current": "Alapértelmezett",
+    "association-other": "Másik alkalmazás",
+    "association-unassigned": "Nincs beállítva",
+    "association-unavailable": "Az alkalmazás nem érhető el",
+    "association-error": "Az ellenőrzés sikertelen",
+    "association-set": "Alapértelmezett beállítása",
+    "association-repair": "Javítás",
+    "association-development": "Fejlesztői módban nem érhető el",
+    "association-settings": "Rendszerbeállítások megnyitása"
   },
   "task": {
     "scope-all": "Összes",

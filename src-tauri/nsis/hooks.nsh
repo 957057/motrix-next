@@ -26,7 +26,28 @@
 
 ; Rayburst Native Messaging registration and icon refresh.
 
+; Advertise capabilities without taking over the user's public defaults.
+!macro RAYBURST_REGISTER_CANDIDATE suffix association section
+  !if "${section}" == "URLAssociations"
+    WriteRegStr SHCTX "Software\Classes\${BUNDLEID}.${suffix}" "URL Protocol" ""
+  !endif
+  WriteRegStr SHCTX "Software\Classes\${BUNDLEID}.${suffix}" "" "Rayburst ${association}"
+  WriteRegStr SHCTX "Software\Classes\${BUNDLEID}.${suffix}\DefaultIcon" "" '"$INSTDIR\${MAINBINARYNAME}.exe",0'
+  WriteRegStr SHCTX "Software\Classes\${BUNDLEID}.${suffix}\shell\open\command" "" '"$INSTDIR\${MAINBINARYNAME}.exe" "%1"'
+  WriteRegStr SHCTX "Software\${BUNDLEID}\Capabilities\${section}" "${association}" "${BUNDLEID}.${suffix}"
+!macroend
+
 !macro NSIS_HOOK_POSTINSTALL
+  WriteRegStr SHCTX "Software\${BUNDLEID}\Capabilities" "ApplicationName" "${PRODUCTNAME}"
+  WriteRegStr SHCTX "Software\${BUNDLEID}\Capabilities" "ApplicationDescription" "Download files and media with Rayburst"
+  WriteRegStr SHCTX "Software\${BUNDLEID}\Capabilities" "ApplicationIcon" '"$INSTDIR\${MAINBINARYNAME}.exe",0'
+  WriteRegStr SHCTX "Software\RegisteredApplications" "${BUNDLEID}" "Software\${BUNDLEID}\Capabilities"
+  !insertmacro RAYBURST_REGISTER_CANDIDATE torrent .torrent FileAssociations
+  !insertmacro RAYBURST_REGISTER_CANDIDATE magnet magnet URLAssociations
+  !insertmacro RAYBURST_REGISTER_CANDIDATE ed2k ed2k URLAssociations
+  !insertmacro RAYBURST_REGISTER_CANDIDATE thunder thunder URLAssociations
+  !insertmacro RAYBURST_REGISTER_CANDIDATE rayburst rayburst URLAssociations
+  System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, p 0, p 0)'
   ; Register the allowlisted, activation-only native messaging host.
   WriteRegStr SHCTX \
     "Software\Google\Chrome\NativeMessagingHosts\dev.aninsomniacy.rayburst.browser" \
@@ -58,21 +79,41 @@
   ${EndIf}
 !macroend
 
+!macro RAYBURST_REMOVE_CANDIDATE hive suffix
+  ReadRegStr $R0 ${hive} "Software\Classes\${BUNDLEID}.${suffix}\shell\open\command" ""
+  ${If} $R0 == '"$INSTDIR\${MAINBINARYNAME}.exe" "%1"'
+    !if "${suffix}" == "torrent"
+      ReadRegStr $R1 ${hive} "Software\Classes\.torrent" ""
+      ${If} $R1 == "${BUNDLEID}.torrent"
+        DeleteRegValue ${hive} "Software\Classes\.torrent" ""
+      ${EndIf}
+    !endif
+    DeleteRegKey ${hive} "Software\Classes\${BUNDLEID}.${suffix}"
+  ${EndIf}
+!macroend
+
+!macro RAYBURST_REMOVE_CAPABILITIES hive
+  !insertmacro RAYBURST_REMOVE_CANDIDATE ${hive} torrent
+  !insertmacro RAYBURST_REMOVE_CANDIDATE ${hive} magnet
+  !insertmacro RAYBURST_REMOVE_CANDIDATE ${hive} ed2k
+  !insertmacro RAYBURST_REMOVE_CANDIDATE ${hive} thunder
+  !insertmacro RAYBURST_REMOVE_CANDIDATE ${hive} rayburst
+  ReadRegStr $R0 ${hive} "Software\${BUNDLEID}\Capabilities" "ApplicationIcon"
+  ${If} $R0 == '"$INSTDIR\${MAINBINARYNAME}.exe",0'
+    DeleteRegKey ${hive} "Software\${BUNDLEID}\Capabilities"
+    DeleteRegValue ${hive} "Software\RegisteredApplications" "${BUNDLEID}"
+  ${EndIf}
+!macroend
+
 !macro NSIS_HOOK_PREUNINSTALL
   !insertmacro RAYBURST_PREPARE_INSTALL
   !insertmacro RAYBURST_REMOVE_PROTOCOL rayburst
   !insertmacro RAYBURST_REMOVE_PROTOCOL magnet
   !insertmacro RAYBURST_REMOVE_PROTOCOL ed2k
   !insertmacro RAYBURST_REMOVE_PROTOCOL thunder
-  ReadRegStr $R0 HKCU "Software\${BUNDLEID}\Capabilities" "ApplicationIcon"
-  ${If} $R0 == '"$INSTDIR\${MAINBINARYNAME}.exe",0'
-    ClearErrors
-    EnumRegValue $R1 HKCU "Software\${BUNDLEID}\Capabilities\URLAssociations" 0
-    ${If} ${Errors}
-      DeleteRegKey HKCU "Software\${BUNDLEID}\Capabilities"
-      DeleteRegValue HKCU "Software\RegisteredApplications" "${BUNDLEID}"
-    ${EndIf}
-  ${EndIf}
+  !insertmacro RAYBURST_REMOVE_CAPABILITIES SHCTX
+  !insertmacro RAYBURST_REMOVE_CAPABILITIES HKCU
+  System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, p 0, p 0)'
   ; Remove only registrations that still belong to this installation.
   ReadRegStr $R0 SHCTX \
     "Software\Google\Chrome\NativeMessagingHosts\dev.aninsomniacy.rayburst.browser" ""

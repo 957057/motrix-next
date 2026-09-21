@@ -429,9 +429,7 @@
     "protocol-magnet": "Магнет-посилання [ magnet:// ]",
     "protocol-thunder": "Thunder-посилання [ thunder:// ]",
     "protocol-registered": "Обробник {protocol} призначено",
-    "protocol-unregistered": "Прив’язку {protocol} скасовано",
     "protocol-register-failed": "Не вдалося призначити обробник {protocol}: {reason}",
-    "protocol-unregister-failed": "Не вдалося скасувати прив’язку {protocol}: {reason}",
     "protocol-unchanged": "Прив’язку {protocol} не змінено",
     "protocol-manual-required": "Виберіть типову програму для цього протоколу в параметрах системи",
     "protocol-query-failed": "Не вдалося перевірити прив’язку {protocol}. Спробуйте ще раз",
@@ -582,7 +580,16 @@
     "media-default-format": "Типовий формат",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Відносно типової теки",
-    "file-category-fixed-directory": "Фіксована тека"
+    "file-category-fixed-directory": "Фіксована тека",
+    "association-current": "За замовчуванням",
+    "association-other": "Інший застосунок",
+    "association-unassigned": "Не задано",
+    "association-unavailable": "Застосунок недоступний",
+    "association-error": "Не вдалося перевірити",
+    "association-set": "Обрати за замовчуванням",
+    "association-repair": "Виправити",
+    "association-development": "Недоступно в режимі розробки",
+    "association-settings": "Відкрити параметри системи"
   },
   "task": {
     "scope-all": "Усі",

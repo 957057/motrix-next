@@ -429,9 +429,7 @@
     "protocol-magnet": "마그넷 링크 [ magnet:// ]",
     "protocol-thunder": "Thunder 링크 [ thunder:// ]",
     "protocol-registered": "{protocol} 연결이 설정되었습니다",
-    "protocol-unregistered": "{protocol} 연결이 해제되었습니다",
     "protocol-register-failed": "{protocol} 연결 설정 실패: {reason}",
-    "protocol-unregister-failed": "{protocol} 연결 해제 실패: {reason}",
     "protocol-unchanged": "{protocol} 연결이 변경되지 않았습니다",
     "protocol-manual-required": "시스템 설정에서 이 프로토콜의 기본 앱을 선택하세요",
     "protocol-query-failed": "{protocol} 연결 상태를 확인할 수 없습니다. 다시 시도하세요",
@@ -582,7 +580,16 @@
     "media-default-format": "기본 형식",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "기본 폴더 기준 상대 경로",
-    "file-category-fixed-directory": "고정 폴더"
+    "file-category-fixed-directory": "고정 폴더",
+    "association-current": "기본 앱",
+    "association-other": "다른 앱",
+    "association-unassigned": "설정되지 않음",
+    "association-unavailable": "앱을 사용할 수 없음",
+    "association-error": "확인할 수 없음",
+    "association-set": "기본 앱 설정",
+    "association-repair": "복구",
+    "association-development": "개발 모드에서는 변경할 수 없습니다",
+    "association-settings": "시스템 설정 열기"
   },
   "task": {
     "scope-all": "전체",

@@ -429,9 +429,7 @@
     "protocol-magnet": "ลิงก์แม่เหล็ก [ magnet:// ]",
     "protocol-thunder": "ลิงก์ Thunder [ thunder:// ]",
     "protocol-registered": "ตั้งค่าตัวจัดการ {protocol} แล้ว",
-    "protocol-unregistered": "ยกเลิกการเชื่อมโยง {protocol} แล้ว",
     "protocol-register-failed": "ตั้งค่าตัวจัดการ {protocol} ไม่สำเร็จ: {reason}",
-    "protocol-unregister-failed": "ยกเลิกการเชื่อมโยง {protocol} ไม่สำเร็จ: {reason}",
     "protocol-unchanged": "การเชื่อมโยง {protocol} ไม่ได้เปลี่ยนแปลง",
     "protocol-manual-required": "เลือกแอปเริ่มต้นสำหรับโปรโตคอลนี้ในการตั้งค่าระบบ",
     "protocol-query-failed": "ตรวจสอบการเชื่อมโยง {protocol} ไม่ได้ โปรดลองอีกครั้ง",
@@ -582,7 +580,16 @@
     "media-default-format": "รูปแบบเริ่มต้น",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "เทียบกับโฟลเดอร์เริ่มต้น",
-    "file-category-fixed-directory": "โฟลเดอร์คงที่"
+    "file-category-fixed-directory": "โฟลเดอร์คงที่",
+    "association-current": "ค่าเริ่มต้น",
+    "association-other": "แอปอื่น",
+    "association-unassigned": "ยังไม่ได้ตั้งค่า",
+    "association-unavailable": "แอปไม่พร้อมใช้งาน",
+    "association-error": "ตรวจสอบไม่ได้",
+    "association-set": "ตั้งเป็นค่าเริ่มต้น",
+    "association-repair": "ซ่อมแซม",
+    "association-development": "ไม่พร้อมใช้งานในโหมดพัฒนา",
+    "association-settings": "เปิดการตั้งค่าระบบ"
   },
   "task": {
     "scope-all": "ทั้งหมด",

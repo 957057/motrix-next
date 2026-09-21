@@ -429,9 +429,7 @@
     "protocol-magnet": "Link magnet [ magnet:// ]",
     "protocol-thunder": "Link Thunder [ thunder:// ]",
     "protocol-registered": "Associazione {protocol} impostata",
-    "protocol-unregistered": "Associazione {protocol} rimossa",
     "protocol-register-failed": "Impossibile impostare l’associazione {protocol}: {reason}",
-    "protocol-unregister-failed": "Impossibile rimuovere l’associazione {protocol}: {reason}",
     "protocol-unchanged": "L’associazione {protocol} non è cambiata",
     "protocol-manual-required": "Scegli l’applicazione predefinita per questo protocollo nelle impostazioni di sistema",
     "protocol-query-failed": "Impossibile verificare l’associazione {protocol}. Riprova",
@@ -582,7 +580,16 @@
     "media-default-format": "Formato predefinito",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Relativa alla cartella predefinita",
-    "file-category-fixed-directory": "Cartella fissa"
+    "file-category-fixed-directory": "Cartella fissa",
+    "association-current": "Predefinita",
+    "association-other": "Altra applicazione",
+    "association-unassigned": "Non impostata",
+    "association-unavailable": "Applicazione non disponibile",
+    "association-error": "Verifica non riuscita",
+    "association-set": "Imposta predefinita",
+    "association-repair": "Ripara",
+    "association-development": "Non disponibile in modalità sviluppo",
+    "association-settings": "Apri impostazioni di sistema"
   },
   "task": {
     "scope-all": "Tutte",

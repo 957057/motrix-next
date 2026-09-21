@@ -429,9 +429,7 @@
     "protocol-magnet": "Магнитни връзки [ magnet:// ]",
     "protocol-thunder": "Thunder връзки [ thunder:// ]",
     "protocol-registered": "Обработчикът за {protocol} е зададен",
-    "protocol-unregistered": "Асоциацията за {protocol} е премахната",
     "protocol-register-failed": "Неуспешно задаване на обработчик за {protocol}: {reason}",
-    "protocol-unregister-failed": "Неуспешно премахване на асоциацията за {protocol}: {reason}",
     "protocol-unchanged": "Асоциацията за {protocol} не е променена",
     "protocol-manual-required": "Изберете приложението по подразбиране за този протокол в системните настройки",
     "protocol-query-failed": "Асоциацията за {protocol} не може да се провери. Опитайте отново",
@@ -582,7 +580,16 @@
     "media-default-format": "Формат по подразбиране",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Спрямо папката по подразбиране",
-    "file-category-fixed-directory": "Фиксирана папка"
+    "file-category-fixed-directory": "Фиксирана папка",
+    "association-current": "По подразбиране",
+    "association-other": "Друго приложение",
+    "association-unassigned": "Не е зададено",
+    "association-unavailable": "Приложението е недостъпно",
+    "association-error": "Неуспешна проверка",
+    "association-set": "Задаване по подразбиране",
+    "association-repair": "Поправяне",
+    "association-development": "Недостъпно в режим за разработка",
+    "association-settings": "Отваряне на системните настройки"
   },
   "task": {
     "scope-all": "Всички",

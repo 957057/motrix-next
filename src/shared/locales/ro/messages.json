@@ -429,9 +429,7 @@
     "protocol-magnet": "Linkuri magnet [ magnet:// ]",
     "protocol-thunder": "Linkuri Thunder [ thunder:// ]",
     "protocol-registered": "Gestionarul pentru {protocol} a fost setat",
-    "protocol-unregistered": "Asocierea pentru {protocol} a fost eliminată",
     "protocol-register-failed": "Nu s-a putut seta gestionarul pentru {protocol}: {reason}",
-    "protocol-unregister-failed": "Nu s-a putut elimina asocierea pentru {protocol}: {reason}",
     "protocol-unchanged": "Asocierea pentru {protocol} nu s-a schimbat",
     "protocol-manual-required": "Alegeți aplicația implicită pentru acest protocol în setările sistemului",
     "protocol-query-failed": "Nu se poate verifica asocierea pentru {protocol}. Încercați din nou",
@@ -582,7 +580,16 @@
     "media-default-format": "Format implicit",
     "color-scheme-rayburst": "Rayburst",
     "file-category-relative-directory": "Relativ la dosarul implicit",
-    "file-category-fixed-directory": "Dosar fix"
+    "file-category-fixed-directory": "Dosar fix",
+    "association-current": "Implicită",
+    "association-other": "Altă aplicație",
+    "association-unassigned": "Nesetat",
+    "association-unavailable": "Aplicație indisponibilă",
+    "association-error": "Verificare nereușită",
+    "association-set": "Setează implicit",
+    "association-repair": "Repară",
+    "association-development": "Indisponibil în modul de dezvoltare",
+    "association-settings": "Deschide setările sistemului"
   },
   "task": {
     "scope-all": "Toate",
