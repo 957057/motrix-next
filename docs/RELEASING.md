@@ -69,6 +69,10 @@ response confirms dispatch; the extension still verifies API readiness separatel
 
 ## Platform distribution
 
+macOS packages use macOS 26 runners with Xcode 26.3 for both architectures.
+Keep the build host aligned with the Icon Composer asset runtime; compiling on
+macOS 15 can crash AssetCatalogAgent even after the application compiles successfully.
+
 Homebrew publication requires `HOMEBREW_ENABLED=true` and `HOMEBREW_TAP_TOKEN`
 with write access to `AnInsomniacy/homebrew-rayburst`. The tap owns `Casks/rayburst.rb`;
 the stable release job uses `brew bump-cask-pr --write-only` to update both architecture
