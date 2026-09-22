@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /** @fileoverview File and URL defaults, verified by the operating system. */
-import { computed, onMounted, ref } from 'vue'
-import { useEventListener } from '@vueuse/core'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useI18n } from 'vue-i18n'
 import { NButton, NDivider, NFormItem, NTooltip, NSkeleton, NInput, NInputGroup, NIcon } from 'naive-ui'
 import { useProtocolHandlers, type ProtocolKey } from '@/composables/useProtocolHandlers'
@@ -57,6 +57,15 @@ async function revealHandler(protocol: ProtocolKey) {
 }
 
 const needsSettings = ref(new Set<ProtocolKey>())
+watch(
+  status,
+  (snapshot) => {
+    for (const protocol of needsSettings.value) {
+      if (snapshot[protocol]?.state === 'current') needsSettings.value.delete(protocol)
+    }
+  },
+  { deep: true },
+)
 async function openSettings() {
   try {
     await invoke('open_default_apps_settings')
@@ -87,8 +96,24 @@ async function change(protocol: ProtocolKey) {
       break
   }
 }
-onMounted(refreshAll)
-useEventListener(window, 'focus', refreshAll)
+let disposed = false
+let unlistenFocus: (() => void) | undefined
+onMounted(async () => {
+  try {
+    const unlisten = await getCurrentWindow().onFocusChanged(({ payload }) => {
+      if (payload) void refreshAll()
+    })
+    if (disposed) unlisten()
+    else unlistenFocus = unlisten
+  } catch (error) {
+    logger.warn('Protocol.focus', String(error))
+  }
+  if (!disposed) await refreshAll()
+})
+onUnmounted(() => {
+  disposed = true
+  unlistenFocus?.()
+})
 </script>
 
 <template>
@@ -114,7 +139,7 @@ useEventListener(window, 'focus', refreshAll)
             busy ||
             !status[option.key] ||
             status[option.key]?.canChange === false ||
-            (status[option.key]?.state === 'current' && (!isWindows || option.key === 'rayburst'))
+            status[option.key]?.state === 'current'
           "
           :aria-label="`${option.label}: ${option.key === 'rayburst' ? t('preferences.association-repair') : t('preferences.association-set')}`"
           @click="change(option.key)"

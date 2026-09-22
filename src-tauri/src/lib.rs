@@ -22,6 +22,9 @@ mod upnp;
 #[cfg(windows)]
 pub use engine::windows_process::prepare_install;
 
+#[cfg(windows)]
+mod association_cleanup;
+
 use crate::commands::power::ShutdownCancelState;
 use crate::commands::updater::{DownloadedUpdate, UpdateCancelState};
 use engine::EngineState;

@@ -171,10 +171,9 @@ pub async fn set_default_protocol_client(app: AppHandle, protocol: String) -> Re
     }
     #[cfg(windows)]
     {
-        windows::register_candidate(&app, &protocol)?;
-        if protocol == ".torrent" {
-            windows::register_file_default(&app)?;
-        } else {
+        // The installer owns public candidates. Runtime repair only owns the
+        // private activation scheme; it must not duplicate installed capabilities.
+        if protocol == "rayburst" && !windows::is_default(&protocol).unwrap_or(false) {
             use tauri_plugin_deep_link::DeepLinkExt;
             app.deep_link()
                 .register(&protocol)
@@ -296,13 +295,7 @@ pub fn open_default_apps_settings(app: AppHandle) -> Result<(), AppError> {
     {
         use tauri_plugin_opener::OpenerExt;
         app.opener()
-            .open_url(
-                format!(
-                    "ms-settings:defaultapps?registeredAppUser={}",
-                    urlencoding::encode(&app.config().identifier)
-                ),
-                None::<String>,
-            )
+            .open_url(windows::settings_url(&app)?, None::<String>)
             .map_err(|error| AppError::Protocol(error.to_string()))
     }
     #[cfg(not(windows))]

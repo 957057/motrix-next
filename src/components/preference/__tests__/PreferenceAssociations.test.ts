@@ -4,6 +4,9 @@ import PreferenceAssociations from '../PreferenceAssociations.vue'
 
 const invoke = vi.hoisted(() => vi.fn())
 vi.mock('@tauri-apps/api/core', () => ({ invoke }))
+vi.mock('@tauri-apps/api/window', () => ({
+  getCurrentWindow: () => ({ onFocusChanged: vi.fn().mockResolvedValue(vi.fn()) }),
+}))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (key: string) => key }) }))
 vi.mock('@/composables/usePlatform', () => ({ usePlatform: () => ({ isWindows: true }) }))
 vi.mock('@/composables/useAppMessage', () => ({

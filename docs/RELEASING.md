@@ -55,8 +55,8 @@ manual launch to refresh that link. The host never launches a path supplied by a
 extension or searches for other installations.
 
 The desktop owns `.torrent`, `magnet`, `ed2k`, `thunder`, and `rayburst` association
-status. Windows registers a candidate and requests the association without changing
-protected UserChoice values. If verification fails, the user can open Settings
+status. The Windows installer registers candidates; runtime queries effective
+associations without changing protected UserChoice values. If verification fails, the user can open Settings
 with an explicit button; macOS uses LaunchServices and Linux uses GIO. Registration alone is
 not proof of the effective default. Development mode does not modify associations
 or browser registrations. Native Messaging permissions remain activation-only.
@@ -68,6 +68,11 @@ Include AppImage relocation and paths containing spaces. An application launch
 response confirms dispatch; the extension still verifies API readiness separately.
 
 ## Platform distribution
+
+Windows installers own Default Apps capabilities in their selected install scope.
+Runtime actions reuse these registrations instead of adding another application.
+Installer maintenance removes owned or orphaned historical candidates; it never
+rewrites protected UserChoice values or removes another live installation.
 
 macOS packages use macOS 26 runners with Xcode 26.3 for both architectures.
 Keep the build host aligned with the Icon Composer asset runtime; compiling on

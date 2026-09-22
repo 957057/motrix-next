@@ -51,8 +51,19 @@ pub fn handler(protocol: &str) -> Result<Handler, AppError> {
             .iter()
             .position(|ch| *ch == 0)
             .unwrap_or(output.len());
+        let path = std::path::PathBuf::from(std::ffi::OsString::from_wide(&output[..length]));
+        let chooser = std::env::var_os("SystemRoot").is_some_and(|root| {
+            ["System32", "SysWOW64"].iter().any(|directory| {
+                path.to_string_lossy().eq_ignore_ascii_case(
+                    &std::path::Path::new(&root)
+                        .join(directory)
+                        .join("OpenWith.exe")
+                        .to_string_lossy(),
+                )
+            })
+        });
         return Ok(Handler {
-            path: Some(std::ffi::OsString::from_wide(&output[..length]).into()),
+            path: (!chooser).then_some(path),
             unavailable: false,
         });
     }
@@ -68,47 +79,35 @@ pub fn is_default(protocol: &str) -> Result<bool, AppError> {
     }))
 }
 
-/// Advertise public download schemes in Windows Default Apps. This registers
-/// a candidate; only the Shell query establishes which application is default.
-pub fn register_candidate(app: &tauri::AppHandle, protocol: &str) -> Result<(), AppError> {
-    use winreg::{enums::HKEY_CURRENT_USER, RegKey};
-    let root = RegKey::predef(HKEY_CURRENT_USER);
+/// Open the installed application's page without creating another registration.
+pub fn settings_url(app: &tauri::AppHandle) -> Result<String, AppError> {
+    use winreg::{
+        enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE},
+        RegKey,
+    };
     let identity = &app.config().identifier;
-    let program = format!("{identity}.{}", protocol.trim_start_matches('.'));
-    let executable = std::env::current_exe()?;
-    let executable = dunce::simplified(&executable).to_string_lossy();
-    let name = app.config().product_name.as_deref().unwrap_or("Rayburst");
-    let (key, _) = root.create_subkey(format!("Software\\Classes\\{program}"))?;
-    key.set_value("", &format!("{name} {protocol}"))?;
-    if !protocol.starts_with('.') {
-        key.set_value("URL Protocol", &"")?;
+    let expected = format!(
+        "\"{}\" \"%1\"",
+        dunce::simplified(&std::env::current_exe()?).display()
+    );
+    for (hive, parameter) in [
+        (HKEY_LOCAL_MACHINE, "registeredAppMachine"),
+        (HKEY_CURRENT_USER, "registeredAppUser"),
+    ] {
+        let root = RegKey::predef(hive);
+        let command = root
+            .open_subkey(format!(
+                "Software\\Classes\\{identity}.rayburst\\shell\\open\\command"
+            ))
+            .and_then(|key| key.get_value::<String, _>(""));
+        if command.is_ok_and(|value| value.eq_ignore_ascii_case(&expected)) {
+            return Ok(format!(
+                "ms-settings:defaultapps?{parameter}={}",
+                urlencoding::encode(identity)
+            ));
+        }
     }
-    key.create_subkey("DefaultIcon")?
-        .0
-        .set_value("", &format!("\"{executable}\",0"))?;
-    key.create_subkey("shell\\open\\command")?
-        .0
-        .set_value("", &format!("\"{executable}\" \"%1\""))?;
-    let capabilities = format!("Software\\{identity}\\Capabilities");
-    let (key, _) = root.create_subkey(&capabilities)?;
-    key.set_value("ApplicationName", &name)?;
-    key.set_value(
-        "ApplicationDescription",
-        &"Download files and media with Rayburst",
-    )?;
-    key.set_value("ApplicationIcon", &format!("\"{executable}\",0"))?;
-    key.create_subkey(if protocol.starts_with('.') {
-        "FileAssociations"
-    } else {
-        "URLAssociations"
-    })?
-    .0
-    .set_value(protocol, &program)?;
-    root.create_subkey("Software\\RegisteredApplications")?
-        .0
-        .set_value(identity, &capabilities)?;
-    notify_changed();
-    Ok(())
+    Ok("ms-settings:defaultapps".into())
 }
 
 /// Notify the Shell after a completed registration, rather than refreshing icons alone.
@@ -122,15 +121,6 @@ pub fn notify_changed() {
             std::ptr::null(),
         );
     }
-}
-
-/// This supplies a legacy default without modifying Windows' protected UserChoice.
-pub fn register_file_default(app: &tauri::AppHandle) -> Result<(), AppError> {
-    use winreg::{enums::HKEY_CURRENT_USER, RegKey};
-    let (key, _) =
-        RegKey::predef(HKEY_CURRENT_USER).create_subkey("Software\\Classes\\.torrent")?;
-    key.set_value("", &format!("{}.torrent", app.config().identifier))?;
-    Ok(())
 }
 
 #[cfg(test)]

@@ -318,6 +318,8 @@ pub fn prepare_install(directory: &Path) -> Result<(), String> {
             return Err(format!("Process enumeration failed: {error}"));
         }
     }
+    crate::association_cleanup::cleanup(directory)
+        .map_err(|error| format!("Association cleanup failed: {error}"))?;
     Ok(())
 }
 

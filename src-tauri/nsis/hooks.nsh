@@ -24,6 +24,16 @@
   !insertmacro RAYBURST_PREPARE_INSTALL
 !macroend
 
+; Tauri may restore the same ProgID from a previous installation during uninstall.
+; Do not leave a default pointing at the application class we just removed.
+!macro NSIS_HOOK_POSTUNINSTALL
+  ReadRegStr $R0 SHCTX "Software\Classes\.torrent" ""
+  ${If} $R0 == "${BUNDLEID}.torrent"
+    DeleteRegValue SHCTX "Software\Classes\.torrent" ""
+  ${EndIf}
+  DeleteRegValue SHCTX "Software\Classes\.torrent" "${BUNDLEID}.torrent_backup"
+!macroend
+
 ; Rayburst Native Messaging registration and icon refresh.
 
 ; Advertise capabilities without taking over the user's public defaults.
