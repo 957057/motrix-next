@@ -8,9 +8,6 @@ on:
 permissions:
   contents: write
 
-env:
-  ENGINE_VERSION: 2.8.0
-
 jobs:
   build:
     strategy:
@@ -85,14 +82,6 @@ jobs:
             librsvg2-dev patchelf xdg-utils
 
       - run: pnpm install --frozen-lockfile
-
-      - name: Prepare verified engine release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TARGET=$(echo '${{ matrix.args }}' | sed 's/.*--target \([^ ]*\).*/\1/')
-          node scripts/prepare-engine.mjs "$ENGINE_VERSION" "$TARGET"
 
       - uses: tauri-apps/tauri-action@v0
         id: tauri

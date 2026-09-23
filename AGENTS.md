@@ -381,8 +381,8 @@ One-paragraph summary of the release scope and significance.
 
 Two jobs share no dependency installation. New commits cancel superseded CI runs.
 
-- `frontend`: lint, formatting, locale integrity, behavior tests, engine checksum tests,
-  then `pnpm build` for type checking and Vite bundling.
+- `frontend`: lint, formatting, locale integrity, behavior tests, then `pnpm build`
+  for type checking and Vite bundling.
 - `backend`: Rust formatting, the Native Messaging launcher, Clippy and Rust tests.
   The launcher uses Node built-ins; this job does not install frontend dependencies.
   Clippy already checks compilation, so do not run `cargo check` after it.

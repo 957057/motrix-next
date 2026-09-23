@@ -28,11 +28,11 @@ fresh installation in the README and website migration notices.
 
 ## Bundled engine
 
-Release builds download the engine version pinned in `.github/workflows/release.yml`
-from the aria2-next repository and verify its published SHA-256 checksum. Publish
-that engine release before building the desktop release. Every platform uses the
-same engine version; a missing release or checksum fails the build. Development
-sidecars in the checkout are not a substitute for release preparation.
+Release builds use the six platform engine binaries committed under
+`src-tauri/binaries`. Update those files from a published aria2-next release before
+the desktop release, then review their SHA-256 values. The checkout is the single
+source used by local and release builds; CI does not download or replace the
+engine during packaging.
 
 ## Browser identities
 
