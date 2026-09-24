@@ -45,7 +45,7 @@ colors use the desktop's default palette; the SVG logos retain their original co
 Website artwork copies come from `public/logo.svg`, Rayburst Connect's
 `public/icon/icon.svg`, and the screenshots in `docs/media/`.
 The companion section uses the approved browser-to-desktop campaign artwork.
-Its engine panel keeps Aria2 Next's original black-and-gold `docs/media/banner.png`.
+Its engine panel uses Aria2 Next's approved black-and-gold `docs/media/banner.png`.
 Keep promotional scenes separate from the unedited interface screenshots; preserve
 their proportions and omit release numbers from campaign artwork.
 Serve full-resolution WebP copies on the website: lossless for interface screenshots
