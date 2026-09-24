@@ -19,18 +19,17 @@ import {
 } from '@shared/utils'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { invoke } from '@tauri-apps/api/core'
-import { deleteTaskFiles } from '@/composables/useFileDelete'
 import { resolveTaskFilePath, requestFileRecheck } from '@/composables/useTaskPaths'
 import { logger } from '@shared/logger'
 import { NCheckbox, useDialog } from 'naive-ui'
-import type { Aria2Task, AppConfig } from '@shared/types'
+import type { Aria2Task, AppConfig, TaskDeletionOptions } from '@shared/types'
 
 interface TaskActionsDeps {
   taskStore: {
     pauseTask: (task: Aria2Task) => Promise<unknown>
     resumeTask: (task: Aria2Task) => Promise<unknown>
     finishSharing: (task: Aria2Task) => Promise<unknown>
-    removeTask: (task: Aria2Task) => Promise<unknown>
+    removeTask: (task: Aria2Task, options?: TaskDeletionOptions) => Promise<unknown>
     removeTaskRecord: (task: Aria2Task) => Promise<unknown>
     retryTask: (task: Aria2Task) => Promise<unknown>
     redownloadTask: (task: Aria2Task) => Promise<unknown>
@@ -149,17 +148,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     if (noConfirm) {
       const alsoDeleteFiles = config.deleteFilesWhenSkipConfirm
       taskStore
-        .removeTask(task)
-        .then(async () => {
-          if (alsoDeleteFiles) {
-            try {
-              await deleteTaskFiles(task, config.fileDeletionMode)
-            } catch (error) {
-              logger.error('TaskView.deleteTaskFiles', error)
-              message.error(t('task.remove-task-file-fail'))
-            }
-          }
-        })
+        .removeTask(task, { deleteMode: alsoDeleteFiles ? config.fileDeletionMode : undefined })
         .catch((error: unknown) => {
           logger.error('TaskView.deleteTask', error)
           message.error(t('task.delete-task-fail', { taskName: getTaskName(task, { defaultName: 'Unknown' }) }))
@@ -192,16 +181,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
         d.closable = false
         d.maskClosable = false
         try {
-          await taskStore.removeTask(task)
-          if (deleteFiles.value) {
-            try {
-              await deleteTaskFiles(task, config.fileDeletionMode)
-            } catch (error) {
-              logger.error('TaskView.deleteTaskFiles', error)
-              message.error(t('task.remove-task-file-fail'))
-              return
-            }
-          }
+          await taskStore.removeTask(task, { deleteMode: deleteFiles.value ? config.fileDeletionMode : undefined })
           message.success(t('task.delete-task-success', { taskName: name }))
         } catch (e) {
           logger.error('TaskView.deleteTask', e)
@@ -211,75 +191,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
     })
   }
 
-  function handleDeleteRecord(task: Aria2Task) {
-    const config = preferenceConfig()
-    const noConfirm = config.noConfirmBeforeDeleteTask
-    if (noConfirm) {
-      const alsoDeleteFiles = config.deleteFilesWhenSkipConfirm
-      const taskRef = task
-      taskStore
-        .removeTaskRecord(task)
-        .then(async () => {
-          if (alsoDeleteFiles) {
-            try {
-              await deleteTaskFiles(taskRef, config.fileDeletionMode)
-            } catch (error) {
-              logger.error('TaskView.deleteRecordFiles', error)
-              message.error(t('task.remove-task-file-fail'))
-              return
-            }
-          }
-          message.success(
-            t('task.remove-record-success', { taskName: getTaskName(taskRef, { defaultName: 'Unknown' }) }),
-          )
-        })
-        .catch((e: unknown) => logger.error('TaskView.deleteRecord', e))
-      return
-    }
-    const deleteFiles = ref(false)
-    const name = getTaskName(task, { defaultName: 'Unknown' })
-    const d = dialog.error({
-      title: t('task.delete-task'),
-      content: () =>
-        h('div', {}, [
-          h('p', { class: 'technical-text-wrap', style: 'margin: 0 0 12px;' }, name),
-          h(
-            NCheckbox,
-            {
-              checked: deleteFiles.value,
-              'onUpdate:checked': (v: boolean) => {
-                deleteFiles.value = v
-              },
-            },
-            { default: deleteFilesLabel },
-          ),
-        ]),
-      positiveText: t('app.yes'),
-      negativeText: t('app.no'),
-      onPositiveClick: async () => {
-        d.loading = true
-        d.negativeButtonProps = { disabled: true }
-        d.closable = false
-        d.maskClosable = false
-        try {
-          if (deleteFiles.value) {
-            try {
-              await deleteTaskFiles(task, config.fileDeletionMode)
-            } catch (error) {
-              logger.error('TaskView.deleteRecordFiles', error)
-              message.error(t('task.remove-task-file-fail'))
-              return
-            }
-          }
-          await taskStore.removeTaskRecord(task)
-          message.success(t('task.delete-task-success', { taskName: name }))
-        } catch (e) {
-          logger.error('TaskView.deleteRecord', e)
-          message.error(t('task.delete-task-fail', { taskName: name }))
-        }
-      },
-    })
-  }
+  const handleDeleteRecord = handleDeleteTask
 
   async function handleCopyLink(task: Aria2Task) {
     const uri = getTaskUri(task).trim()

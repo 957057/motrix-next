@@ -18,9 +18,8 @@ tracked in [tauri#15991](https://github.com/tauri-apps/tauri/pull/15991).
 The tray remains a separate transparent template image.
 `docs/brand/banner.png` is the English README banner with the current slogan. Use no terminal punctuation in slogans, including translations.
 
-The default interface seed is `#946ECE`, softened from the original purple while
-preserving its hue. Material Color Utilities generates both themes through the
-standard source palette.
+The default interface seed is `#9E74D5`, a soft lavender. Material Color Utilities
+generates both themes through the content palette, preserving the seed chroma.
 The original logo artwork retains its purple gradients.
 The empty-list background reuses `public/logo.svg` as a monochrome CSS mask,
 without a wordmark. It follows the rendered list immediately, independent of

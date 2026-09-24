@@ -40,7 +40,7 @@ pub struct PingResponse {
 #[derive(Debug, Serialize)]
 pub struct VersionResponse {
     pub app: String,
-    pub engine: String,
+    pub engine: crate::engine::supervisor::EnginePhase,
 }
 
 /// GET /stat response — mirrors aria2's getGlobalStat for the extension popup.
@@ -174,17 +174,18 @@ async fn handle_ping(State(ctx): State<Arc<ApiContext>>) -> impl IntoResponse {
 async fn handle_download_capabilities(
     State(ctx): State<Arc<ApiContext>>,
     headers: HeaderMap,
-) -> Result<Json<serde_json::Value>, StatusCode> {
-    validate_bearer_token(&headers, &read_api_secret(&ctx.app))?;
+) -> Result<Json<serde_json::Value>, Response> {
+    validate_bearer_token(&headers, &read_api_secret(&ctx.app))
+        .map_err(IntoResponse::into_response)?;
     let engine = ctx
         .app
         .try_state::<TaskServiceState>()
-        .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
+        .ok_or_else(|| engine_unavailable(&ctx.app))?;
     let version = engine
         .0
         .get_version()
         .await
-        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
+        .map_err(|_| engine_unavailable(&ctx.app))?;
     if !version["downloadFeatures"]
         .as_array()
         .is_some_and(|features| {
@@ -193,7 +194,7 @@ async fn handle_download_capabilities(
                 .any(|feature| feature.as_str() == Some("filename-hints"))
         })
     {
-        return Err(StatusCode::SERVICE_UNAVAILABLE);
+        return Err(engine_unavailable(&ctx.app));
     }
     Ok(Json(
         serde_json::json!({"product":"rayburst","protocolVersion":2,"filenameHints":true}),
@@ -241,15 +242,9 @@ async fn handle_add(
 async fn handle_version(State(ctx): State<Arc<ApiContext>>) -> impl IntoResponse {
     let app_version = ctx.app.package_info().version.to_string();
 
-    let engine_status = if ctx.app.try_state::<TaskServiceState>().is_some() {
-        "running"
-    } else {
-        "stopped"
-    };
-
     Json(VersionResponse {
         app: app_version,
-        engine: engine_status.to_string(),
+        engine: engine_phase(&ctx.app),
     })
 }
 
@@ -261,14 +256,14 @@ async fn handle_version(State(ctx): State<Arc<ApiContext>>) -> impl IntoResponse
 async fn handle_stat(
     State(ctx): State<Arc<ApiContext>>,
     headers: HeaderMap,
-) -> Result<Json<StatResponse>, StatusCode> {
+) -> Result<Json<StatResponse>, Response> {
     let secret = read_api_secret(&ctx.app);
-    validate_bearer_token(&headers, &secret)?;
+    validate_bearer_token(&headers, &secret).map_err(IntoResponse::into_response)?;
 
     let aria2 = ctx
         .app
         .try_state::<TaskServiceState>()
-        .ok_or(StatusCode::SERVICE_UNAVAILABLE)?;
+        .ok_or_else(|| engine_unavailable(&ctx.app))?;
 
     match aria2.0.get_global_stat().await {
         Ok(stat) => Ok(Json(StatResponse {
@@ -281,9 +276,33 @@ async fn handle_stat(
         })),
         Err(e) => {
             log::error!("http_api: get_global_stat failed: {e}");
-            Err(StatusCode::INTERNAL_SERVER_ERROR)
+            Err(engine_unavailable(&ctx.app))
         }
     }
+}
+
+fn engine_phase(app: &AppHandle) -> crate::engine::supervisor::EnginePhase {
+    app.try_state::<crate::engine::supervisor::EngineSupervisor>()
+        .map(|supervisor| supervisor.snapshot().phase)
+        .unwrap_or(crate::engine::supervisor::EnginePhase::Stopped)
+}
+
+fn engine_unavailable(app: &AppHandle) -> Response {
+    use crate::engine::supervisor::EnginePhase;
+    let error = match engine_phase(app) {
+        EnginePhase::Preparing
+        | EnginePhase::Starting
+        | EnginePhase::Probing
+        | EnginePhase::Initializing
+        | EnginePhase::Stabilizing
+        | EnginePhase::Recovering => "engine_starting",
+        _ => "engine_unavailable",
+    };
+    (
+        StatusCode::SERVICE_UNAVAILABLE,
+        Json(serde_json::json!({"error": error})),
+    )
+        .into_response()
 }
 
 /// POST /pause-all — pause all active downloads.

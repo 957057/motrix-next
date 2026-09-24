@@ -58,6 +58,7 @@ dirs = "6"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 chrono = "0.4"
 trash = "5"
+notify = "8.1"
 dunce = "1"
 os_info = "3"
 sys-locale = "0.3"

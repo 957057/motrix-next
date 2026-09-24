@@ -7,6 +7,7 @@ import { NEllipsis, NIcon, NProgress } from 'naive-ui'
 import MTooltip, { TOOLTIP_DEFAULTS } from '@/components/common/MTooltip.vue'
 import { ArrowDownOutline, ArrowUpOutline, AlertCircleOutline, RadioOutline, TimeOutline } from '@vicons/ionicons5'
 import { useTaskCardModel } from '@/composables/useTaskCardModel'
+import { canOpenTaskContent } from '@/composables/useTaskContentOpen'
 import { useTaskFileMissing } from '@/composables/useTaskFileMissing'
 import TaskDragHandle from './TaskDragHandle.vue'
 import TaskItemActions from './TaskItemActions.vue'
@@ -50,7 +51,7 @@ const {
   remainingText,
   transferSummary,
 } = useTaskCardModel(taskRef)
-const { fileMissing } = useTaskFileMissing(taskRef)
+const { fileMissing, fileState } = useTaskFileMissing(taskRef)
 
 const statusColorMap: Record<string, string> = {
   active: 'var(--m3-status-active)',
@@ -67,7 +68,7 @@ const progressColor = computed(() => statusColorMap[taskStatus.value] || 'var(--
 const compactStatus = computed<{ label: string; tone: string; icon: Component } | null>(() => {
   if (fileMissing.value) {
     return {
-      label: t('task.file-missing') || 'File missing',
+      label: t(fileState.value === 'inaccessible' ? 'task.file-inaccessible' : 'task.file-missing') || 'File missing',
       tone: 'error',
       icon: AlertCircleOutline,
     }
@@ -93,6 +94,7 @@ const compactStatus = computed<{ label: string; tone: string; icon: Component } 
     :class="{
       'is-sharing': isSharing,
     }"
+    @dblclick="!fileMissing && !actionPending && canOpenTaskContent(task, $event) && emit('open-file', task)"
   >
     <TaskDragHandle class="compact-drag-rail" />
     <div class="compact-body">

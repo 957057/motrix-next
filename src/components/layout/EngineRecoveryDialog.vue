@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { NButton, NIcon, NModal, NSpin } from 'naive-ui'
 import { CheckmarkCircleOutline, CheckmarkOutline, CloseCircleOutline } from '@vicons/ionicons5'
 import { useEngineStore, type EnginePhase } from '@/stores/engine'
@@ -18,6 +19,7 @@ interface RecoveryStage {
 }
 
 const { t } = useI18n()
+const router = useRouter()
 const engineStore = useEngineStore()
 const message = useAppMessage()
 const pendingAction = ref<'cancel' | 'retry' | 'cleanup' | null>(null)
@@ -26,6 +28,7 @@ const completed = ref(false)
 let successTimer: ReturnType<typeof setTimeout> | null = null
 
 const failed = computed(() => engineStore.snapshot.phase === 'failed')
+const configurationFailure = computed(() => engineStore.snapshot.failure?.stage === 'configuration')
 const cleaning = computed(() => engineStore.snapshot.phase === 'cleaning')
 const panelState = computed<PanelState>(() => {
   if (completed.value) return 'complete'
@@ -135,6 +138,11 @@ async function retry() {
   }
 }
 
+async function openSettings() {
+  await cancel()
+  await router.push('/preference/network')
+}
+
 async function cleanupAndRetry() {
   if (pendingAction.value) return
   pendingAction.value = 'cleanup'
@@ -209,8 +217,10 @@ async function cleanupAndRetry() {
                 <NIcon :size="24"><CloseCircleOutline /></NIcon>
                 <div>
                   <h2>{{ title }}</h2>
-                  <p>{{ t('app.engine-unrecoverable') }}</p>
-                  <p class="engine-attempt">{{ t('app.engine-attempt') }} {{ attemptText }}</p>
+                  <p>{{ t(configurationFailure ? 'app.engine-configuration-invalid' : 'app.engine-unrecoverable') }}</p>
+                  <p v-if="!configurationFailure" class="engine-attempt">
+                    {{ t('app.engine-attempt') }} {{ attemptText }}
+                  </p>
                 </div>
               </div>
 
@@ -219,7 +229,7 @@ async function cleanupAndRetry() {
                 <code>{{ failureDetail }}</code>
               </div>
 
-              <p class="engine-cleanup-warning">{{ t('app.engine-cleanup-warning') }}</p>
+              <p v-if="!configurationFailure" class="engine-cleanup-warning">{{ t('app.engine-cleanup-warning') }}</p>
             </template>
 
             <template v-else>
@@ -250,7 +260,12 @@ async function cleanupAndRetry() {
             <NButton :loading="pendingAction === 'cancel'" :disabled="pendingAction !== null" @click="cancel">
               {{ t('app.cancel') }}
             </NButton>
-            <div class="engine-dialog-actions">
+            <div v-if="configurationFailure" class="engine-dialog-actions">
+              <NButton type="primary" :disabled="pendingAction !== null" @click="openSettings">
+                {{ t('app.engine-open-settings') }}
+              </NButton>
+            </div>
+            <div v-else class="engine-dialog-actions">
               <NButton :loading="pendingAction === 'retry'" :disabled="pendingAction !== null" @click="retry">
                 {{ t('app.engine-manual-retry') }}
               </NButton>

@@ -99,7 +99,9 @@
     "shutdown-failed": "시스템 종료에 실패했습니다",
     "shutdown-skip-once": "이번에는 건너뛰기",
     "shutdown-disable": "자동 종료 비활성화",
-    "delete": "삭제"
+    "delete": "삭제",
+    "engine-configuration-invalid": "프록시 설정이 올바르지 않습니다. 네트워크 설정에서 수정하거나 프록시를 끄세요.",
+    "engine-open-settings": "네트워크 설정 열기"
   },
   "preferences": {
     "general": "일반",
@@ -589,7 +591,11 @@
     "association-set": "기본 앱 설정",
     "association-repair": "복구",
     "association-development": "개발 모드에서는 변경할 수 없습니다",
-    "association-settings": "시스템 설정 열기"
+    "association-settings": "시스템 설정 열기",
+    "remember-save-location": "마지막 저장 위치 기억",
+    "stream-max-range-size": "HTTP 범위 최대 크기",
+    "stream-max-range-size-hint": "0은 무제한입니다. K, M, G를 사용할 수 있습니다(예: 5M).",
+    "proxy-import-unsupported": "저장하기 전에 지원되지 않는 예외 규칙을 확인하세요: {rules}"
   },
   "task": {
     "scope-all": "전체",
@@ -890,7 +896,8 @@
     "recent-folders": "최근 폴더",
     "dir-no-saved": "저장된 폴더 없음",
     "create": "만들기",
-    "more-actions": "추가 작업"
+    "more-actions": "추가 작업",
+    "file-inaccessible": "파일에 접근할 수 없음"
   },
   "media": {
     "probing": "미디어 분석 중",

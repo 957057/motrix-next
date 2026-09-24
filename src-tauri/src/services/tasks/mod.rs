@@ -1,4 +1,5 @@
 //! Application task queries, admission and native controls.
+pub mod files;
 mod policy;
 use crate::{
     aria2::{rpc::RpcClient, types::*},
@@ -14,6 +15,8 @@ use std::sync::{
 pub struct TaskService {
     rpc: RpcClient,
     pub tasks: TaskPolicy,
+    pub files: Arc<std::sync::Mutex<files::FileMonitor>>,
+    pub mutation: tokio::sync::Mutex<()>,
     generation: AtomicU64,
 }
 pub struct TaskServiceState(pub Arc<TaskService>);
@@ -37,6 +40,8 @@ impl TaskService {
         Self {
             rpc: RpcClient::new(port, secret),
             tasks: TaskPolicy::default(),
+            files: Arc::new(std::sync::Mutex::new(files::FileMonitor::default())),
+            mutation: tokio::sync::Mutex::new(()),
             generation: AtomicU64::new(0),
         }
     }
@@ -45,6 +50,7 @@ impl TaskService {
     }
     pub async fn update_credentials(&self, port: u16, secret: String) {
         self.generation.fetch_add(1, Ordering::Relaxed);
+        self.tasks.clear_pending_starts().await;
         self.tasks.clear_automatic().await;
         self.rpc.update_credentials(port, secret).await;
     }
@@ -260,6 +266,9 @@ impl TaskService {
         }
 
         if !resumable_gids.is_empty() {
+            for gid in &resumable_gids {
+                self.recheck_before_resume(gid).await?;
+            }
             let calls = resumable_gids
                 .iter()
                 .map(|gid| {
@@ -446,12 +455,33 @@ impl TaskService {
 
     /// Resumes a paused task.
     pub async fn unpause(&self, gid: &str) -> Result<String, AppError> {
+        self.recheck_before_resume(gid).await?;
         self.call("unpause", vec![gid.into()]).await
+    }
+
+    async fn recheck_before_resume(&self, gid: &str) -> Result<(), AppError> {
+        let recheck = self
+            .files
+            .lock()
+            .map_err(|_| AppError::Io("File monitor lock poisoned".into()))?
+            .needs_recheck(gid);
+        if recheck && self.tell_status(gid).await?.bittorrent.is_some() {
+            self.force_bt_recheck(gid).await?;
+            self.files
+                .lock()
+                .map_err(|_| AppError::Io("File monitor lock poisoned".into()))?
+                .rechecked(gid);
+        }
+        Ok(())
     }
 
     /// Forcefully removes a task.
     pub async fn force_remove(&self, gid: &str) -> Result<String, AppError> {
-        self.call("forceRemove", vec![gid.into()]).await
+        let result = self.call("forceRemove", vec![gid.into()]).await;
+        if result.is_ok() {
+            self.tasks.take_start(gid).await;
+        }
+        result
     }
 
     /// Removes a completed/error/removed download result.

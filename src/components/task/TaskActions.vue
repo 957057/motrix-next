@@ -11,7 +11,6 @@ import type { Aria2Task } from '@shared/types'
 import type { I18nKey } from '@shared/i18nTypes'
 import { canFinishMedia } from '@shared/utils/media'
 import { getTaskSharingState } from '@shared/utils/task'
-import { deleteTaskFiles } from '@/composables/useFileDelete'
 
 import { logger } from '@shared/logger'
 import { getErrorMessage } from '@shared/utils/errorMessage'
@@ -192,38 +191,18 @@ function onDeleteAll() {
     negativeText: t('app.no'),
     onPositiveClick: async () => {
       await lockDialog(d)
-      // Capture task references BEFORE removal — the store list mutates after
-      // batchRemoveTask, so we'd lose the dir/path info needed for file deletion.
-      const targetTasks = taskStore.taskList.filter((t) => gids.includes(t.gid))
-      const tasksToDelete = deleteFiles.value ? targetTasks : []
-      // Remove task records FIRST, then delete files.
-      // This matches the safer order used in single-task delete (TaskView.vue).
-      // If file deletion fails, tasks are already cleaned up from aria2;
-      // the reverse order would leave orphaned tasks with missing files.
       try {
-        const result = await taskStore.batchRemoveTask(gids)
-        const succeeded = new Set(result.succeeded)
-        const deletedTasks = tasksToDelete.filter((task) => succeeded.has(task.gid))
-
-        let fileDeletionFailed = false
-        for (const task of deletedTasks) {
-          try {
-            await deleteTaskFiles(task, preferenceStore.config.fileDeletionMode)
-          } catch (error) {
-            fileDeletionFailed = true
-            logger.warn('TaskActions.onDeleteAllFiles', getErrorMessage(error))
-          }
-        }
-
+        const result = await taskStore.batchRemoveTask(gids, {
+          deleteMode: deleteFiles.value ? preferenceStore.config.fileDeletionMode : undefined,
+        })
         if (result.failed.length > 0) {
           const key = result.succeeded.length > 0 ? 'task.batch-delete-task-partial' : 'task.batch-delete-task-fail'
           message[result.succeeded.length > 0 ? 'warning' : 'error'](
             t(key, { removed: result.succeeded.length, failed: result.failed.length }),
           )
-        } else if (!fileDeletionFailed) {
+        } else {
           message.success(t('task.batch-delete-task-success'))
         }
-        if (fileDeletionFailed) message.error(t('task.remove-task-file-fail'))
       } catch (error) {
         logger.warn('TaskActions.onDeleteAll', getErrorMessage(error))
         message.error(t('task.batch-delete-task-fail'))
@@ -368,31 +347,26 @@ function purgeRecord() {
     onPositiveClick: async () => {
       await lockDialog(d)
 
-      // Capture task refs BEFORE purge — the store list mutates after purgeTaskRecord
-      const tasksToClean = deleteFiles.value ? [...terminalTasks.value] : []
-
       try {
-        await taskStore.purgeTaskRecord()
+        if (deleteFiles.value) {
+          const result = await taskStore.batchRemoveTask(
+            terminalTasks.value.map((task) => task.gid),
+            { deleteMode: preferenceStore.config.fileDeletionMode },
+          )
+          if (result.failed.length) {
+            message.error(t('task.remove-task-file-fail'))
+            return false
+          }
+        } else {
+          await taskStore.purgeTaskRecord()
+        }
+        message.success(t('task.purge-record-success'))
       } catch (error) {
         logger.warn('TaskActions.purgeRecord', getErrorMessage(error))
         message.error(t('task.purge-record-fail'))
+      } finally {
         d.destroy()
-        return false
       }
-
-      let fileDeletionFailed = false
-      for (const task of tasksToClean) {
-        try {
-          await deleteTaskFiles(task, preferenceStore.config.fileDeletionMode)
-        } catch (error) {
-          fileDeletionFailed = true
-          logger.warn('TaskActions.purgeRecordFiles', getErrorMessage(error))
-        }
-      }
-      message[fileDeletionFailed ? 'error' : 'success'](
-        t(fileDeletionFailed ? 'task.remove-task-file-fail' : 'task.purge-record-success'),
-      )
-      d.destroy()
       return false
     },
   })

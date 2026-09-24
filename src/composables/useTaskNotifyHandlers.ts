@@ -13,7 +13,6 @@
  * from the notification — without navigating through the task list.
  */
 import type { VNodeChild } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
 import type { Aria2Task } from '@shared/types'
 import { getTaskName } from '@shared/utils'
 import type { TaskSharingKind } from '@shared/utils/task'
@@ -104,8 +103,7 @@ export interface StartNotifyDeps {
  * For single tasks:  "Downloading: movie.mp4"
  * For batch tasks:   "Downloading: movie.mp4 and 2 other task(s)"
  *
- * Toast always fires; OS notification is delegated to Rust so lightweight mode
- * uses the same backend-owned native path as completion/error notifications.
+ * Native start notifications are owned by the background lifecycle monitor.
  */
 export function handleTaskStart(taskNames: string[], deps: StartNotifyDeps): void {
   if (taskNames.length === 0) return
@@ -120,9 +118,6 @@ export function handleTaskStart(taskNames: string[], deps: StartNotifyDeps): voi
         })
 
   deps.messageInfo(body)
-  Promise.resolve(invoke('send_task_start_notification', { taskNames })).catch((error) =>
-    logger.debug('TaskNotify.start', `native notification failed: ${error}`),
-  )
   logger.info('TaskNotify.start', 'download_notification_started', {
     count: taskNames.length,
     first: /^(?:https?|sftp|magnet|ed2k|thunder):/i.test(firstName) ? summarizeExternalInput(firstName) : firstName,

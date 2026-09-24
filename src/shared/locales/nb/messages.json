@@ -99,7 +99,9 @@
     "shutdown-failed": "Kunne ikke slå av systemet",
     "shutdown-skip-once": "Hopp over denne gangen",
     "shutdown-disable": "Deaktiver automatisk avslutning",
-    "delete": "Slett"
+    "delete": "Slett",
+    "engine-configuration-invalid": "Proxyinnstillingene er ugyldige. Rett dem eller slå av proxyen i nettverksinnstillingene.",
+    "engine-open-settings": "Åpne nettverksinnstillinger"
   },
   "preferences": {
     "general": "Generelt",
@@ -589,7 +591,11 @@
     "association-set": "Angi standard",
     "association-repair": "Reparer",
     "association-development": "Utilgjengelig i utviklingsmodus",
-    "association-settings": "Åpne systeminnstillinger"
+    "association-settings": "Åpne systeminnstillinger",
+    "remember-save-location": "Husk siste lagringssted",
+    "stream-max-range-size": "Maksimal HTTP-områdestørrelse",
+    "stream-max-range-size-hint": "0 betyr ubegrenset. Bruk K, M eller G, for eksempel 5M.",
+    "proxy-import-unsupported": "Kontroller unntak som ikke støttes før lagring: {rules}"
   },
   "task": {
     "scope-all": "Alle",
@@ -890,7 +896,8 @@
     "recent-folders": "Nylige mapper",
     "dir-no-saved": "Ingen lagrede mapper",
     "create": "Opprett",
-    "more-actions": "Flere handlinger"
+    "more-actions": "Flere handlinger",
+    "file-inaccessible": "Filen er utilgjengelig"
   },
   "media": {
     "probing": "Undersøker medier",

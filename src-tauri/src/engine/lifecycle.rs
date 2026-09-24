@@ -296,20 +296,26 @@ pub(crate) enum StartEngineOutcome {
     Cancelled,
 }
 
-pub fn start_engine(app: &tauri::AppHandle) -> Result<StartEngineOutcome, String> {
+pub fn start_engine(app: &tauri::AppHandle) -> Result<StartEngineOutcome, crate::error::AppError> {
+    use crate::error::AppError;
     if !process_spawn_allowed(app) {
         return Ok(StartEngineOutcome::Cancelled);
     }
 
     let state = app.state::<EngineState>();
-    let mut child_lock = state.child.lock().map_err(|e| e.to_string())?;
+    let mut child_lock = state
+        .child
+        .lock()
+        .map_err(|e| AppError::Engine(e.to_string()))?;
 
     if child_lock.is_some() {
         return Ok(StartEngineOutcome::Started);
     }
 
-    let config = crate::commands::config::read_engine_config_snapshot(app.clone())
-        .map_err(|e| e.to_string())?;
+    let mut config = crate::commands::config::read_engine_config_snapshot(app.clone())?;
+    if let Some(options) = config.as_object_mut() {
+        crate::proxy_bypass::normalize_options(options)?;
+    }
 
     // Kill any leftover supported engine process on the RPC port before starting
     let port = config
@@ -318,11 +324,11 @@ pub fn start_engine(app: &tauri::AppHandle) -> Result<StartEngineOutcome, String
         .unwrap_or(DEFAULT_RPC_PORT_STR);
     cleanup_port(port);
 
-    let args = prepare_engine_args(app, &config)?;
+    let args = prepare_engine_args(app, &config).map_err(AppError::Engine)?;
     if !process_spawn_allowed(app) {
         return Ok(StartEngineOutcome::Cancelled);
     }
-    let (receiver, child) = spawn_engine(app, &args)?;
+    let (receiver, child) = spawn_engine(app, &args).map_err(AppError::Engine)?;
 
     log::info!(target: "engine", event = "engine_started", pid = child.pid(); "engine_started");
 

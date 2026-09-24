@@ -99,7 +99,9 @@
     "shutdown-failed": "خاموش کردن سیستم ناموفق بود",
     "shutdown-skip-once": "رد شدن این بار",
     "shutdown-disable": "غیرفعال کردن خاموشی خودکار",
-    "delete": "حذف"
+    "delete": "حذف",
+    "engine-configuration-invalid": "تنظیمات پراکسی نامعتبر است. در تنظیمات شبکه آن را اصلاح یا غیرفعال کنید.",
+    "engine-open-settings": "بازکردن تنظیمات شبکه"
   },
   "preferences": {
     "general": "عمومی",
@@ -589,7 +591,11 @@
     "association-set": "تنظیم پیش‌فرض",
     "association-repair": "ترمیم",
     "association-development": "در حالت توسعه در دسترس نیست",
-    "association-settings": "باز کردن تنظیمات سیستم"
+    "association-settings": "باز کردن تنظیمات سیستم",
+    "remember-save-location": "به‌خاطرسپردن آخرین محل ذخیره",
+    "stream-max-range-size": "حداکثر اندازه بازه HTTP",
+    "stream-max-range-size-hint": "0 یعنی نامحدود. از K، M یا G استفاده کنید، مانند 5M.",
+    "proxy-import-unsupported": "پیش از ذخیره، استثناهای پشتیبانی‌نشده را بررسی کنید: {rules}"
   },
   "task": {
     "scope-all": "همه",
@@ -890,7 +896,8 @@
     "recent-folders": "پوشه‌های اخیر",
     "dir-no-saved": "پوشه ذخیره‌شده‌ای وجود ندارد",
     "create": "ایجاد",
-    "more-actions": "عملیات بیشتر"
+    "more-actions": "عملیات بیشتر",
+    "file-inaccessible": "فایل در دسترس نیست"
   },
   "media": {
     "probing": "در حال بررسی رسانه",

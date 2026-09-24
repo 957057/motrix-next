@@ -465,7 +465,7 @@ already checked elsewhere. Packaging and native UI acceptance are separate from 
 
 ## Brand and delivery
 
-Use the supplied SVG master and interface seed `#946ECE` in the standard source
+Use the supplied SVG master and interface seed `#9E74D5` in the content
 palette mode. Preserve the master logo colors. Keep all implementation
 comments and documentation in English. Product names remain untranslated. Localize
 interface copy and slogans in every supported locale, preserving the approved English

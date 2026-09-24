@@ -99,7 +99,9 @@
     "shutdown-failed": "No s'ha pogut apagar el sistema",
     "shutdown-skip-once": "Ometre aquesta vegada",
     "shutdown-disable": "Desactivar l'apagada automàtica",
-    "delete": "Suprimeix"
+    "delete": "Suprimeix",
+    "engine-configuration-invalid": "La configuració del servidor intermediari no és vàlida. Corregiu-la o desactiveu-lo als paràmetres de xarxa.",
+    "engine-open-settings": "Obre els paràmetres de xarxa"
   },
   "preferences": {
     "general": "General",
@@ -589,7 +591,11 @@
     "association-set": "Estableix per defecte",
     "association-repair": "Repara",
     "association-development": "No disponible en mode de desenvolupament",
-    "association-settings": "Obre la configuració del sistema"
+    "association-settings": "Obre la configuració del sistema",
+    "remember-save-location": "Recorda la darrera ubicació",
+    "stream-max-range-size": "Mida màxima del rang HTTP",
+    "stream-max-range-size-hint": "0 vol dir sense límit. Feu servir K, M o G, per exemple 5M.",
+    "proxy-import-unsupported": "Reviseu les excepcions no compatibles abans de desar: {rules}"
   },
   "task": {
     "scope-all": "Totes",
@@ -890,7 +896,8 @@
     "recent-folders": "Carpetes recents",
     "dir-no-saved": "No hi ha carpetes desades",
     "create": "Crea",
-    "more-actions": "Més accions"
+    "more-actions": "Més accions",
+    "file-inaccessible": "Fitxer inaccessible"
   },
   "media": {
     "probing": "Analitzant el contingut",

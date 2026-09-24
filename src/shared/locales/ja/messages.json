@@ -99,7 +99,9 @@
     "shutdown-failed": "システムのシャットダウンに失敗しました",
     "shutdown-skip-once": "今回はスキップ",
     "shutdown-disable": "自動シャットダウンを無効にする",
-    "delete": "削除"
+    "delete": "削除",
+    "engine-configuration-invalid": "プロキシ設定が無効です。ネットワーク設定で修正するか無効にしてください。",
+    "engine-open-settings": "ネットワーク設定を開く"
   },
   "preferences": {
     "general": "一般",
@@ -589,7 +591,11 @@
     "association-set": "既定に設定",
     "association-repair": "修復",
     "association-development": "開発モードでは変更できません",
-    "association-settings": "システム設定を開く"
+    "association-settings": "システム設定を開く",
+    "remember-save-location": "前回の保存先を記憶",
+    "stream-max-range-size": "HTTP 範囲の最大サイズ",
+    "stream-max-range-size-hint": "0 は無制限です。K、M、G を使用できます（例：5M）。",
+    "proxy-import-unsupported": "保存前に未対応の除外ルールを確認してください：{rules}"
   },
   "task": {
     "scope-all": "すべて",
@@ -890,7 +896,8 @@
     "recent-folders": "最近のフォルダ",
     "dir-no-saved": "保存済みフォルダはありません",
     "create": "作成",
-    "more-actions": "その他の操作"
+    "more-actions": "その他の操作",
+    "file-inaccessible": "ファイルにアクセスできません"
   },
   "media": {
     "probing": "メディアを解析中",

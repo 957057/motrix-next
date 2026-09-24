@@ -198,7 +198,7 @@ impl TaskEvent {
     }
 }
 
-fn is_metadata_task(task: &Aria2Task) -> bool {
+pub(super) fn is_metadata_task(task: &Aria2Task) -> bool {
     let Some(bt) = task.bittorrent.as_ref() else {
         return false;
     };
@@ -413,10 +413,6 @@ async fn persist_lifecycle_event(
         }
     }
 
-    if let Some(info_hash) = payload.info_hash.as_deref() {
-        db.remove_by_info_hash(info_hash, Some(&payload.gid))
-            .await?;
-    }
     if let Some(added_at) = record.added_at.as_deref() {
         db.record_task_birth(&record.gid, added_at).await?;
     }
@@ -433,6 +429,21 @@ pub async fn process_lifecycle_task(
         return Ok(());
     }
 
+    if let Some(engine) = app.try_state::<super::tasks::TaskServiceState>() {
+        super::notification::notify_started_tasks(app, &engine.0, std::slice::from_ref(task)).await;
+    }
+    let engine_state = app.try_state::<super::tasks::TaskServiceState>();
+    let _mutation = if let Some(engine) = &engine_state {
+        Some(engine.0.mutation.lock().await)
+    } else {
+        None
+    };
+    if engine_state
+        .as_ref()
+        .is_some_and(|engine| engine.0.tasks.is_deleted(&task.gid))
+    {
+        return Ok(());
+    }
     let payload = TaskEvent::from_aria2(task);
     if let Err(error) = persist_lifecycle_event(app, event_name, &payload).await {
         log::error!(
@@ -647,6 +658,7 @@ async fn monitor_loop(
     // preventing false triggers on app launch with an empty queue.
     let mut had_active_downloads = false;
     let mut shutdown_triggered = false;
+    let mut file_states = std::collections::HashMap::new();
 
     match aria2.tell_active().await {
         Ok(tasks) => {
@@ -672,7 +684,7 @@ async fn monitor_loop(
         // Active-task polling remains necessary for aggregate state, ED2K
         // sharing detection, and auto-shutdown. Terminal task events arrive
         // through Aria2 Next's native WebSocket notifications.
-        let active = match aria2.tell_active().await {
+        let tasks = match aria2.tell_task_snapshot(false).await {
             Ok(tasks) => tasks,
             Err(e) => {
                 log::debug!("task_monitor: tell_active failed: {e}");
@@ -680,7 +692,37 @@ async fn monitor_loop(
             }
         };
 
+        match super::tasks::files::inspect(&aria2, tasks.clone(), false).await {
+            Ok(states) => {
+                for task in &tasks {
+                    if task.status == "active"
+                        && task.seeder.as_deref() == Some("true")
+                        && matches!(
+                            states.get(&task.gid),
+                            Some(
+                                super::tasks::files::FileState::Missing
+                                    | super::tasks::files::FileState::Inaccessible
+                            )
+                        )
+                    {
+                        if let Err(error) = aria2.force_pause(&task.gid).await {
+                            log::warn!("task_files: pause failed gid={} error={error}", task.gid);
+                        }
+                    }
+                }
+                if states != file_states {
+                    let _ = app.emit("task-files:changed", &states);
+                    file_states = states;
+                }
+            }
+            Err(error) => log::warn!("task_files: inspection failed: {error}"),
+        }
+        let active: Vec<_> = tasks
+            .into_iter()
+            .filter(|task| task.status == "active")
+            .collect();
         let sharing_events = sharing_notifier.scan(&active);
+        super::notification::notify_started_tasks(&app, &aria2, &active).await;
         for payload in sharing_events {
             let task = active.iter().find(|task| task.gid == payload.gid);
             if let Some(task) = task {

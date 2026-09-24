@@ -3,7 +3,7 @@
  * Restores history records into task models and supports cleanup logic.
  */
 import type { Aria2Task, Aria2File, HistoryRecord, HistoryMeta } from '@shared/types'
-import { collectTaskIdentityBuckets, isBtMetadataTask } from '@shared/utils/task'
+import { isBtMetadataTask } from '@shared/utils/task'
 
 /** Detect magnet tasks that are still resolving BitTorrent metadata. */
 export function isMetadataTask(task: Aria2Task): boolean {
@@ -132,44 +132,8 @@ export function historyRecordToTask(record: HistoryRecord): Aria2Task {
   return task
 }
 
-/** Merge live aria2 tasks with persisted history records.
- *
- * Deduplicates by GID and stable protocol identities. Live engine data wins.
- *
- * Aria2 live data always takes priority. History-only records (from
- * previous sessions) are appended after the live data. */
+/** Merge by task identity; the same content can belong to different downloads. */
 export function mergeHistoryIntoTasks(aria2Tasks: Aria2Task[], historyRecords: HistoryRecord[]): Aria2Task[] {
-  const LIVE_STATUSES: ReadonlySet<string> = new Set(['active', 'waiting', 'paused'])
-  const live = collectTaskIdentityBuckets(
-    aria2Tasks.filter((task) => LIVE_STATUSES.has(task.status) && !isMetadataTask(task)),
-  )
-  // Retained engine results follow the same protocol-identity rules as history.
-  aria2Tasks = aria2Tasks.filter(
-    (task) =>
-      LIVE_STATUSES.has(task.status) ||
-      !(
-        (task.infoHash && live.btInfoHashes.includes(task.infoHash)) ||
-        (task.ed2k?.hash && live.ed2kHashes.includes(task.ed2k.hash)) ||
-        (task.ed2k?.ed2kLink && live.ed2kLinks.includes(task.ed2k.ed2kLink))
-      ),
-  )
-  if (historyRecords.length === 0) return aria2Tasks
-
-  const identities = collectTaskIdentityBuckets(aria2Tasks.filter((task) => !isMetadataTask(task)))
-  const seenGids = new Set(identities.gids)
-  const seenInfoHashes = new Set(identities.btInfoHashes)
-  const seenEd2kHashes = new Set(identities.ed2kHashes)
-  const seenEd2kLinks = new Set(identities.ed2kLinks)
-
-  const historyOnly = historyRecords.filter((r) => {
-    // Same-session: GID match → aria2 data wins
-    if (seenGids.has(r.gid)) return false
-    const meta = parseHistoryMeta(r)
-    if (meta.infoHash && seenInfoHashes.has(meta.infoHash)) return false
-    if (meta.ed2kHash && seenEd2kHashes.has(meta.ed2kHash)) return false
-    if (meta.ed2kLink && seenEd2kLinks.has(meta.ed2kLink)) return false
-    return true
-  })
-
-  return [...aria2Tasks, ...historyOnly.map(historyRecordToTask)]
+  const gids = new Set(aria2Tasks.map((task) => task.gid))
+  return [...aria2Tasks, ...historyRecords.filter((record) => !gids.has(record.gid)).map(historyRecordToTask)]
 }

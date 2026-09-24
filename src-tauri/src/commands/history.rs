@@ -48,19 +48,6 @@ pub async fn history_remove_stale(
     state.0.remove_stale_records(&gids).await
 }
 
-/// Remove records matching a BT infoHash in the meta JSON column.
-#[tauri::command]
-pub async fn history_remove_by_info_hash(
-    state: State<'_, DatabaseState>,
-    info_hash: String,
-    exclude_gid: Option<String>,
-) -> Result<(), AppError> {
-    state
-        .0
-        .remove_by_info_hash(&info_hash, exclude_gid.as_deref())
-        .await
-}
-
 /// Record a task birth timestamp.
 #[tauri::command]
 pub async fn history_record_birth(

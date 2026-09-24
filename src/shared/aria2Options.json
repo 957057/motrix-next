@@ -93,6 +93,7 @@
     "seed-time",
     "select-file",
     "stream-max-connections",
+    "stream-max-range-size",
     "timeout",
     "user-agent"
   ],

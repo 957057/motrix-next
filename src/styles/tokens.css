@@ -1,7 +1,7 @@
 /**
  * @fileoverview Design tokens following Material Design 3 tonal surface system.
  *
- * Seed color: #946ECE (Rayburst)
+ * Seed color: #9E74D5 (Rayburst)
  * Runtime values are generated from the selected seed by Material Color Utilities.
  * These values provide the matching first-paint fallback before Vue mounts.
  */
@@ -10,10 +10,10 @@
 :root {
   /* ── M3 Surface Tonal System ───────────────────────────────────── */
   --m3-surface: #fffbff;
-  --m3-surface-dim: #d5d0d5;
-  --m3-surface-container-lowest: #fef8fc;
+  --m3-surface-dim: #d6d0d5;
+  --m3-surface-container-lowest: #fef7fc;
   --m3-surface-container-low: #f2ecf1;
-  --m3-surface-container: #e9e4e8;
+  --m3-surface-container: #eae4e8;
   --m3-surface-container-high: #e1dbe0;
   --m3-surface-container-highest: #d8d3d7;
 
@@ -23,13 +23,13 @@
 
   /* ── M3 Outline / Borders ──────────────────────────────────────── */
   --m3-outline: #7b757f;
-  --m3-outline-variant: #cbc4cf;
+  --m3-outline-variant: #ccc4cf;
 
   /* ── M3 Primary (Rayburst purple) ───────────────────────────────────── */
-  --m3-primary: #704ba8;
+  --m3-primary: #724aa7;
   --m3-on-primary: #ffffff;
-  --m3-primary-container: #ecdcff;
-  --m3-on-primary-container: #280056;
+  --m3-primary-container: #eedcff;
+  --m3-on-primary-container: #290054;
 
   /* ── M3 Info (harmonized extended color) ──────────────────────── */
   --m3-info: #375ba9;
@@ -50,10 +50,10 @@
   --m3-on-success-container: #00210b;
 
   /* ── M3 Tertiary (Purple-gray — special operations) ──────────────── */
-  --m3-tertiary: #7f525b;
+  --m3-tertiary: #82505a;
   --m3-on-tertiary: #ffffff;
-  --m3-tertiary-container: #ffd9df;
-  --m3-on-tertiary-container: #321019;
+  --m3-tertiary-container: #ffd9de;
+  --m3-on-tertiary-container: #340f18;
 
   /* ── M3 Warning (harmonized extended color) ───────────────────── */
   --m3-warning: #885200;
@@ -73,7 +73,7 @@
   --m3-shadow: rgba(0, 0, 0, 0.15);
 
   /* ── M3 Status Colors (semantic) ────────────────────────────────── */
-  --m3-status-active: #704ba8;
+  --m3-status-active: #724aa7;
   --m3-status-waiting: #375ba9;
   --m3-status-paused: #7b757f;
   --m3-status-error: #bb0947;
@@ -122,26 +122,26 @@
 .dark {
   /* ── M3 Surface Tonal System ───────────────────────────────────── */
   --m3-surface: #1d1b1e;
-  --m3-surface-dim: #141316;
-  --m3-surface-container-lowest: #0f0e11;
+  --m3-surface-dim: #151316;
+  --m3-surface-container-lowest: #0f0d11;
   --m3-surface-container-low: #1d1b1e;
   --m3-surface-container: #211f22;
   --m3-surface-container-high: #2b292d;
   --m3-surface-container-highest: #363438;
 
   /* ── M3 On-Surface / Text ──────────────────────────────────────── */
-  --m3-on-surface: #e7e1e6;
-  --m3-on-surface-variant: #cbc4cf;
+  --m3-on-surface: #e7e1e5;
+  --m3-on-surface-variant: #ccc4cf;
 
   /* ── M3 Outline / Borders ──────────────────────────────────────── */
   --m3-outline: #958e99;
   --m3-outline-variant: #4a454e;
 
   /* ── M3 Primary (Rayburst purple) ───────────────────────────────────── */
-  --m3-primary: #d6baff;
-  --m3-on-primary: #401676;
-  --m3-primary-container: #57328e;
-  --m3-on-primary-container: #ecdcff;
+  --m3-primary: #d9b9ff;
+  --m3-on-primary: #421576;
+  --m3-primary-container: #5a308e;
+  --m3-on-primary-container: #eedcff;
 
   /* ── M3 Info (harmonized extended color) ──────────────────────── */
   --m3-info: #b1c5ff;
@@ -162,10 +162,10 @@
   --m3-on-success-container: #9ef6b0;
 
   /* ── M3 Tertiary (Green-gray — lighter in dark) ─────────────────── */
-  --m3-tertiary: #f1b7c2;
-  --m3-on-tertiary: #4b252e;
-  --m3-tertiary-container: #643b44;
-  --m3-on-tertiary-container: #ffd9df;
+  --m3-tertiary: #f6b6c0;
+  --m3-on-tertiary: #4d232c;
+  --m3-tertiary-container: #673942;
+  --m3-on-tertiary-container: #ffd9de;
 
   /* ── M3 Warning ────────────────────────────────────────────────── */
   --m3-warning: #ffb869;
@@ -174,18 +174,18 @@
   --m3-on-warning-container: #ffddbb;
 
   /* ── M3 Inverse ────────────────────────────────────────────────── */
-  --m3-inverse-surface: #e7e1e6;
+  --m3-inverse-surface: #e7e1e5;
   --m3-on-inverse-surface: #322f33;
 
   /* ── M3 Scrollbar ──────────────────────────────────────────────── */
-  --m3-scrollbar-thumb: color-mix(in srgb, #e7e1e6 24%, transparent);
-  --m3-scrollbar-thumb-inactive: color-mix(in srgb, #e7e1e6 12%, transparent);
+  --m3-scrollbar-thumb: color-mix(in srgb, #e7e1e5 24%, transparent);
+  --m3-scrollbar-thumb-inactive: color-mix(in srgb, #e7e1e5 12%, transparent);
 
   /* ── M3 Shadow ─────────────────────────────────────────────────── */
   --m3-shadow: rgba(0, 0, 0, 0.5);
 
   /* ── M3 Status Colors (semantic — lighter in dark) ──────────────── */
-  --m3-status-active: #d6baff;
+  --m3-status-active: #d9b9ff;
   --m3-status-waiting: #b1c5ff;
   --m3-status-paused: #958e99;
   --m3-status-error: #ffb2bc;

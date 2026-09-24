@@ -99,7 +99,9 @@
     "shutdown-failed": "Impossible d'éteindre le système",
     "shutdown-skip-once": "Ignorer cette fois",
     "shutdown-disable": "Désactiver l'arrêt automatique",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "engine-configuration-invalid": "Les paramètres du proxy sont invalides. Corrigez-les ou désactivez le proxy dans les paramètres réseau.",
+    "engine-open-settings": "Ouvrir les paramètres réseau"
   },
   "preferences": {
     "general": "Général",
@@ -589,7 +591,11 @@
     "association-set": "Définir par défaut",
     "association-repair": "Réparer",
     "association-development": "Indisponible en mode développement",
-    "association-settings": "Ouvrir les paramètres système"
+    "association-settings": "Ouvrir les paramètres système",
+    "remember-save-location": "Mémoriser le dernier dossier",
+    "stream-max-range-size": "Taille maximale des plages HTTP",
+    "stream-max-range-size-hint": "0 signifie sans limite. Utilisez K, M ou G, par exemple 5M.",
+    "proxy-import-unsupported": "Vérifiez les exceptions non prises en charge avant de sauvegarder : {rules}"
   },
   "task": {
     "scope-all": "Toutes",
@@ -890,7 +896,8 @@
     "recent-folders": "Dossiers récents",
     "dir-no-saved": "Aucun dossier enregistré",
     "create": "Créer",
-    "more-actions": "Plus d’actions"
+    "more-actions": "Plus d’actions",
+    "file-inaccessible": "Fichier inaccessible"
   },
   "media": {
     "probing": "Analyse du média",

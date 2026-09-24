@@ -99,7 +99,9 @@
     "shutdown-failed": "Sistem kapatılamadı",
     "shutdown-skip-once": "Bu Sefer Atla",
     "shutdown-disable": "Otomatik Kapanmayı Devre Dışı Bırak",
-    "delete": "Sil"
+    "delete": "Sil",
+    "engine-configuration-invalid": "Proxy ayarları geçersiz. Ağ ayarlarından düzeltin veya proxyyi kapatın.",
+    "engine-open-settings": "Ağ ayarlarını aç"
   },
   "preferences": {
     "general": "Genel",
@@ -589,7 +591,11 @@
     "association-set": "Varsayılanı ayarla",
     "association-repair": "Onar",
     "association-development": "Geliştirme modunda kullanılamaz",
-    "association-settings": "Sistem ayarlarını aç"
+    "association-settings": "Sistem ayarlarını aç",
+    "remember-save-location": "Son kayıt konumunu hatırla",
+    "stream-max-range-size": "En büyük HTTP aralığı boyutu",
+    "stream-max-range-size-hint": "0 sınırsızdır. K, M veya G kullanın, örneğin 5M.",
+    "proxy-import-unsupported": "Kaydetmeden önce desteklenmeyen istisnaları gözden geçirin: {rules}"
   },
   "task": {
     "scope-all": "Tümü",
@@ -890,7 +896,8 @@
     "recent-folders": "Son klasörler",
     "dir-no-saved": "Kayıtlı klasör yok",
     "create": "Oluştur",
-    "more-actions": "Diğer işlemler"
+    "more-actions": "Diğer işlemler",
+    "file-inaccessible": "Dosyaya erişilemiyor"
   },
   "media": {
     "probing": "Medya inceleniyor",

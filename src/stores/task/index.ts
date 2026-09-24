@@ -612,7 +612,8 @@ export const useTaskStore = defineStore('task', () => {
     fetchTaskStatus,
     getTaskOption,
     changeTaskOption,
-    removeTask: (task: Aria2Task) => taskOps.removeTask(task),
+    removeTask: (task: Aria2Task, options?: import('@shared/types').TaskDeletionOptions) =>
+      taskOps.removeTask(task, options),
     pauseTask: (task: Aria2Task) => taskOps.pauseTask(task),
     finishSharing: (task: Aria2Task) => taskOps.finishSharing(task),
     finishSharingTasks: (gids: string[]) => taskOps.finishSharingTasks(gids),
@@ -625,7 +626,8 @@ export const useTaskStore = defineStore('task', () => {
     removeTaskRecord: (task: Aria2Task) => taskOps.removeTaskRecord(task),
     purgeTaskRecord: () => taskOps.purgeTaskRecord(),
     saveSession: () => taskOps.saveSession(),
-    batchRemoveTask: (gids: string[]) => taskOps.batchRemoveTask(gids),
+    batchRemoveTask: (gids: string[], options?: import('@shared/types').TaskDeletionOptions) =>
+      taskOps.batchRemoveTask(gids, options),
     retryTask: (task: Aria2Task) => resubmitTerminalTask(task, 'retry'),
     redownloadTask: (task: Aria2Task) => resubmitTerminalTask(task, 'redownload'),
 

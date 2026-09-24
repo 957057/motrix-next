@@ -163,10 +163,10 @@ describe('PreferenceStore', () => {
     expect(store.config.historyDirectories).toContain('/downloads')
   })
 
-  it('recordHistoryDirectory skips if already in history', () => {
-    store.updatePreference({ historyDirectories: ['/downloads'], favoriteDirectories: [] })
+  it('recordHistoryDirectory moves an existing location to the front', () => {
+    store.updatePreference({ historyDirectories: ['/other', '/downloads'], favoriteDirectories: [] })
     store.recordHistoryDirectory('/downloads')
-    expect(store.config.historyDirectories).toEqual(['/downloads'])
+    expect(store.config.historyDirectories).toEqual(['/downloads', '/other'])
   })
 
   it('recordHistoryDirectory skips if already in favorites', () => {

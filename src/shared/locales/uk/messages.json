@@ -99,7 +99,9 @@
     "shutdown-failed": "Не вдалося вимкнути систему",
     "shutdown-skip-once": "Пропустити цього разу",
     "shutdown-disable": "Вимкнути автовимкнення",
-    "delete": "Видалити"
+    "delete": "Видалити",
+    "engine-configuration-invalid": "Хибні налаштування проксі. Виправте їх або вимкніть проксі в налаштуваннях мережі.",
+    "engine-open-settings": "Відкрити налаштування мережі"
   },
   "preferences": {
     "general": "Загальні",
@@ -589,7 +591,11 @@
     "association-set": "Обрати за замовчуванням",
     "association-repair": "Виправити",
     "association-development": "Недоступно в режимі розробки",
-    "association-settings": "Відкрити параметри системи"
+    "association-settings": "Відкрити параметри системи",
+    "remember-save-location": "Запам’ятовувати останню папку",
+    "stream-max-range-size": "Максимальний розмір діапазону HTTP",
+    "stream-max-range-size-hint": "0 — без обмежень. Доступні K, M і G, наприклад 5M.",
+    "proxy-import-unsupported": "Перевірте непідтримувані винятки перед збереженням: {rules}"
   },
   "task": {
     "scope-all": "Усі",
@@ -890,7 +896,8 @@
     "recent-folders": "Нещодавні теки",
     "dir-no-saved": "Немає збережених тек",
     "create": "Створити",
-    "more-actions": "Інші дії"
+    "more-actions": "Інші дії",
+    "file-inaccessible": "Файл недоступний"
   },
   "media": {
     "probing": "Аналіз медіа",

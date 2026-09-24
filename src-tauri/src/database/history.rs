@@ -177,20 +177,10 @@ impl Database {
     }
 
     /// Remove every persisted record owned by a deleted task.
-    pub async fn remove_task_records(
-        &self,
-        gid: &str,
-        info_hash: Option<&str>,
-    ) -> Result<(), AppError> {
+    pub async fn remove_task_records(&self, gid: &str) -> Result<(), AppError> {
         let mut conn = self.connection().await?;
         let transaction = conn.transaction()?;
         transaction.execute("DELETE FROM download_history WHERE gid = ?1", params![gid])?;
-        if let Some(info_hash) = info_hash.filter(|value| !value.is_empty()) {
-            transaction.execute(
-                "DELETE FROM download_history WHERE json_extract(meta, '$.infoHash') = ?1",
-                params![info_hash],
-            )?;
-        }
         transaction.execute("DELETE FROM task_birth WHERE gid = ?1", params![gid])?;
         transaction.commit()?;
         Ok(())
@@ -241,30 +231,6 @@ impl Database {
         let params: Vec<&dyn rusqlite::ToSql> =
             gids.iter().map(|g| g as &dyn rusqlite::ToSql).collect();
         conn.execute(&sql, params.as_slice())?;
-        Ok(())
-    }
-
-    /// Remove records matching a BT infoHash in the meta JSON column.
-    pub async fn remove_by_info_hash(
-        &self,
-        info_hash: &str,
-        exclude_gid: Option<&str>,
-    ) -> Result<(), AppError> {
-        if info_hash.is_empty() {
-            return Ok(());
-        }
-        let conn = self.connection().await?;
-        if let Some(exclude) = exclude_gid {
-            conn.execute(
-                "DELETE FROM download_history WHERE json_extract(meta, '$.infoHash') = ?1 AND gid != ?2",
-                params![info_hash, exclude],
-            )?;
-        } else {
-            conn.execute(
-                "DELETE FROM download_history WHERE json_extract(meta, '$.infoHash') = ?1",
-                params![info_hash],
-            )?;
-        }
         Ok(())
     }
 
@@ -555,7 +521,7 @@ mod tests {
             .await
             .unwrap();
 
-        db.remove_task_records("gid001", None).await.unwrap();
+        db.remove_task_records("gid001").await.unwrap();
 
         assert!(db.get_records(None).await.unwrap().is_empty());
         assert_eq!(db.get_task_birth("gid001").await.unwrap(), None);
@@ -640,32 +606,15 @@ mod tests {
     // ── InfoHash operations ─────────────────────────────────────────
 
     #[tokio::test]
-    async fn remove_by_info_hash() {
+    async fn deleting_one_gid_preserves_another_copy_of_the_same_content() {
         let db = Database::open_in_memory().unwrap();
-        let mut rec = make_record("g1", "torrent.zip", "complete");
-        rec.meta = Some(r#"{"infoHash":"abc123"}"#.to_string());
-        db.add_record(&rec).await.unwrap();
-
-        let mut rec2 = make_record("g2", "torrent2.zip", "complete");
-        rec2.meta = Some(r#"{"infoHash":"abc123"}"#.to_string());
-        db.add_record(&rec2).await.unwrap();
-
-        // Remove all with infoHash abc123, excluding g2
-        db.remove_by_info_hash("abc123", Some("g2")).await.unwrap();
-
-        let records = db.get_records(None).await.unwrap();
-        assert_eq!(records.len(), 1);
-        assert_eq!(records[0].gid, "g2");
-    }
-
-    #[tokio::test]
-    async fn remove_by_info_hash_empty_is_noop() {
-        let db = Database::open_in_memory().unwrap();
-        db.add_record(&make_record("g1", "a.zip", "complete"))
-            .await
-            .unwrap();
-        db.remove_by_info_hash("", None).await.unwrap();
-        assert_eq!(db.get_records(None).await.unwrap().len(), 1);
+        for gid in ["g1", "g2"] {
+            let mut record = make_record(gid, "same.zip", "complete");
+            record.meta = Some(r#"{"infoHash":"same"}"#.into());
+            db.add_record(&record).await.unwrap();
+        }
+        db.remove_task_records("g1").await.unwrap();
+        assert!(db.get_record("g2").await.unwrap().is_some());
     }
 
     // ── Task birth tracking ─────────────────────────────────────────

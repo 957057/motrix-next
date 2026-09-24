@@ -37,7 +37,6 @@ pub async fn dispatch(app: &AppHandle, request: AddRequest) -> Result<AddRespons
         return Err(AppError::InvalidInput("Unsupported download URL".into()));
     }
     let prefs = preferences::load(app)?;
-    let options = preferences::options(&prefs, &request)?;
     crate::commands::database_initialize(app.clone()).await?;
     let fingerprint = format!("{:x}", Sha256::digest(serde_json::to_vec(&request)?));
     let record = app
@@ -66,6 +65,7 @@ pub async fn dispatch(app: &AppHandle, request: AddRequest) -> Result<AddRespons
             .as_ref()
             .is_some_and(|url| url.path().to_ascii_lowercase().ends_with(".torrent"))
     {
+        let options = preferences::options(&prefs, &request)?;
         let gid = submit(
             app,
             TaskInput::Uris(vec![url.to_owned()]),
@@ -111,12 +111,33 @@ impl TaskInput {
     async fn create(
         self,
         engine: &crate::services::tasks::TaskService,
-        options: serde_json::Value,
+        mut options: serde_json::Value,
     ) -> Result<String, AppError> {
-        match self {
+        let options_map = options
+            .as_object_mut()
+            .ok_or_else(|| AppError::InvalidInput("Download options must be an object".into()))?;
+        let gid = options_map
+            .entry("gid")
+            .or_insert_with(|| {
+                uuid::Uuid::new_v4().simple().to_string()[..16]
+                    .to_string()
+                    .into()
+            })
+            .as_str()
+            .ok_or_else(|| AppError::InvalidInput("Invalid task ID".into()))?
+            .to_string();
+        engine.tasks.expect_start(&gid).await;
+        let result = match self {
             Self::Uris(uris) => engine.add_uri(uris, options).await,
             Self::Torrent(torrent) => engine.add_torrent(&torrent, options).await,
+        };
+        if matches!(
+            result,
+            Err(AppError::Rpc { .. } | AppError::InvalidInput(_))
+        ) {
+            engine.tasks.take_start(&gid).await;
         }
+        result
     }
 }
 
@@ -145,12 +166,14 @@ pub async fn submit(
             .ok_or_else(|| AppError::InvalidInput("Download options must be an object".into()))?
             .insert("gid".into(), record.gid.into());
     }
+    preferences::validate_save_location(app, &options)?;
     let automatic = if let TaskInput::Uris(uris) = &input {
         native::prepare(app, &engine, uris, &mut options).await?
     } else {
         None
     };
     let generation = engine.generation();
+    let _mutation = engine.mutation.lock().await;
     let result = if let Some(id) = request_id {
         let gate = app.state::<SubmissionGate>();
         let _submission = gate.0.lock().await;
@@ -161,6 +184,7 @@ pub async fn submit(
     if let Ok(gid) = &result {
         super::tasks::notify_changed(app, gid);
     }
+    drop(_mutation);
     native::finish(app.clone(), engine, automatic, generation).await;
     result
 }

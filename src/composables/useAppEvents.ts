@@ -7,6 +7,7 @@
  */
 import { useTaskSelectionStore } from '@/stores/taskSelection'
 import { listen } from '@tauri-apps/api/event'
+import { updateTaskFileStates, type TaskFileState } from '@/composables/useTaskFileMissing'
 import { getCurrentWebview } from '@tauri-apps/api/webview'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
@@ -188,6 +189,9 @@ export function useAppEvents(deps: AppEventsDeps): AppEventsReturn {
 
   // ─── Port state watchers ──────────────────────────────────────────
   async function setupPortWatchers() {
+    registerCleanup(
+      await listen<Record<string, TaskFileState>>('task-files:changed', (event) => updateTaskFileStates(event.payload)),
+    )
     const unlistenPortAutoSwitched = registerCleanup(
       await listen<PortSwitchEvent[]>('port-auto-switched', (event) => {
         const switches = event.payload

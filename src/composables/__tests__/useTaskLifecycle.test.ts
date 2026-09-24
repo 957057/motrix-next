@@ -221,7 +221,7 @@ describe('mergeHistoryIntoTasks', () => {
 
   // ── infoHash-based cross-session dedup ─────────────────────────
 
-  it('deduplicates by infoHash when GIDs differ (cross-session restart)', () => {
+  it('preserves distinct GIDs with the same infoHash', () => {
     // aria2 restarted → same torrent got new GID Y, but infoHash is stable
     const aria2 = [
       makeTask({
@@ -239,8 +239,8 @@ describe('mergeHistoryIntoTasks', () => {
       }),
     ]
     const result = mergeHistoryIntoTasks(aria2, history)
-    expect(result).toHaveLength(1)
-    expect(result[0].gid).toBe('new-gid-Y') // aria2 live data wins
+    expect(result).toHaveLength(2)
+    expect(result[0].gid).toBe('new-gid-Y')
   })
 
   it('keeps HTTP records with no infoHash (GID-only dedup)', () => {
@@ -262,27 +262,6 @@ describe('mergeHistoryIntoTasks', () => {
     const result = mergeHistoryIntoTasks(aria2, history)
     // Corrupt meta → cannot extract infoHash → record kept (safe fallback)
     expect(result).toHaveLength(2)
-  })
-
-  it('filters ALL stale DB records matching same infoHash', () => {
-    // Multiple restarts → multiple stale GIDs for the same torrent in DB
-    const aria2 = [
-      makeTask({
-        gid: 'latest-gid',
-        infoHash: 'hash-abc',
-        bittorrent: { info: { name: 'Torrent' } },
-      } as Partial<Aria2Task>),
-    ]
-    const history = [
-      makeRecord({ gid: 'stale-1', meta: JSON.stringify({ infoHash: 'hash-abc' }) }),
-      makeRecord({ gid: 'stale-2', meta: JSON.stringify({ infoHash: 'hash-abc' }) }),
-      makeRecord({ gid: 'unrelated', meta: undefined }),
-    ]
-    const result = mergeHistoryIntoTasks(aria2, history)
-    // stale-1, stale-2 filtered (infoHash match), unrelated kept
-    expect(result).toHaveLength(2)
-    expect(result[0].gid).toBe('latest-gid')
-    expect(result[1].gid).toBe('unrelated')
   })
 
   it('keeps native output paths authoritative over a conflicting history snapshot', () => {

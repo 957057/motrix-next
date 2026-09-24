@@ -84,9 +84,14 @@ const selectedPortRecoveryTargets = computed<string[]>({
 const { detecting: detectingProxy, detect: detectProxy } = useSystemProxyDetect({
   onSuccess(info) {
     form.value.proxy.server = info.server
-    if (info.bypass) form.value.proxy.bypass = info.bypass
+    form.value.proxy.bypass = info.bypass
     form.value.proxy.mode = 'manual'
-    message.success(t('preferences.proxy-detected-success'))
+    if (info.unsupportedBypass.length) {
+      message.warning(t('preferences.proxy-import-unsupported', { rules: info.unsupportedBypass.join(', ') }), {
+        closable: true,
+        duration: 0,
+      })
+    } else message.success(t('preferences.proxy-detected-success'))
   },
   onSocks() {
     message.warning(t('preferences.proxy-system-socks-rejected'))
@@ -114,7 +119,9 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot, patchSnapshot } =
       return false
     }
     try {
-      f.proxy.bypass = await invoke<string>('normalize_proxy_bypass', { value: f.proxy.bypass })
+      if (f.proxy.mode === 'manual' && f.proxy.scope.includes('download')) {
+        f.proxy.bypass = await invoke<string>('normalize_proxy_bypass', { value: f.proxy.bypass })
+      }
     } catch (error) {
       message.error(getErrorMessage(error))
       return false

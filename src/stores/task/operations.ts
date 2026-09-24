@@ -10,7 +10,7 @@ import { TASK_STATUS } from '@shared/constants'
 import { checkTaskIsBT, checkTaskIsSharing } from '@shared/utils'
 import { logger } from '@shared/logger'
 import { isAwaitingBtFileSelection } from '@/composables/useBtLifecycle'
-import type { Aria2Task, TaskApi } from '@shared/types'
+import type { Aria2Task, TaskApi, TaskDeletionOptions } from '@shared/types'
 import type { Ref } from 'vue'
 
 interface TaskOperationsDeps {
@@ -26,19 +26,18 @@ interface TaskOperationsDeps {
 }
 
 export function createTaskOperations(deps: TaskOperationsDeps) {
-  const { api, taskList, currentTaskGid, hideTaskDetail, fetchList } = deps
+  const { api, currentTaskGid, hideTaskDetail, fetchList } = deps
   const setTaskRemoving = deps.setTaskRemoving ?? (() => undefined)
 
-  async function removeTask(task: Aria2Task) {
+  async function removeTask(task: Aria2Task, options: TaskDeletionOptions = {}) {
     if (task.gid === currentTaskGid.value) hideTaskDetail()
     setTaskRemoving(task.gid, true)
     try {
-      await api.deleteTask({ gid: task.gid, infoHash: task.infoHash })
+      await api.deleteTask({ gid: task.gid, ...options })
       await deps.clearSelections?.([task.gid])
       logger.info('TaskOps.removeTask', `gid=${task.gid}`)
       setTaskRemoving(task.gid, false)
       await fetchList()
-      await api.saveSession()
     } catch (error) {
       setTaskRemoving(task.gid, false)
       await fetchList()
@@ -54,7 +53,6 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       logger.info('TaskOps.pauseTask', `gid=${task.gid} bt=${isBT}`)
     } finally {
       await fetchList()
-      await api.saveSession()
     }
   }
 
@@ -64,7 +62,6 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       logger.info('TaskOps.finishSharing', `gid=${task.gid}`)
     } finally {
       await fetchList()
-      await api.saveSession()
     }
   }
 
@@ -78,7 +75,6 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       return result
     } finally {
       await fetchList()
-      await api.saveSession()
     }
   }
 
@@ -99,7 +95,6 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       return true
     } finally {
       await fetchList()
-      await api.saveSession()
     }
   }
 
@@ -125,7 +120,6 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       )
     } finally {
       await fetchList()
-      await api.saveSession()
     }
   }
 
@@ -135,7 +129,6 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       logger.info('TaskOps.pauseAllTask', 'native forcePauseAll completed')
     } finally {
       await fetchList()
-      await api.saveSession()
     }
   }
 
@@ -146,7 +139,6 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
       return result
     } finally {
       await fetchList()
-      await api.saveSession()
     }
   }
 
@@ -165,15 +157,13 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
   async function purgeTaskRecord() {
     await api.purgeTaskRecords()
     await fetchList()
-    await api.saveSession()
   }
 
-  async function batchRemoveTask(gids: string[]) {
-    const tasks = new Map(taskList.value.map((task) => [task.gid, task]))
+  async function batchRemoveTask(gids: string[], options: TaskDeletionOptions = {}) {
     gids.forEach((gid) => setTaskRemoving(gid, true))
     try {
       const result = await api.batchDeleteTasks({
-        tasks: gids.map((gid) => ({ gid, infoHash: tasks.get(gid)?.infoHash })),
+        tasks: gids.map((gid) => ({ gid, ...options })),
       })
       await deps.clearSelections?.(result.succeeded)
       logger.info(
@@ -184,7 +174,6 @@ export function createTaskOperations(deps: TaskOperationsDeps) {
     } finally {
       gids.forEach((gid) => setTaskRemoving(gid, false))
       await fetchList()
-      await api.saveSession()
     }
   }
 

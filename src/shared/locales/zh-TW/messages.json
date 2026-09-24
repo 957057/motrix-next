@@ -99,7 +99,9 @@
     "shutdown-failed": "關機失敗",
     "shutdown-skip-once": "本次忽略",
     "shutdown-disable": "關閉自動關機",
-    "delete": "刪除"
+    "delete": "刪除",
+    "engine-configuration-invalid": "代理設定有誤，請前往網路設定修改或關閉代理。",
+    "engine-open-settings": "開啟網路設定"
   },
   "preferences": {
     "general": "一般",
@@ -589,7 +591,11 @@
     "association-set": "設為預設",
     "association-repair": "修復",
     "association-development": "開發模式無法修改",
-    "association-settings": "開啟系統設定"
+    "association-settings": "開啟系統設定",
+    "remember-save-location": "記住上次儲存位置",
+    "stream-max-range-size": "HTTP 區段大小上限",
+    "stream-max-range-size-hint": "0 表示不限。支援 K、M、G，例如 5M。",
+    "proxy-import-unsupported": "儲存前請檢查不支援的略過規則：{rules}"
   },
   "task": {
     "scope-all": "全部",
@@ -890,7 +896,8 @@
     "recent-folders": "最近使用",
     "dir-no-saved": "沒有已儲存目錄",
     "create": "新增",
-    "more-actions": "更多操作"
+    "more-actions": "更多操作",
+    "file-inaccessible": "無法存取檔案"
   },
   "media": {
     "probing": "正在探測媒體",

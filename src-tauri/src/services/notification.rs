@@ -9,6 +9,54 @@ use crate::i18n::{
 };
 use tauri::Manager;
 
+/// Consume only newly submitted tasks. Restored tasks and internal probes never
+/// enter this set; native progress determines when selection has actually ended.
+pub async fn notify_started_tasks(
+    app: &tauri::AppHandle,
+    engine: &super::tasks::TaskService,
+    tasks: &[crate::aria2::types::Aria2Task],
+) {
+    let mut names = Vec::new();
+    for task in tasks {
+        if matches!(task.status.as_str(), "error" | "removed") {
+            engine.tasks.take_start(&task.gid).await;
+            continue;
+        }
+        if !matches!(task.status.as_str(), "active" | "complete")
+            || super::monitor::is_metadata_task(task)
+            || engine.tasks.is_internal(&task.gid).await
+            || task.bittorrent.as_ref().is_some_and(|bt| {
+                bt.info.is_none()
+                    || bt
+                        .file_selection_state
+                        .as_deref()
+                        .is_some_and(|state| state != "none")
+            })
+            || task.media.as_ref().is_some_and(|media| {
+                !matches!(
+                    media.state.as_str(),
+                    "downloading" | "recording" | "finalizing" | "complete"
+                )
+            })
+        {
+            continue;
+        }
+        if engine.tasks.take_start(&task.gid).await {
+            names.push(TaskEvent::from_aria2(task).name);
+        }
+    }
+    if names.is_empty() {
+        return;
+    }
+    let config = app
+        .state::<super::config::RuntimeConfigState>()
+        .snapshot()
+        .await;
+    if let Err(error) = send_task_start_notification_from_names(app, &names, &config).await {
+        log::warn!("notification:start-failed error={error}");
+    }
+}
+
 #[cfg(target_os = "linux")]
 use std::{
     collections::VecDeque,

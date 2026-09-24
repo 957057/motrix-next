@@ -99,7 +99,9 @@
     "shutdown-failed": "Αποτυχία τερματισμού του συστήματος",
     "shutdown-skip-once": "Παράλειψη αυτή τη φορά",
     "shutdown-disable": "Απενεργοποίηση αυτόματου τερματισμού",
-    "delete": "Διαγραφή"
+    "delete": "Διαγραφή",
+    "engine-configuration-invalid": "Οι ρυθμίσεις διακομιστή μεσολάβησης δεν είναι έγκυρες. Διορθώστε τις ή απενεργοποιήστε τον στις ρυθμίσεις δικτύου.",
+    "engine-open-settings": "Άνοιγμα ρυθμίσεων δικτύου"
   },
   "preferences": {
     "general": "Γενικά",
@@ -589,7 +591,11 @@
     "association-set": "Ορισμός προεπιλογής",
     "association-repair": "Επιδιόρθωση",
     "association-development": "Μη διαθέσιμο σε λειτουργία ανάπτυξης",
-    "association-settings": "Άνοιγμα ρυθμίσεων συστήματος"
+    "association-settings": "Άνοιγμα ρυθμίσεων συστήματος",
+    "remember-save-location": "Απομνημόνευση τελευταίου φακέλου",
+    "stream-max-range-size": "Μέγιστο μέγεθος εύρους HTTP",
+    "stream-max-range-size-hint": "0 σημαίνει απεριόριστο. Χρησιμοποιήστε K, M ή G, π.χ. 5M.",
+    "proxy-import-unsupported": "Ελέγξτε τις μη υποστηριζόμενες εξαιρέσεις πριν από την αποθήκευση: {rules}"
   },
   "task": {
     "scope-all": "Όλα",
@@ -890,7 +896,8 @@
     "recent-folders": "Πρόσφατοι φάκελοι",
     "dir-no-saved": "Δεν υπάρχουν αποθηκευμένοι φάκελοι",
     "create": "Δημιουργία",
-    "more-actions": "Περισσότερες ενέργειες"
+    "more-actions": "Περισσότερες ενέργειες",
+    "file-inaccessible": "Το αρχείο δεν είναι προσβάσιμο"
   },
   "media": {
     "probing": "Ανάλυση πολυμέσων",

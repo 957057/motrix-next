@@ -18,6 +18,7 @@ export type EnginePhase =
   | 'failed'
 
 export type EngineFailureStage =
+  | 'configuration'
   | 'spawn'
   | 'probe'
   | 'contract'

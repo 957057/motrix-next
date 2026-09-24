@@ -24,10 +24,10 @@ export interface ColorSchemeDefinition {
 
 /** Rayburst defaults and optional user-selected color seeds. */
 export const DEFAULT_COLOR_SCHEME_ID = 'rayburst'
-export const BRAND_COLOR = '#946ECE'
+export const BRAND_COLOR = '#9E74D5'
 
 export const COLOR_SCHEMES: ColorSchemeDefinition[] = [
-  { id: DEFAULT_COLOR_SCHEME_ID, labelKey: 'preferences.color-scheme-rayburst', seed: BRAND_COLOR },
+  { id: DEFAULT_COLOR_SCHEME_ID, labelKey: 'preferences.color-scheme-rayburst', seed: BRAND_COLOR, variant: 'content' },
   { id: 'amber', labelKey: 'preferences.color-scheme-amber', seed: '#E0A422' },
   { id: 'space', labelKey: 'preferences.color-scheme-space', seed: '#4A6CF7' },
   { id: 'mint', labelKey: 'preferences.color-scheme-mint', seed: '#10B981' },
@@ -210,6 +210,9 @@ export const DEFAULT_APP_CONFIG = {
 
   // ── Download Core ─────────────────────────────────────────────────
   dir: '',
+  rememberSaveLocation: false,
+  lastSaveLocation: '',
+  streamMaxRangeSize: '0',
   streamMaxConnections: ENGINE_DEFAULT_STREAM_CONNECTIONS,
   maxConcurrentDownloads: 6,
   maxOverallDownloadLimit: '0',

@@ -19,6 +19,8 @@ pub(super) struct Preferences {
     #[serde(default = "enabled")]
     pub new_task_show_downloading: bool,
     dir: String,
+    remember_save_location: bool,
+    last_save_location: String,
     file_category_enabled: bool,
     file_categories: Vec<Category>,
     user_agent: String,
@@ -51,6 +53,24 @@ pub(super) fn load(app: &AppHandle) -> Result<Preferences, AppError> {
     Ok(serde_json::from_value(value)?)
 }
 
+pub(super) fn validate_save_location(app: &AppHandle, options: &Value) -> Result<(), AppError> {
+    let prefs = load(app)?;
+    if prefs.remember_save_location
+        && !prefs.last_save_location.is_empty()
+        && options["dir"].as_str() == Some(&prefs.last_save_location)
+    {
+        if !std::fs::metadata(&prefs.last_save_location)
+            .map_err(AppError::from)?
+            .is_dir()
+        {
+            return Err(AppError::InvalidInput(
+                "The remembered save location is not a directory".into(),
+            ));
+        }
+    }
+    Ok(())
+}
+
 fn matches(pattern: &str, value: &str) -> bool {
     let expression = format!("^{}$", regex::escape(pattern).replace("\\*", ".*"));
     regex::RegexBuilder::new(&expression)
@@ -76,7 +96,15 @@ pub(super) fn options(prefs: &Preferences, request: &AddRequest) -> Result<Value
         options["filename-hint"] = name.clone().into();
         options["filename-hint-source"] = serde_json::to_value(request.filename_source)?;
     }
-    if prefs.file_category_enabled {
+    if prefs.remember_save_location && !prefs.last_save_location.is_empty() {
+        let path = std::path::Path::new(&prefs.last_save_location);
+        if !std::fs::metadata(path).map_err(AppError::from)?.is_dir() {
+            return Err(AppError::InvalidInput(
+                "The remembered save location is not a directory".into(),
+            ));
+        }
+        options["dir"] = prefs.last_save_location.clone().into();
+    } else if prefs.file_category_enabled {
         let name = request.filename.clone().unwrap_or_else(|| {
             url::Url::parse(urls[0])
                 .ok()
@@ -222,5 +250,32 @@ mod tests {
             options(&Preferences::default(), &request),
             Err(AppError::InvalidInput(_))
         ));
+    }
+
+    #[test]
+    fn remembered_location_precedes_classification_only_when_enabled() {
+        let root = tempfile::tempdir().unwrap();
+        let remembered = root.path().join("chosen");
+        std::fs::create_dir(&remembered).unwrap();
+        let mut prefs: Preferences = serde_json::from_value(json!({
+            "dir":root.path(), "rememberSaveLocation":true, "lastSaveLocation":remembered,
+            "fileCategoryEnabled":true, "fileCategories":[{"directory":"documents", "directoryMode":"relative", "label":"Documents", "extensions":["pdf"], "urlPatterns":[]}]
+        })).unwrap();
+        let request: AddRequest = serde_json::from_value(
+            json!({"id":"location", "url":"https://example.test/report.pdf"}),
+        )
+        .unwrap();
+        assert_eq!(
+            options(&prefs, &request).unwrap()["dir"],
+            remembered.to_string_lossy().as_ref()
+        );
+        prefs.remember_save_location = false;
+        assert_eq!(
+            std::path::Path::new(options(&prefs, &request).unwrap()["dir"].as_str().unwrap()),
+            root.path().join("documents")
+        );
+        prefs.remember_save_location = true;
+        std::fs::remove_dir(&remembered).unwrap();
+        assert!(options(&prefs, &request).is_err());
     }
 }

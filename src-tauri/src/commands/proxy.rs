@@ -26,12 +26,20 @@ pub struct SystemProxyInfo {
     pub is_socks: bool,
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SystemProxyDetection {
+    #[serde(flatten)]
+    proxy: SystemProxyInfo,
+    unsupported_bypass: Vec<String>,
+}
+
 /// Detects the system-level HTTP proxy configuration.
 ///
 /// Returns `Ok(Some(info))` when a proxy is configured and enabled,
 /// `Ok(None)` when no proxy is detected or the platform is unsupported.
 #[tauri::command]
-pub fn get_system_proxy() -> Result<Option<SystemProxyInfo>, AppError> {
+pub fn get_system_proxy() -> Result<Option<SystemProxyDetection>, AppError> {
     log::info!("proxy:detect started");
     let result = get_system_proxy_impl();
     match &result {
@@ -43,7 +51,16 @@ pub fn get_system_proxy() -> Result<Option<SystemProxyInfo>, AppError> {
         Ok(None) => log::info!("proxy:detect result=not-found"),
         Err(e) => log::warn!("proxy:detect result=error {:?}", e),
     }
-    result
+    result.map(|info| {
+        info.map(|mut proxy| {
+            let (bypass, unsupported_bypass) = crate::proxy_bypass::import_system(&proxy.bypass);
+            proxy.bypass = bypass;
+            SystemProxyDetection {
+                proxy,
+                unsupported_bypass,
+            }
+        })
+    })
 }
 
 // ── Platform implementations ────────────────────────────────────────

@@ -99,7 +99,9 @@
     "shutdown-failed": "Nu s-a putut opri sistemul",
     "shutdown-skip-once": "Omite de data aceasta",
     "shutdown-disable": "Dezactivare oprire automată",
-    "delete": "Șterge"
+    "delete": "Șterge",
+    "engine-configuration-invalid": "Setările proxy sunt nevalide. Corectați-le sau dezactivați proxy-ul din setările de rețea.",
+    "engine-open-settings": "Deschide setările de rețea"
   },
   "preferences": {
     "general": "General",
@@ -589,7 +591,11 @@
     "association-set": "Setează implicit",
     "association-repair": "Repară",
     "association-development": "Indisponibil în modul de dezvoltare",
-    "association-settings": "Deschide setările sistemului"
+    "association-settings": "Deschide setările sistemului",
+    "remember-save-location": "Memorează ultima locație de salvare",
+    "stream-max-range-size": "Dimensiunea maximă a intervalului HTTP",
+    "stream-max-range-size-hint": "0 înseamnă nelimitat. Folosiți K, M sau G, de exemplu 5M.",
+    "proxy-import-unsupported": "Verificați excepțiile neacceptate înainte de salvare: {rules}"
   },
   "task": {
     "scope-all": "Toate",
@@ -890,7 +896,8 @@
     "recent-folders": "Foldere recente",
     "dir-no-saved": "Nu există foldere salvate",
     "create": "Creează",
-    "more-actions": "Mai multe acțiuni"
+    "more-actions": "Mai multe acțiuni",
+    "file-inaccessible": "Fișier inaccesibil"
   },
   "media": {
     "probing": "Analizare conținut",

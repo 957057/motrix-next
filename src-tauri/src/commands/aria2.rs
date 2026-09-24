@@ -450,7 +450,7 @@ fn is_p2p_sharing_task(task: &Aria2Task) -> bool {
 #[serde(rename_all = "camelCase")]
 pub struct BatchDeleteTaskTarget {
     gid: String,
-    info_hash: Option<String>,
+    delete_mode: Option<crate::commands::fs::FileDeletionMode>,
 }
 
 #[derive(Debug, Serialize)]
@@ -486,11 +486,68 @@ async fn delete_task(
     client: &TaskService,
     history: &Database,
     gid: &str,
-    info_hash: Option<&str>,
+    delete_mode: Option<crate::commands::fs::FileDeletionMode>,
 ) -> Result<(), AppError> {
+    use crate::services::tasks::files::{
+        content_paths, delete_content, history_task, path_identity,
+    };
+    let _mutation = client.mutation.lock().await;
     log::info!("aria2:delete gid={gid}");
+    let snapshot = client.tell_task_snapshot(true).await?;
+    let records = history.get_records(None).await?;
+    let task = snapshot
+        .iter()
+        .find(|task| task.gid == gid)
+        .cloned()
+        .or_else(|| {
+            records
+                .iter()
+                .find(|record| record.gid == gid)
+                .map(history_task)
+        });
+    let paths = task
+        .as_ref()
+        .map(|task| content_paths(&task.files, false))
+        .unwrap_or_default();
+    let protected_tasks = snapshot
+        .iter()
+        .chain(
+            records
+                .iter()
+                .filter(|record| record.gid != gid)
+                .map(history_task)
+                .collect::<Vec<_>>()
+                .iter(),
+        )
+        .filter(|task| task.gid != gid)
+        .flat_map(|task| content_paths(&task.files, false))
+        .collect::<Vec<_>>();
+    if delete_mode.is_some() && !records.iter().any(|record| record.gid == gid) {
+        if let Some(task) = &task {
+            let event = crate::services::monitor::TaskEvent::from_aria2(task);
+            let mut record = crate::services::monitor::build_history_record_with_added_at(
+                &event,
+                crate::services::monitor::events::TASK_ERROR,
+                history.get_task_birth(gid).await?,
+            );
+            record.status = "removed".into();
+            history.add_record(&record).await?;
+        }
+    }
     remove_engine_task(client, gid).await?;
-    history.remove_task_records(gid, info_hash).await
+    client.tasks.mark_deleted(gid);
+    if let Some(mode) = delete_mode {
+        tokio::task::spawn_blocking(move || {
+            let protected = protected_tasks
+                .iter()
+                .map(|path| path_identity(path))
+                .collect();
+            delete_content(&paths, &protected, mode)
+        })
+        .await
+        .map_err(|error| AppError::Io(error.to_string()))??;
+    }
+    history.remove_task_records(gid).await
 }
 
 async fn finish_sharing_task(
@@ -523,9 +580,36 @@ pub async fn aria2_delete_task(
     state: State<'_, TaskServiceState>,
     history: State<'_, DatabaseState>,
     gid: String,
-    info_hash: Option<String>,
+    delete_mode: Option<crate::commands::fs::FileDeletionMode>,
 ) -> Result<(), AppError> {
-    delete_task(&state.0, &history.0, &gid, info_hash.as_deref()).await
+    delete_task(&state.0, &history.0, &gid, delete_mode).await
+}
+
+/// Inspect only engine/database-owned paths, never paths supplied by a card.
+#[tauri::command]
+pub async fn task_file_states(
+    state: State<'_, TaskServiceState>,
+    history: State<'_, DatabaseState>,
+    gids: Vec<String>,
+) -> Result<HashMap<String, crate::services::tasks::files::FileState>, AppError> {
+    if gids.len() > 1000 {
+        return Err(AppError::InvalidInput("Too many task IDs".into()));
+    }
+    let ids: HashSet<_> = gids.into_iter().collect();
+    let mut tasks: Vec<_> = state
+        .0
+        .tell_task_snapshot(true)
+        .await?
+        .into_iter()
+        .filter(|task| ids.contains(&task.gid))
+        .collect();
+    let live: HashSet<_> = tasks.iter().map(|task| task.gid.clone()).collect();
+    for record in history.0.get_records(None).await? {
+        if ids.contains(&record.gid) && !live.contains(&record.gid) {
+            tasks.push(crate::services::tasks::files::history_task(&record));
+        }
+    }
+    crate::services::tasks::files::inspect(&state.0, tasks, true).await
 }
 
 /// Delete multiple tasks while preserving per-task history cleanup semantics.
@@ -537,13 +621,7 @@ pub async fn aria2_batch_delete_tasks(
 ) -> Result<BatchTaskOperationResult, AppError> {
     let mut result = BatchTaskOperationResult::default();
     for target in tasks {
-        let operation = delete_task(
-            &state.0,
-            &history.0,
-            &target.gid,
-            target.info_hash.as_deref(),
-        )
-        .await;
+        let operation = delete_task(&state.0, &history.0, &target.gid, target.delete_mode).await;
         result.record(target.gid, operation);
     }
     log::info!(

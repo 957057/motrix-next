@@ -10,9 +10,18 @@ use tokio::sync::RwLock;
 pub struct TaskPolicy {
     internal: RwLock<HashSet<String>>,
     automatic: RwLock<HashSet<String>>,
+    pending_starts: RwLock<HashSet<String>>,
     worker: AtomicBool,
+    deleted: std::sync::Mutex<HashSet<String>>,
 }
 impl TaskPolicy {
+    pub fn mark_deleted(&self, gid: &str) {
+        self.deleted.lock().unwrap().insert(gid.into());
+    }
+    pub fn is_deleted(&self, gid: &str) -> bool {
+        self.deleted.lock().unwrap().contains(gid)
+    }
+
     pub async fn has_internal(&self) -> bool {
         !self.internal.read().await.is_empty()
     }
@@ -21,6 +30,16 @@ impl TaskPolicy {
     }
     pub async fn clear_automatic(&self) {
         self.automatic.write().await.clear();
+    }
+    pub async fn clear_pending_starts(&self) {
+        self.deleted.lock().unwrap().clear();
+        self.pending_starts.write().await.clear();
+    }
+    pub async fn expect_start(&self, gid: &str) {
+        self.pending_starts.write().await.insert(gid.into());
+    }
+    pub async fn take_start(&self, gid: &str) -> bool {
+        self.pending_starts.write().await.remove(gid)
     }
     pub fn begin_automatic_worker(&self) -> bool {
         !self.worker.swap(true, Ordering::AcqRel)

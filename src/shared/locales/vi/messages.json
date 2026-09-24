@@ -99,7 +99,9 @@
     "shutdown-failed": "Không thể tắt hệ thống",
     "shutdown-skip-once": "Bỏ qua lần này",
     "shutdown-disable": "Tắt tự động tắt máy",
-    "delete": "Xóa"
+    "delete": "Xóa",
+    "engine-configuration-invalid": "Cài đặt proxy không hợp lệ. Hãy sửa hoặc tắt proxy trong cài đặt mạng.",
+    "engine-open-settings": "Mở cài đặt mạng"
   },
   "preferences": {
     "general": "Chung",
@@ -589,7 +591,11 @@
     "association-set": "Đặt mặc định",
     "association-repair": "Sửa chữa",
     "association-development": "Không khả dụng trong chế độ phát triển",
-    "association-settings": "Mở cài đặt hệ thống"
+    "association-settings": "Mở cài đặt hệ thống",
+    "remember-save-location": "Nhớ vị trí lưu gần nhất",
+    "stream-max-range-size": "Kích thước vùng HTTP tối đa",
+    "stream-max-range-size-hint": "0 là không giới hạn. Dùng K, M hoặc G, ví dụ 5M.",
+    "proxy-import-unsupported": "Kiểm tra các quy tắc bỏ qua không được hỗ trợ trước khi lưu: {rules}"
   },
   "task": {
     "scope-all": "Tất cả",
@@ -890,7 +896,8 @@
     "recent-folders": "Thư mục gần đây",
     "dir-no-saved": "Không có thư mục đã lưu",
     "create": "Tạo",
-    "more-actions": "Thao tác khác"
+    "more-actions": "Thao tác khác",
+    "file-inaccessible": "Không thể truy cập tệp"
   },
   "media": {
     "probing": "Đang phân tích nội dung",

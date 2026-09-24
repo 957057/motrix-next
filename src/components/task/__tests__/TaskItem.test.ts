@@ -52,6 +52,8 @@ vi.mock('../TaskItemActions.vue', () => ({
 
 import TaskItem from '../TaskItem.vue'
 import TaskCompactItem from '../TaskCompactItem.vue'
+import { updateTaskFileStates } from '@/composables/useTaskFileMissing'
+import { nextTick } from 'vue'
 
 function createTask(path: string): Aria2Task {
   return {
@@ -110,62 +112,34 @@ describe('TaskItem', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()
-    invokeMock.mockResolvedValue(true)
+    invokeMock.mockResolvedValue({ 'gid-1': 'available' })
+    updateTaskFileStates({})
   })
 
   afterEach(() => {
     vi.useRealTimers()
   })
 
-  it('refreshes file existence when the selected target path changes', async () => {
-    const wrapper = mount(TaskItem, {
-      props: {
-        task: createTask('/downloads/first.bin'),
-      },
-    })
-
-    await vi.advanceTimersByTimeAsync(200)
-    expect(invokeMock).toHaveBeenLastCalledWith('check_path_exists', {
-      path: '/downloads/first.bin',
-    })
-
-    invokeMock.mockClear()
-
-    await wrapper.setProps({
-      task: createTask('/downloads/second.bin'),
-    })
-    await vi.advanceTimersByTimeAsync(200)
-
-    expect(invokeMock).toHaveBeenCalledTimes(1)
-    expect(invokeMock).toHaveBeenCalledWith('check_path_exists', {
-      path: '/downloads/second.bin',
-    })
-  })
-
-  it('coalesces rapid target path changes into a single file check for the latest path', async () => {
-    const wrapper = mount(TaskItem, {
-      props: {
-        task: createTask('/downloads/first.bin'),
-      },
-    })
-
-    await vi.advanceTimersByTimeAsync(200)
-    invokeMock.mockClear()
-
-    await wrapper.setProps({
-      task: createTask('/downloads/second.bin'),
-    })
-    await vi.advanceTimersByTimeAsync(50)
-    await wrapper.setProps({
-      task: createTask('/downloads/third.bin'),
-    })
-    await vi.advanceTimersByTimeAsync(200)
-
-    expect(invokeMock).toHaveBeenCalledTimes(1)
-    expect(invokeMock).toHaveBeenCalledWith('check_path_exists', {
-      path: '/downloads/third.bin',
-    })
-  })
+  it.each([TaskItem, TaskCompactItem])(
+    'uses native availability and blocks opening missing content',
+    async (component) => {
+      const wrapper = mount(component, { props: { task: createTask('/downloads/file.bin') } })
+      await vi.advanceTimersByTimeAsync(0)
+      expect(invokeMock).toHaveBeenCalledWith('task_file_states', { gids: ['gid-1'] })
+      updateTaskFileStates({ 'gid-1': 'missing' })
+      await nextTick()
+      expect(wrapper.text()).toContain('task.file-missing')
+      await wrapper.trigger('dblclick')
+      expect(wrapper.emitted('open-file')).toBeUndefined()
+      updateTaskFileStates({ 'gid-1': 'available' })
+      await nextTick()
+      await wrapper.trigger('dblclick')
+      expect(wrapper.emitted('open-file')).toHaveLength(1)
+      await wrapper.get('.task-drag-handle').trigger('dblclick')
+      expect(wrapper.emitted('open-file')).toHaveLength(1)
+      wrapper.unmount()
+    },
+  )
 
   it('shows queued status for waiting tasks', () => {
     const task = {
@@ -316,7 +290,7 @@ describe('TaskItem', () => {
     expect(wrapper.emitted('open-file')).toBeUndefined()
   })
 
-  it('keeps the compact card surface non-interactive', async () => {
+  it('opens completed content from the compact card', async () => {
     const wrapper = mount(TaskCompactItem, {
       props: {
         task: createTask('/downloads/complete.bin'),
@@ -330,6 +304,6 @@ describe('TaskItem', () => {
     expect(wrapper.classes()).not.toContain('pressed')
     expect(wrapper.emitted('pause')).toBeUndefined()
     expect(wrapper.emitted('resume')).toBeUndefined()
-    expect(wrapper.emitted('open-file')).toBeUndefined()
+    expect(wrapper.emitted('open-file')).toHaveLength(1)
   })
 })

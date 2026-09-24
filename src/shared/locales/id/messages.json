@@ -99,7 +99,9 @@
     "shutdown-failed": "Gagal mematikan sistem",
     "shutdown-skip-once": "Lewati Kali Ini",
     "shutdown-disable": "Nonaktifkan Mati Otomatis",
-    "delete": "Hapus"
+    "delete": "Hapus",
+    "engine-configuration-invalid": "Pengaturan proksi tidak valid. Perbaiki atau nonaktifkan proksi di pengaturan jaringan.",
+    "engine-open-settings": "Buka pengaturan jaringan"
   },
   "preferences": {
     "general": "Umum",
@@ -589,7 +591,11 @@
     "association-set": "Atur default",
     "association-repair": "Perbaiki",
     "association-development": "Tidak tersedia dalam mode pengembangan",
-    "association-settings": "Buka pengaturan sistem"
+    "association-settings": "Buka pengaturan sistem",
+    "remember-save-location": "Ingat lokasi penyimpanan terakhir",
+    "stream-max-range-size": "Ukuran rentang HTTP maksimum",
+    "stream-max-range-size-hint": "0 berarti tanpa batas. Gunakan K, M, atau G, misalnya 5M.",
+    "proxy-import-unsupported": "Periksa aturan pengecualian yang tidak didukung sebelum menyimpan: {rules}"
   },
   "task": {
     "scope-all": "Semua",
@@ -890,7 +896,8 @@
     "recent-folders": "Folder terbaru",
     "dir-no-saved": "Tidak ada folder tersimpan",
     "create": "Buat",
-    "more-actions": "Tindakan lainnya"
+    "more-actions": "Tindakan lainnya",
+    "file-inaccessible": "Berkas tidak dapat diakses"
   },
   "media": {
     "probing": "Memeriksa media",

@@ -28,6 +28,7 @@ pub async fn start(
     }
     options["media-pause-after-probe"] = "false".into();
     if task.status == "error" && mode == StartMode::User {
+        engine.tasks.expect_start(&task.gid).await;
         engine.retry_media(&task.gid, options).await?;
     } else if task.status == "paused"
         && matches!(media.state.as_str(), "awaiting-selection" | "paused")
@@ -37,6 +38,9 @@ pub async fn start(
             || (mode == StartMode::Automatic && !engine.tasks.is_automatic(&task.gid).await)
         {
             return Err(AppError::Aria2("Media selection was interrupted".into()));
+        }
+        if matches!(media.state.as_str(), "awaiting-selection") {
+            engine.tasks.expect_start(&task.gid).await;
         }
         engine.unpause(&task.gid).await?;
     } else if !matches!(task.status.as_str(), "active" | "waiting" | "complete") {

@@ -99,7 +99,9 @@
     "shutdown-failed": "Не удалось выключить систему",
     "shutdown-skip-once": "Пропустить",
     "shutdown-disable": "Отключить автовыключение",
-    "delete": "Удалить"
+    "delete": "Удалить",
+    "engine-configuration-invalid": "Неверные настройки прокси. Исправьте их или отключите прокси в настройках сети.",
+    "engine-open-settings": "Открыть настройки сети"
   },
   "preferences": {
     "general": "Общие",
@@ -589,7 +591,11 @@
     "association-set": "Выбрать по умолчанию",
     "association-repair": "Исправить",
     "association-development": "Недоступно в режиме разработки",
-    "association-settings": "Открыть параметры системы"
+    "association-settings": "Открыть параметры системы",
+    "remember-save-location": "Запоминать последнюю папку",
+    "stream-max-range-size": "Максимальный размер диапазона HTTP",
+    "stream-max-range-size-hint": "0 — без ограничений. Допустимы K, M и G, например 5M.",
+    "proxy-import-unsupported": "Проверьте неподдерживаемые исключения перед сохранением: {rules}"
   },
   "task": {
     "scope-all": "Все",
@@ -890,7 +896,8 @@
     "recent-folders": "Недавние папки",
     "dir-no-saved": "Нет сохраненных папок",
     "create": "Создать",
-    "more-actions": "Другие действия"
+    "more-actions": "Другие действия",
+    "file-inaccessible": "Файл недоступен"
   },
   "media": {
     "probing": "Анализ медиа",

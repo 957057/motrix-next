@@ -322,6 +322,7 @@ export interface SystemProxyInfo {
   server: string
   /** OS bypass list (comma-separated domains/CIDRs) */
   bypass: string
+  unsupportedBypass: string[]
   /** True when the detected proxy uses a SOCKS protocol (unsupported by aria2) */
   isSocks: boolean
 }
@@ -415,6 +416,9 @@ export interface AppConfig {
   taskPageSize: number
   locale: string
   dir: string
+  rememberSaveLocation: boolean
+  lastSaveLocation: string
+  streamMaxRangeSize: string
   streamMaxConnections: number
   maxConcurrentDownloads: number
   maxOverallDownloadLimit: string
@@ -748,7 +752,7 @@ export interface HistoryMeta {
   magnetLink?: string
   /** Engine-serialized ED2K file link. */
   ed2kLink?: string
-  /** ED2K file hash — used to deduplicate shared-upload records across sessions. */
+  /** ED2K content identity; history ownership remains per GID. */
   ed2kHash?: string
   /** BT announce tiers — used to restore tracker-aware magnet restart links. */
   announceList?: string[][]
@@ -797,9 +801,12 @@ export interface BatchTaskOperationResult {
   failed: BatchTaskFailure[]
 }
 
-export interface BatchDeleteTaskTarget {
+export interface TaskDeletionOptions {
+  deleteMode?: FileDeletionMode
+}
+
+export interface BatchDeleteTaskTarget extends TaskDeletionOptions {
   gid: string
-  infoHash?: string
 }
 
 export interface ResumeEligibleResult {
@@ -821,7 +828,7 @@ export interface TaskApi {
   changeOption: (params: TaskOptionParams) => Promise<void>
   getFiles: (params: { gid: string }) => Promise<Aria2File[]>
   removeTask: (params: { gid: string }) => Promise<string>
-  deleteTask: (params: { gid: string; infoHash?: string }) => Promise<void>
+  deleteTask: (params: { gid: string } & TaskDeletionOptions) => Promise<void>
   batchDeleteTasks: (params: { tasks: BatchDeleteTaskTarget[] }) => Promise<BatchTaskOperationResult>
   finishSharing: (params: { gid: string }) => Promise<void>
   batchFinishSharing: (params: { gids: string[] }) => Promise<BatchTaskOperationResult>

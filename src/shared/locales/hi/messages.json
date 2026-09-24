@@ -99,7 +99,9 @@
     "shutdown-failed": "सिस्टम बंद नहीं हो सका",
     "shutdown-skip-once": "इस बार छोड़ें",
     "shutdown-disable": "Auto-Shutdown बंद करें",
-    "delete": "हटाएं"
+    "delete": "हटाएं",
+    "engine-configuration-invalid": "प्रॉक्सी सेटिंग गलत है। नेटवर्क सेटिंग में इसे सुधारें या प्रॉक्सी बंद करें।",
+    "engine-open-settings": "नेटवर्क सेटिंग खोलें"
   },
   "preferences": {
     "general": "सामान्य",
@@ -589,7 +591,11 @@
     "association-set": "डिफ़ॉल्ट सेट करें",
     "association-repair": "सुधारें",
     "association-development": "डेवलपमेंट मोड में उपलब्ध नहीं",
-    "association-settings": "सिस्टम सेटिंग खोलें"
+    "association-settings": "सिस्टम सेटिंग खोलें",
+    "remember-save-location": "पिछला सहेजने का स्थान याद रखें",
+    "stream-max-range-size": "अधिकतम HTTP रेंज आकार",
+    "stream-max-range-size-hint": "0 का अर्थ असीमित है। K, M या G इस्तेमाल करें, जैसे 5M।",
+    "proxy-import-unsupported": "सहेजने से पहले असमर्थित बायपास नियम जाँचें: {rules}"
   },
   "task": {
     "scope-all": "सभी",
@@ -890,7 +896,8 @@
     "recent-folders": "Recent",
     "dir-no-saved": "कोई सहेजा गया फ़ोल्डर नहीं",
     "create": "बनाएँ",
-    "more-actions": "और कार्रवाइयाँ"
+    "more-actions": "और कार्रवाइयाँ",
+    "file-inaccessible": "फ़ाइल उपलब्ध नहीं है"
   },
   "media": {
     "probing": "मीडिया की जाँच जारी",

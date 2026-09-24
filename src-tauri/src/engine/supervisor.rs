@@ -68,6 +68,7 @@ pub enum EngineOperationCause {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum EngineFailureStage {
+    Configuration,
     Spawn,
     Probe,
     Contract,
@@ -396,9 +397,13 @@ impl EngineSupervisor {
             match start_result {
                 Ok(super::StartEngineOutcome::Started) => {}
                 Ok(super::StartEngineOutcome::Cancelled) => return Err(cancelled_error()),
-                Err(message) => {
-                    let failure =
-                        failure_from_message(EngineFailureStage::Spawn, message, false, app);
+                Err(error) => {
+                    let stage = if matches!(error, AppError::InvalidInput(_)) {
+                        EngineFailureStage::Configuration
+                    } else {
+                        EngineFailureStage::Spawn
+                    };
+                    let failure = failure_from_error(stage, &error, false, app);
                     return self.fail(app, operation_id, attempt, cause, failure);
                 }
             }

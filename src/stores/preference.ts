@@ -150,16 +150,11 @@ export const usePreferenceStore = defineStore('preference', () => {
   }
 
   function recordHistoryDirectory(directory: string) {
-    const historyDirectories = config.value.historyDirectories || []
-    const favoriteDirectories = config.value.favoriteDirectories || []
-    const all = new Set([...historyDirectories, ...favoriteDirectories])
-    if (all.has(directory)) return
-    addHistoryDirectory(directory)
-  }
-
-  function addHistoryDirectory(directory: string) {
-    const historyDirectories = config.value.historyDirectories || []
-    const history = pushItemToFixedLengthArray(historyDirectories, MAX_NUM_OF_DIRECTORIES, directory)
+    if (config.value.favoriteDirectories?.includes(directory)) return
+    const history = [directory, ...(config.value.historyDirectories || []).filter((item) => item !== directory)].slice(
+      0,
+      MAX_NUM_OF_DIRECTORIES,
+    )
     config.value = { ...config.value, historyDirectories: history }
     void savePreference()
   }
@@ -257,7 +252,6 @@ export const usePreferenceStore = defineStore('preference', () => {
     reloadPreferenceFromDisk,
     savePreference,
     recordHistoryDirectory,
-    addHistoryDirectory,
     favoriteDirectory,
     cancelFavoriteDirectory,
     removeDirectory,

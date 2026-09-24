@@ -99,7 +99,9 @@
     "shutdown-failed": "关机失败",
     "shutdown-skip-once": "本次忽略",
     "shutdown-disable": "关闭自动关机",
-    "delete": "删除"
+    "delete": "删除",
+    "engine-configuration-invalid": "代理设置有误，请前往网络设置修改或关闭代理。",
+    "engine-open-settings": "打开网络设置"
   },
   "preferences": {
     "general": "通用",
@@ -589,7 +591,11 @@
     "association-set": "设为默认",
     "association-repair": "修复",
     "association-development": "开发模式不可修改",
-    "association-settings": "打开系统设置"
+    "association-settings": "打开系统设置",
+    "remember-save-location": "记住上次保存位置",
+    "stream-max-range-size": "HTTP 分段大小上限",
+    "stream-max-range-size-hint": "0 表示不限。支持 K、M、G，例如 5M。",
+    "proxy-import-unsupported": "保存前请检查不支持的绕过规则：{rules}"
   },
   "task": {
     "scope-all": "全部",
@@ -890,7 +896,8 @@
     "recent-folders": "最近使用",
     "dir-no-saved": "没有已保存目录",
     "create": "新建",
-    "more-actions": "更多操作"
+    "more-actions": "更多操作",
+    "file-inaccessible": "文件无法访问"
   },
   "media": {
     "probing": "正在探测媒体",

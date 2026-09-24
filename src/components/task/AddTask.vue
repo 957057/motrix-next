@@ -85,6 +85,9 @@ const message = useAppMessage()
 const { constraint, configFieldProps, areConfigFieldsValid } = usePreferenceNumericValidation()
 /** Tracks whether the user manually edited the download directory in this session. */
 const dirUserModified = ref(false)
+const rememberedDirectory = computed(() =>
+  preferenceStore.config.rememberSaveLocation ? preferenceStore.config.lastSaveLocation : '',
+)
 
 const activeTab = ref<BatchItemKind>(ADD_TASK_TYPE.URI)
 const tabsRef = ref<InstanceType<typeof import('naive-ui').NTabs> | null>(null)
@@ -142,7 +145,7 @@ const form = ref<AddTaskForm>({
   media: defaultMediaOptions(preferenceStore.config),
   uris: '',
   out: '',
-  dir: preferenceStore.config.dir || '',
+  dir: rememberedDirectory.value || preferenceStore.config.dir || '',
   streamMaxConnections: preferenceStore.config.streamMaxConnections,
   userAgent: '',
   authorization: '',
@@ -238,9 +241,9 @@ watch(
   (visible) => {
     if (visible) {
       form.value.media = defaultMediaOptions(preferenceStore.config)
-      // When classification is enabled, clear the dir so user sees it's optional;
-      // otherwise sync from preferences as usual.
-      if (preferenceStore.config.fileCategoryEnabled) {
+      if (rememberedDirectory.value) {
+        form.value.dir = rememberedDirectory.value
+      } else if (preferenceStore.config.fileCategoryEnabled) {
         form.value.dir = ''
       } else {
         form.value.dir = preferenceStore.config.dir || form.value.dir
@@ -278,7 +281,7 @@ watch(
 )
 
 /** Whether file classification is currently enabled in preferences. */
-const categoryEnabled = computed(() => preferenceStore.config.fileCategoryEnabled)
+const categoryEnabled = computed(() => preferenceStore.config.fileCategoryEnabled && !rememberedDirectory.value)
 
 /** Dynamic label: switches between original 'Save to' and 'Custom Path' based on classification state. */
 const dirLabel = computed(() => (categoryEnabled.value ? t('task.task-custom-dir') : t('task.task-dir')))
@@ -377,7 +380,7 @@ const categoryMatchPreview = computed(() => {
 })
 
 const displayedDir = computed(() => {
-  if (dirUserModified.value) return form.value.dir
+  if (dirUserModified.value || rememberedDirectory.value) return form.value.dir
   return categoryMatchPreview.value?.directory ?? form.value.dir
 })
 
@@ -550,11 +553,10 @@ async function retryTorrent(item: BatchItem) {
 
 async function chooseDirectory() {
   try {
-    const selected = await openDialog({ directory: true })
+    const selected = await openDialog({ directory: true, defaultPath: displayedDir.value || undefined })
     if (typeof selected === 'string') {
       form.value.dir = selected
-      // Only mark as user-override when classification is active
-      dirUserModified.value = categoryEnabled.value && selected.trim().length > 0
+      dirUserModified.value = selected.trim().length > 0
     }
   } catch (e) {
     logger.debug('AddTask.chooseDirectory', e)
@@ -563,7 +565,7 @@ async function chooseDirectory() {
 
 function onDirectorySelect(dir: string) {
   form.value.dir = dir
-  dirUserModified.value = categoryEnabled.value && dir.trim().length > 0
+  dirUserModified.value = dir.trim().length > 0
 }
 
 function onUserAgentInput(value: string) {
@@ -644,7 +646,7 @@ async function handleSubmit() {
     // fall back to the global default dir so aria2 always has a valid path.
     const effectiveForm = {
       ...form.value,
-      dir: form.value.dir.trim() || preferenceStore.config.dir,
+      dir: form.value.dir.trim() || rememberedDirectory.value || preferenceStore.config.dir,
       appProxy: preferenceStore.config.proxy,
       defaultUserAgent: preferenceStore.config.userAgent,
       userAgentProfiles: preferenceStore.config.userAgentProfiles,
@@ -652,7 +654,7 @@ async function handleSubmit() {
     }
     const options = buildEngineOptions(effectiveForm)
     const fileCategory = {
-      enabled: preferenceStore.config.fileCategoryEnabled && !dirUserModified.value,
+      enabled: preferenceStore.config.fileCategoryEnabled && !dirUserModified.value && !rememberedDirectory.value,
       categories: preferenceStore.config.fileCategories,
     }
     let manualResult: ManualUriSubmitResult = { submittedTaskNames: [], magnetGids: [], magnetFailures: [] }
@@ -699,10 +701,15 @@ async function handleSubmit() {
         }
       }
 
+      const effectiveDir = effectiveForm.dir.trim()
+      if (dirUserModified.value && preferenceStore.config.rememberSaveLocation) {
+        preferenceStore.updatePreference({ lastSaveLocation: effectiveDir })
+        await preferenceStore.savePreference()
+      }
       await handleClose(false)
 
-      // ── Record directory for the recent-folders popover ────────
-      const effectiveDir = form.value.dir.trim() || preferenceStore.config.dir
+      // Recent directories follow successful submissions.
+
       if (effectiveDir) {
         preferenceStore.recordHistoryDirectory(effectiveDir)
       }

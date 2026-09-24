@@ -19,6 +19,7 @@ import {
   ListOutline,
 } from '@vicons/ionicons5'
 import { useTaskCardModel } from '@/composables/useTaskCardModel'
+import { canOpenTaskContent } from '@/composables/useTaskContentOpen'
 import { useTaskFileMissing } from '@/composables/useTaskFileMissing'
 import TaskDragHandle from './TaskDragHandle.vue'
 import TaskItemActions from './TaskItemActions.vue'
@@ -117,7 +118,7 @@ const statusBadgeIcon = computed(() => {
   }
 })
 
-const { fileMissing } = useTaskFileMissing(taskRef)
+const { fileMissing, fileState } = useTaskFileMissing(taskRef)
 </script>
 
 <template>
@@ -126,6 +127,7 @@ const { fileMissing } = useTaskFileMissing(taskRef)
     :class="{
       'is-sharing': isSharing,
     }"
+    @dblclick="!fileMissing && !actionPending && canOpenTaskContent(task, $event) && emit('open-file', task)"
   >
     <TaskDragHandle class="task-drag-rail" />
     <div class="task-body">
@@ -170,7 +172,7 @@ const { fileMissing } = useTaskFileMissing(taskRef)
             </TaskTextTransition>
             <span v-show="fileMissing" class="file-missing-tag">
               <NIcon :size="13"><AlertCircleOutline /></NIcon>
-              {{ t('task.file-missing') || 'File missing' }}
+              {{ t(fileState === 'inaccessible' ? 'task.file-inaccessible' : 'task.file-missing') || 'File missing' }}
             </span>
           </div>
         </div>

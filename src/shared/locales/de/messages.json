@@ -99,7 +99,9 @@
     "shutdown-failed": "System konnte nicht heruntergefahren werden",
     "shutdown-skip-once": "Diesmal überspringen",
     "shutdown-disable": "Auto-Herunterfahren deaktivieren",
-    "delete": "Löschen"
+    "delete": "Löschen",
+    "engine-configuration-invalid": "Die Proxy-Einstellungen sind ungültig. In den Netzwerkeinstellungen korrigieren oder den Proxy deaktivieren.",
+    "engine-open-settings": "Netzwerkeinstellungen öffnen"
   },
   "preferences": {
     "general": "Allgemein",
@@ -589,7 +591,11 @@
     "association-set": "Standard festlegen",
     "association-repair": "Reparieren",
     "association-development": "Im Entwicklungsmodus nicht verfügbar",
-    "association-settings": "Systemeinstellungen öffnen"
+    "association-settings": "Systemeinstellungen öffnen",
+    "remember-save-location": "Letzten Speicherort merken",
+    "stream-max-range-size": "Maximale HTTP-Bereichsgröße",
+    "stream-max-range-size-hint": "0 bedeutet unbegrenzt. K, M oder G verwenden, z. B. 5M.",
+    "proxy-import-unsupported": "Nicht unterstützte Ausnahmen vor dem Speichern prüfen: {rules}"
   },
   "task": {
     "scope-all": "Alle",
@@ -890,7 +896,8 @@
     "recent-folders": "Zuletzt verwendete Ordner",
     "dir-no-saved": "Keine gespeicherten Ordner",
     "create": "Erstellen",
-    "more-actions": "Weitere Aktionen"
+    "more-actions": "Weitere Aktionen",
+    "file-inaccessible": "Datei nicht zugänglich"
   },
   "media": {
     "probing": "Medium wird untersucht",

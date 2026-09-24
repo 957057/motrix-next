@@ -123,6 +123,31 @@ These identities prevent retries from creating another task after a lost reply.
 They are not a distributed transaction across arbitrary machine power loss.
 Saved HTTP passwords remain plaintext local data as before and are never URL decoded.
 
+## Save locations and task files
+
+Save locations use the current explicit choice, then the remembered explicit
+choice (when enabled), then classification, then the default directory. Remembering
+a location is opt-in and updates only after a successful user submission. Silent
+browser submissions read the same preferences without changing the remembered path.
+
+Task deletion resolves individual files from native snapshots and persisted history.
+Other GIDs referencing the same path protect that file. No task operation infers
+ownership of a whole directory or removes another record by content hash. A failed
+file deletion retains its history record for retry.
+
+`services/tasks/files.rs` watches selected completed files through `notify` and
+checks them periodically when native filesystem events are unavailable. Missing or
+inaccessible seeding files pause sharing even without a WebView; resuming an affected
+BitTorrent task requests libtorrent's recheck. Cards consume one shared availability
+stream. A double-click opens completed content and ignores controls, drag handles
+and selected text.
+
+Start notifications belong to the native task lifecycle and honor `notifyOnStart`.
+Submitting metadata or displaying an in-app toast never duplicates an OS notification.
+Authenticated readiness endpoints return `engine_starting` or `engine_unavailable`
+when the desktop is reachable but cannot provide engine services. Connect retains
+the desktop version and offers recovery instead of repeatedly activating the app.
+
 ## Verification and packaging
 
 Use `pnpm test --maxWorkers=4`, `pnpm build`, `pnpm lint`, `pnpm check:repo`,
@@ -177,5 +202,6 @@ session through the existing supervisor.
 
 Proxy bypass entries are validated and normalized once in Rust for runtime config,
 global option updates and task options. libcurl performs host/IP/CIDR matching.
-Newlines, commas and system-list semicolons separate entries; unsupported wildcard
-expressions and `<local>` are rejected rather than silently misinterpreted.
+Newlines, commas and system-list semicolons separate entries. Trailing numeric
+IPv4 wildcards become CIDR networks. System import reports unsupported expressions
+for review before saving; `<local>` is not treated as an alias for localhost.

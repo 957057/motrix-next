@@ -106,10 +106,10 @@ describe('removeTask', () => {
     const deps = createDeps(api)
     const ops = createTaskOperations(deps)
     await ops.removeTask(makeTask({ gid: 'task-1', infoHash: 'hash-1' }))
-    expect(api.deleteTask).toHaveBeenCalledWith({ gid: 'task-1', infoHash: 'hash-1' })
+    expect(api.deleteTask).toHaveBeenCalledWith({ gid: 'task-1' })
     expect(deps.clearSelections).toHaveBeenCalledWith(['task-1'])
     expect(deps.fetchList).toHaveBeenCalledOnce()
-    expect(api.saveSession).toHaveBeenCalledOnce()
+    expect(api.saveSession).not.toHaveBeenCalled()
   })
 
   it('restores the list when deletion fails', async () => {
@@ -140,7 +140,7 @@ describe('finishSharing', () => {
     expect(api.deleteTask).not.toHaveBeenCalled()
     expect(deps.setTaskRemoving).not.toHaveBeenCalled()
     expect(deps.fetchList).toHaveBeenCalledOnce()
-    expect(api.saveSession).toHaveBeenCalledOnce()
+    expect(api.saveSession).not.toHaveBeenCalled()
   })
 
   it('finishes multiple BT and ED2K sharing tasks in one native call', async () => {
@@ -155,7 +155,7 @@ describe('finishSharing', () => {
 
     expect(api.batchFinishSharing).toHaveBeenCalledWith({ gids: ['bt', 'ed2k'] })
     expect(deps.fetchList).toHaveBeenCalledOnce()
-    expect(api.saveSession).toHaveBeenCalledOnce()
+    expect(api.saveSession).not.toHaveBeenCalled()
   })
 })
 
@@ -188,10 +188,10 @@ describe('pauseTask', () => {
     expect(api.forcePauseTask).not.toHaveBeenCalled()
   })
 
-  it('refreshes list and saves session after pause', async () => {
+  it('refreshes the list after the native operation after pause', async () => {
     await ops.pauseTask(makeTask())
     expect(deps.fetchList).toHaveBeenCalledOnce()
-    expect(api.saveSession).toHaveBeenCalledOnce()
+    expect(api.saveSession).not.toHaveBeenCalled()
   })
 
   it('still refreshes list even when pause fails', async () => {
@@ -223,10 +223,10 @@ describe('resumeTask', () => {
     expect(api.resumeTask).toHaveBeenCalledWith({ gid: 'r-1' })
   })
 
-  it('refreshes list and saves session', async () => {
+  it('refreshes the list after the native operation', async () => {
     await ops.resumeTask(makeTask())
     expect(deps.fetchList).toHaveBeenCalledOnce()
-    expect(api.saveSession).toHaveBeenCalledOnce()
+    expect(api.saveSession).not.toHaveBeenCalled()
   })
 
   it('keeps a resolved magnet paused until file selection is applied', async () => {
@@ -280,7 +280,7 @@ describe('pauseAllTask', () => {
     expect(api.forcePauseAll).toHaveBeenCalledOnce()
     expect(api.forcePauseTask).not.toHaveBeenCalled()
     expect(deps.fetchList).toHaveBeenCalledOnce()
-    expect(api.saveSession).toHaveBeenCalledOnce()
+    expect(api.saveSession).not.toHaveBeenCalled()
   })
 
   it('keeps sharing tasks inside the native pause-all scope', async () => {
@@ -302,7 +302,7 @@ describe('pauseAllTask', () => {
 })
 
 describe('resumeAllTask', () => {
-  it('resumes eligible paused tasks, then refreshes and saves', async () => {
+  it('resumes eligible paused tasks, then refreshes the list', async () => {
     const api = createMockApi()
     const deps = createDeps(api)
     deps.taskList.value = [makeTask({ gid: 'paused-1', status: TASK_STATUS.PAUSED })]
@@ -310,7 +310,7 @@ describe('resumeAllTask', () => {
     await expect(ops.resumeAllTask()).resolves.toEqual({ resumed: 1, blocked: 0 })
     expect(api.resumeEligible).toHaveBeenCalledOnce()
     expect(deps.fetchList).toHaveBeenCalledOnce()
-    expect(api.saveSession).toHaveBeenCalledOnce()
+    expect(api.saveSession).not.toHaveBeenCalled()
   })
 })
 
@@ -387,7 +387,7 @@ describe('removeTaskRecord', () => {
     const deps = createDeps(api)
     const ops = createTaskOperations(deps)
     await ops.removeTaskRecord(makeTask({ gid: 'record', status: TASK_STATUS.COMPLETE }))
-    expect(api.deleteTask).toHaveBeenCalledWith({ gid: 'record', infoHash: undefined })
+    expect(api.deleteTask).toHaveBeenCalledWith({ gid: 'record' })
     expect(deps.fetchList).toHaveBeenCalledOnce()
   })
 })
@@ -407,12 +407,12 @@ describe('purgeTaskRecord', () => {
     expect(deps.fetchList).toHaveBeenCalledOnce()
   })
 
-  it('saves session after purging all records', async () => {
+  it('does not duplicate native persistence after purging records', async () => {
     const api = createMockApi()
     const deps = createDeps(api)
     const ops = createTaskOperations(deps)
     await ops.purgeTaskRecord()
-    expect(api.saveSession).toHaveBeenCalledOnce()
+    expect(api.saveSession).not.toHaveBeenCalled()
   })
 
   it('surfaces a native transaction failure', async () => {
@@ -436,14 +436,11 @@ describe('batchRemoveTask', () => {
     const ops = createTaskOperations(deps)
     await ops.batchRemoveTask(['a', 'b'])
     expect(api.batchDeleteTasks).toHaveBeenCalledWith({
-      tasks: [
-        { gid: 'a', infoHash: undefined },
-        { gid: 'b', infoHash: undefined },
-      ],
+      tasks: [{ gid: 'a' }, { gid: 'b' }],
     })
     expect(api.deleteTask).not.toHaveBeenCalled()
     expect(deps.clearSelections).toHaveBeenCalledWith(['a', 'b'])
-    expect(api.saveSession).toHaveBeenCalledOnce()
+    expect(api.saveSession).not.toHaveBeenCalled()
   })
 
   it('refreshes after a failed transaction', async () => {

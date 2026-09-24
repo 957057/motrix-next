@@ -19,6 +19,8 @@ pub fn normalize(input: &str) -> Result<String, AppError> {
             .parse::<std::net::IpAddr>()
         {
             address.to_string()
+        } else if let Some(network) = ipv4_wildcard(entry) {
+            network
         } else if let Ok(url::Host::Domain(domain)) =
             url::Host::parse(entry.trim_start_matches('.'))
         {
@@ -40,6 +42,45 @@ pub fn normalize(input: &str) -> Result<String, AppError> {
     Ok(entries.join(","))
 }
 
+fn ipv4_wildcard(entry: &str) -> Option<String> {
+    let parts: Vec<_> = entry.split('.').collect();
+    let prefix = parts.iter().position(|part| *part == "*")?;
+    if prefix == 0
+        || prefix > 3
+        || parts.len() > 4
+        || parts[prefix..].iter().any(|part| *part != "*")
+    {
+        return None;
+    }
+    let mut octets = [0; 4];
+    for (index, part) in parts[..prefix].iter().enumerate() {
+        octets[index] = part.parse::<u8>().ok()?;
+    }
+    ipnet::Ipv4Net::new(std::net::Ipv4Addr::from(octets), (prefix * 8) as u8)
+        .ok()
+        .map(|network| network.to_string())
+}
+
+/// Import only equivalent native curl rules; report unsupported OS expressions.
+pub fn import_system(input: &str) -> (String, Vec<String>) {
+    let mut accepted = Vec::new();
+    let mut unsupported = Vec::new();
+    for entry in input
+        .split([',', ';', '\n', '\r'])
+        .map(str::trim)
+        .filter(|entry| !entry.is_empty())
+    {
+        match normalize(entry) {
+            Ok(value) if !accepted.contains(&value) => accepted.push(value),
+            Err(_) if !unsupported.iter().any(|value| value == entry) => {
+                unsupported.push(entry.to_string())
+            }
+            _ => {}
+        }
+    }
+    (accepted.join(","), unsupported)
+}
+
 fn invalid(entry: &str) -> AppError {
     AppError::InvalidInput(format!(
         "Unsupported proxy bypass entry: {entry}. Use a host, domain, IP, CIDR network, or *; separate entries with newlines or commas."
@@ -47,6 +88,13 @@ fn invalid(entry: &str) -> AppError {
 }
 
 pub fn normalize_options(options: &mut serde_json::Map<String, Value>) -> Result<(), AppError> {
+    if ["all-proxy", "http-proxy", "https-proxy"]
+        .iter()
+        .all(|key| options.get(*key).and_then(Value::as_str) == Some(""))
+    {
+        options.insert("no-proxy".into(), "".into());
+        return Ok(());
+    }
     if let Some(value) = options.get_mut("no-proxy") {
         let input = value
             .as_str()
@@ -72,13 +120,24 @@ mod tests {
         );
         assert_eq!(normalize("*\n*").unwrap(), "*");
         assert_eq!(normalize("\n , ; ").unwrap(), "");
+        assert_eq!(
+            normalize("127.*;10.*;192.168.*").unwrap(),
+            "127.0.0.0/8,10.0.0.0/8,192.168.0.0/16"
+        );
+        assert_eq!(
+            import_system("<local>;127.*;*.local"),
+            (
+                "127.0.0.0/8".into(),
+                vec!["<local>".into(), "*.local".into()]
+            )
+        );
     }
 
     #[test]
     fn rejects_rules_curl_cannot_interpret() {
         for value in [
             "<local>",
-            "127.*",
+            "127.*.1",
             "*.local",
             "https://example.com",
             "host:8080",

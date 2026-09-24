@@ -99,7 +99,9 @@
     "shutdown-failed": "Falha ao desligar o sistema",
     "shutdown-skip-once": "Pular desta vez",
     "shutdown-disable": "Desativar desligamento automático",
-    "delete": "Excluir"
+    "delete": "Excluir",
+    "engine-configuration-invalid": "As configurações do proxy são inválidas. Corrija-as ou desative o proxy nas configurações de rede.",
+    "engine-open-settings": "Abrir configurações de rede"
   },
   "preferences": {
     "general": "Geral",
@@ -589,7 +591,11 @@
     "association-set": "Definir padrão",
     "association-repair": "Reparar",
     "association-development": "Indisponível no modo de desenvolvimento",
-    "association-settings": "Abrir configurações do sistema"
+    "association-settings": "Abrir configurações do sistema",
+    "remember-save-location": "Lembrar o último local de salvamento",
+    "stream-max-range-size": "Tamanho máximo do intervalo HTTP",
+    "stream-max-range-size-hint": "0 significa sem limite. Use K, M ou G, por exemplo 5M.",
+    "proxy-import-unsupported": "Revise as exceções não compatíveis antes de salvar: {rules}"
   },
   "task": {
     "scope-all": "Todas",
@@ -890,7 +896,8 @@
     "recent-folders": "Pastas recentes",
     "dir-no-saved": "Nenhuma pasta salva",
     "create": "Criar",
-    "more-actions": "Mais ações"
+    "more-actions": "Mais ações",
+    "file-inaccessible": "Arquivo inacessível"
   },
   "media": {
     "probing": "Analisando mídia",

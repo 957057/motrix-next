@@ -99,7 +99,9 @@
     "shutdown-failed": "فشل في إيقاف تشغيل النظام",
     "shutdown-skip-once": "تجاهل هذه المرة",
     "shutdown-disable": "إيقاف الإغلاق التلقائي",
-    "delete": "حذف"
+    "delete": "حذف",
+    "engine-configuration-invalid": "إعدادات الوكيل غير صالحة. صحّحها أو عطّل الوكيل من إعدادات الشبكة.",
+    "engine-open-settings": "فتح إعدادات الشبكة"
   },
   "preferences": {
     "general": "عام",
@@ -589,7 +591,11 @@
     "association-set": "تعيين الافتراضي",
     "association-repair": "إصلاح",
     "association-development": "غير متاح في وضع التطوير",
-    "association-settings": "فتح إعدادات النظام"
+    "association-settings": "فتح إعدادات النظام",
+    "remember-save-location": "تذكّر آخر موقع حفظ",
+    "stream-max-range-size": "الحد الأقصى لحجم نطاق HTTP",
+    "stream-max-range-size-hint": "0 يعني بلا حد. استخدم K أو M أو G، مثل 5M.",
+    "proxy-import-unsupported": "راجع قواعد التجاوز غير المدعومة قبل الحفظ: {rules}"
   },
   "task": {
     "scope-all": "الكل",
@@ -890,7 +896,8 @@
     "recent-folders": "المجلدات الأخيرة",
     "dir-no-saved": "لا توجد مجلدات محفوظة",
     "create": "إنشاء",
-    "more-actions": "المزيد من الإجراءات"
+    "more-actions": "المزيد من الإجراءات",
+    "file-inaccessible": "الملف غير متاح"
   },
   "media": {
     "probing": "جارٍ فحص الوسائط",

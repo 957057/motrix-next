@@ -231,10 +231,13 @@ export async function removeTask(params: { gid: string }): Promise<string> {
 }
 
 /** Deletes a task across live, transitioning, stopped, and history states. */
-export async function deleteTask(params: { gid: string; infoHash?: string }): Promise<void> {
+export async function deleteTask(params: {
+  gid: string
+  deleteMode?: import('@shared/types').FileDeletionMode
+}): Promise<void> {
   return invoke<void>('aria2_delete_task', {
     gid: params.gid,
-    infoHash: params.infoHash ?? null,
+    deleteMode: params.deleteMode ?? null,
   })
 }
 

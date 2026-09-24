@@ -38,8 +38,6 @@ export const useHistoryStore = defineStore('history', () => {
     removeBirthRecords: (gids: string[]) => call<void>('history_remove_births', { gids }),
     clearRecords: (status?: string) => call<void>('history_clear_records', { status }),
     removeStaleRecords: (gids: string[]) => call<void>('history_remove_stale', { gids }),
-    removeByInfoHash: (infoHash: string, excludeGid?: string) =>
-      call<void>('history_remove_by_info_hash', { infoHash, excludeGid }),
     checkIntegrity: () => call<string>('history_check_integrity'),
     recordTaskBirth: (gid: string, addedAt = new Date().toISOString()) =>
       call<void>('history_record_birth', { gid, addedAt }),

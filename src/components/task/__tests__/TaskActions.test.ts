@@ -23,7 +23,6 @@ const mockPauseAllTask = vi.fn().mockResolvedValue(undefined)
 const mockFinishSharingTasks = vi.fn()
 const mockPurgeTaskRecord = vi.fn().mockResolvedValue(undefined)
 const mockBatchRemoveTask = vi.fn()
-const mockDeleteTaskFiles = vi.fn().mockResolvedValue(undefined)
 
 // Dialog mock: captures onPositiveClick so we can invoke it in tests
 let lastDialogOptions: Record<string, unknown> | null = null
@@ -153,10 +152,6 @@ vi.mock('@/composables/useAppMessage', () => ({
     warning: mockMessageWarning,
     info: vi.fn(() => ({ destroy: vi.fn() })),
   }),
-}))
-
-vi.mock('@/composables/useFileDelete', () => ({
-  deleteTaskFiles: (...args: unknown[]) => mockDeleteTaskFiles(...args),
 }))
 
 import TaskActions from '../TaskActions.vue'
@@ -613,7 +608,7 @@ describe('TaskActions', () => {
       const onPositiveClick = lastDialogOptions!.onPositiveClick as () => Promise<false>
       await onPositiveClick()
 
-      expect(mockBatchRemoveTask).toHaveBeenCalledWith(['g1', 'g2', 'g3'])
+      expect(mockBatchRemoveTask).toHaveBeenCalledWith(['g1', 'g2', 'g3'], { deleteMode: undefined })
     })
 
     it('shows success message after batch deletion', async () => {

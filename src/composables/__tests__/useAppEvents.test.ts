@@ -317,9 +317,7 @@ describe('useAppEvents', () => {
     handler?.(['file.zip'])
 
     expect(message.info).toHaveBeenCalledWith('task.download-start-message')
-    expect(invokeMock).toHaveBeenCalledWith('send_task_start_notification', {
-      taskNames: ['file.zip'],
-    })
+    expect(invokeMock).not.toHaveBeenCalled()
   })
 
   it('keeps the external input error handler registered after listener setup', async () => {

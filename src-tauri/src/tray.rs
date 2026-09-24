@@ -53,13 +53,25 @@ pub fn request_main_window(app: &AppHandle, source: &'static str, visible: bool)
             .0
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
-        // WebView2 creation must run outside synchronous UI event handlers.
-        let Some(window) = get_or_create_main_window(&app) else {
+        let window = get_or_create_main_window(&app);
+        let Some((window, created)) = window else {
             log::error!("window:request-failed source={source}");
             return;
         };
-        if visible {
-            activate_main_window(&window, source);
+        let handle = app.clone();
+        // Tauri queues plugin initialization during build(). Restore afterward
+        // on the event thread, without a worker holding the plugin's state lock
+        // while waiting for window queries on that same thread.
+        if let Err(error) = app.run_on_main_thread(move || {
+            if created {
+                crate::restore_window_state_if_enabled(&handle, &window);
+                log::info!("tray:window-recreated label=main");
+            }
+            if visible {
+                activate_main_window(&window, source);
+            }
+        }) {
+            log::error!("window:activation-schedule-failed source={source} error={error}");
         }
     });
 }
@@ -71,9 +83,9 @@ pub fn request_main_window(app: &AppHandle, source: &'static str, visible: bool)
 /// clicks the tray icon or triggers macOS Reopen, the original window
 /// handle is gone.  This function detects that and rebuilds the window
 /// from the active platform configuration.
-fn get_or_create_main_window(app: &AppHandle) -> Option<tauri::WebviewWindow> {
+fn get_or_create_main_window(app: &AppHandle) -> Option<(tauri::WebviewWindow, bool)> {
     if let Some(window) = app.get_webview_window("main") {
-        return Some(window);
+        return Some((window, false));
     }
 
     // Window was destroyed — recreate from the same merged platform config
@@ -103,11 +115,7 @@ fn get_or_create_main_window(app: &AppHandle) -> Option<tauri::WebviewWindow> {
     };
 
     match builder.build() {
-        Ok(w) => {
-            crate::restore_window_state_if_enabled(app, &w);
-            log::info!("tray:window-recreated label=main");
-            Some(w)
-        }
+        Ok(w) => Some((w, true)),
         Err(e) => {
             log::error!("tray:window-recreate-failed error={}", e);
             None

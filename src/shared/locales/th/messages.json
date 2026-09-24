@@ -99,7 +99,9 @@
     "shutdown-failed": "ไม่สามารถปิดระบบได้",
     "shutdown-skip-once": "ข้ามครั้งนี้",
     "shutdown-disable": "ปิดการปิดเครื่องอัตโนมัติ",
-    "delete": "ลบ"
+    "delete": "ลบ",
+    "engine-configuration-invalid": "การตั้งค่าพร็อกซีไม่ถูกต้อง โปรดแก้ไขหรือปิดพร็อกซีในการตั้งค่าเครือข่าย",
+    "engine-open-settings": "เปิดการตั้งค่าเครือข่าย"
   },
   "preferences": {
     "general": "ทั่วไป",
@@ -589,7 +591,11 @@
     "association-set": "ตั้งเป็นค่าเริ่มต้น",
     "association-repair": "ซ่อมแซม",
     "association-development": "ไม่พร้อมใช้งานในโหมดพัฒนา",
-    "association-settings": "เปิดการตั้งค่าระบบ"
+    "association-settings": "เปิดการตั้งค่าระบบ",
+    "remember-save-location": "จำตำแหน่งบันทึกล่าสุด",
+    "stream-max-range-size": "ขนาดช่วง HTTP สูงสุด",
+    "stream-max-range-size-hint": "0 หมายถึงไม่จำกัด ใช้ K, M หรือ G เช่น 5M",
+    "proxy-import-unsupported": "ตรวจสอบกฎยกเว้นที่ไม่รองรับก่อนบันทึก: {rules}"
   },
   "task": {
     "scope-all": "ทั้งหมด",
@@ -890,7 +896,8 @@
     "recent-folders": "โฟลเดอร์ล่าสุด",
     "dir-no-saved": "ไม่มีโฟลเดอร์ที่บันทึกไว้",
     "create": "สร้าง",
-    "more-actions": "การดำเนินการเพิ่มเติม"
+    "more-actions": "การดำเนินการเพิ่มเติม",
+    "file-inaccessible": "ไม่สามารถเข้าถึงไฟล์"
   },
   "media": {
     "probing": "กำลังตรวจสอบสื่อ",

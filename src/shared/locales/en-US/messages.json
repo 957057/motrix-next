@@ -99,7 +99,9 @@
     "shutdown-failed": "Failed to shut down the system",
     "shutdown-skip-once": "Skip This Time",
     "shutdown-disable": "Disable Auto-Shutdown",
-    "delete": "Delete"
+    "delete": "Delete",
+    "engine-configuration-invalid": "The proxy settings are invalid. Open Network settings to correct or disable the proxy.",
+    "engine-open-settings": "Open Network Settings"
   },
   "preferences": {
     "general": "General",
@@ -589,7 +591,11 @@
     "association-set": "Set default",
     "association-repair": "Repair",
     "association-development": "Unavailable in development mode",
-    "association-settings": "Open system settings"
+    "association-settings": "Open system settings",
+    "remember-save-location": "Remember last save location",
+    "stream-max-range-size": "Maximum HTTP range size",
+    "stream-max-range-size-hint": "0 means unlimited. Use K, M or G, for example 5M.",
+    "proxy-import-unsupported": "Review unsupported bypass rules before saving: {rules}"
   },
   "task": {
     "scope-all": "All",
@@ -890,7 +896,8 @@
     "recent-folders": "Recent",
     "dir-no-saved": "No saved folders",
     "create": "Create",
-    "more-actions": "More actions"
+    "more-actions": "More actions",
+    "file-inaccessible": "File unavailable"
   },
   "media": {
     "probing": "Inspecting media",

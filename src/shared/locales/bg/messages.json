@@ -99,7 +99,9 @@
     "shutdown-failed": "Неуспешно изключване на системата",
     "shutdown-skip-once": "Пропусни този път",
     "shutdown-disable": "Спри автоматичното изключване",
-    "delete": "Изтрий"
+    "delete": "Изтрий",
+    "engine-configuration-invalid": "Настройките на проксито са невалидни. Поправете ги или изключете проксито в мрежовите настройки.",
+    "engine-open-settings": "Отваряне на мрежовите настройки"
   },
   "preferences": {
     "general": "Общи",
@@ -589,7 +591,11 @@
     "association-set": "Задаване по подразбиране",
     "association-repair": "Поправяне",
     "association-development": "Недостъпно в режим за разработка",
-    "association-settings": "Отваряне на системните настройки"
+    "association-settings": "Отваряне на системните настройки",
+    "remember-save-location": "Запомняне на последната папка",
+    "stream-max-range-size": "Максимален размер на HTTP диапазон",
+    "stream-max-range-size-hint": "0 означава без ограничение. Използвайте K, M или G, например 5M.",
+    "proxy-import-unsupported": "Проверете неподдържаните изключения преди запазване: {rules}"
   },
   "task": {
     "scope-all": "Всички",
@@ -890,7 +896,8 @@
     "recent-folders": "Скорошни папки",
     "dir-no-saved": "Няма запазени папки",
     "create": "Създаване",
-    "more-actions": "Още действия"
+    "more-actions": "Още действия",
+    "file-inaccessible": "Файлът е недостъпен"
   },
   "media": {
     "probing": "Анализ на медията",

@@ -451,7 +451,7 @@ pub fn open_path_normalized(app: AppHandle, path: String) -> Result<(), AppError
         .map_err(|e| AppError::Io(format!("Failed to open {}: {}", path, e)))
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Copy, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum FileDeletionMode {
     Trash,

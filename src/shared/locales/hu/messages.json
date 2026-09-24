@@ -99,7 +99,9 @@
     "shutdown-failed": "Nem sikerült leállítani a rendszert",
     "shutdown-skip-once": "Kihagyás most",
     "shutdown-disable": "Automatikus leállítás kikapcsolása",
-    "delete": "Törlés"
+    "delete": "Törlés",
+    "engine-configuration-invalid": "A proxybeállítások érvénytelenek. Javítsa őket, vagy kapcsolja ki a proxyt a hálózati beállításokban.",
+    "engine-open-settings": "Hálózati beállítások megnyitása"
   },
   "preferences": {
     "general": "Általános",
@@ -589,7 +591,11 @@
     "association-set": "Alapértelmezett beállítása",
     "association-repair": "Javítás",
     "association-development": "Fejlesztői módban nem érhető el",
-    "association-settings": "Rendszerbeállítások megnyitása"
+    "association-settings": "Rendszerbeállítások megnyitása",
+    "remember-save-location": "Utolsó mentési hely megjegyzése",
+    "stream-max-range-size": "HTTP-tartomány maximális mérete",
+    "stream-max-range-size-hint": "0 esetén korlátlan. Használjon K, M vagy G utótagot, például 5M.",
+    "proxy-import-unsupported": "Mentés előtt ellenőrizze a nem támogatott kivételeket: {rules}"
   },
   "task": {
     "scope-all": "Összes",
@@ -890,7 +896,8 @@
     "recent-folders": "Legutóbbi mappák",
     "dir-no-saved": "Nincsenek mentett mappák",
     "create": "Létrehozás",
-    "more-actions": "További műveletek"
+    "more-actions": "További műveletek",
+    "file-inaccessible": "A fájl nem érhető el"
   },
   "media": {
     "probing": "Média vizsgálata",

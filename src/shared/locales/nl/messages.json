@@ -99,7 +99,9 @@
     "shutdown-failed": "Kan het systeem niet afsluiten",
     "shutdown-skip-once": "Deze keer overslaan",
     "shutdown-disable": "Automatisch afsluiten uitschakelen",
-    "delete": "Verwijderen"
+    "delete": "Verwijderen",
+    "engine-configuration-invalid": "De proxy-instellingen zijn ongeldig. Corrigeer ze of schakel de proxy uit in de netwerkinstellingen.",
+    "engine-open-settings": "Netwerkinstellingen openen"
   },
   "preferences": {
     "general": "Algemeen",
@@ -589,7 +591,11 @@
     "association-set": "Standaard instellen",
     "association-repair": "Herstellen",
     "association-development": "Niet beschikbaar in ontwikkelmodus",
-    "association-settings": "Systeeminstellingen openen"
+    "association-settings": "Systeeminstellingen openen",
+    "remember-save-location": "Laatste opslaglocatie onthouden",
+    "stream-max-range-size": "Maximale HTTP-bereikgrootte",
+    "stream-max-range-size-hint": "0 betekent onbeperkt. Gebruik K, M of G, bijvoorbeeld 5M.",
+    "proxy-import-unsupported": "Controleer niet-ondersteunde uitzonderingen vóór het opslaan: {rules}"
   },
   "task": {
     "scope-all": "Alle",
@@ -890,7 +896,8 @@
     "recent-folders": "Recente mappen",
     "dir-no-saved": "Geen opgeslagen mappen",
     "create": "Aanmaken",
-    "more-actions": "Meer acties"
+    "more-actions": "Meer acties",
+    "file-inaccessible": "Bestand niet toegankelijk"
   },
   "media": {
     "probing": "Media onderzoeken",
