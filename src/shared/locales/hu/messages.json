@@ -839,7 +839,6 @@
     "copy-link-success": "Link másolva",
     "copy-link-unavailable": "A link nem érhető el",
     "remove-record": "Bejegyzés eltávolítása",
-    "remove-record-success": "„{taskName}\" bejegyzés eltávolítva",
     "show-in-folder": "Megjelenítés a mappában",
     "file-not-exist": "A fájl nem létezik vagy törölve lett",
     "open-file-success": "Fájl megnyitva",

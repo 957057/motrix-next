@@ -839,7 +839,6 @@
     "copy-link-success": "Link gekopieerd",
     "copy-link-unavailable": "Link niet beschikbaar",
     "remove-record": "Record verwijderen",
-    "remove-record-success": "Record van \"{taskName}\" verwijderd",
     "show-in-folder": "Tonen in map",
     "file-not-exist": "Bestand bestaat niet of is verwijderd",
     "open-file-success": "Bestand geopend",

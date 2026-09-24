@@ -839,7 +839,6 @@
     "copy-link-success": "تم نسخ الرابط",
     "copy-link-unavailable": "الرابط غير متاح",
     "remove-record": "إزالة السجل",
-    "remove-record-success": "تمت إزالة سجل \"{taskName}\"",
     "show-in-folder": "إظهار في المجلد",
     "file-not-exist": "الملف غير موجود أو تم حذفه",
     "open-file-success": "تم فتح الملف",

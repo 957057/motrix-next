@@ -565,7 +565,7 @@ describe('TaskStore', () => {
     await store.pauseAllTask()
     expect(mockApi.forcePauseAll).toHaveBeenCalledOnce()
     expect(mockApi.forcePauseTask).not.toHaveBeenCalled()
-    expect(mockApi.saveSession).toHaveBeenCalled()
+    expect(mockApi.saveSession).not.toHaveBeenCalled()
   })
 
   it('pauseAllTask remains native when the queue contains sharing tasks', async () => {
@@ -581,13 +581,13 @@ describe('TaskStore', () => {
     expect(mockApi.forcePauseAll).toHaveBeenCalledOnce()
   })
 
-  it('resumeAllTask resumes eligible paused tasks, refreshes, and saves session', async () => {
+  it('resumeAllTask resumes eligible paused tasks and refreshes the list', async () => {
     mockApi.fetchTaskList.mockResolvedValueOnce([makeMockTask('paused-1', 'paused')])
     await store.fetchList()
     await store.resumeAllTask()
     expect(mockApi.resumeEligible).toHaveBeenCalledOnce()
     expect(mockApi.fetchTaskList).toHaveBeenCalled()
-    expect(mockApi.saveSession).toHaveBeenCalled()
+    expect(mockApi.saveSession).not.toHaveBeenCalled()
   })
 
   // ─── showTaskDetail / hideTaskDetail ────────────────────
@@ -651,9 +651,9 @@ describe('TaskStore', () => {
   it('removeTask calls API and refreshes list', async () => {
     const task = makeMockTask('gid1')
     await store.removeTask(task)
-    expect(mockApi.deleteTask).toHaveBeenCalledWith({ gid: 'gid1', infoHash: undefined })
+    expect(mockApi.deleteTask).toHaveBeenCalledWith({ gid: 'gid1' })
     expect(mockApi.fetchTaskList).toHaveBeenCalled()
-    expect(mockApi.saveSession).toHaveBeenCalled()
+    expect(mockApi.saveSession).not.toHaveBeenCalled()
   })
 
   it('removeTask hides detail if removing current detail task', async () => {
@@ -687,12 +687,12 @@ describe('TaskStore', () => {
     expect(mockApi.forcePauseTask).not.toHaveBeenCalled()
   })
 
-  it('resumeTask calls API, refreshes, and saves session', async () => {
+  it('resumeTask calls API and refreshes the list', async () => {
     const task = makeMockTask('gid1')
     await store.resumeTask(task)
     expect(mockApi.resumeTask).toHaveBeenCalledWith({ gid: 'gid1' })
     expect(mockApi.fetchTaskList).toHaveBeenCalled()
-    expect(mockApi.saveSession).toHaveBeenCalled()
+    expect(mockApi.saveSession).not.toHaveBeenCalled()
   })
 
   // ─── toggleTask ─────────────────────────────────────────
@@ -718,16 +718,13 @@ describe('TaskStore', () => {
 
   // ─── batch operations ───────────────────────────────────
 
-  it('batchRemoveTask calls API with gids and saves session', async () => {
+  it('batchRemoveTask deletes by GID in one native transaction', async () => {
     await store.batchRemoveTask(['gid1', 'gid2'])
     expect(mockApi.batchDeleteTasks).toHaveBeenCalledWith({
-      tasks: [
-        { gid: 'gid1', infoHash: undefined },
-        { gid: 'gid2', infoHash: undefined },
-      ],
+      tasks: [{ gid: 'gid1' }, { gid: 'gid2' }],
     })
     expect(mockApi.deleteTask).not.toHaveBeenCalled()
-    expect(mockApi.saveSession).toHaveBeenCalled()
+    expect(mockApi.saveSession).not.toHaveBeenCalled()
   })
 
   // ─── updateCurrentTaskItem ──────────────────────────────
@@ -777,7 +774,7 @@ describe('TaskStore', () => {
   it('removeTaskRecord uses the unified deletion transaction', async () => {
     const task = makeMockTask('gid1', 'complete')
     await store.removeTaskRecord(task)
-    expect(mockApi.deleteTask).toHaveBeenCalledWith({ gid: 'gid1', infoHash: undefined })
+    expect(mockApi.deleteTask).toHaveBeenCalledWith({ gid: 'gid1' })
   })
 
   it('removeTaskRecord hides the current task detail', async () => {

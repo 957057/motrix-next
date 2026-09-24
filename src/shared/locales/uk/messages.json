@@ -839,7 +839,6 @@
     "copy-link-success": "Посилання скопійовано",
     "copy-link-unavailable": "Посилання недоступне",
     "remove-record": "Видалити запис",
-    "remove-record-success": "Запис «{taskName}» видалено",
     "show-in-folder": "Показати в папці",
     "file-not-exist": "Файл не існує або був видалений",
     "open-file-success": "Файл відкрито",

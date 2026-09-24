@@ -839,7 +839,6 @@
     "copy-link-success": "Bağlantı kopyalandı",
     "copy-link-unavailable": "Bağlantı kullanılamıyor",
     "remove-record": "Kaydı kaldır",
-    "remove-record-success": "\"{taskName}\" kaydı kaldırıldı",
     "show-in-folder": "Klasörde göster",
     "file-not-exist": "Dosya mevcut değil veya silindi",
     "open-file-success": "Dosya açıldı",

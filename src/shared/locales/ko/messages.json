@@ -839,7 +839,6 @@
     "copy-link-success": "링크 복사됨",
     "copy-link-unavailable": "링크를 사용할 수 없음",
     "remove-record": "기록 제거",
-    "remove-record-success": "\"{taskName}\" 기록 제거됨",
     "show-in-folder": "폴더에서 보기",
     "file-not-exist": "파일이 존재하지 않거나 삭제되었습니다",
     "open-file-success": "파일 열림",

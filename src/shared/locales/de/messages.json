@@ -839,7 +839,6 @@
     "copy-link-success": "Link kopiert",
     "copy-link-unavailable": "Link nicht verfügbar",
     "remove-record": "Eintrag entfernen",
-    "remove-record-success": "Eintrag von „{taskName}\" entfernt",
     "show-in-folder": "Im Ordner anzeigen",
     "file-not-exist": "Datei existiert nicht oder wurde gelöscht",
     "open-file-success": "Datei geöffnet",

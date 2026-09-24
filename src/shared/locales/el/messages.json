@@ -839,7 +839,6 @@
     "copy-link-success": "Ο σύνδεσμος αντιγράφηκε",
     "copy-link-unavailable": "Ο σύνδεσμος δεν είναι διαθέσιμος",
     "remove-record": "Αφαίρεση εγγραφής",
-    "remove-record-success": "Η εγγραφή «{taskName}» αφαιρέθηκε",
     "show-in-folder": "Εμφάνιση στον φάκελο",
     "file-not-exist": "Το αρχείο δεν υπάρχει ή διαγράφηκε",
     "open-file-success": "Το αρχείο άνοιξε",

@@ -839,7 +839,6 @@
     "copy-link-success": "Đã sao chép liên kết",
     "copy-link-unavailable": "Liên kết không khả dụng",
     "remove-record": "Xóa bản ghi",
-    "remove-record-success": "Đã xóa bản ghi \"{taskName}\"",
     "show-in-folder": "Hiện trong thư mục",
     "file-not-exist": "Tệp không tồn tại hoặc đã bị xóa",
     "open-file-success": "Đã mở tệp",

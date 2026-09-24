@@ -839,7 +839,6 @@
     "copy-link-success": "Lenke kopiert",
     "copy-link-unavailable": "Lenke utilgjengelig",
     "remove-record": "Fjern oppføring",
-    "remove-record-success": "Oppføring for «{taskName}» fjernet",
     "show-in-folder": "Vis i mappe",
     "file-not-exist": "Filen eksisterer ikke eller er slettet",
     "open-file-success": "Fil åpnet",

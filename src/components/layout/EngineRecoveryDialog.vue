@@ -217,7 +217,9 @@ async function cleanupAndRetry() {
                 <NIcon :size="24"><CloseCircleOutline /></NIcon>
                 <div>
                   <h2>{{ title }}</h2>
-                  <p>{{ t(configurationFailure ? 'app.engine-configuration-invalid' : 'app.engine-unrecoverable') }}</p>
+                  <p>
+                    {{ configurationFailure ? t('app.engine-configuration-invalid') : t('app.engine-unrecoverable') }}
+                  </p>
                   <p v-if="!configurationFailure" class="engine-attempt">
                     {{ t('app.engine-attempt') }} {{ attemptText }}
                   </p>

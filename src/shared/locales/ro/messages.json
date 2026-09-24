@@ -839,7 +839,6 @@
     "copy-link-success": "Link copiat",
     "copy-link-unavailable": "Link indisponibil",
     "remove-record": "Elimină înregistrarea",
-    "remove-record-success": "Înregistrarea „{taskName}\" a fost eliminată",
     "show-in-folder": "Arată în dosar",
     "file-not-exist": "Fișierul nu există sau a fost șters",
     "open-file-success": "Fișier deschis",

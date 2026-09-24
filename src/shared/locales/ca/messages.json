@@ -839,7 +839,6 @@
     "copy-link-success": "Enllaç copiat",
     "copy-link-unavailable": "Enllaç no disponible",
     "remove-record": "Eliminar registre",
-    "remove-record-success": "Registre de «{taskName}» eliminat",
     "show-in-folder": "Mostra a la carpeta",
     "file-not-exist": "El fitxer no existeix o ha estat eliminat",
     "open-file-success": "Fitxer obert",

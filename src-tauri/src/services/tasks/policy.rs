@@ -16,10 +16,16 @@ pub struct TaskPolicy {
 }
 impl TaskPolicy {
     pub fn mark_deleted(&self, gid: &str) {
-        self.deleted.lock().unwrap().insert(gid.into());
+        self.deleted
+            .lock()
+            .expect("task deletion state poisoned")
+            .insert(gid.into());
     }
     pub fn is_deleted(&self, gid: &str) -> bool {
-        self.deleted.lock().unwrap().contains(gid)
+        self.deleted
+            .lock()
+            .expect("task deletion state poisoned")
+            .contains(gid)
     }
 
     pub async fn has_internal(&self) -> bool {
@@ -32,7 +38,10 @@ impl TaskPolicy {
         self.automatic.write().await.clear();
     }
     pub async fn clear_pending_starts(&self) {
-        self.deleted.lock().unwrap().clear();
+        self.deleted
+            .lock()
+            .expect("task deletion state poisoned")
+            .clear();
         self.pending_starts.write().await.clear();
     }
     pub async fn expect_start(&self, gid: &str) {

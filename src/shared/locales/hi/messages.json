@@ -839,7 +839,6 @@
     "copy-link-success": "Link copied",
     "copy-link-unavailable": "Link unavailable",
     "remove-record": "Record हटाएं",
-    "remove-record-success": "\"{taskName}\" का record हटाया गया",
     "show-in-folder": "Folder में दिखाएं",
     "file-not-exist": "File मौजूद नहीं है या delete हो चुकी है",
     "open-file-success": "File opened",

@@ -839,7 +839,6 @@
     "copy-link-success": "لینک کپی شد",
     "copy-link-unavailable": "لینک در دسترس نیست",
     "remove-record": "حذف رکورد",
-    "remove-record-success": "رکورد \"{taskName}\" حذف شد",
     "show-in-folder": "نمایش در پوشه",
     "file-not-exist": "فایل وجود ندارد یا حذف شده",
     "open-file-success": "فایل باز شد",

@@ -68,7 +68,7 @@ const progressColor = computed(() => statusColorMap[taskStatus.value] || 'var(--
 const compactStatus = computed<{ label: string; tone: string; icon: Component } | null>(() => {
   if (fileMissing.value) {
     return {
-      label: t(fileState.value === 'inaccessible' ? 'task.file-inaccessible' : 'task.file-missing') || 'File missing',
+      label: fileState.value === 'inaccessible' ? t('task.file-inaccessible') : t('task.file-missing'),
       tone: 'error',
       icon: AlertCircleOutline,
     }

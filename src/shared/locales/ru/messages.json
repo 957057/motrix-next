@@ -839,7 +839,6 @@
     "copy-link-success": "Ссылка скопирована",
     "copy-link-unavailable": "Ссылка недоступна",
     "remove-record": "Удалить запись",
-    "remove-record-success": "Запись «{taskName}» удалена",
     "show-in-folder": "Показать в папке",
     "file-not-exist": "Файл не существует или был удалён",
     "open-file-success": "Файл открыт",

@@ -839,7 +839,6 @@
     "copy-link-success": "Връзката е копирана",
     "copy-link-unavailable": "Връзката не е налична",
     "remove-record": "Премахни запис",
-    "remove-record-success": "Записът на „{taskName}\" е премахнат",
     "show-in-folder": "Покажи в папката",
     "file-not-exist": "Файлът не съществува или е изтрит",
     "open-file-success": "Файлът е отворен",

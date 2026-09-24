@@ -58,15 +58,13 @@ pub(super) fn validate_save_location(app: &AppHandle, options: &Value) -> Result
     if prefs.remember_save_location
         && !prefs.last_save_location.is_empty()
         && options["dir"].as_str() == Some(&prefs.last_save_location)
-    {
-        if !std::fs::metadata(&prefs.last_save_location)
+        && !std::fs::metadata(&prefs.last_save_location)
             .map_err(AppError::from)?
             .is_dir()
-        {
-            return Err(AppError::InvalidInput(
-                "The remembered save location is not a directory".into(),
-            ));
-        }
+    {
+        return Err(AppError::InvalidInput(
+            "The remembered save location is not a directory".into(),
+        ));
     }
     Ok(())
 }

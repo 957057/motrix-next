@@ -839,7 +839,6 @@
     "copy-link-success": "คัดลอกลิงก์แล้ว",
     "copy-link-unavailable": "ลิงก์ไม่พร้อมใช้งาน",
     "remove-record": "ลบรายการ",
-    "remove-record-success": "ลบรายการ \"{taskName}\" แล้ว",
     "show-in-folder": "แสดงในโฟลเดอร์",
     "file-not-exist": "ไฟล์ไม่มีอยู่หรือถูกลบแล้ว",
     "open-file-success": "เปิดไฟล์แล้ว",

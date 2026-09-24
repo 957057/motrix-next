@@ -174,9 +174,9 @@ async fn handle_ping(State(ctx): State<Arc<ApiContext>>) -> impl IntoResponse {
 async fn handle_download_capabilities(
     State(ctx): State<Arc<ApiContext>>,
     headers: HeaderMap,
-) -> Result<Json<serde_json::Value>, Response> {
+) -> Result<Json<serde_json::Value>, (StatusCode, Json<serde_json::Value>)> {
     validate_bearer_token(&headers, &read_api_secret(&ctx.app))
-        .map_err(IntoResponse::into_response)?;
+        .map_err(|status| (status, Json(serde_json::Value::Null)))?;
     let engine = ctx
         .app
         .try_state::<TaskServiceState>()
@@ -256,9 +256,10 @@ async fn handle_version(State(ctx): State<Arc<ApiContext>>) -> impl IntoResponse
 async fn handle_stat(
     State(ctx): State<Arc<ApiContext>>,
     headers: HeaderMap,
-) -> Result<Json<StatResponse>, Response> {
+) -> Result<Json<StatResponse>, (StatusCode, Json<serde_json::Value>)> {
     let secret = read_api_secret(&ctx.app);
-    validate_bearer_token(&headers, &secret).map_err(IntoResponse::into_response)?;
+    validate_bearer_token(&headers, &secret)
+        .map_err(|status| (status, Json(serde_json::Value::Null)))?;
 
     let aria2 = ctx
         .app
@@ -287,7 +288,7 @@ fn engine_phase(app: &AppHandle) -> crate::engine::supervisor::EnginePhase {
         .unwrap_or(crate::engine::supervisor::EnginePhase::Stopped)
 }
 
-fn engine_unavailable(app: &AppHandle) -> Response {
+fn engine_unavailable(app: &AppHandle) -> (StatusCode, Json<serde_json::Value>) {
     use crate::engine::supervisor::EnginePhase;
     let error = match engine_phase(app) {
         EnginePhase::Preparing
@@ -302,7 +303,6 @@ fn engine_unavailable(app: &AppHandle) -> Response {
         StatusCode::SERVICE_UNAVAILABLE,
         Json(serde_json::json!({"error": error})),
     )
-        .into_response()
 }
 
 /// POST /pause-all — pause all active downloads.

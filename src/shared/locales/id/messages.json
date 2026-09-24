@@ -839,7 +839,6 @@
     "copy-link-success": "Tautan disalin",
     "copy-link-unavailable": "Tautan tidak tersedia",
     "remove-record": "Hapus catatan",
-    "remove-record-success": "Catatan \"{taskName}\" dihapus",
     "show-in-folder": "Tampilkan di folder",
     "file-not-exist": "File tidak ada atau telah dihapus",
     "open-file-success": "File dibuka",

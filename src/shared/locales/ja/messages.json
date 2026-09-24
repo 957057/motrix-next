@@ -839,7 +839,6 @@
     "copy-link-success": "リンクをコピーしました",
     "copy-link-unavailable": "リンクを利用できません",
     "remove-record": "記録を削除",
-    "remove-record-success": "「{taskName}」の記録を削除しました",
     "show-in-folder": "フォルダーで表示",
     "file-not-exist": "ファイルが存在しないか、削除されました",
     "open-file-success": "ファイルを開きました",

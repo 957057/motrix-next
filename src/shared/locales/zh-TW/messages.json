@@ -839,7 +839,6 @@
     "copy-link-success": "連結已複製",
     "copy-link-unavailable": "連結不可用",
     "remove-record": "移除記錄",
-    "remove-record-success": "已移除「{taskName}」的記錄",
     "show-in-folder": "在資料夾中顯示",
     "file-not-exist": "檔案不存在或已刪除",
     "open-file-success": "檔案已開啟",

@@ -172,7 +172,7 @@ const { fileMissing, fileState } = useTaskFileMissing(taskRef)
             </TaskTextTransition>
             <span v-show="fileMissing" class="file-missing-tag">
               <NIcon :size="13"><AlertCircleOutline /></NIcon>
-              {{ t(fileState === 'inaccessible' ? 'task.file-inaccessible' : 'task.file-missing') || 'File missing' }}
+              {{ fileState === 'inaccessible' ? t('task.file-inaccessible') : t('task.file-missing') }}
             </span>
           </div>
         </div>
