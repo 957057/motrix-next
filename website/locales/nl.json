@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next heet nu Rayburst en de browserextensie Rayburst Connect. Een schone installatie van de desktopapp wordt aanbevolen. Instellingen, taken en geschiedenis worden niet overgenomen. Bijwerken vanuit de app kan beide versies of oude snelkoppelingen laten staan.",
   "connect.description": "Ontdek HLS/DASH-streams en mediabestanden in de sniffer, de zijbalk van de browser of de werkruimte op een volledige pagina. Stuur geselecteerde bronnen naar Rayburst.",
   "features.media.description": "Kies video, audio en ondertitels, neem livestreams op en sla op als MP4 of MKV. Media met DRM worden niet ondersteund.",
-  "engine.description": "{aria2Next} verwerkt de downloads.",
+  "engine.description": "{aria2Next} is de opensource-downloadengine achter Rayburst. Ondersteunt HTTP, HTTPS, SFTP, ED2K en BitTorrent, met een opdrachtregelinterface en JSON-RPC.",
   "dl.note": "Nieuwste stabiele versie. Oudere versies kunnen nog de vorige naam gebruiken.",
   "dl.releases": "Alle releases bekijken",
   "hero.description": "Een downloadmanager voor bestanden, torrents en streams op je desktop.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Donkere modus",
   "showcase.light.alt": "Rayburst — Lichte modus",
-  "rebrand.title": "Overstappen"
+  "rebrand.title": "Overstappen",
+  "connect.handoff": "Stuur browserdownloads automatisch naar Rayburst, stel regels per website in en beheer taken vanuit de pop-up.",
+  "connect.preview": "Bekijk media vóór het downloaden en kies video-, audio- en ondertitelsporen. Vereist de Rayburst-desktopapp.",
+  "connect.artwork.alt": "Rayburst Connect stuurt browserdownloads naar de Rayburst-desktopapp",
+  "engine.media": "Download HLS/DASH-streams, selecteer sporen, neem live-uitzendingen op en sla ze op als MP4 of MKV zonder transcodering."
 }

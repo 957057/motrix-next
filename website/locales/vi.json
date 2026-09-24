@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next nay là Rayburst, còn tiện ích trình duyệt là Rayburst Connect. Bạn nên cài mới ứng dụng máy tính. Cài đặt, tác vụ và lịch sử không được nhập lại. Cập nhật trong ứng dụng có thể giữ cả hai phiên bản hoặc các lối tắt cũ.",
   "connect.description": "Tìm luồng HLS/DASH và tệp phương tiện trong trình dò, thanh bên trình duyệt hoặc không gian làm việc toàn trang. Gửi tài nguyên đã chọn đến Rayburst.",
   "features.media.description": "Chọn video, âm thanh và phụ đề, ghi luồng trực tiếp rồi lưu thành MP4 hoặc MKV. Không hỗ trợ nội dung được bảo vệ bằng DRM.",
-  "engine.description": "{aria2Next} xử lý các lượt tải.",
+  "engine.description": "{aria2Next} là bộ máy tải xuống mã nguồn mở của Rayburst. Hỗ trợ HTTP, HTTPS, SFTP, ED2K và BitTorrent, với giao diện dòng lệnh và JSON-RPC.",
   "dl.note": "Bản ổn định mới nhất. Các bản cũ có thể vẫn dùng tên trước đây.",
   "dl.releases": "Xem tất cả bản phát hành",
   "hero.description": "Trình quản lý tải xuống trên máy tính cho tệp, torrent và luồng phương tiện.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Chế độ tối",
   "showcase.light.alt": "Rayburst — Chế độ sáng",
-  "rebrand.title": "Chuyển đổi"
+  "rebrand.title": "Chuyển đổi",
+  "connect.handoff": "Tự động gửi lượt tải từ trình duyệt sang Rayburst, đặt quy tắc cho từng trang web và quản lý tác vụ từ cửa sổ bật lên.",
+  "connect.preview": "Xem trước phương tiện trước khi tải và chọn luồng video, âm thanh và phụ đề. Cần cài ứng dụng Rayburst trên máy tính.",
+  "connect.artwork.alt": "Rayburst Connect gửi lượt tải từ trình duyệt sang ứng dụng Rayburst trên máy tính",
+  "engine.media": "Tải luồng HLS/DASH, chọn các luồng thành phần, ghi chương trình phát trực tiếp và lưu thành MP4 hoặc MKV mà không mã hóa lại."
 }

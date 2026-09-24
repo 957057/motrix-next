@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next nazywa się teraz Rayburst, a rozszerzenie przeglądarki — Rayburst Connect. Zalecamy czystą instalację aplikacji komputerowej. Ustawienia, zadania i historia nie są importowane. Aktualizacja z aplikacji może pozostawić obie wersje lub stare skróty.",
   "connect.description": "Wykrywaj strumienie HLS/DASH i pliki multimedialne w snifferze, panelu bocznym przeglądarki lub obszarze roboczym na osobnej stronie. Wysyłaj wybrane zasoby do Rayburst.",
   "features.media.description": "Wybieraj wideo, dźwięk i napisy, nagrywaj transmisje na żywo i zapisuj jako MP4 lub MKV. Multimedia chronione DRM nie są obsługiwane.",
-  "engine.description": "Pobieranie obsługuje {aria2Next}.",
+  "engine.description": "{aria2Next} to otwartoźródłowy silnik pobierania używany przez Rayburst. Obsługuje HTTP, HTTPS, SFTP, ED2K i BitTorrent oraz udostępnia interfejsy wiersza poleceń i JSON-RPC.",
   "dl.note": "Najnowsza stabilna wersja. Starsze wydania mogą nadal używać poprzedniej nazwy.",
   "dl.releases": "Zobacz wszystkie wydania",
   "hero.description": "Menedżer pobierania plików, torrentów i strumieni multimedialnych na komputer.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Tryb ciemny",
   "showcase.light.alt": "Rayburst — Tryb jasny",
-  "rebrand.title": "Migracja"
+  "rebrand.title": "Migracja",
+  "connect.handoff": "Automatycznie wysyłaj pobrania z przeglądarki do Rayburst, ustawiaj reguły dla witryn i zarządzaj zadaniami z wyskakującego okna.",
+  "connect.preview": "Wyświetlaj podgląd przed pobraniem i wybieraj ścieżki wideo, audio i napisów. Wymaga aplikacji komputerowej Rayburst.",
+  "connect.artwork.alt": "Rayburst Connect wysyła pobrania z przeglądarki do aplikacji komputerowej Rayburst",
+  "engine.media": "Pobieraj strumienie HLS/DASH, wybieraj ścieżki, nagrywaj transmisje na żywo i zapisuj w formacie MP4 lub MKV bez transkodowania."
 }

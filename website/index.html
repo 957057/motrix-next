@@ -12,30 +12,21 @@
     <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg" />
     <link rel="preload" href="assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="assets/css/style.css" />
-    <style>
-      html[data-locale-pending] {
-        background: var(--bg);
-      }
-      html[data-locale-pending] body {
-        visibility: hidden;
-      }
-    </style>
-    <!-- Critical: apply stored theme before first paint, hide until i18n is ready -->
+    <!-- Apply the theme and text placeholders before first paint. -->
     <script>
       ;(() => {
         const root = document.documentElement
         root.setAttribute('data-locale-pending', '')
-        const controller = new AbortController()
+        root.setAttribute('aria-busy', 'true')
         const timer = setTimeout(() => window.localeBoot.finish(), 8000)
         window.localeBoot = {
-          signal: controller.signal,
           finished: false,
           finish() {
             if (this.finished) return
             this.finished = true
             clearTimeout(timer)
-            controller.abort()
             root.removeAttribute('data-locale-pending')
+            root.removeAttribute('aria-busy')
           },
         }
         let t
@@ -187,7 +178,7 @@
             data-i18n-aria-label="a11y.language"
           >
             <svg class="ic"><use href="#i-globe" /></svg>
-            <span id="lang-toggle-label">English</span>
+            <span id="lang-toggle-label" data-locale-label>English</span>
           </button>
           <div class="picker-menu" id="lang-dropdown">
             <button class="picker-option" id="lang-system-hint" style="display: none" data-lang=""></button>
@@ -226,12 +217,12 @@
             class="picker-toggle"
             id="theme-toggle"
             type="button"
-            aria-label="Theme"
+            aria-label="System / Light / Dark"
             data-i18n-aria-label="a11y.theme"
           >
             <svg class="ic icon-moon"><use href="#i-moon" /></svg>
             <svg class="ic icon-sun"><use href="#i-sun" /></svg>
-            <span id="theme-toggle-label">System</span>
+            <span id="theme-toggle-label" data-locale-label>System</span>
           </button>
           <div class="picker-menu" id="theme-dropdown">
             <button class="picker-option" data-theme="system" id="theme-system-hint">
@@ -344,7 +335,8 @@
           <figure class="duo-shot duo-dark">
             <button type="button" class="screenshot-button" onclick="openLightbox(this.querySelector('img'))">
               <img
-                src="assets/img/screenshot-dark.png"
+                data-image
+                src="assets/img/screenshot-dark.webp"
                 alt="Rayburst — Dark Mode"
                 data-i18n-alt="showcase.dark.alt"
                 width="1068"
@@ -359,7 +351,8 @@
           <figure class="duo-shot duo-light">
             <button type="button" class="screenshot-button" onclick="openLightbox(this.querySelector('img'))">
               <img
-                src="assets/img/screenshot-light.png"
+                data-image
+                src="assets/img/screenshot-light.webp"
                 alt="Rayburst — Light Mode"
                 data-i18n-alt="showcase.light.alt"
                 width="1068"
@@ -397,10 +390,31 @@
             <p class="lead" data-i18n="connect.tagline">Redefining the companion browser extension</p>
           </div>
           <div class="story-body">
+            <figure class="story-art reveal">
+              <button type="button" class="screenshot-button" onclick="openLightbox(this.querySelector('img'))">
+                <img
+                  data-image
+                  src="assets/img/connect-overview.webp"
+                  alt="Rayburst Connect sends browser downloads to the Rayburst desktop app"
+                  data-i18n-alt="connect.artwork.alt"
+                  width="1672"
+                  height="941"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </button>
+            </figure>
             <div class="prose reveal">
+              <p data-i18n="connect.handoff">
+                Send browser downloads to Rayburst automatically, set per-site rules, and manage tasks from the popup.
+              </p>
               <p data-i18n="connect.description">
                 Discover HLS/DASH streams and media files in Sniffer, the browser sidebar, or the full-page workspace.
                 Send selected resources to Rayburst.
+              </p>
+              <p data-i18n="connect.preview">
+                Preview media before downloading and choose video, audio and subtitle tracks. Requires the Rayburst
+                desktop app.
               </p>
               <a
                 class="btn btn-ghost"
@@ -410,14 +424,33 @@
                 >Rayburst Connect <svg class="ic"><use href="#i-external" /></svg
               ></a>
             </div>
-            <aside class="engine-note reveal">
-              <p data-i18n-html="engine.description">
-                Downloads run in
-                <a href="https://github.com/AnInsomniacy/aria2-next" target="_blank" rel="noopener">Aria2 Next</a>.
-              </p>
-            </aside>
           </div>
         </div>
+        <aside class="engine-note reveal" aria-labelledby="engine-title">
+          <figure class="story-art">
+            <img
+              data-image
+              src="assets/img/aria2-next-banner.webp"
+              alt="Aria2 Next — Redefining the next generation of aria2"
+              width="2172"
+              height="724"
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+          <div class="prose">
+            <h2 id="engine-title">Aria2 Next</h2>
+            <p data-i18n-html="engine.description">
+              <a href="https://github.com/AnInsomniacy/aria2-next" target="_blank" rel="noopener">Aria2 Next</a>
+              is the open-source download engine behind Rayburst. It supports HTTP, HTTPS, SFTP, ED2K and BitTorrent,
+              with a command-line interface and JSON-RPC.
+            </p>
+            <p data-i18n="engine.media">
+              Download HLS/DASH streams, select tracks, record live broadcasts and save to MP4 or MKV without
+              transcoding.
+            </p>
+          </div>
+        </aside>
       </section>
 
       <!-- ═══ Design & Motion ═══ -->
@@ -579,7 +612,7 @@
           <p class="release-note" data-i18n="dl.note">
             Latest stable release. Older releases may use the previous name.
           </p>
-          <p class="dl-detected" id="dl-detected"></p>
+          <p class="dl-detected" id="dl-detected" data-locale-label></p>
           <a
             href="https://github.com/AnInsomniacy/rayburst/releases"
             class="btn btn-primary btn-lg"
@@ -613,7 +646,7 @@
     <dialog
       id="lightbox"
       class="overlay"
-      aria-label="Screenshot"
+      aria-label="Rayburst"
       data-i18n-aria-label="a11y.screenshot"
       onclick="if (event.target === this) closeLightbox()"
     >
@@ -639,9 +672,9 @@
         >
           &times;
         </button>
-        <h3 class="modal-title" id="dl-modal-title"></h3>
+        <h3 class="modal-title" id="dl-modal-title" data-locale-label></h3>
         <div class="modal-options" id="dl-modal-options"></div>
-        <p class="modal-help" id="dl-modal-help"></p>
+        <p class="modal-help" id="dl-modal-help" data-locale-label></p>
       </div>
     </dialog>
 
@@ -695,6 +728,18 @@
       <p class="footer-license" data-i18n="footer.license">MIT — Copyright © 2025-present AnInsomniacy</p>
     </footer>
 
+    <!-- English fallback for labels created by JavaScript. -->
+    <template id="locale-fallback">
+      <span data-i18n="dl.detected">Detected: {os}</span>
+      <span data-i18n="dl.primary">Download for {os}</span>
+      <span data-i18n="dl.modal.title">Download for {os}</span>
+      <span data-i18n="dl.modal.download">Download</span>
+      <span data-i18n="dl.modal.viewRelease">View release</span>
+      <span data-i18n="dl.modal.notSure">Not sure?</span>
+      <span data-i18n="dl.modal.help.macOS"> → About This Mac → Chip</span>
+      <span data-i18n="dl.modal.help.windows">Settings → System → About → System type</span>
+      <span data-i18n-html="dl.modal.help.linux">Run <code>uname -m</code> in a terminal</span>
+    </template>
     <script src="assets/js/i18n.js"></script>
     <script src="assets/js/main.js"></script>
   </body>

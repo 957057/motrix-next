@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next は Rayburst に、ブラウザー拡張機能は Rayburst Connect に名称を変更しました。デスクトップアプリは新規インストールを推奨します。設定、タスク、履歴は引き継がれません。アプリ内更新では両方のバージョンや古いショートカットが残る場合があります。",
   "connect.description": "スニファー、ブラウザーのサイドバー、または独立したワークスペースで HLS/DASH ストリームやメディアファイルを検出し、選択したリソースを Rayburst に送信できます。",
   "features.media.description": "動画・音声・字幕を選択し、ライブ配信を録画して MP4 や MKV に保存できます。DRM 保護メディアには対応していません。",
-  "engine.description": "ダウンロードは {aria2Next} が処理します。",
+  "engine.description": "{aria2Next} は Rayburst で使われるオープンソースのダウンロードエンジンです。HTTP、HTTPS、SFTP、ED2K、BitTorrent に対応し、コマンドラインと JSON-RPC インターフェースを提供します。",
   "dl.note": "最新の安定版です。以前のリリースは旧名称のままの場合があります。",
   "dl.releases": "すべてのリリースを見る",
   "hero.description": "ファイル、Torrent、ストリーミングに対応したデスクトップ用ダウンロードマネージャー。",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — ダークモード",
   "showcase.light.alt": "Rayburst — ライトモード",
-  "rebrand.title": "移行について"
+  "rebrand.title": "移行について",
+  "connect.handoff": "ブラウザーのダウンロードを自動で Rayburst に送り、サイトごとのルールを設定し、ポップアップからタスクを管理できます。",
+  "connect.preview": "ダウンロード前にメディアをプレビューし、映像・音声・字幕トラックを選択できます。Rayburst デスクトップアプリが必要です。",
+  "connect.artwork.alt": "Rayburst Connect がブラウザーのダウンロードを Rayburst デスクトップアプリに送信",
+  "engine.media": "HLS/DASH ストリームのダウンロード、トラック選択、ライブ配信の録画に対応。再エンコードせずに MP4 または MKV に保存できます。"
 }

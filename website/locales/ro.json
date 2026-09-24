@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next se numește acum Rayburst, iar extensia pentru browser Rayburst Connect. Se recomandă o instalare curată a aplicației desktop. Setările, sarcinile și istoricul nu sunt importate. Actualizarea din aplicație poate păstra ambele versiuni instalate sau scurtăturile vechi.",
   "connect.description": "Descoperiți fluxuri HLS/DASH și fișiere media în detector, în bara laterală a browserului sau în spațiul de lucru pe o pagină întreagă. Trimiteți resursele selectate către Rayburst.",
   "features.media.description": "Alege video, audio și subtitrări, înregistrează transmisiuni live și salvează în MP4 sau MKV. Conținutul protejat prin DRM nu este acceptat.",
-  "engine.description": "Descărcările sunt gestionate de {aria2Next}.",
+  "engine.description": "{aria2Next} este motorul de descărcare cu sursă deschisă folosit de Rayburst. Acceptă HTTP, HTTPS, SFTP, ED2K și BitTorrent și oferă interfețe pentru linia de comandă și JSON-RPC.",
   "dl.note": "Cea mai recentă versiune stabilă. Versiunile mai vechi pot folosi numele anterior.",
   "dl.releases": "Vezi toate versiunile",
   "hero.description": "Un manager de descărcări pentru fișiere, torrente și fluxuri media, pe desktop.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Mod întunecat",
   "showcase.light.alt": "Rayburst — Mod luminos",
-  "rebrand.title": "Migrare"
+  "rebrand.title": "Migrare",
+  "connect.handoff": "Trimiteți automat descărcările din browser către Rayburst, configurați reguli pentru fiecare site și gestionați sarcinile din fereastra extensiei.",
+  "connect.preview": "Previzualizați conținutul înainte de descărcare și alegeți pistele video, audio și de subtitrări. Necesită aplicația desktop Rayburst.",
+  "connect.artwork.alt": "Rayburst Connect trimite descărcările din browser către aplicația desktop Rayburst",
+  "engine.media": "Descărcați fluxuri HLS/DASH, selectați piste, înregistrați transmisiuni în direct și salvați în MP4 sau MKV fără transcodare."
 }

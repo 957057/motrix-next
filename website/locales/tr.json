@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next artık Rayburst, tarayıcı uzantısı ise Rayburst Connect adını taşıyor. Masaüstü uygulaması için temiz kurulum önerilir. Ayarlar, görevler ve geçmiş aktarılmaz. Uygulama içinden güncelleme yapıldığında iki sürüm de yüklü kalabilir veya eski kısayollar korunabilir.",
   "connect.description": "HLS/DASH akışlarını ve medya dosyalarını algılayıcıda, tarayıcı kenar çubuğunda veya tam sayfa çalışma alanında keşfedin. Seçili kaynakları Rayburst’e gönderin.",
   "features.media.description": "Video, ses ve altyazı seçin, canlı yayınları kaydedin ve MP4 veya MKV olarak saklayın. DRM korumalı medya desteklenmez.",
-  "engine.description": "İndirmeleri {aria2Next} yürütür.",
+  "engine.description": "{aria2Next}, Rayburst’ün açık kaynaklı indirme motorudur. Komut satırı ve JSON-RPC arayüzleriyle HTTP, HTTPS, SFTP, ED2K ve BitTorrent’i destekler.",
   "dl.note": "En son kararlı sürüm. Önceki sürümler eski adı kullanabilir.",
   "dl.releases": "Tüm sürümleri görüntüle",
   "hero.description": "Dosyalar, torrentler ve medya akışları için masaüstü indirme yöneticisi.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Koyu mod",
   "showcase.light.alt": "Rayburst — Açık mod",
-  "rebrand.title": "Geçiş"
+  "rebrand.title": "Geçiş",
+  "connect.handoff": "Tarayıcı indirmelerini otomatik olarak Rayburst’e gönderin, siteye özel kurallar belirleyin ve görevleri açılır pencereden yönetin.",
+  "connect.preview": "İndirmeden önce medyayı önizleyin ve video, ses ve altyazı parçalarını seçin. Rayburst masaüstü uygulaması gereklidir.",
+  "connect.artwork.alt": "Rayburst Connect, tarayıcı indirmelerini Rayburst masaüstü uygulamasına gönderir",
+  "engine.media": "HLS/DASH akışlarını indirin, parçaları seçin, canlı yayınları kaydedin ve yeniden kodlama olmadan MP4 veya MKV olarak saklayın."
 }

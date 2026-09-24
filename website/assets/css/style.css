@@ -239,27 +239,44 @@ code {
   stroke: none;
 }
 
-/* Brand accent text */
-/* ── i18n cross-fade ───────────────────────────────────────────────── */
-@keyframes i18nOut {
-  to {
-    opacity: 0.25;
-    filter: blur(3px);
-  }
+/* Text keeps its layout while the selected language loads. */
+html[data-locale-pending] :is([data-i18n], [data-i18n-html], [data-locale-label]) {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  background: linear-gradient(transparent 25%, var(--surface-2) 25% 75%, transparent 75%) 0 0 / 100% 1lh repeat-y;
+  box-decoration-break: clone;
+  pointer-events: none;
+  user-select: none;
 }
-@keyframes i18nIn {
+
+html[data-locale-pending] [data-i18n-html] * {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+}
+
+html[data-locale-reveal] :is([data-i18n], [data-i18n-html], [data-locale-label]) {
+  animation: content-ready 180ms var(--ease-enter);
+}
+
+@keyframes content-ready {
   from {
-    opacity: 0.25;
-    filter: blur(3px);
+    opacity: 0;
   }
 }
-main.i18n-fade-out,
-footer.i18n-fade-out {
-  animation: i18nOut 150ms ease forwards;
+
+/* Image loading is independent of locale loading and scroll entrances. */
+img[data-image] {
+  display: block;
+  width: 100%;
 }
-main.i18n-fade-in,
-footer.i18n-fade-in {
-  animation: i18nIn 200ms ease forwards;
+
+img[data-image-pending] {
+  opacity: 0;
+}
+
+img[data-image-ready] {
+  animation: content-ready 200ms var(--ease-enter);
 }
 
 /* ═══ Navigation ═══════════════════════════════════════════════════ */
@@ -995,13 +1012,37 @@ footer.i18n-fade-in {
 .story-body {
   display: grid;
   gap: 1.5rem;
+  min-width: 0;
+}
+
+.story-art {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.story-art .screenshot-button:focus-visible {
+  outline-offset: -4px;
 }
 
 .engine-note {
-  padding: 1.15rem 1.35rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  margin-top: 3rem;
+  padding: clamp(1.15rem, 3vw, 2rem);
   border: 1px solid var(--accent-line);
   border-radius: var(--radius);
   background: linear-gradient(120deg, var(--accent-soft), transparent 65%);
+}
+
+.engine-note h2 {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  margin-bottom: 0.75rem;
 }
 
 .engine-note p {
@@ -1781,7 +1822,8 @@ footer.i18n-fade-in {
   .b-protocol {
     grid-row: auto;
   }
-  .story-grid {
+  .story-grid,
+  .engine-note {
     grid-template-columns: 1fr;
   }
   .story-head {

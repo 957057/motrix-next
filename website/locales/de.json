@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next heißt jetzt Rayburst, die Browser-Erweiterung Rayburst Connect. Eine Neuinstallation der Desktop-App wird empfohlen. Einstellungen, Aufgaben und Verlauf werden nicht übernommen. Beim Update aus der App können beide Versionen oder alte Verknüpfungen erhalten bleiben.",
   "connect.description": "Entdecke HLS/DASH-Streams und Mediendateien im Sniffer, in der Browser-Seitenleiste oder im ganzseitigen Arbeitsbereich. Sende ausgewählte Ressourcen an Rayburst.",
   "features.media.description": "Video, Audio und Untertitel auswählen, Livestreams aufnehmen und als MP4 oder MKV speichern. DRM-geschützte Medien werden nicht unterstützt.",
-  "engine.description": "{aria2Next} übernimmt die Downloads.",
+  "engine.description": "{aria2Next} ist die Open-Source-Download-Engine von Rayburst. Sie unterstützt HTTP, HTTPS, SFTP, ED2K und BitTorrent und bietet eine Kommandozeile sowie JSON-RPC.",
   "dl.note": "Neueste stabile Version. Ältere Versionen können noch den bisherigen Namen tragen.",
   "dl.releases": "Alle Releases ansehen",
   "hero.description": "Ein Downloadmanager für Dateien, Torrents und Streams auf dem Desktop.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Dunkler Modus",
   "showcase.light.alt": "Rayburst — Heller Modus",
-  "rebrand.title": "Umstieg"
+  "rebrand.title": "Umstieg",
+  "connect.handoff": "Leite Browser-Downloads automatisch an Rayburst weiter, lege Regeln pro Website fest und verwalte Aufgaben im Erweiterungs-Popup.",
+  "connect.preview": "Sieh dir Medien vor dem Download an und wähle Video-, Audio- und Untertitelspuren. Die Rayburst-Desktop-App wird benötigt.",
+  "connect.artwork.alt": "Rayburst Connect leitet Browser-Downloads an die Rayburst-Desktop-App weiter",
+  "engine.media": "Lade HLS/DASH-Streams herunter, wähle Spuren, zeichne Liveübertragungen auf und speichere sie ohne Neukodierung als MP4 oder MKV."
 }

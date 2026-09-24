@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next heter nå Rayburst, og nettleserutvidelsen heter Rayburst Connect. Vi anbefaler en ny installasjon av skrivebordsappen. Innstillinger, oppgaver og historikk importeres ikke. Oppdatering fra appen kan la begge versjonene eller gamle snarveier bli liggende.",
   "connect.description": "Finn HLS/DASH-strømmer og mediefiler i snifferen, nettleserens sidepanel eller arbeidsområdet på en egen side. Send valgte ressurser til Rayburst.",
   "features.media.description": "Velg video, lyd og undertekster, ta opp direktesendinger og lagre som MP4 eller MKV. DRM-beskyttede medier støttes ikke.",
-  "engine.description": "{aria2Next} håndterer nedlastingene.",
+  "engine.description": "{aria2Next} er nedlastingsmotoren med åpen kildekode bak Rayburst. Den støtter HTTP, HTTPS, SFTP, ED2K og BitTorrent, med kommandolinje og JSON-RPC.",
   "dl.note": "Nyeste stabile utgave. Eldre utgaver kan fortsatt bruke det gamle navnet.",
   "dl.releases": "Se alle utgivelser",
   "hero.description": "En nedlastingsbehandler for filer, torrenter og mediestrømmer på skrivebordet.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Mørk modus",
   "showcase.light.alt": "Rayburst — Lys modus",
-  "rebrand.title": "Overgang"
+  "rebrand.title": "Overgang",
+  "connect.handoff": "Send nettlesernedlastinger automatisk til Rayburst, angi regler for hvert nettsted og administrer oppgaver fra utvidelsens popup.",
+  "connect.preview": "Forhåndsvis medier før nedlasting og velg video-, lyd- og undertekstspor. Krever Rayburst-skrivebordsappen.",
+  "connect.artwork.alt": "Rayburst Connect sender nettlesernedlastinger til Rayburst-skrivebordsappen",
+  "engine.media": "Last ned HLS/DASH-strømmer, velg spor, ta opp direktesendinger og lagre som MP4 eller MKV uten omkoding."
 }

@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next kini bernama Rayburst, dan ekstensi perambannya bernama Rayburst Connect. Disarankan melakukan instalasi baru aplikasi desktop. Pengaturan, tugas, dan riwayat tidak diimpor. Pembaruan dari dalam aplikasi dapat menyisakan kedua versi atau pintasan lama.",
   "connect.description": "Temukan stream HLS/DASH dan file media di pengendus, bilah samping browser, atau ruang kerja satu halaman penuh. Kirim sumber yang dipilih ke Rayburst.",
   "features.media.description": "Pilih video, audio, dan takarir, rekam siaran langsung, lalu simpan sebagai MP4 atau MKV. Media yang dilindungi DRM tidak didukung.",
-  "engine.description": "Unduhan ditangani oleh {aria2Next}.",
+  "engine.description": "{aria2Next} adalah mesin unduhan sumber terbuka yang digunakan Rayburst. Mendukung HTTP, HTTPS, SFTP, ED2K, dan BitTorrent, dengan antarmuka baris perintah dan JSON-RPC.",
   "dl.note": "Rilis stabil terbaru. Rilis terdahulu mungkin masih memakai nama lama.",
   "dl.releases": "Lihat semua rilis",
   "hero.description": "Pengelola unduhan desktop untuk berkas, torrent, dan aliran media.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Mode gelap",
   "showcase.light.alt": "Rayburst — Mode terang",
-  "rebrand.title": "Migrasi"
+  "rebrand.title": "Migrasi",
+  "connect.handoff": "Kirim unduhan browser ke Rayburst secara otomatis, atur aturan per situs, dan kelola tugas dari popup.",
+  "connect.preview": "Pratinjau media sebelum mengunduh dan pilih trek video, audio, serta subtitel. Memerlukan aplikasi desktop Rayburst.",
+  "connect.artwork.alt": "Rayburst Connect mengirim unduhan browser ke aplikasi desktop Rayburst",
+  "engine.media": "Unduh stream HLS/DASH, pilih trek, rekam siaran langsung, dan simpan ke MP4 atau MKV tanpa transcoding."
 }

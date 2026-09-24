@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next의 이름이 Rayburst로, 브라우저 확장 기능의 이름이 Rayburst Connect로 바뀌었습니다. 데스크톱 앱은 새로 설치하는 것을 권장합니다. 설정, 작업, 기록은 가져오지 않습니다. 앱 내 업데이트 시 두 버전이 함께 설치되거나 이전 바로 가기가 남을 수 있습니다.",
   "connect.description": "스니퍼, 브라우저 사이드바 또는 전체 페이지 작업 공간에서 HLS/DASH 스트림과 미디어 파일을 찾고 선택한 리소스를 Rayburst로 보내세요.",
   "features.media.description": "비디오, 오디오, 자막을 선택하고 라이브 스트림을 녹화하여 MP4 또는 MKV로 저장합니다. DRM으로 보호된 미디어는 지원하지 않습니다.",
-  "engine.description": "{aria2Next}가 다운로드를 처리합니다.",
+  "engine.description": "{aria2Next}는 Rayburst에서 사용하는 오픈 소스 다운로드 엔진입니다. HTTP, HTTPS, SFTP, ED2K, BitTorrent를 지원하며 명령줄과 JSON-RPC 인터페이스를 제공합니다.",
   "dl.note": "최신 안정 버전입니다. 이전 릴리스는 옛 이름을 사용할 수 있습니다.",
   "dl.releases": "모든 릴리스 보기",
   "hero.description": "파일, 토렌트, 스트림을 위한 데스크톱 다운로드 관리자.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — 다크 모드",
   "showcase.light.alt": "Rayburst — 라이트 모드",
-  "rebrand.title": "이전 안내"
+  "rebrand.title": "이전 안내",
+  "connect.handoff": "브라우저 다운로드를 Rayburst로 자동 전송하고, 사이트별 규칙을 설정하고, 팝업에서 작업을 관리하세요.",
+  "connect.preview": "다운로드 전에 미디어를 미리 보고 비디오, 오디오, 자막 트랙을 선택하세요. Rayburst 데스크톱 앱이 필요합니다.",
+  "connect.artwork.alt": "Rayburst Connect가 브라우저 다운로드를 Rayburst 데스크톱 앱으로 전송",
+  "engine.media": "HLS/DASH 스트림을 다운로드하고, 트랙을 선택하고, 라이브 방송을 녹화하고, 재인코딩 없이 MP4 또는 MKV로 저장하세요."
 }

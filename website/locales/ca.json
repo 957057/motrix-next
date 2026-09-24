@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next ara es diu Rayburst, i la seva extensió de navegador, Rayburst Connect. Es recomana una instal·lació neta de l’aplicació d’escriptori. No s’importen la configuració, les tasques ni l’historial. Les actualitzacions des de l’aplicació poden deixar les dues versions instal·lades o conservar dreceres antigues.",
   "connect.description": "Descobriu fluxos HLS/DASH i fitxers multimèdia al detector, a la barra lateral del navegador o a l’espai de treball de pàgina completa. Envieu els recursos seleccionats a Rayburst.",
   "features.media.description": "Trieu vídeo, àudio i subtítols, enregistreu emissions en directe i deseu-les com a MP4 o MKV. No s’admet contingut protegit amb DRM.",
-  "engine.description": "{aria2Next} gestiona les baixades.",
+  "engine.description": "{aria2Next} és el motor de baixades de codi obert de Rayburst. Admet HTTP, HTTPS, SFTP, ED2K i BitTorrent, amb interfícies de línia d’ordres i JSON-RPC.",
   "dl.note": "Darrera versió estable. Les versions anteriors poden conservar el nom antic.",
   "dl.releases": "Vegeu totes les versions",
   "hero.description": "Un gestor de baixades d’escriptori per a fitxers, torrents i contingut en streaming.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Mode fosc",
   "showcase.light.alt": "Rayburst — Mode clar",
-  "rebrand.title": "Migració"
+  "rebrand.title": "Migració",
+  "connect.handoff": "Envieu automàticament les baixades del navegador a Rayburst, definiu regles per lloc web i gestioneu les tasques des de la finestra emergent.",
+  "connect.preview": "Previsualitzeu el contingut abans de baixar-lo i trieu les pistes de vídeo, àudio i subtítols. Requereix l’aplicació d’escriptori Rayburst.",
+  "connect.artwork.alt": "Rayburst Connect envia les baixades del navegador a l’aplicació d’escriptori Rayburst",
+  "engine.media": "Baixeu fluxos HLS/DASH, seleccioneu pistes, enregistreu emissions en directe i deseu-les en MP4 o MKV sense transcodificació."
 }

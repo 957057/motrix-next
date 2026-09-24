@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next ahora se llama Rayburst, y su extensión del navegador, Rayburst Connect. Se recomienda una instalación limpia de la aplicación de escritorio. No se importan los ajustes, las tareas ni el historial. Al actualizar desde la aplicación pueden quedar ambas versiones instaladas o conservarse accesos directos antiguos.",
   "connect.description": "Descubre transmisiones HLS/DASH y archivos multimedia en el detector, la barra lateral del navegador o el espacio de trabajo a página completa. Envía los recursos seleccionados a Rayburst.",
   "features.media.description": "Elige vídeo, audio y subtítulos, graba transmisiones en directo y guarda en MP4 o MKV. No se admiten medios protegidos con DRM.",
-  "engine.description": "{aria2Next} gestiona las descargas.",
+  "engine.description": "{aria2Next} es el motor de descargas de código abierto de Rayburst. Admite HTTP, HTTPS, SFTP, ED2K y BitTorrent, con interfaces de línea de comandos y JSON-RPC.",
   "dl.note": "Última versión estable. Las versiones anteriores pueden conservar el nombre antiguo.",
   "dl.releases": "Ver todas las versiones",
   "hero.description": "Un gestor de descargas de escritorio para archivos, torrents y contenido en streaming.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Modo oscuro",
   "showcase.light.alt": "Rayburst — Modo claro",
-  "rebrand.title": "Migración"
+  "rebrand.title": "Migración",
+  "connect.handoff": "Envía automáticamente las descargas del navegador a Rayburst, configura reglas por sitio y gestiona tareas desde la ventana emergente.",
+  "connect.preview": "Previsualiza el contenido antes de descargarlo y elige las pistas de vídeo, audio y subtítulos. Requiere la aplicación de escritorio Rayburst.",
+  "connect.artwork.alt": "Rayburst Connect envía las descargas del navegador a la aplicación de escritorio Rayburst",
+  "engine.media": "Descarga transmisiones HLS/DASH, selecciona pistas, graba emisiones en directo y guarda en MP4 o MKV sin transcodificar."
 }

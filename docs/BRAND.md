@@ -44,6 +44,12 @@ The website remains a standalone HTML, CSS and JavaScript site. Its light and da
 colors use the desktop's default palette; the SVG logos retain their original colors.
 Website artwork copies come from `public/logo.svg`, Rayburst Connect's
 `public/icon/icon.svg`, and the screenshots in `docs/media/`.
+The companion section uses the approved browser-to-desktop campaign artwork.
+Its engine panel keeps Aria2 Next's original black-and-gold `docs/media/banner.png`.
+Keep promotional scenes separate from the unedited interface screenshots; preserve
+their proportions and omit release numbers from campaign artwork.
+Serve full-resolution WebP copies on the website: lossless for interface screenshots
+and quality 90 for campaign artwork. Keep the original PNGs in their source locations.
 Use the current repository URLs throughout the app, website and documentation.
 Keep the previous product name in the README and website migration notices only.
 The website continues to offer the latest stable release, even before the first

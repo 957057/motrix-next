@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next s’appelle désormais Rayburst, et son extension de navigateur, Rayburst Connect. Une nouvelle installation de l’application de bureau est recommandée. Les paramètres, les tâches et l’historique ne sont pas importés. Une mise à jour depuis l’application peut conserver les deux versions ou d’anciens raccourcis.",
   "connect.description": "Découvrez les flux HLS/DASH et les fichiers multimédias dans le détecteur, la barre latérale du navigateur ou l’espace de travail en pleine page. Envoyez les ressources sélectionnées à Rayburst.",
   "features.media.description": "Choisissez la vidéo, l’audio et les sous-titres, enregistrez les directs et sauvegardez en MP4 ou MKV. Les médias protégés par DRM ne sont pas pris en charge.",
-  "engine.description": "Les téléchargements sont gérés par {aria2Next}.",
+  "engine.description": "{aria2Next} est le moteur de téléchargement open source de Rayburst. Il prend en charge HTTP, HTTPS, SFTP, ED2K et BitTorrent, avec une ligne de commande et une interface JSON-RPC.",
   "dl.note": "Dernière version stable. Les anciennes versions peuvent conserver le nom précédent.",
   "dl.releases": "Voir toutes les versions",
   "hero.description": "Un gestionnaire de téléchargements pour les fichiers, les torrents et les flux multimédias.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Mode sombre",
   "showcase.light.alt": "Rayburst — Mode clair",
-  "rebrand.title": "Migration"
+  "rebrand.title": "Migration",
+  "connect.handoff": "Envoyez automatiquement les téléchargements du navigateur à Rayburst, définissez des règles par site et gérez les tâches depuis la fenêtre de l’extension.",
+  "connect.preview": "Prévisualisez les médias avant de les télécharger et choisissez les pistes vidéo, audio et de sous-titres. Nécessite l’application de bureau Rayburst.",
+  "connect.artwork.alt": "Rayburst Connect envoie les téléchargements du navigateur à l’application de bureau Rayburst",
+  "engine.media": "Téléchargez des flux HLS/DASH, sélectionnez les pistes, enregistrez des diffusions en direct et sauvegardez en MP4 ou MKV sans transcodage."
 }

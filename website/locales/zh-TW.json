@@ -66,7 +66,7 @@
   "rebrand.body": "Motrix Next 已更名為 Rayburst，瀏覽器擴充功能更名為 Rayburst Connect。建議解除安裝舊版本後重新安裝桌面程式。設定、任務和歷史記錄不會自動移轉。透過程式內更新可能保留兩個版本或舊捷徑。",
   "connect.description": "在嗅探頁籤、瀏覽器側欄或獨立工作區中探索 HLS/DASH 串流和媒體檔案，將選取的資源傳送至 Rayburst。",
   "features.media.description": "選擇影片、音訊和字幕，錄製直播，儲存為 MP4 或 MKV。不支援受 DRM 保護的媒體。",
-  "engine.description": "下載由 {aria2Next} 執行。",
+  "engine.description": "{aria2Next} 是 Rayburst 使用的開源下載引擎，支援 HTTP、HTTPS、SFTP、ED2K 和 BitTorrent，並提供命令列及 JSON-RPC 介面。",
   "dl.note": "最新穩定版。較早的發行版本可能仍使用舊名稱。",
   "dl.releases": "查看所有版本",
   "hero.description": "支援檔案、種子與串流媒體的桌面下載管理員。",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — 深色模式",
   "showcase.light.alt": "Rayburst — 淺色模式",
-  "rebrand.title": "移轉說明"
+  "rebrand.title": "移轉說明",
+  "connect.handoff": "自動將瀏覽器下載傳送至 Rayburst，依網站設定接管規則，並在擴充功能彈出視窗中管理任務。",
+  "connect.preview": "下載前預覽媒體，選擇影片、音訊和字幕軌道。需要安裝 Rayburst 桌面應用程式。",
+  "connect.artwork.alt": "Rayburst Connect 將瀏覽器下載傳送至 Rayburst 桌面應用程式",
+  "engine.media": "下載 HLS/DASH 串流、選擇軌道、錄製直播，無需轉碼即可儲存為 MP4 或 MKV。"
 }

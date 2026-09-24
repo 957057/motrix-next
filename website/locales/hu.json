@@ -66,7 +66,7 @@
   "rebrand.body": "A Motrix Next neve mostantól Rayburst, a böngészőbővítményé pedig Rayburst Connect. Az asztali alkalmazás tiszta telepítése ajánlott. A beállítások, feladatok és előzmények nem kerülnek át. Az alkalmazáson belüli frissítés megtarthatja mindkét verziót vagy a régi parancsikonokat.",
   "connect.description": "Fedezzen fel HLS/DASH adatfolyamokat és médiafájlokat a forráskeresőben, a böngésző oldalsávjában vagy az egész oldalas munkaterületen. Küldje a kiválasztott forrásokat a Rayburst alkalmazásnak.",
   "features.media.description": "Válasszon videót, hangot és feliratot, rögzítsen élő adásokat, és mentse MP4 vagy MKV formátumban. A DRM-védett média nem támogatott.",
-  "engine.description": "A letöltéseket az {aria2Next} végzi.",
+  "engine.description": "Az {aria2Next} a Rayburst nyílt forráskódú letöltőmotorja. Támogatja a HTTP, HTTPS, SFTP, ED2K és BitTorrent protokollokat, parancssori és JSON-RPC felülettel.",
   "dl.note": "Legújabb stabil kiadás. A korábbi kiadások még a régi nevet használhatják.",
   "dl.releases": "Összes kiadás",
   "hero.description": "Asztali letöltéskezelő fájlokhoz, torrentekhez és médiafolyamokhoz.",
@@ -78,5 +78,9 @@
   "a11y.screenshot": "Rayburst",
   "showcase.dark.alt": "Rayburst — Sötét mód",
   "showcase.light.alt": "Rayburst — Világos mód",
-  "rebrand.title": "Átállás"
+  "rebrand.title": "Átállás",
+  "connect.handoff": "Küldje automatikusan a böngésző letöltéseit a Rayburstnek, állítson be webhelyenkénti szabályokat, és kezelje a feladatokat a felugró ablakból.",
+  "connect.preview": "Nézze meg a médiát letöltés előtt, és válasszon videó-, hang- és feliratsávokat. A Rayburst asztali alkalmazás szükséges.",
+  "connect.artwork.alt": "A Rayburst Connect a böngésző letöltéseit a Rayburst asztali alkalmazásnak küldi",
+  "engine.media": "Töltsön le HLS/DASH adatfolyamokat, válasszon sávokat, rögzítsen élő adásokat, és mentse őket MP4 vagy MKV formátumban újrakódolás nélkül."
 }

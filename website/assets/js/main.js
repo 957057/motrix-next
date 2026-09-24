@@ -23,6 +23,24 @@ const revealObserver = new IntersectionObserver(
 document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el))
 document.documentElement.classList.add('js')
 
+/* ═══ Images — preserve layout, reveal only after decoding ══════════ */
+document.querySelectorAll('img[data-image]').forEach((image) => {
+  // Cached images and existing errors remain visible without an artificial delay.
+  if (image.complete) return
+
+  const reveal = () => {
+    image.removeEventListener('load', onLoad)
+    image.removeEventListener('error', reveal)
+    image.removeAttribute('data-image-pending')
+    if (image.naturalWidth) image.setAttribute('data-image-ready', '')
+  }
+  const onLoad = () => image.decode().then(reveal, reveal)
+
+  image.addEventListener('load', onLoad, { once: true })
+  image.addEventListener('error', reveal, { once: true })
+  image.setAttribute('data-image-pending', '')
+})
+
 /* ═══ Bento spotlight — cursor-following highlight ═══════════════════ */
 document.querySelectorAll('.bcard').forEach((card) => {
   card.addEventListener('pointermove', (e) => {
