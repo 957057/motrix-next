@@ -121,22 +121,10 @@ pub async fn get_association_status(
 
 // ── Cross-platform Tauri commands ───────────────────────────────────
 
-/// Returns `true` when this application is the OS-level default handler
-/// for the given URL scheme (e.g. `"magnet"`, `"thunder"`).
-pub async fn is_default_protocol_client(
-    app: AppHandle,
-    protocol: String,
-) -> Result<bool, AppError> {
+/// Queries the activation association on platforms that repair it at runtime.
+#[cfg(any(windows, target_os = "linux"))]
+async fn is_default_protocol_client(app: AppHandle, protocol: String) -> Result<bool, AppError> {
     validate_protocol(&protocol)?;
-    #[cfg(target_os = "macos")]
-    {
-        let handler_id = macos::get_default_handler_bundle_id(&protocol);
-        let self_id = &app.config().identifier;
-        match handler_id {
-            Some(handler) => Ok(handler == *self_id),
-            None => Ok(false),
-        }
-    }
     #[cfg(windows)]
     {
         let _ = &app;

@@ -828,7 +828,7 @@ kbd {
   background: var(--text-3);
   opacity: 0.6;
 }
-/* The film: a small moving thumbnail, so it reads as a video, not another button. */
+/* Film link: local cover, official player on demand. */
 .film-card {
   display: inline-flex;
   align-items: center;
@@ -857,12 +857,12 @@ kbd {
     0 10px 26px -10px rgba(123, 62, 209, 0.75);
   transition: transform 0.45s var(--ease-spring);
 }
-.film-thumb-light {
+.film-thumb > img {
   position: absolute;
-  inset: -60%;
-  background: conic-gradient(from 0deg, transparent 0deg, rgba(177, 124, 236, 0.75) 70deg, transparent 140deg, rgba(79, 208, 230, 0.5) 220deg, transparent 290deg);
-  filter: blur(10px);
-  animation: spin 9s linear infinite;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .film-thumb-play {
   position: relative;
@@ -4382,10 +4382,6 @@ kbd {
 .overlay[open]::backdrop {
   animation: fade-in 0.35s var(--ease-enter);
 }
-.overlay.is-closing::backdrop,
-.overlay.is-closing .overlay-close {
-  animation: fade-out 0.3s var(--ease-exit) forwards;
-}
 .overlay-close {
   position: fixed;
   top: 18px;
@@ -4408,124 +4404,43 @@ kbd {
   background: rgba(255, 255, 255, 0.2);
   transform: rotate(90deg);
 }
+.film-shell {
+  width: min(100%, 1280px, calc((100svh - 120px) * 16 / 9));
+  min-width: min(100%, 200px);
+}
 .film-stage {
-  position: relative;
-  width: min(100%, 1280px, calc((100svh - 2 * var(--gutter)) * 16 / 9));
+  width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 18px;
+  min-height: 200px;
   overflow: hidden;
+  border-radius: 18px;
   background: #0b0910;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    var(--shadow);
-  animation: pop 0.5s var(--ease-enter);
+  box-shadow: var(--shadow);
+  animation: pop 0.3s var(--ease-enter);
 }
-.film.is-closing .film-stage {
-  animation: pop-out 0.3s var(--ease-exit) forwards;
-}
-.film video {
-  position: absolute;
-  inset: 0;
+.film-stage iframe {
+  display: block;
   width: 100%;
   height: 100%;
-  background: transparent;
+  border: 0;
 }
-/* The poster: the hero's light, the mark and the name, until the first frame plays. */
-.film-poster {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 14px;
+.film-help {
+  margin: 16px 0 0;
   color: #fff;
-  background:
-    radial-gradient(55% 65% at 50% 42%, rgba(123, 62, 209, 0.55), transparent 70%),
-    radial-gradient(40% 50% at 82% 18%, rgba(74, 108, 247, 0.3), transparent 70%),
-    radial-gradient(40% 50% at 14% 86%, rgba(177, 124, 236, 0.22), transparent 70%),
-    linear-gradient(180deg, #140e20, #07060b);
-  overflow: hidden;
-  pointer-events: none;
-  transition: opacity 0.7s var(--ease-text);
+  text-align: center;
+  font-size: 14px;
 }
-.film-poster.is-gone {
-  opacity: 0;
-}
-.film-aurora {
-  position: absolute;
-  inset: -30%;
-  background: conic-gradient(from 0deg, transparent 0deg, rgba(177, 124, 236, 0.28) 60deg, transparent 130deg, rgba(79, 208, 230, 0.18) 210deg, transparent 280deg);
-  filter: blur(50px);
-  animation: spin 28s linear infinite;
-}
-.film-poster img {
-  position: relative;
-  width: clamp(64px, 8vw, 96px);
-  height: auto;
-  filter: drop-shadow(0 14px 44px rgba(155, 98, 223, 0.85));
-  animation: breathe 3.2s ease-in-out infinite;
-}
-.film-poster b {
-  position: relative;
-  font-size: clamp(28px, 4.2vw, 52px);
-  font-weight: 800;
-  letter-spacing: -0.045em;
-  background: linear-gradient(180deg, #fff, #d9c2fb);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.film-status {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 20px;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 15px;
-}
-.film-spin {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-top-color: #fff;
-  animation: spin 0.9s linear infinite;
-}
-.film-soon {
-  display: none;
-}
-.film-poster.is-missing .film-spin {
-  display: none;
-}
-.film-poster.is-missing .film-soon {
-  display: inline;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes breathe {
-  50% {
-    transform: scale(1.05);
-  }
+.film-help a { text-decoration: underline; }
+.film .overlay-close {
+  width: 44px;
+  height: 44px;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
 }
 @keyframes pop {
   from {
     opacity: 0;
     transform: translateY(16px) scale(0.94);
-  }
-}
-@keyframes pop-out {
-  to {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-}
-@keyframes fade-out {
-  to {
-    opacity: 0;
   }
 }
 

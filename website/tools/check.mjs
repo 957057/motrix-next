@@ -5,8 +5,8 @@
  *   - the English written into index.html matches locales/en-US.json
  *   - headlines and slogans carry no terminal punctuation
  *   - every icon referenced has a symbol in the sprite
- *   - pages, styles and scripts load only local files (the GitHub API is the
- *     one network request) and stay within the size budget
+ *   - initial page assets stay local; the film uses an on-demand YouTube embed
+ *     and assets stay within the size budget
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
@@ -88,7 +88,7 @@ for (const src of Object.values(js)) for (const m of src.matchAll(/['"`]((?:[a-z
 for (const r of refs) if (!symbols.has(r)) err(`icon "${r}" has no symbol (run python3 tools/build-icons.py)`)
 
 // ── Local assets only ────────────────────────────────────────────────────
-for (const m of html.matchAll(/<(?:script|link|img|source|video)\b[^>]*\s(?:src|href|poster)="([^"]+)"/g)) {
+for (const m of html.matchAll(/<(?:script|link|img|source|video|iframe)\b[^>]*\s(?:src|href|poster)="([^"]+)"/g)) {
   if (/^(https?:)?\/\//.test(m[1])) err(`index.html loads a remote resource: ${m[1]}`)
 }
 for (const m of css.matchAll(/url\(([^)]+)\)/g)) if (/^['"]?(https?:)?\/\//.test(m[1])) err(`style.css loads ${m[1]}`)
@@ -96,6 +96,14 @@ for (const [p, src] of Object.entries(js)) {
   for (const m of src.matchAll(/fetch\(\s*(['"`])(https?:[^'"`]+)\1/g)) err(`${p} fetches ${m[2]}`)
   for (const m of src.matchAll(/https:\/\/api\.[\w.]+/g)) if (!m[0].startsWith('https://api.github.com')) err(`${p} calls ${m[0]}`)
   if (/\bimport\s*\(|from\s+['"]https?:/.test(src)) err(`${p} imports remote code`)
+}
+
+// The official player is the only embedded origin. Runtime lifecycle checks
+// belong in a browser; scanning source cannot prove click-only network access.
+for (const [p, src] of Object.entries(js)) {
+  for (const match of src.matchAll(/https:\/\/[^\s'"`]+\/embed\//g)) {
+    if (match[0] !== 'https://www.youtube-nocookie.com/embed/') err(`${p} uses an unexpected embed origin: ${match[0]}`)
+  }
 }
 
 // ── Budget ───────────────────────────────────────────────────────────────
@@ -107,7 +115,7 @@ const budget = [
   ['index.html', size('index.html'), 80_000],
 ]
 for (const [name, bytes, max] of budget) if (bytes > max) err(`${name} is ${bytes} bytes (budget ${max})`)
-// Cloudflare Pages serves files up to 25 MiB (the film's web copy is the only large one).
+// Cloudflare Pages serves files up to 25 MiB.
 for (const p of walk('assets', '')) if (size(p) > 25 * 1024 * 1024) err(`${p} is over 25 MiB, the Cloudflare Pages file limit`)
 
 // ── Report ───────────────────────────────────────────────────────────────
@@ -120,4 +128,4 @@ if (errors.length) {
 console.log(`✓ ${used.size} text keys in use, ${enKeys.length} per locale, ${codes.length} locales in parity`)
 console.log(`✓ page English matches en-US.json; headlines carry no terminal punctuation`)
 console.log(`✓ ${refs.size} icons referenced, all in the sprite`)
-console.log(`✓ local assets only; ${budget.map(([n, b]) => `${n} ${(b / 1024).toFixed(1)} KB`).join(', ')}`)
+console.log(`✓ initial assets local; ${budget.map(([n, b]) => `${n} ${(b / 1024).toFixed(1)} KB`).join(', ')}`)

@@ -244,9 +244,9 @@
               <span data-i18n="hero.github">GitHub</span>
             </a>
           </div>
-          <button class="film-card" type="button" id="film-open" data-intro style="--d: 1.33s">
-            <span class="film-thumb" aria-hidden="true"><i class="film-thumb-light"></i><i class="film-thumb-play"><svg class="ic"><use href="#i-play" /></svg></i></span>
-            <span class="film-text"><b data-i18n="hero.film">Watch the film</b><small class="mono" id="film-meta">1:06</small></span>
+          <a class="film-card" id="film-open" href="https://www.youtube.com/watch?v=Qz4BaKhfT-M" lang="en" data-intro style="--d: 1.33s">
+            <span class="film-thumb" aria-hidden="true"><img src="assets/img/film-cover.webp" alt="" width="384" height="216" /><i class="film-thumb-play"><svg class="ic"><use href="#i-play" /></svg></i></span>
+            <span class="film-text"><b>Watch the film</b><small class="mono film-meta" id="film-meta">1:06 · English</small></span>
           </button>
           <div class="hero-meta" data-intro style="--d: 1.4s">
             <a class="stat" href="https://github.com/AnInsomniacy/rayburst/stargazers" target="_blank" rel="noopener">
@@ -617,18 +617,15 @@
     </footer>
 
     <!-- ═══ Dialogs ═══ -->
-    <dialog class="overlay film" id="film" data-i18n-aria-label="hero.film" aria-label="Watch the film">
-      <button class="overlay-close" type="button" data-close data-i18n-aria-label="a11y.close" aria-label="Close">
-        <svg class="ic" aria-hidden="true"><use href="#i-close-outline" /></svg>
-      </button>
-      <div class="film-stage">
-        <video id="film-video" lang="en" controls playsinline preload="none"></video>
-        <div class="film-poster" id="film-poster">
-          <i class="film-aurora" aria-hidden="true"></i>
-          <img src="assets/img/logo.svg" alt="" width="88" height="88" />
-          <b>Rayburst</b>
-          <span class="film-status"><i class="film-spin" aria-hidden="true"></i><span class="film-soon" data-i18n="hero.filmSoon">The film is on its way</span></span>
-        </div>
+    <dialog class="overlay film" id="film" lang="en" dir="ltr" aria-label="Watch the film" closedby="any">
+      <div class="film-shell">
+        <form method="dialog" class="film-close">
+          <button class="overlay-close" type="submit" aria-label="Close video" autofocus>
+            <svg class="ic" aria-hidden="true"><use href="#i-close-outline" /></svg>
+          </button>
+        </form>
+        <div class="film-stage" id="film-stage"></div>
+        <p class="film-help">Video not playing? Check your connection or <a id="film-youtube" target="_blank" rel="noopener">watch on YouTube</a>.</p>
       </div>
     </dialog>
     <!-- English for labels created by JavaScript, used if the locale files cannot load. -->

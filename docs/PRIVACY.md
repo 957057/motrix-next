@@ -72,7 +72,7 @@ The API accepts Rayburst Connect browser requests and authenticated native clien
 
 ## Website Privacy
 
-The static website uses local assets and stores language and theme preferences in browser local storage. It requests public repository statistics and release metadata from the GitHub API, which receives standard HTTPS request metadata including the visitor's IP address. Download links lead to GitHub release assets. The website has no analytics SDK.
+The static website uses local assets and stores language and theme preferences in browser local storage. It requests public repository statistics and release metadata from the GitHub API, which receives standard HTTPS request metadata including the visitor's IP address. Download links lead to GitHub release assets. The website has no analytics SDK. Opening the English film loads YouTube’s privacy-enhanced embedded player, which sends request metadata, including the visitor’s IP address, to Google. No YouTube resources are loaded before this action. Privacy-enhanced mode does not eliminate data transmission. Watching on YouTube is subject to Google’s privacy policy.
 
 ## Third-Party Components
 

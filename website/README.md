@@ -17,7 +17,7 @@ module scripts and locale requests on `file://`.
 
 | Section | What plays |
 | --- | --- |
-| Hero | The first screen: the logo traces itself and fills in, the name and slogan rise; Sponsor (rose), Download and GitHub, then the film card (a moving thumbnail) on its own row |
+| Hero | The first screen: the logo traces itself and fills in, the name and slogan rise; Sponsor (rose), Download and GitHub, then the film card (a local cover) on its own row |
 | Overview | A centred heading, then a first look at the whole window (sidebar, task cards, toolbar, speedometer). A short tour on the left lights each part up in turn, or on hover |
 | Protocols | Six protocol families light up in turn; each link types out and a ribbon carries it into the window, where the task lands |
 | Details | Three 6-second tabs: 48 connection ranges that always add up to the card's progress, the Task Details piece map, live recording with streaming segments |
@@ -38,8 +38,8 @@ Speeds and sizes are illustrative.
 - Reveals are one-shot, fixed-length transitions. Elements already above the
   viewport after a reload or anchor jump are shown at once.
 - Anchor links glide; the download button glows once when the page arrives.
-- Everything that opens also closes with motion: the migration note, menus,
-  dialogs (the screenshot flies back into its tile). Switching language
+- The film uses native dialog dismissal and releases its player on close.
+  The migration note and menus animate. Switching language
   cross-fades the page; switching theme reveals it in a circle.
 - Text rises with `cubic-bezier(0.33, 1, 0.68, 1)`; interface elements use
   Rayburst's Material 3 curves.
@@ -87,34 +87,20 @@ repositories' GitHub descriptions and stay word for word:
 - Rayburst Connect: Redefining the companion browser extension
 - Aria2 Next: Redefining the next generation of aria2
 
-## The film (optional)
+## The film
 
-The hero always shows a "Watch the film" link under the buttons; it reads "1:06 · EN" in other
-languages because the film is captioned in English. The player opens on a
-branded poster (the hero's light, the mark and the name) that fades once the
-first frame plays, and says the film is on its way while
-`assets/video/rayburst-film.mp4` is not deployed. Cloudflare Pages serves files up to 25 MiB, so the 4K60
-master (about 3 GB) needs a web copy. At 1080p60, a two-pass 2.8 Mbit/s encode
-of the 66-second film comes to about 23 MiB:
+The English film opens in a native dialog using YouTube's privacy-enhanced
+player. The cover is local; no YouTube resources load until the visitor opens
+it. Closing the dialog removes the player and stops playback. Without
+JavaScript, the film link opens YouTube directly.
 
-```bash
-mkdir -p assets/video
-ffmpeg -y -i rayburst-4k.mp4 -vf "scale=1920:-2:flags=lanczos" -r 60 \
-  -c:v libx264 -preset slow -b:v 2800k -pass 1 -an -f mp4 /dev/null      # NUL on Windows
-ffmpeg -i rayburst-4k.mp4 -vf "scale=1920:-2:flags=lanczos" -r 60 \
-  -c:v libx264 -preset slow -b:v 2800k -maxrate 4200k -bufsize 5600k -pass 2 \
-  -profile:v high -pix_fmt yuv420p -movflags +faststart \
-  -c:a aac -b:a 128k assets/video/rayburst-film.mp4
-```
-
-`node tools/check.mjs` fails if the file exceeds 25 MiB. The video loads only
-when the visitor presses the link. To show the 4K master instead, host it
-somewhere without the size limit (for example Cloudflare R2) and point the
-`src` in `assets/js/main.js` at it.
+The watch URL in `index.html` is the source for the video ID and external link.
+YouTube handles playback quality and controls. Network access to YouTube is
+required. The player preserves the HTTP Referer with
+`strict-origin-when-cross-origin`; do not suppress it in deployment headers.
 
 ## Deployment
 
 Replace the contents of `rayburst/website` with this folder. Cloudflare Pages
-settings stay the same (root `website`, output `.`, no build). The page loads
-only local files; the one network request is the public GitHub API for stars,
-downloads and release assets, as described in `docs/PRIVACY.md`.
+settings stay the same (root `website`, output `.`, no build). The page loads local assets and requests GitHub release metadata and statistics.
+Opening the film connects to YouTube, as described in `docs/PRIVACY.md`.

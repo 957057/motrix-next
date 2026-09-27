@@ -1,3 +1,4 @@
+import { initFilm } from './ui/film.js'
 /**
  * Rayburst website entry: language and theme pickers, navigation, dialogs,
  * and the scenes. No dependencies; modern browser APIs only.
@@ -164,52 +165,6 @@ function initMigrate() {
       anim = null
     }
   })
-}
-
-/* ─── Film dialog: opens and closes with motion ────────────────────────── */
-function closeDialog(d) {
-  if (!d.open || d.classList.contains('is-closing')) return
-  d.classList.add('is-closing')
-  const finish = () => {
-    d.classList.remove('is-closing')
-    d.close()
-  }
-  if (reducedMotion()) return finish()
-  // Wait for the closing animations only (the poster's looping light never ends).
-  const closing = d.getAnimations({ subtree: true }).filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
-  Promise.all(closing.map((a) => a.finished)).then(finish, finish)
-}
-
-function initFilm() {
-  const film = document.getElementById('film')
-  const video = document.getElementById('film-video')
-  const poster = document.getElementById('film-poster')
-  const button = document.getElementById('film-open')
-  const src = new URL('assets/video/rayburst-film.mp4', document.baseURI)
-  film.addEventListener('click', (e) => {
-    if (e.target === film || e.target.closest('[data-close]')) closeDialog(film)
-  })
-  film.addEventListener('cancel', (e) => {
-    e.preventDefault()
-    closeDialog(film)
-  })
-  film.addEventListener('close', () => video.pause())
-
-  // The branded poster stays until the first frame plays; without a deployed
-  // film it says the film is on its way.
-  video.addEventListener('playing', () => poster.classList.add('is-gone'))
-  video.addEventListener('error', () => poster.classList.add('is-missing'))
-  button.addEventListener('click', () => {
-    if (!video.getAttribute('src')) video.src = src.href
-    film.showModal()
-    video.play().catch(() => {})
-  })
-
-  // The film is captioned in English; other languages see a small EN tag.
-  const meta = document.getElementById('film-meta')
-  const tag = () => (meta.textContent = locale().startsWith('en') ? '1:06' : '1:06 · EN')
-  tag()
-  onChange(tag)
 }
 
 /* ─── Boot ────────────────────────────────────────────────────────────── */
