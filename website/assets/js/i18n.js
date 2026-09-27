@@ -1,48 +1,17 @@
 /**
- * @fileoverview Locale loading and DOM translations for the Rayburst website.
+ * Locale loading and DOM translation.
  *
- * Architecture:
- *   1. Detect language: URL hash (#lang=xx) > localStorage > navigator.languages > en-US
- *   2. Fetch JSON locale file from /locales/{lang}.json
- *   3. Walk DOM for [data-i18n] attributes and replace textContent
- *   4. Handle interpolation: {variable} placeholders
- *   5. RTL support for Arabic and Persian
+ *   1. Language: ?lang= / #lang= > saved choice > navigator.languages > en-US
+ *   2. locales/en-US.json is the base; the chosen locale is layered on top
+ *   3. [data-i18n] → textContent, [data-i18n-html] → innerHTML (with link
+ *      variables), [data-i18n-alt|aria-label|title] → attributes
+ *   4. Arabic and Persian switch the page to right-to-left
  *
- * Zero dependencies.
+ * Text waits for its language (data-locale-pending) so the page never flashes
+ * English before switching; the bootstrap in index.html gives up after 8 s.
  */
 
-const SUPPORTED_LOCALES = [
-  'ar',
-  'bg',
-  'ca',
-  'de',
-  'el',
-  'en-US',
-  'es',
-  'fa',
-  'fr',
-  'hu',
-  'hi',
-  'id',
-  'it',
-  'ja',
-  'ko',
-  'nb',
-  'nl',
-  'pl',
-  'pt-BR',
-  'ro',
-  'ru',
-  'th',
-  'tr',
-  'uk',
-  'vi',
-  'zh-CN',
-  'zh-TW',
-]
-
-/** Native display names for the toggle button (always in the locale's own language). */
-const LOCALE_NAMES = {
+export const LOCALES = {
   ar: 'العربية',
   bg: 'Български',
   ca: 'Català',
@@ -52,16 +21,16 @@ const LOCALE_NAMES = {
   es: 'Español',
   fa: 'فارسی',
   fr: 'Français',
-  hu: 'Magyar',
   hi: 'हिन्दी',
-  id: 'Indonesia',
+  hu: 'Magyar',
+  id: 'Bahasa Indonesia',
   it: 'Italiano',
   ja: '日本語',
   ko: '한국어',
-  nb: 'Norsk',
+  nb: 'Norsk bokmål',
   nl: 'Nederlands',
   pl: 'Polski',
-  'pt-BR': 'Português',
+  'pt-BR': 'Português (Brasil)',
   ro: 'Română',
   ru: 'Русский',
   th: 'ไทย',
@@ -71,217 +40,126 @@ const LOCALE_NAMES = {
   'zh-CN': '简体中文',
   'zh-TW': '繁體中文',
 }
-
-const RTL_LOCALES = ['ar', 'fa']
+const CODES = Object.keys(LOCALES)
+const RTL = new Set(['ar', 'fa'])
 const FALLBACK = 'en-US'
 const STORAGE_KEY = 'rayburst-website-lang'
+const LINKS = {
+  aria2Next: '<a href="https://github.com/AnInsomniacy/aria2-next" target="_blank" rel="noopener">Aria2 Next</a>',
+}
 
-let currentLocale = FALLBACK
-let detectedSystemLocale = null
-let localeRequest = null
-const fallbackMessages = readFallbackMessages()
-let messages = fallbackMessages
-const textElements = document.querySelectorAll('[data-i18n], [data-i18n-html], [data-locale-label]')
+let current = FALLBACK
+let base = readStaticEnglish()
+let messages = base
+let request = null
+let english = null
+const listeners = []
 
-/** Registered callbacks invoked after every locale switch. */
-const localeChangeCallbacks = []
-
-/** The static page also provides English when every locale request fails. */
-function readFallbackMessages() {
-  const result = {}
-  for (const root of [document, document.getElementById('locale-fallback').content]) {
+/** English copy baked into the page, used until (or if) the locale files load. */
+function readStaticEnglish() {
+  const out = {}
+  const roots = [document, document.getElementById('locale-fallback')?.content].filter(Boolean)
+  for (const root of roots) {
     root.querySelectorAll('[data-i18n]').forEach((el) => {
-      result[el.dataset.i18n] = el.textContent.trim().replace(/\s+/g, ' ')
+      out[el.dataset.i18n] = el.textContent.trim().replace(/\s+/g, ' ')
     })
     root.querySelectorAll('[data-i18n-html]').forEach((el) => {
-      result[el.dataset.i18nHtml] = el.innerHTML.trim().replace(/\s+/g, ' ')
+      out[el.dataset.i18nHtml] = el.innerHTML.trim().replace(/\s+/g, ' ')
     })
-    for (const attribute of ['alt', 'aria-label']) {
-      root.querySelectorAll(`[data-i18n-${attribute}]`).forEach((el) => {
-        result[el.getAttribute(`data-i18n-${attribute}`)] = el.getAttribute(attribute)
-      })
-    }
   }
-  return result
+  return out
 }
 
-/** Placeholder controls must not remain keyboard targets without visible labels. */
-function setTextPending(pending) {
-  document.documentElement.toggleAttribute('data-locale-pending', pending)
-  document.documentElement.setAttribute('aria-busy', String(pending))
-  for (const el of textElements) el.inert = pending
-}
-
-/** Resolve the best locale from browser language, e.g. "zh-CN" or "zh" → "zh-CN". */
-function resolveLocale(raw) {
+export function resolve(raw) {
   if (!raw) return null
-  const normalized = raw.trim()
-  if (SUPPORTED_LOCALES.includes(normalized)) return normalized
-  // Region-specific overrides (Traditional Chinese regions → zh-TW)
-  const REGION_MAP = { 'zh-hk': 'zh-TW', 'zh-mo': 'zh-TW', 'zh-tw': 'zh-TW' }
-  const lower = normalized.toLowerCase()
-  if (REGION_MAP[lower]) return REGION_MAP[lower]
-  // Try base language match: "zh" → "zh-CN", "pt" → "pt-BR"
-  const base = normalized.split('-')[0].toLowerCase()
-  const match = SUPPORTED_LOCALES.find((l) => l.toLowerCase().startsWith(base))
-  return match || null
+  const v = raw.trim()
+  if (CODES.includes(v)) return v
+  const lower = v.toLowerCase()
+  if (['zh-hk', 'zh-mo', 'zh-tw', 'zh-hant'].some((p) => lower.startsWith(p))) return 'zh-TW'
+  const exact = CODES.find((c) => c.toLowerCase() === lower)
+  if (exact) return exact
+  const lang = lower.split('-')[0]
+  if (lang === 'no' || lang === 'nn') return 'nb'
+  return CODES.find((c) => c.toLowerCase().split('-')[0] === lang) ?? null
 }
 
-/** Detect preferred locale from URL hash > localStorage > navigator. */
-function detectLocale() {
-  // 1. URL hash: #lang=zh-CN
-  const hash = location.hash.match(/lang=([^&]+)/)
-  if (hash) {
-    const resolved = resolveLocale(hash[1])
-    if (resolved) return resolved
-  }
-  // 2. localStorage
-  let stored
+export const systemLocale = () => navigator.languages.map(resolve).find(Boolean) ?? FALLBACK
+
+function detect() {
+  const param = new URLSearchParams(location.search).get('lang') ?? location.hash.match(/lang=([^&]+)/)?.[1]
+  const fromUrl = resolve(param)
+  if (fromUrl) return fromUrl
   try {
-    stored = localStorage.getItem(STORAGE_KEY)
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (CODES.includes(saved)) return saved
   } catch {
-    // Language detection does not require persistent storage.
+    // Storage is optional.
   }
-  if (stored && SUPPORTED_LOCALES.includes(stored)) return stored
-  // Respect the browser's ordered language preferences.
-  for (const lang of navigator.languages) {
-    const resolved = resolveLocale(lang)
-    if (resolved) return resolved
-  }
-  return FALLBACK
+  return systemLocale()
 }
 
-/** Fetch only the requested language; failures use the static English copy. */
-async function fetchLocale(locale, signal) {
+async function load(code, signal) {
   try {
-    const res = await fetch(new URL(`locales/${locale}.json`, document.baseURI), {
-      signal,
-    })
+    const res = await fetch(new URL(`locales/${code}.json`, document.baseURI), { signal })
     if (!res.ok) return null
     const data = await res.json()
-    if (!data || Array.isArray(data) || typeof data !== 'object') return null
-    const entries = Object.entries(data).filter(
-      ([key, value]) => Object.hasOwn(fallbackMessages, key) && typeof value === 'string' && value.trim(),
-    )
-    return entries.length ? Object.fromEntries(entries) : null
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : null
   } catch {
     return null
   }
 }
 
-/** Interpolate {variable} placeholders in a string. */
-function interpolate(template, vars) {
-  if (!vars || !template) return template
-  return template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? `{${key}}`)
+export function t(key, vars) {
+  const raw = messages[key] ?? base[key] ?? key
+  return vars ? raw.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)) : raw
 }
 
-/** Get a translated string by key, with optional interpolation variables. */
-function t(key, vars) {
-  const raw = messages[key] ?? fallbackMessages[key] ?? key
-  return vars ? interpolate(raw, vars) : raw
-}
+export const locale = () => current
+export const isRtl = () => RTL.has(current)
+export const onChange = (fn) => listeners.push(fn)
 
-/** Apply translations to all [data-i18n] elements in the DOM. */
-function applyTranslations() {
-  document.querySelectorAll('[data-i18n]').forEach((el) => {
-    const key = el.getAttribute('data-i18n')
-    if (key && (key in messages || key in fallbackMessages)) el.textContent = t(key)
+export function apply(root = document) {
+  root.querySelectorAll('[data-i18n]').forEach((el) => {
+    el.textContent = t(el.dataset.i18n)
   })
-  // HTML interpolation variables — keeps locale files free of markup
-  const HTML_VARS = {
-    aria2Next: '<a href="https://github.com/AnInsomniacy/aria2-next" target="_blank" rel="noopener">Aria2 Next</a>',
-  }
-  document.querySelectorAll('[data-i18n-html]').forEach((el) => {
-    const key = el.getAttribute('data-i18n-html')
-    if (key && (key in messages || key in fallbackMessages)) el.innerHTML = t(key, HTML_VARS)
+  root.querySelectorAll('[data-i18n-html]').forEach((el) => {
+    el.innerHTML = t(el.dataset.i18nHtml, LINKS)
   })
-  for (const attribute of ['alt', 'aria-label']) {
-    document.querySelectorAll(`[data-i18n-${attribute}]`).forEach((el) => {
-      const key = el.getAttribute(`data-i18n-${attribute}`)
-      if (key && (key in messages || key in fallbackMessages)) el.setAttribute(attribute, t(key))
+  for (const attr of ['alt', 'aria-label', 'title']) {
+    root.querySelectorAll(`[data-i18n-${attr}]`).forEach((el) => {
+      el.setAttribute(attr, t(el.getAttribute(`data-i18n-${attr}`)))
     })
   }
-
-  // Update HTML lang and dir attributes
-  document.documentElement.lang = currentLocale
-  document.documentElement.dir = RTL_LOCALES.includes(currentLocale) ? 'rtl' : 'ltr'
-
-  // Update active state in language picker
-  document.querySelectorAll('.picker-option[data-lang]').forEach((opt) => {
-    opt.classList.toggle('active', opt.dataset.lang === currentLocale)
-  })
-
-  // Update toggle button to show current language name
-  const toggleLabel = document.getElementById('lang-toggle-label')
-  if (toggleLabel) toggleLabel.textContent = LOCALE_NAMES[currentLocale] || currentLocale
-
-  // Update system detection hint in dropdown
-  const sysHint = document.getElementById('lang-system-hint')
-  if (sysHint && detectedSystemLocale) {
-    const sysName = LOCALE_NAMES[detectedSystemLocale] || detectedSystemLocale
-    sysHint.textContent = `${t('theme.system')}: ${sysName}`
-    sysHint.dataset.lang = detectedSystemLocale
-    sysHint.style.display = ''
-    const sysSep = document.getElementById('lang-system-sep')
-    if (sysSep) sysSep.style.display = ''
-  }
 }
 
-/** Resolve a language before revealing text; only the latest request may commit. */
-async function setLocale(locale, persist = true) {
-  if (!SUPPORTED_LOCALES.includes(locale)) return
+export async function setLocale(code, persist = true) {
+  if (!CODES.includes(code)) return
   const root = document.documentElement
-  if (locale === currentLocale && !root.hasAttribute('data-locale-pending')) return
-  localeRequest?.abort()
+  request?.abort()
   const controller = new AbortController()
-  localeRequest = controller
-  window.localeBoot.finish()
-  root.removeAttribute('data-locale-reveal')
-  setTextPending(true)
-  const started = performance.now()
-
-  try {
-    const localized =
-      locale === FALLBACK
-        ? fallbackMessages
-        : await fetchLocale(locale, AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]))
-    if (localeRequest !== controller) return
-
-    messages = localized || fallbackMessages
-    currentLocale = localized ? locale : FALLBACK
-    applyTranslations()
-    for (const cb of localeChangeCallbacks) cb()
-
-    if (persist && localized) {
-      try {
-        localStorage.setItem(STORAGE_KEY, currentLocale)
-      } catch {
-        // Translation still works when storage is unavailable.
-      }
-      location.hash = `lang=${currentLocale}`
-    }
-  } finally {
-    if (localeRequest === controller) {
-      localeRequest = null
-      setTextPending(false)
-      if (performance.now() - started > 100) root.setAttribute('data-locale-reveal', '')
+  request = controller
+  const signal = AbortSignal.any ? AbortSignal.any([controller.signal, AbortSignal.timeout(8000)]) : controller.signal
+  const [en, loc] = await Promise.all([english ?? load(FALLBACK, signal), code === FALLBACK ? null : load(code, signal)])
+  if (request !== controller) return
+  request = null
+  if (en && !english) {
+    english = en
+    base = { ...base, ...en }
+  }
+  messages = code === FALLBACK ? base : (loc ?? base)
+  current = code === FALLBACK || loc ? code : FALLBACK
+  root.lang = current
+  root.dir = RTL.has(current) ? 'rtl' : 'ltr'
+  apply()
+  if (persist) {
+    try {
+      localStorage.setItem(STORAGE_KEY, current)
+    } catch {
+      // The choice simply is not remembered.
     }
   }
+  window.localeBoot?.finish()
+  for (const fn of listeners) fn(current)
 }
 
-/** Register a callback to re-render dynamic content on locale change. */
-function onLocaleChange(cb) {
-  localeChangeCallbacks.push(cb)
-}
-
-/** Initialize i18n: detect language, load messages, render. */
-async function initI18n() {
-  detectedSystemLocale = navigator.languages.map(resolveLocale).find(Boolean) || FALLBACK
-  // If the bootstrap expired before this script arrived, keep its English fallback.
-  if (!window.localeBoot.finished) await setLocale(detectLocale(), false)
-}
-
-// Expose globally for inline usage
-window.i18n = { t, setLocale, onLocaleChange, currentLocale: () => currentLocale, SUPPORTED_LOCALES }
-// Only translated text waits; branding, images and layout render independently.
-window.i18n.ready = initI18n()
+export const ready = setLocale(detect(), false)

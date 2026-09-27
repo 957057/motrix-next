@@ -1,0 +1,13 @@
+{
+  "name": "rayburst-website",
+  "private": true,
+  "type": "module",
+  "description": "Static website for Rayburst. No build step: serve this folder as is.",
+  "scripts": {
+    "serve": "python3 -m http.server 8080",
+    "check": "node tools/check.mjs",
+    "smoke": "node tools/smoke.mjs",
+    "icons": "python3 tools/build-icons.py",
+    "strings": "python3 tools/sync-ui-strings.py"
+  }
+}
