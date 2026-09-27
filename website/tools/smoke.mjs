@@ -146,6 +146,8 @@ const checks = {
   pick: `${document.querySelector('.pick-head b').textContent} · ${document.querySelector('[data-v="count"]').textContent} — ${document.querySelector('[data-v="size"]').textContent}`,
   filmCard: document.querySelector('#film-open b').textContent,
   overview: document.querySelectorAll('.ov-point').length,
+  overviewTier: document.getElementById('hero-app').dataset.tier,
+  tourOn: [...document.querySelectorAll('.ov-point')].map((p) => (p.classList.contains('is-on') ? p.dataset.spot : '')).join(''),
 }
 // Pick a language and a scheme in the studio, as a visitor would.
 document.querySelector('.lang-chip[data-lang="ko"]').dispatchEvent(new window.Event('click', { bubbles: true }))

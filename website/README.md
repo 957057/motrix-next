@@ -18,12 +18,12 @@ module scripts and locale requests on `file://`.
 | Section | What plays |
 | --- | --- |
 | Hero | The first screen: the logo traces itself and fills in, the name and slogan rise; Sponsor (rose), Download and GitHub, then the film card (a moving thumbnail) on its own row |
-| Overview | A centred heading, then the short version on the left (four points, each linking to its section), a live Rayburst window on the right |
+| Overview | A centred heading, then a first look at the whole window (sidebar, task cards, toolbar, speedometer). A short tour on the left lights each part up in turn, or on hover |
 | Protocols | Six protocol families light up in turn; each link types out and a ribbon carries it into the window, where the task lands |
 | Details | Three 6-second tabs: 48 connection ranges that always add up to the card's progress, the Task Details piece map, live recording with streaming segments |
 | Rayburst Connect | Chrome, Edge and Firefox store buttons (the visitor's browser is filled in), then the popup's real flow: sniff, Media options, MKV, Download, confirmation, hand-off to Rayburst |
 | Aria2 Next | A black-and-gold band: data lanes converge on a terminal typing the engine's quick-start commands; a gold download button for the visitor's system with every build in a menu, and a Docker command that copies itself |
-| Make it yours | A studio around one live window: light or dark, ten color schemes and all 27 languages, applied as they are picked (a slow tour runs until the first pick). Below: the tray title and menu, torrent file selection, the real `constants.ts`, and six more features |
+| Make it yours | A studio around one live window: light or dark, ten color schemes and all 27 languages, applied as they are picked (a slow tour runs until the first pick). Below: the tray title and menu, file selection (torrent and magnet files, stream tracks), the real `constants.ts`, and six more features |
 | Download | A slow burst of light, one button for the visitor's system with an architecture switch, a card per platform with every package, then the family: Connect, Aria2 Next and Sponsor |
 
 All interface mock-ups are rebuilt in HTML from the apps' components and show

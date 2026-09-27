@@ -1,13 +1,14 @@
 /**
  * Hero: the logo traces itself, the name and slogan rise, and the backdrop
  * canvas carries slow star dust and a single burst of light from the logo
- * when it fills in. The live Rayburst window beside the overview below is
- * started from here too.
+ * when it fills in. The overview below (the full Rayburst window and a tour of
+ * its parts) is started from here too.
  */
 import { t } from '../i18n.js'
 import { clamp, ease, hash, prog } from '../core/motion.js'
 import { Stage } from '../core/stage.js'
 import { AppWindow } from '../ui/appwindow.js'
+import { setClass } from '../ui/dom.js'
 import { KINDS, scenario } from '../ui/tasks.js'
 import { toastsFor } from './shared.js'
 
@@ -93,9 +94,10 @@ export function initHero() {
 
   const sky = new Stage(hero, { render: drawSky, still: 3, autostart: false })
 
-  // The live window below the copy.
+  // The overview: the full window (sidebar, list, toolbar, speedometer) with a
+  // short tour of its parts; each point lights its part up, in turn or on hover.
   const host = document.getElementById('hero-app')
-  const win = new AppWindow(host, { tr: t, height: 620, rows: 4 })
+  const win = new AppWindow(host, { tr: t, height: 640, rows: 4, wideFrom: 0 })
   const model = scenario(
     [
       KINDS.live(-40, 2472),
@@ -107,11 +109,33 @@ export function initHero() {
     ],
     { newestFirst: true },
   )
+  const points = [...document.querySelectorAll('.ov-point')]
+  const parts = {
+    side: host.querySelector('.rbw-side'),
+    tools: host.querySelector('.rbw-toolbar'),
+    speed: host.querySelector('.rbw-speed'),
+  }
+  const TOUR = 3.2
+  let pinned = -1
+  points.forEach((point, i) => {
+    const pin = () => (pinned = i)
+    const unpin = () => (pinned = -1)
+    point.addEventListener('pointerenter', pin)
+    point.addEventListener('pointerleave', unpin)
+    point.addEventListener('focus', pin)
+    point.addEventListener('blur', unpin)
+  })
   const app = new Stage(host, {
     still: 30,
     autostart: false,
     render: (time) => {
       const m = model(time, t)
+      const on = pinned >= 0 ? pinned : Math.floor(time / TOUR) % points.length
+      const spot = points[on]?.dataset.spot
+      points.forEach((point, i) => setClass(point, 'is-on', i === on))
+      for (const [key, el] of Object.entries(parts)) setClass(el, 'is-spot', key === spot)
+      // The task cards: the newest card glows.
+      if (spot === 'card' && m.tasks[0]) m.tasks[0].focus = true
       win.update(m)
       win.toasts(toastsFor(m, time, t))
     },

@@ -970,7 +970,7 @@ kbd {
 /* ─── Overview: the short version, with the live window ───────────────── */
 .ov-grid {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
   gap: clamp(28px, 4vw, 64px);
   align-items: center;
 }
@@ -983,7 +983,7 @@ kbd {
 }
 .ov-point {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-columns: 44px minmax(0, 1fr);
   align-items: center;
   gap: 16px;
   padding: 18px 20px;
@@ -992,7 +992,7 @@ kbd {
   background: var(--card);
   transition:
     border-color 0.3s,
-    transform 0.45s var(--ease-enter);
+    background-color 0.3s;
 }
 .ov-point > i {
   display: grid;
@@ -1018,33 +1018,38 @@ kbd {
   font-size: 14px;
   line-height: 1.45;
 }
-.ov-go {
-  color: var(--text-3);
-  opacity: 0;
-  transform: translateX(-6px);
-  transition:
-    opacity 0.25s,
-    transform 0.35s var(--ease-enter);
+.ov-point:hover,
+.ov-point.is-on {
+  border-color: color-mix(in srgb, var(--accent-2) 50%, transparent);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent-2) 10%, transparent), transparent 70%),
+    var(--card);
 }
-[dir='rtl'] .ov-go {
-  transform: scaleX(-1) translateX(-6px);
-}
-.ov-point:hover {
-  border-color: color-mix(in srgb, var(--accent-2) 45%, transparent);
-  transform: translateX(4px);
-}
-[dir='rtl'] .ov-point:hover {
-  transform: translateX(-4px);
-}
-.ov-point:hover > i {
+.ov-point.is-on > i {
+  background: var(--brand);
+  color: #fff;
   transform: scale(1.06);
 }
-.ov-point:hover .ov-go {
-  opacity: 1;
-  transform: none;
+[dir='rtl'] .ov-point.is-on {
+  background:
+    linear-gradient(270deg, color-mix(in srgb, var(--accent-2) 10%, transparent), transparent 70%),
+    var(--card);
 }
-[dir='rtl'] .ov-point:hover .ov-go {
-  transform: scaleX(-1);
+/* The window part a tour point refers to. */
+.rbw-side,
+.rbw-toolbar,
+.rbw-speed {
+  transition:
+    box-shadow 0.45s var(--ease-enter),
+    background-color 0.45s var(--ease-enter);
+}
+.rbw .is-spot {
+  box-shadow:
+    inset 0 0 0 2px var(--w-primary),
+    inset 0 0 32px color-mix(in srgb, var(--w-primary) 22%, transparent);
+}
+.rbw-toolbar.is-spot {
+  border-radius: 10px;
 }
 .ov-stage {
   position: relative;

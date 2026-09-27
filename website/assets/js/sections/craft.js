@@ -241,11 +241,11 @@ function initTray() {
 const FILES = [
   ['bbb_sunflower_2160p_60fps_normal.mp4', 642 * MB],
   ['bbb_sunflower_1080p_60fps_normal.mp4', 355.9 * MB],
-  ['bbb_sunflower_1080p_30fps_normal.mp4', 263.4 * MB],
-  ['poster.jpg', 1.2 * MB],
+  ['subtitles/en.srt', 42 * 1024],
+  ['extras/making-of.mkv', 1.1 * 1024 * MB],
 ]
 /** When each file is unticked during the loop (null: stays selected). */
-const UNTICK = [null, 1.3, 2.1, null]
+const UNTICK = [null, 1.3, null, 2.1]
 const PICK_LOOP = 7
 
 function initPick() {

@@ -52,6 +52,7 @@
     <!-- icons:start -->
     <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="i-add-outline" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M256 112v288M400 256H112"/></symbol>
+<symbol id="i-albums-outline" viewBox="0 0 512 512"><rect x="64" y="176" width="384" height="256" rx="28.87" ry="28.87" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32"/><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="M144 80h224M112 128h288"/></symbol>
 <symbol id="i-alert-circle-outline" viewBox="0 0 512 512"><path d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192 192-86 192-192z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"/><path d="M250.26 166.05L256 288l5.73-121.95a5.74 5.74 0 00-5.79-6h0a5.74 5.74 0 00-5.68 6z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M256 367.91a20 20 0 1120-20 20 20 0 01-20 20z"/></symbol>
 <symbol id="i-arrow-down-outline" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M112 268l144 144 144-144M256 392V100"/></symbol>
 <symbol id="i-arrow-forward-outline" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M268 112l144 144-144 144M392 256H100"/></symbol>
@@ -273,32 +274,28 @@
           <div class="ov-grid">
             <ul class="ov-points">
               <li data-reveal style="--i: 2">
-                <a class="ov-point" href="#protocols">
-                  <i><svg class="ic" aria-hidden="true"><use href="#i-layers-outline" /></svg></i>
-                  <span><b data-i18n="ov.p1.t">Every protocol</b><small data-i18n="ov.p1.d">HTTP(S), SFTP, BitTorrent, magnet, ED2K, HLS and DASH in one list</small></span>
-                  <svg class="ic ov-go" aria-hidden="true"><use href="#i-arrow-forward-outline" /></svg>
-                </a>
+                <div class="ov-point" data-spot="side" tabindex="0">
+                  <i><svg class="ic" aria-hidden="true"><use href="#i-list-outline" /></svg></i>
+                  <span><b data-i18n="ov.p1.t">Sidebar</b><small data-i18n="ov.p1.d">All, in progress, failed and completed, each with a live count</small></span>
+                </div>
               </li>
               <li data-reveal style="--i: 3">
-                <a class="ov-point" href="#details">
-                  <i><svg class="ic" aria-hidden="true"><use href="#i-speedometer-outline" /></svg></i>
-                  <span><b data-i18n="ov.p2.t">Built for speed</b><small data-i18n="ov.p2.d">Up to 64 connections per file, resuming right where it stopped</small></span>
-                  <svg class="ic ov-go" aria-hidden="true"><use href="#i-arrow-forward-outline" /></svg>
-                </a>
+                <div class="ov-point" data-spot="card" tabindex="0">
+                  <i><svg class="ic" aria-hidden="true"><use href="#i-albums-outline" /></svg></i>
+                  <span><b data-i18n="ov.p2.t">Task cards</b><small data-i18n="ov.p2.d">Progress, speed, time left and connections on every card</small></span>
+                </div>
               </li>
               <li data-reveal style="--i: 4">
-                <a class="ov-point" href="#connect">
-                  <i><svg class="ic" aria-hidden="true"><use href="#i-globe-outline" /></svg></i>
-                  <span><b data-i18n="ov.p3.t">Straight from the browser</b><small data-i18n="ov.p3.d">Rayburst Connect sends the media on any page to Rayburst</small></span>
-                  <svg class="ic ov-go" aria-hidden="true"><use href="#i-arrow-forward-outline" /></svg>
-                </a>
+                <div class="ov-point" data-spot="tools" tabindex="0">
+                  <i><svg class="ic" aria-hidden="true"><use href="#i-options-outline" /></svg></i>
+                  <span><b data-i18n="ov.p3.t">Toolbar</b><small data-i18n="ov.p3.d">Sort, resume, pause or remove tasks in one click</small></span>
+                </div>
               </li>
               <li data-reveal style="--i: 5">
-                <a class="ov-point" href="#craft">
-                  <i><svg class="ic" aria-hidden="true"><use href="#i-color-palette-outline" /></svg></i>
-                  <span><b data-i18n="ov.p4.t">Native and yours</b><small data-i18n="ov.p4.d">Built with Tauri and Rust, in 27 languages and ten color schemes</small></span>
-                  <svg class="ic ov-go" aria-hidden="true"><use href="#i-arrow-forward-outline" /></svg>
-                </a>
+                <div class="ov-point" data-spot="speed" tabindex="0">
+                  <i><svg class="ic" aria-hidden="true"><use href="#i-speedometer-outline" /></svg></i>
+                  <span><b data-i18n="ov.p4.t">Speedometer</b><small data-i18n="ov.p4.d">Total upload and download speed, with the current limits beside it</small></span>
+                </div>
               </li>
             </ul>
             <div class="ov-stage" data-reveal="scale" style="--i: 1"><div id="hero-app"></div></div>
@@ -504,8 +501,8 @@
             </article>
             <article class="moment" data-reveal style="--i: 1">
               <div class="moment-art pick" id="pick" aria-hidden="true"></div>
-              <h3 data-i18n="craft.pick">Only the files you want</h3>
-              <p data-i18n="craft.pickSub">Tick what you need inside a torrent before it starts. The rest never downloads.</p>
+              <h3 data-i18n="craft.pick">Pick exactly what you need</h3>
+              <p data-i18n="craft.pickSub">Choose the files in a torrent or magnet link, or the tracks of a stream, before it starts. Nothing else downloads.</p>
             </article>
             <article class="moment" data-reveal style="--i: 2">
               <div class="moment-art code" id="code" aria-hidden="true"></div>
