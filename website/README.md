@@ -17,13 +17,14 @@ module scripts and locale requests on `file://`.
 
 | Section | What plays |
 | --- | --- |
-| Hero | The logo traces itself and fills in, the name and slogan rise, a live Rayburst window lands below. Completion and seeding toasts appear as tasks finish |
+| Hero | The first screen: the logo traces itself and fills in, the name and slogan rise; Sponsor (rose), Download and GitHub, then the film card (a moving thumbnail) on its own row |
+| Overview | A centred heading, then the short version on the left (four points, each linking to its section), a live Rayburst window on the right |
 | Protocols | Six protocol families light up in turn; each link types out and a ribbon carries it into the window, where the task lands |
-| Details | Three tabs on their own clock: parallel connections, the Task Details piece map, live recording with streaming segments |
-| Rayburst Connect | The popup's real flow: sniff, Media options, MKV, Download, confirmation, then the hand-off to Rayburst |
-| Aria2 Next | Gold data lanes converge on a terminal typing the engine's quick-start commands |
-| The little things | The ten color schemes (click to recolor the window), unedited screenshots, 27 languages, the tray title and menu, the completion notification, no telemetry, the real `constants.ts` |
-| Download | OS detection, the latest stable release, the architecture picker and every package |
+| Details | Three 6-second tabs: 48 connection ranges that always add up to the card's progress, the Task Details piece map, live recording with streaming segments |
+| Rayburst Connect | Chrome, Edge and Firefox store buttons (the visitor's browser is filled in), then the popup's real flow: sniff, Media options, MKV, Download, confirmation, hand-off to Rayburst |
+| Aria2 Next | A black-and-gold band: data lanes converge on a terminal typing the engine's quick-start commands; a gold download button for the visitor's system with every build in a menu, and a Docker command that copies itself |
+| Make it yours | A studio around one live window: light or dark, ten color schemes and all 27 languages, applied as they are picked (a slow tour runs until the first pick). Below: the tray title and menu, torrent file selection, the real `constants.ts`, and six more features |
+| Download | A slow burst of light, one button for the visitor's system with an architecture switch, a card per platform with every package, then the family: Connect, Aria2 Next and Sponsor |
 
 All interface mock-ups are rebuilt in HTML from the apps' components and show
 the apps' own labels in every language (see `tools/sync-ui-strings.py`).
@@ -36,6 +37,10 @@ Speeds and sizes are illustrative.
   ends, so fast or slow scrolling never makes it stutter (`assets/js/core/stage.js`).
 - Reveals are one-shot, fixed-length transitions. Elements already above the
   viewport after a reload or anchor jump are shown at once.
+- Anchor links glide; the download button glows once when the page arrives.
+- Everything that opens also closes with motion: the migration note, menus,
+  dialogs (the screenshot flies back into its tile). Switching language
+  cross-fades the page; switching theme reveals it in a circle.
 - Text rises with `cubic-bezier(0.33, 1, 0.68, 1)`; interface elements use
   Rayburst's Material 3 curves.
 - Scenes tilt only while moving and land flat before anything has to be read.
@@ -55,7 +60,7 @@ assets/js/
   sections/              one module per section
 assets/data/schemes.json the ten color schemes, light and dark
 assets/fonts/            Inter, JetBrains Mono (digits and Latin subset)
-assets/img/              logos and the unedited screenshots
+assets/img/              logos
 locales/*.json           27 languages
 tools/                   maintenance scripts (not needed at runtime)
 ```
@@ -75,23 +80,37 @@ through `$RAYBURST_LAB`, `../rayburst-lab`, or `../..` when the site lives in
 `rayburst/website`.
 
 New copy must exist in all 27 locale files; `check.mjs` fails otherwise.
-Headlines and slogans carry no terminal punctuation.
+Headlines and slogans carry no terminal punctuation. The three slogans are the
+repositories' GitHub descriptions and stay word for word:
+
+- Rayburst: Redefining the open-source download manager
+- Rayburst Connect: Redefining the companion browser extension
+- Aria2 Next: Redefining the next generation of aria2
 
 ## The film (optional)
 
-The hero shows a "Watch the film" button only when
-`assets/video/rayburst-film.mp4` is deployed. Cloudflare Pages accepts files up
-to 25 MiB, so encode a web copy from the master render:
+The hero always shows a "Watch the film" link under the buttons; it reads "1:06 · EN" in other
+languages because the film is captioned in English. The player opens on a
+branded poster (the hero's light, the mark and the name) that fades once the
+first frame plays, and says the film is on its way while
+`assets/video/rayburst-film.mp4` is not deployed. Cloudflare Pages serves files up to 25 MiB, so the 4K60
+master (about 3 GB) needs a web copy. At 1080p60, a two-pass 2.8 Mbit/s encode
+of the 66-second film comes to about 23 MiB:
 
 ```bash
-ffmpeg -i rayburst-4k.mp4 -vf "scale=1920:-2:flags=lanczos" \
-  -c:v libx264 -preset slow -crf 23 -profile:v high -pix_fmt yuv420p \
-  -maxrate 2600k -bufsize 5200k -movflags +faststart \
-  -c:a aac -b:a 160k assets/video/rayburst-film.mp4
-ffmpeg -ss 10 -i rayburst-4k.mp4 -frames:v 1 -vf "scale=1920:-2" -q:v 3 assets/video/rayburst-film.jpg
+mkdir -p assets/video
+ffmpeg -y -i rayburst-4k.mp4 -vf "scale=1920:-2:flags=lanczos" -r 60 \
+  -c:v libx264 -preset slow -b:v 2800k -pass 1 -an -f mp4 /dev/null      # NUL on Windows
+ffmpeg -i rayburst-4k.mp4 -vf "scale=1920:-2:flags=lanczos" -r 60 \
+  -c:v libx264 -preset slow -b:v 2800k -maxrate 4200k -bufsize 5600k -pass 2 \
+  -profile:v high -pix_fmt yuv420p -movflags +faststart \
+  -c:a aac -b:a 128k assets/video/rayburst-film.mp4
 ```
 
-The video loads only when the visitor presses the button.
+`node tools/check.mjs` fails if the file exceeds 25 MiB. The video loads only
+when the visitor presses the link. To show the 4K master instead, host it
+somewhere without the size limit (for example Cloudflare R2) and point the
+`src` in `assets/js/main.js` at it.
 
 ## Deployment
 

@@ -180,7 +180,8 @@ export function initConnect() {
   const stepA = document.getElementById('cstep-a')
   const stepB = document.getElementById('cstep-b')
   const appHost = document.getElementById('connect-app')
-  const win = new AppWindow(appHost, { tr: t, height: 700, rows: 4 })
+  // The window is never taller than the browser beside it, so the two read as a pair.
+  const win = new AppWindow(appHost, { tr: t, height: 700, rows: 4, match: host.querySelector('.bw') })
   const model = scenario(
     [
       KINDS.sftp(-20, 0.4),

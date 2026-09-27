@@ -193,8 +193,8 @@ function media(o) {
 }
 
 export const KINDS = {
-  http: (at, p0 = 0) =>
-    file({ id: 'http', name: 'blender-4.5.3-linux-x64.tar.xz', size: 372 * MB, at, p0, rate: 31 * MB, conns: [6, 48], seed: 1 }),
+  http: (at, p0 = 0, rate = 31 * MB) =>
+    file({ id: 'http', name: 'blender-4.5.3-linux-x64.tar.xz', size: 372 * MB, at, p0, rate, conns: [6, 48], seed: 1 }),
   sftp: (at, p0 = 0) =>
     file({ id: 'sftp', name: 'photos-2026.tar', size: 2.37 * 1024 * MB, at, p0, rate: 18.6 * MB, conns: [4, 4], seed: 2 }),
   ed2k: (at, p0 = 0) =>

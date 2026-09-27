@@ -27,7 +27,7 @@ Object.assign(g, { window, document })
 for (const k of ['HTMLElement', 'Element', 'Node', 'CustomEvent', 'Event', 'SVGElement', 'HTMLCanvasElement', 'DocumentFragment', 'MutationObserver']) {
   if (window[k] && !g[k]) g[k] = window[k]
 }
-Object.defineProperty(g, 'navigator', { value: { languages: [LANG], userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }, configurable: true })
+Object.defineProperty(g, 'navigator', { value: { languages: [LANG], userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36' }, configurable: true })
 g.location = new URL('http://localhost:8080/')
 window.location = g.location
 Object.defineProperty(document, 'baseURI', { value: 'http://localhost:8080/' })
@@ -126,10 +126,41 @@ const checks = {
   tray: document.querySelector('.tray-item em')?.textContent,
   sidebar: document.querySelector('.rbw-nav span')?.textContent,
   badge: [...document.querySelectorAll('.rbw-badge-t')].map((e) => e.textContent).filter(Boolean).slice(0, 4),
+  heroDownload: document.getElementById('hero-download-text').textContent,
+  stores: [...document.querySelectorAll('.store b')].map((e) => e.textContent),
+  yourBrowser: document.querySelector('.store.is-yours')?.dataset.store,
+  dlPrimary: `${document.getElementById('dl-primary-text').textContent} · ${document.getElementById('dl-primary-meta').textContent}`,
+  archSwitch: [...document.querySelectorAll('#dl-arch [data-arch]')].map((b) => b.textContent),
+  platforms: document.querySelectorAll('.plat').length,
+  packages: document.querySelectorAll('.pkg').length,
+  yourPlatform: document.querySelector('.plat.is-yours h4')?.textContent,
+  engine: `${document.querySelector('[data-engine-label]').textContent} · ${document.querySelector('[data-engine-sub]').textContent}`,
+  engineBuilds: document.querySelectorAll('#engine-builds a').length,
+  film: document.getElementById('film-meta').textContent,
+  studioCards: document.querySelectorAll('#studio-app .rbw-card').length,
+  studioLook: document.getElementById('studio-app').dataset.look,
+  studioScheme: document.getElementById('studio-scheme').textContent,
+  studioLang: document.getElementById('studio-lang').textContent,
+  studioSidebar: document.querySelector('#studio-app .rbw-nav span')?.textContent,
+  langChips: document.querySelectorAll('.lang-chip').length,
+  pick: `${document.querySelector('.pick-head b').textContent} · ${document.querySelector('[data-v="count"]').textContent} — ${document.querySelector('[data-v="size"]').textContent}`,
+  filmCard: document.querySelector('#film-open b').textContent,
+  overview: document.querySelectorAll('.ov-point').length,
+}
+// Pick a language and a scheme in the studio, as a visitor would.
+document.querySelector('.lang-chip[data-lang="ko"]').dispatchEvent(new window.Event('click', { bubbles: true }))
+document.querySelector('.swatch[data-i="4"]').dispatchEvent(new window.Event('click', { bubbles: true }))
+document.querySelector('#studio-look [data-look="light"]').dispatchEvent(new window.Event('click', { bubbles: true }))
+await frames(3)
+checks.studioPicked = {
+  look: document.getElementById('studio-app').dataset.look,
+  scheme: document.getElementById('studio-scheme').textContent,
+  lang: document.getElementById('studio-lang').textContent,
+  sidebar: document.querySelector('#studio-app .rbw-nav span')?.textContent,
 }
 await i18n.setLocale('ar')
 await frames(10)
-checks.afterSwitch = { lang: document.documentElement.lang, dir: document.documentElement.dir, sidebar: document.querySelector('.rbw-nav span')?.textContent, proto: document.querySelector('.proto-name')?.textContent }
+checks.afterSwitch = { lang: document.documentElement.lang, dir: document.documentElement.dir, sidebar: document.querySelector('.rbw-nav span')?.textContent, proto: document.querySelector('.proto-name')?.textContent, store: document.querySelector('.store b')?.textContent, help: document.querySelector('.plat-help')?.textContent }
 document.documentElement.dataset.theme = 'light'
 await frames(10)
 await main

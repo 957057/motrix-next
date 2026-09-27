@@ -61,10 +61,10 @@ function readStaticEnglish() {
   const roots = [document, document.getElementById('locale-fallback')?.content].filter(Boolean)
   for (const root of roots) {
     root.querySelectorAll('[data-i18n]').forEach((el) => {
-      out[el.dataset.i18n] = el.textContent.trim().replace(/\s+/g, ' ')
+      out[el.getAttribute('data-i18n')] = el.textContent.trim().replace(/\s+/g, ' ')
     })
     root.querySelectorAll('[data-i18n-html]').forEach((el) => {
-      out[el.dataset.i18nHtml] = el.innerHTML.trim().replace(/\s+/g, ' ')
+      out[el.getAttribute('data-i18n-html')] = el.innerHTML.trim().replace(/\s+/g, ' ')
     })
   }
   return out
@@ -98,16 +98,24 @@ function detect() {
   return systemLocale()
 }
 
+const loaded = new Map()
+
 async function load(code, signal) {
+  if (loaded.has(code)) return loaded.get(code)
   try {
     const res = await fetch(new URL(`locales/${code}.json`, document.baseURI), { signal })
     if (!res.ok) return null
     const data = await res.json()
-    return data && typeof data === 'object' && !Array.isArray(data) ? data : null
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return null
+    loaded.set(code, data)
+    return data
   } catch {
     return null
   }
 }
+
+/** Fetch a locale ahead of switching to it, so the switch itself is instant. */
+export const preload = (code) => (CODES.includes(code) ? load(code, AbortSignal.timeout(8000)) : Promise.resolve(null))
 
 export function t(key, vars) {
   const raw = messages[key] ?? base[key] ?? key
@@ -120,10 +128,10 @@ export const onChange = (fn) => listeners.push(fn)
 
 export function apply(root = document) {
   root.querySelectorAll('[data-i18n]').forEach((el) => {
-    el.textContent = t(el.dataset.i18n)
+    el.textContent = t(el.getAttribute('data-i18n'))
   })
   root.querySelectorAll('[data-i18n-html]').forEach((el) => {
-    el.innerHTML = t(el.dataset.i18nHtml, LINKS)
+    el.innerHTML = t(el.getAttribute('data-i18n-html'), LINKS)
   })
   for (const attr of ['alt', 'aria-label', 'title']) {
     root.querySelectorAll(`[data-i18n-${attr}]`).forEach((el) => {

@@ -2,42 +2,23 @@
  * Rayburst website entry: language and theme pickers, navigation, dialogs,
  * and the scenes. No dependencies; modern browser APIs only.
  */
-import { apply as applyI18n, LOCALES, locale, onChange, ready, setLocale, systemLocale, t } from './i18n.js'
+import { apply as applyI18n, LOCALES, locale, onChange, preload, ready, setLocale, systemLocale, t } from './i18n.js'
+import { reducedMotion } from './core/motion.js'
 import { initReveals } from './core/stage.js'
 import { initConnect } from './sections/connect.js'
 import { initCraft } from './sections/craft.js'
 import { initDetails } from './sections/details.js'
 import { initDownload } from './sections/download.js'
 import { initEngine } from './sections/engine.js'
+import { initFamily } from './sections/family.js'
 import { initHero } from './sections/hero.js'
 import { initProtocols } from './sections/protocols.js'
+import { picker } from './ui/picker.js'
 
 const THEME_KEY = 'rayburst-website-theme'
 const THEME_COLOR = { dark: '#0b0910', light: '#fbf8fd' }
 
 /* ─── Pickers ─────────────────────────────────────────────────────────── */
-function picker(root) {
-  const toggle = root.querySelector('.picker-toggle')
-  const close = () => {
-    root.classList.remove('is-open')
-    toggle.setAttribute('aria-expanded', 'false')
-  }
-  toggle.addEventListener('click', (e) => {
-    e.stopPropagation()
-    const open = !root.classList.contains('is-open')
-    document.querySelectorAll('.picker.is-open').forEach((p) => p.classList.remove('is-open'))
-    root.classList.toggle('is-open', open)
-    toggle.setAttribute('aria-expanded', String(open))
-  })
-  document.addEventListener('click', (e) => {
-    if (!root.contains(e.target)) close()
-  })
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') close()
-  })
-  return close
-}
-
 function initLanguagePicker() {
   const root = document.getElementById('lang-picker')
   const menu = document.getElementById('lang-menu')
@@ -56,11 +37,19 @@ function initLanguagePicker() {
   }
   refresh()
   onChange(refresh)
-  menu.addEventListener('click', (e) => {
+  menu.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-lang]')
     if (!b) return
     close()
-    setLocale(b.dataset.lang)
+    const code = b.dataset.lang
+    if (code === locale()) return
+    if (!document.startViewTransition || reducedMotion()) return setLocale(code)
+    // Fetch first, then cross-fade the whole page into the new language.
+    await preload(code)
+    const root = document.documentElement
+    root.classList.add('vt-fade')
+    const vt = document.startViewTransition(() => setLocale(code))
+    vt.finished.finally(() => root.classList.remove('vt-fade'))
   })
 }
 
@@ -98,7 +87,7 @@ function initThemePicker() {
       close()
       const choice = opt.dataset.theme
       const toggle = root.querySelector('.picker-toggle').getBoundingClientRect()
-      if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) return apply(choice)
+      if (!document.startViewTransition || reducedMotion()) return apply(choice)
       // Circular reveal from the toggle.
       const x = toggle.left + toggle.width / 2
       const y = toggle.top + toggle.height / 2
@@ -122,50 +111,118 @@ function initNav() {
   new IntersectionObserver(([e]) => nav.classList.toggle('is-solid', !e.isIntersecting)).observe(sentinel)
 }
 
-/* ─── Dialogs ─────────────────────────────────────────────────────────── */
-function initDialogs() {
-  const lightbox = document.getElementById('lightbox')
+/* ─── Migration note: height and text glide open and closed ───────────── */
+function initMigrate() {
+  const box = document.querySelector('.migrate')
+  const summary = box.querySelector('summary')
+  const body = box.querySelector('.migrate-body')
+  let anim = null
+  let fade = null
+  summary.addEventListener('click', (e) => {
+    if (reducedMotion()) return
+    e.preventDefault()
+    const opening = !box.open || box.classList.contains('is-closing')
+    const from = box.getBoundingClientRect()
+    anim?.cancel()
+    fade?.cancel()
+    // Measure both end states (no paint happens in between).
+    box.classList.remove('is-closing')
+    box.open = false
+    const closed = box.getBoundingClientRect()
+    box.open = true
+    const full = box.getBoundingClientRect()
+    box.classList.toggle('is-closing', !opening)
+    const to = opening ? full : closed
+    // Width and height move together, and the text keeps its open width so it never reflows.
+    body.style.width = `${body.getBoundingClientRect().width}px`
+    box.style.overflow = 'hidden'
+    anim = box.animate(
+      [
+        { width: `${from.width}px`, height: `${from.height}px` },
+        { width: `${to.width}px`, height: `${to.height}px` },
+      ],
+      {
+        duration: opening ? 520 : 380,
+        easing: opening ? 'cubic-bezier(0.2, 0, 0, 1)' : 'cubic-bezier(0.3, 0, 0.2, 1)',
+      },
+    )
+    fade = body.animate(
+      opening
+        ? [{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }]
+        : [{ opacity: 1 }, { opacity: 0 }],
+      { duration: opening ? 380 : 200, delay: opening ? 80 : 0, easing: 'cubic-bezier(0.2, 0, 0, 1)', fill: opening ? 'backwards' : 'forwards' },
+    )
+    anim.onfinish = () => {
+      box.style.overflow = ''
+      body.style.width = ''
+      fade?.cancel()
+      fade = null
+      if (!opening) {
+        box.open = false
+        box.classList.remove('is-closing')
+      }
+      anim = null
+    }
+  })
+}
+
+/* ─── Film dialog: opens and closes with motion ────────────────────────── */
+function closeDialog(d) {
+  if (!d.open || d.classList.contains('is-closing')) return
+  d.classList.add('is-closing')
+  const finish = () => {
+    d.classList.remove('is-closing')
+    d.close()
+  }
+  if (reducedMotion()) return finish()
+  // Wait for the closing animations only (the poster's looping light never ends).
+  const closing = d.getAnimations({ subtree: true }).filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
+  Promise.all(closing.map((a) => a.finished)).then(finish, finish)
+}
+
+function initFilm() {
   const film = document.getElementById('film')
   const video = document.getElementById('film-video')
-  for (const d of [lightbox, film]) {
-    d.addEventListener('click', (e) => {
-      if (e.target === d || e.target.closest('[data-close]')) d.close()
-    })
-  }
-  window.openLightbox = (img) => {
-    const target = document.getElementById('lightbox-img')
-    target.src = img.currentSrc || img.src
-    target.alt = img.alt
-    lightbox.showModal()
-  }
+  const poster = document.getElementById('film-poster')
+  const button = document.getElementById('film-open')
+  const src = new URL('assets/video/rayburst-film.mp4', document.baseURI)
+  film.addEventListener('click', (e) => {
+    if (e.target === film || e.target.closest('[data-close]')) closeDialog(film)
+  })
+  film.addEventListener('cancel', (e) => {
+    e.preventDefault()
+    closeDialog(film)
+  })
   film.addEventListener('close', () => video.pause())
 
-  // The film button appears only when a web encode of the film is deployed.
-  const src = new URL('assets/video/rayburst-film.mp4', document.baseURI)
-  const button = document.getElementById('film-open')
-  if (location.protocol.startsWith('http')) {
-    fetch(src, { method: 'HEAD' })
-      .then((res) => {
-        if (res.ok && (res.headers.get('content-type') ?? '').startsWith('video')) button.hidden = false
-      })
-      .catch(() => {})
-  }
+  // The branded poster stays until the first frame plays; without a deployed
+  // film it says the film is on its way.
+  video.addEventListener('playing', () => poster.classList.add('is-gone'))
+  video.addEventListener('error', () => poster.classList.add('is-missing'))
   button.addEventListener('click', () => {
-    if (!video.src) video.src = src.href
+    if (!video.getAttribute('src')) video.src = src.href
     film.showModal()
     video.play().catch(() => {})
   })
+
+  // The film is captioned in English; other languages see a small EN tag.
+  const meta = document.getElementById('film-meta')
+  const tag = () => (meta.textContent = locale().startsWith('en') ? '1:06' : '1:06 · EN')
+  tag()
+  onChange(tag)
 }
 
 /* ─── Boot ────────────────────────────────────────────────────────────── */
 initThemePicker()
 initNav()
-initDialogs()
+initMigrate()
+initFilm()
 
 await ready
 applyI18n()
 initLanguagePicker()
 initDownload()
+initFamily()
 const hero = initHero()
 const scenes = [hero, initProtocols(), initDetails(), initConnect(), initCraft()]
 initEngine()

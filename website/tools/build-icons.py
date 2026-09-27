@@ -3,7 +3,8 @@
 
 Rayburst's interface uses Ionicons 5 (via @vicons/ionicons5), so the mock-ups
 use the same outlines. The script collects every icon name referenced by
-index.html and assets/js (names ending in -outline, plus logo-github),
+index.html and assets/js (names ending in -outline, the brand logos, heart
+and play),
 downloads missing SVGs from the ionicons 5.5.4 package into tools/.icons, and
 writes one <symbol id="i-NAME"> per icon between the icons:start/end markers.
 
@@ -16,7 +17,7 @@ from pathlib import Path
 SITE = Path(__file__).resolve().parent.parent
 CACHE = SITE / "tools" / ".icons"
 SOURCE = "https://unpkg.com/ionicons@5.5.4/dist/svg/{}.svg"
-NAME = re.compile(r"(?<![\w-])(?:i-)?((?:[a-z]+-)+outline|logo-github)\b")
+NAME = re.compile(r"(?<![\w-])(?:i-)?((?:[a-z]+-)+outline|logo-(?:github|chrome|edge|firefox|docker|apple|windows|tux|android)|heart|play)\b")
 
 
 def used():

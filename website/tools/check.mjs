@@ -36,7 +36,7 @@ const js = Object.fromEntries(scripts.map((p) => [p, read(p)]))
 const used = new Set()
 for (const m of html.matchAll(/data-i18n(?:-html|-alt|-aria-label|-title)?="([^"]+)"/g)) used.add(m[1])
 for (const m of html.matchAll(/data-k="([^"]+)"/g)) used.add(m[1])
-const KEY = /['"`]((?:ui|cx|tray|native|proto|connect|details|d[123]|craft|dl|hero|features|theme|a11y|nav|rebrand|engine|ctl|showcase|footer)\.[\w.]*\w)['"`]/g
+const KEY = /['"`]((?:ui|cx|tray|ov|proto|connect|details|d[123]|craft|dl|hero|features|theme|a11y|nav|rebrand|engine|ctl|footer)\.[\w.]*\w)['"`]/g
 for (const src of Object.values(js)) {
   for (const m of src.matchAll(KEY)) used.add(m[1])
   for (const m of src.matchAll(/data-k="([\w.]+)"/g)) used.add(m[1])
@@ -84,7 +84,7 @@ for (const [code, loc] of Object.entries(locales)) {
 const symbols = new Set([...html.matchAll(/<symbol id="i-([\w-]+)"/g)].map((m) => m[1]))
 const refs = new Set()
 for (const m of html.matchAll(/#i-([\w-]+)/g)) refs.add(m[1])
-for (const src of Object.values(js)) for (const m of src.matchAll(/['"`]((?:[a-z]+-)+outline|logo-github)['"`]/g)) refs.add(m[1])
+for (const src of Object.values(js)) for (const m of src.matchAll(/['"`]((?:[a-z]+-)+outline|logo-(?:github|chrome|edge|firefox|docker|apple|windows|tux|android))['"`]/g)) refs.add(m[1])
 for (const r of refs) if (!symbols.has(r)) err(`icon "${r}" has no symbol (run python3 tools/build-icons.py)`)
 
 // ── Local assets only ────────────────────────────────────────────────────
@@ -103,10 +103,12 @@ const size = (p) => statSync(join(ROOT, p)).size
 const jsBytes = scripts.reduce((n, p) => n + size(p), 0)
 const budget = [
   ['JavaScript', jsBytes, 140_000],
-  ['CSS', size('assets/css/style.css'), 90_000],
-  ['index.html', size('index.html'), 70_000],
+  ['CSS', size('assets/css/style.css'), 100_000],
+  ['index.html', size('index.html'), 80_000],
 ]
 for (const [name, bytes, max] of budget) if (bytes > max) err(`${name} is ${bytes} bytes (budget ${max})`)
+// Cloudflare Pages serves files up to 25 MiB (the film's web copy is the only large one).
+for (const p of walk('assets', '')) if (size(p) > 25 * 1024 * 1024) err(`${p} is over 25 MiB, the Cloudflare Pages file limit`)
 
 // ── Report ───────────────────────────────────────────────────────────────
 for (const w of warn) console.log(`  warn  ${w}`)

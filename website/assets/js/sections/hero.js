@@ -1,7 +1,8 @@
 /**
- * Hero: the logo traces itself, the name and slogan rise, and a live Rayburst
- * window lands flat below them. The backdrop canvas carries slow star dust
- * and a single burst of light from the logo when it fills in.
+ * Hero: the logo traces itself, the name and slogan rise, and the backdrop
+ * canvas carries slow star dust and a single burst of light from the logo
+ * when it fills in. The live Rayburst window beside the overview below is
+ * started from here too.
  */
 import { t } from '../i18n.js'
 import { clamp, ease, hash, prog } from '../core/motion.js'
@@ -25,10 +26,15 @@ export function initHero() {
 
   const measure = () => {
     dpr = Math.min(1.75, window.devicePixelRatio || 1)
-    w = canvas.clientWidth
-    h = canvas.clientHeight
-    canvas.width = Math.round(w * dpr)
-    canvas.height = Math.round(h * dpr)
+    const cw = canvas.clientWidth
+    const ch = canvas.clientHeight
+    // Resizing the bitmap clears it, so only do it when the size really changes.
+    if (cw !== w || ch !== h || canvas.width !== Math.round(cw * dpr)) {
+      w = cw
+      h = ch
+      canvas.width = Math.round(w * dpr)
+      canvas.height = Math.round(h * dpr)
+    }
     const a = logo.getBoundingClientRect()
     const b = canvas.getBoundingClientRect()
     // The rays converge near the lower-left of the mark; the glow sits at its centre.
@@ -89,7 +95,7 @@ export function initHero() {
 
   // The live window below the copy.
   const host = document.getElementById('hero-app')
-  const win = new AppWindow(host, { tr: t, height: 680, rows: 4 })
+  const win = new AppWindow(host, { tr: t, height: 620, rows: 4 })
   const model = scenario(
     [
       KINDS.live(-40, 2472),

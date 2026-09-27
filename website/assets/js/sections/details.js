@@ -2,7 +2,8 @@
  * Details, live. Three tabs advance on their own clock (a click jumps to a tab
  * and the cycle continues from there):
  *   01  Parallel connections: the connection count climbs to 48 and the file's
- *       ranges fill side by side above the real card
+ *       48 ranges fill side by side above the real card; their average is
+ *       exactly the card's progress, and the file completes before the tab ends
  *   02  Every piece: Task Details › Activity, with TaskGraphic's piece map
  *       (8 px atoms, 2 px gutters, success ramp) and the description table
  *   03  Live recording: a running timecode while HLS segments stream into the
@@ -13,13 +14,19 @@ import { clamp, hash, reducedMotion } from '../core/motion.js'
 import { Stage } from '../core/stage.js'
 import { CardView } from '../ui/appwindow.js'
 import { h, ic, setAttr, setClass, setStyle, setText } from '../ui/dom.js'
-import { bytes, clock } from '../ui/format.js'
+import { bytes, clock, MB } from '../ui/format.js'
 import { BT, KINDS } from '../ui/tasks.js'
 
-const DUR = 8
-const STILL = 6
+const DUR = 6
+const STILL = 4.6
 const COLORS = ['#b98cf0', '#6fdc93', '#8fb0ff']
 const RANGES = 48
+/** Per-connection lead or lag, centred so the ranges always average to the file's progress. */
+const LEAD = (() => {
+  const raw = Array.from({ length: RANGES }, (_, k) => hash(k, 9) - 0.5)
+  const mean = raw.reduce((a, b) => a + b, 0) / RANGES
+  return raw.map((x) => x - mean)
+})()
 
 /** Deterministic permutation rank for the piece order. */
 const RANK = (() => {
@@ -78,7 +85,8 @@ function panelConnections(el) {
   const conns = el.querySelector('[data-m="conns"]')
   const down = el.querySelector('[data-m="down"]')
   const card = new CardView(el.querySelector('.dcard'))
-  const task = KINDS.http(0, 0.06)
+  // 372 MB over 48 connections: done in about 4.5 s, so the tab ends on "Completed".
+  const task = KINDS.http(0, 0.04, 82 * MB)
   return (lt) => {
     const view = task(lt, t)
     card.update(view)
@@ -94,14 +102,14 @@ function panelConnections(el) {
     const ch = Math.min(22, (H - gap * (rows - 1)) / rows)
     const accent = COLORS[0]
     const rail = themeColors('rail', () => css(el, '--line') || 'rgba(255,255,255,.08)')
-    const open = view.right?.conns ?? RANGES
+    const p = view.progress
+    // Each connection owns 1/48 of the file. Ranges run a little ahead or behind
+    // (never at 0 % or 100 %), so together they add up to the card's progress.
+    const spread = 1.2 * Math.min(p, 1 - p)
     for (let k = 0; k < RANGES; k++) {
       const x = (k % cols) * (cw + gap)
       const y = Math.floor(k / cols) * (ch + gap)
-      // Connections open one by one; each range then fills at its own pace.
-      const start = (k / RANGES) * 1.6
-      const rate = 0.1 + 0.07 * hash(k, 9)
-      const f = k < open ? clamp((lt - start) * rate + 0.06) : 0
+      const f = clamp(p + spread * LEAD[k])
       ctx.fillStyle = rail
       ctx.beginPath()
       ctx.roundRect(x, y, cw, ch, 4)
@@ -146,7 +154,7 @@ function panelPieces(el) {
   const pEl = el.querySelector('[data-m="p"]')
   const sEl = el.querySelector('[data-m="s"]')
   const values = [...el.querySelectorAll('.tdetail-rows dd')]
-  const task = KINDS.bt(-0.001, 0.02, 9.5, 0)
+  const task = KINDS.bt(-0.001, 0.02, 5.2, 0)
   const lastLevel = new Int8Array(BT.atoms)
   const changed = new Float32Array(BT.atoms).fill(-9)
   let lastT = -1

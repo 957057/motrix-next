@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Copy interface strings from the Rayburst and Rayburst Connect locales.
 
-The product mock-ups on the website show the apps' own labels (desktop,
-native notifications and the browser extension), verbatim, in
-every supported language. This script copies them into locales/<code>.json
-under the ui.*, cx.*, tray.*, scheme.* and native.* keys and leaves every other key
-untouched.
+The product mock-ups on the website show the apps' own labels (the desktop
+app and the browser extension), verbatim, in every supported language. This
+script copies them into locales/<code>.json under the ui.*, cx.*, tray.* and
+scheme.* keys and leaves every other key untouched.
 
     python3 tools/sync-ui-strings.py            # write
     python3 tools/sync-ui-strings.py --check    # fail when a copy is stale
@@ -59,6 +58,12 @@ APP = {
     "ui.d.ratio": "task.task-ratio",
     "ui.d.seeders": "task.task-num-seeders",
     "ui.conns": "task.task-connections",
+    "ui.selectFiles": "task.select-files",
+    "ui.fileNo": "task.file-index",
+    "ui.fileName": "task.file-name",
+    "ui.fileSize": "task.file-size",
+    "ui.chooseLater": "task.magnet-choose-later",
+    "ui.startDownload": "task.magnet-start-download",
     "tray.show": "app.show",
     "tray.new": "app.tray-new-task",
     "tray.resume": "app.tray-resume-all",
@@ -94,11 +99,6 @@ CONNECT = {
     "cx.cancel": "media_cancel",
     "cx.download": "media_download",
     "cx.submitted": "media_submitted",
-}
-
-NATIVE = {
-    "native.doneTitle": "notification.download-complete-title",
-    "native.doneBody": "notification.download-complete-body",
 }
 
 CODES = [
@@ -140,11 +140,6 @@ def main():
             if src not in cx:
                 sys.exit(f"{code}: {src} missing in Rayburst Connect")
             wanted[key] = cx[src]["message"]
-        native = json.loads((lab / "rayburst/src-tauri/locales" / f"{code}.json").read_text("utf-8"))
-        for key, src in NATIVE.items():
-            if src not in native:
-                sys.exit(f"{code}: {src} missing in the native locale")
-            wanted[key] = native[src].replace("%{task_name}", "{name}")
         path = LOCALES / f"{code}.json"
         current = json.loads(path.read_text("utf-8")) if path.exists() else {}
         if all(current.get(k) == v for k, v in wanted.items()):
@@ -156,7 +151,7 @@ def main():
             path.write_text(json.dumps(merged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if check and stale:
         sys.exit("Interface strings out of date: " + ", ".join(stale))
-    print(("checked" if check else "synced") + f" {len(APP) + len(CONNECT) + len(NATIVE)} interface strings in {len(CODES)} locales"
+    print(("checked" if check else "synced") + f" {len(APP) + len(CONNECT)} interface strings in {len(CODES)} locales"
           + (f" (updated: {', '.join(stale)})" if stale and not check else ""))
 
 

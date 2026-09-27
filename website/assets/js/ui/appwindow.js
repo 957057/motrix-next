@@ -50,12 +50,16 @@ export class AppWindow {
    * @param {(key: string, vars?: object) => string} o.tr   translator
    * @param {number} [o.height=680]  window height in the wide layout
    * @param {number} [o.rows]        rows to reserve in the list-only layouts
+   * @param {HTMLElement} [o.match]  never taller than this element (scaled down and centred)
+   * @param {number} [o.wideFrom=900]  container width from which the sidebar layout is used
    */
   constructor(host, o) {
     this.host = host
     this.tr = o.tr
     this.height = o.height ?? 680
     this.rows = o.rows ?? 4
+    this.match = o.match ?? null
+    this.wideFrom = o.wideFrom ?? TIERS[0].min
     this.cards = new Map()
     this.toastEls = new Map()
     host.classList.add('rbw')
@@ -107,6 +111,7 @@ export class AppWindow {
     this.fit = this.fit.bind(this)
     new ResizeObserver(this.fit).observe(host)
     new ResizeObserver(this.fit).observe(this.win)
+    if (this.match) new ResizeObserver(this.fit).observe(this.match)
     this.fit()
   }
 
@@ -119,16 +124,20 @@ export class AppWindow {
   fit() {
     const cw = this.host.clientWidth
     if (!cw) return
-    const tier = TIERS.find((x) => cw >= x.min)
+    const tier = cw >= this.wideFrom ? TIERS[0] : TIERS.find((x) => x !== TIERS[0] && cw >= x.min)
     if (this.host.dataset.tier !== tier.name) {
       this.host.dataset.tier = tier.name
       setStyle(this.win, 'width', `${tier.w}px`)
       setStyle(this.win, 'height', tier.name === 'wide' ? `${this.height}px` : 'auto')
       setStyle(this.list, 'minHeight', tier.name === 'wide' ? '' : `${this.rows * 136 - 16}px`)
     }
-    const k = cw / tier.w
+    let k = cw / tier.w
+    const limit = this.match?.offsetHeight
+    if (limit) k = Math.min(k, limit / this.win.offsetHeight)
+    const dx = (cw - tier.w * k) / 2
     this.scale = k
-    setStyle(this.win, 'transform', `scale(${k})`)
+    this.dx = dx
+    setStyle(this.win, 'transform', `translateX(${dx.toFixed(1)}px) scale(${k})`)
     setStyle(this.host, 'height', `${Math.ceil(this.win.offsetHeight * k)}px`)
   }
 

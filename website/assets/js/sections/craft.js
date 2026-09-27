@@ -1,48 +1,19 @@
 /**
- * The little things: small live demos, each built from the product's own
- * data: the ten color schemes (palettes generated like colorScheme.ts), the
- * unedited screenshots, "Download" in the 27 shipped languages, the tray
- * title and menu (stat.rs, tray.rs), the completion notification and the
- * real constants.ts.
+ * Make it yours: a studio around one live Rayburst window. The visitor picks
+ * light or dark, one of the ten color schemes (palettes generated like
+ * colorScheme.ts) and any of the 27 languages the app ships, and the window
+ * follows at once. Until the first pick, a slow tour changes one thing at a
+ * time. Below it: the tray title and menu (stat.rs, tray.rs), torrent file
+ * selection (BtSelectionDialog) and the real constants.ts.
  */
-import { t } from '../i18n.js'
-import { noise } from '../core/motion.js'
+import { LOCALES, locale, onChange, preload, t } from '../i18n.js'
+import { noise, reducedMotion } from '../core/motion.js'
 import { Stage } from '../core/stage.js'
 import { AppWindow } from '../ui/appwindow.js'
-import { esc, fmt, h, ic, setClass, setText } from '../ui/dom.js'
-import { compactSpeed, MB } from '../ui/format.js'
+import { esc, fmt, ic, setClass, setText } from '../ui/dom.js'
+import { bytes, compactSpeed, MB } from '../ui/format.js'
 import { KINDS, scenario } from '../ui/tasks.js'
-
-/** "Download" in the 27 locales Rayburst ships (their hero.download). */
-const WORDS = [
-  ['en-US', 'Download'],
-  ['zh-CN', '下载'],
-  ['ja', 'ダウンロード'],
-  ['de', 'Herunterladen'],
-  ['ar', 'تنزيل'],
-  ['fr', 'Télécharger'],
-  ['ko', '다운로드'],
-  ['es', 'Descargar'],
-  ['hi', 'डाउनलोड'],
-  ['ru', 'Скачать'],
-  ['pt-BR', 'Baixar'],
-  ['th', 'ดาวน์โหลด'],
-  ['it', 'Scarica'],
-  ['zh-TW', '下載'],
-  ['tr', 'İndir'],
-  ['el', 'Λήψη'],
-  ['vi', 'Tải xuống'],
-  ['pl', 'Pobierz'],
-  ['fa', 'دانلود'],
-  ['uk', 'Завантажити'],
-  ['nl', 'Downloaden'],
-  ['id', 'Unduh'],
-  ['hu', 'Letöltés'],
-  ['ro', 'Descarcă'],
-  ['bg', 'Изтегляне'],
-  ['nb', 'Last ned'],
-  ['ca', 'Descarregar'],
-]
+import { toastsFor } from './shared.js'
 
 /** rayburst/src/shared/constants.ts, lines 64–77, verbatim. */
 const CODE_FIRST = 64
@@ -90,110 +61,141 @@ function schemeVars(tok, dark) {
   return v
 }
 
-async function initSchemes() {
-  const demo = document.getElementById('scheme-demo')
+/** Languages the tour visits, one per step, before it returns to the page's own. */
+const TOUR = ['ja', 'de', 'ar', 'fr', 'ko', 'es', 'ru', 'hi', 'zh-CN', 'pt-BR', 'th', 'it']
+const STEP = 2.6
+
+async function initStudio() {
+  const studio = document.getElementById('studio')
+  const host = document.getElementById('studio-app')
   const swatches = document.getElementById('swatches')
-  const res = await fetch(new URL('assets/data/schemes.json', document.baseURI))
-  const schemes = await res.json()
-  const win = new AppWindow(demo, { tr: t, rows: 2 })
-  const model = scenario([KINDS.bt(-30, 0.1, 12, 0), KINDS.sftp(-10, 0.5)], { newestFirst: true })
+  const schemeName = document.getElementById('studio-scheme')
+  const langName = document.getElementById('studio-lang')
+  const langBox = document.getElementById('studio-langs')
+  const lookSeg = document.getElementById('studio-look')
+  const schemes = await (await fetch(new URL('assets/data/schemes.json', document.baseURI))).json()
+
+  const state = {
+    look: document.documentElement.dataset.theme === 'light' ? 'light' : 'dark',
+    scheme: 0,
+    lang: locale(),
+    dict: null,
+    manual: false,
+  }
+  const tr = (key, vars) => fmt(state.dict?.[key] ?? t(key), vars ?? {})
+  // The full window with its sidebar, so a scheme recolors every surface.
+  const win = new AppWindow(host, { tr, height: 620, rows: 4, wideFrom: 620 })
+  const model = scenario(
+    [KINDS.live(-50, 3120), KINDS.sftp(-30, 0.62), KINDS.bt(-4, 0.3, 30, 0.8), KINDS.http(0, 0.2), KINDS.media(0, 0.44, (x) => `${x('connect.pageTitle')}.mkv`)],
+    { newestFirst: true },
+  )
 
   swatches.innerHTML = schemes
-    .map(
-      (s, i) =>
-        `<button class="swatch" type="button" role="radio" aria-checked="${i === 0}" data-i="${i}" style="--s: ${s.seed}"><i></i><span data-k="scheme.${s.id}"></span></button>`,
-    )
+    .map((s, i) => `<button class="swatch" type="button" role="radio" data-i="${i}" style="--s: ${s.seed}" title=""><i></i></button>`)
     .join('')
-  const buttons = [...swatches.children]
-  let current = 0
-  let manual = false
-  const apply = (i) => {
-    current = i
-    const dark = document.documentElement.dataset.theme !== 'light'
-    const vars = schemeVars(schemes[i][dark ? 'dark' : 'light'], dark)
-    for (const [k, v] of Object.entries(vars)) demo.style.setProperty(k, v)
-    buttons.forEach((b, j) => {
-      setClass(b, 'is-on', j === i)
-      b.setAttribute('aria-checked', String(j === i))
+  const swatchEls = [...swatches.children]
+  langBox.innerHTML = Object.entries(LOCALES)
+    .map(([code, name]) => `<button class="lang-chip" type="button" role="radio" data-lang="${code}" lang="${code}">${esc(name)}</button>`)
+    .join('')
+  const chips = [...langBox.children]
+  const looks = [...lookSeg.querySelectorAll('[data-look]')]
+
+  const paintScheme = () => {
+    const dark = state.look === 'dark'
+    const vars = schemeVars(schemes[state.scheme][dark ? 'dark' : 'light'], dark)
+    for (const [k, v] of Object.entries(vars)) host.style.setProperty(k, v)
+    host.dataset.look = state.look
+    swatchEls.forEach((b, j) => {
+      setClass(b, 'is-on', j === state.scheme)
+      b.setAttribute('aria-checked', String(j === state.scheme))
     })
+    lookSeg.style.setProperty('--at', state.look === 'light' ? 0 : 1)
+    looks.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.look === state.look)))
   }
-  buttons.forEach((b, i) =>
-    b.addEventListener('click', () => {
-      manual = true
-      apply(i)
-    }),
-  )
-  new MutationObserver(() => apply(current)).observe(document.documentElement, { attributeFilter: ['data-theme'] })
-  apply(0)
-  const translate = () => {
-    buttons.forEach((b) => setText(b.querySelector('span'), t(b.querySelector('span').dataset.k)))
+  const paintLabels = () => {
+    setText(schemeName, t(`scheme.${schemes[state.scheme].id}`))
+    swatchEls.forEach((b, j) => b.setAttribute('title', t(`scheme.${schemes[j].id}`)))
+    setText(langName, LOCALES[state.lang])
+  }
+  const setLang = async (code) => {
+    const dict = await preload(code)
+    state.lang = code
+    state.dict = dict
+    chips.forEach((c) => {
+      setClass(c, 'is-on', c.dataset.lang === code)
+      c.setAttribute('aria-checked', String(c.dataset.lang === code))
+    })
     win.translate()
+    paintLabels()
+    // The window's labels change language in place; a short fade marks the switch.
+    if (!reducedMotion()) host.animate([{ opacity: 0.55, filter: 'blur(2px)' }, { opacity: 1, filter: 'none' }], { duration: 380, easing: 'cubic-bezier(0.2, 0, 0, 1)' })
   }
-  translate()
-  let step = 0
-  new Stage(demo, {
-    still: 10,
+
+  const pick = () => {
+    state.manual = true
+    studio.classList.add('is-manual')
+  }
+  swatches.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-i]')
+    if (!b) return
+    pick()
+    state.scheme = Number(b.dataset.i)
+    paintScheme()
+    paintLabels()
+  })
+  lookSeg.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-look]')
+    if (!b) return
+    pick()
+    state.look = b.dataset.look
+    paintScheme()
+  })
+  langBox.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-lang]')
+    if (!b) return
+    pick()
+    setLang(b.dataset.lang)
+  })
+  // Until the visitor picks something, the window follows the page's theme and language.
+  new MutationObserver(() => {
+    if (state.manual) return
+    state.look = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
+    paintScheme()
+  }).observe(document.documentElement, { attributeFilter: ['data-theme'] })
+  onChange(() => {
+    paintLabels()
+    if (!state.manual) setLang(locale())
+  })
+
+  paintScheme()
+  await setLang(state.lang)
+
+  let step = -1
+  new Stage(studio, {
+    still: 8,
     render: (time) => {
-      win.update(model(time, t))
-      // Cycle the schemes until the visitor picks one.
-      const next = Math.floor(time / 2.4) % schemes.length
-      if (!manual && next !== step) {
-        step = next
-        apply(next)
+      const m = model(time, tr)
+      win.update(m)
+      win.toasts(toastsFor(m, time, tr))
+      if (state.manual || reducedMotion()) return
+      // The tour: every step changes one thing (scheme, language, then appearance).
+      const k = Math.floor(time / STEP)
+      if (k === step || k === 0) return
+      step = k
+      const phase = k % 4
+      if (phase === 1 || phase === 3) {
+        state.scheme = (state.scheme + 1) % schemes.length
+        paintScheme()
+        paintLabels()
+      } else if (phase === 2) {
+        setLang(TOUR[Math.floor(k / 4) % TOUR.length])
+      } else {
+        state.look = state.look === 'dark' ? 'light' : 'dark'
+        paintScheme()
       }
     },
   })
-  return translate
-}
-
-function initShots() {
-  const box = document.getElementById('shots')
-  const imgs = [...box.querySelectorAll('img')]
-  const buttons = [...document.querySelectorAll('#shot-toggle button')]
-  let manual = false
-  let shown = 0
-  const show = (i) => {
-    shown = i
-    imgs.forEach((img, j) => setClass(img, 'is-off', j !== i))
-    buttons.forEach((b, j) => b.setAttribute('aria-pressed', String(j === i)))
-  }
-  buttons.forEach((b, i) =>
-    b.addEventListener('click', () => {
-      manual = true
-      show(i)
-    }),
-  )
-  box.addEventListener('click', () => window.openLightbox?.(imgs[shown]))
-  new Stage(box, {
-    still: 0,
-    render: (time) => {
-      const i = Math.floor(time / 3.6) % 2
-      if (!manual && i !== shown) show(i)
-    },
-  })
-}
-
-function initLangs() {
-  const box = document.getElementById('langs')
-  const code = h('<span class="langs-code"></span>')
-  box.append(code)
-  let shown = -1
-  let current = null
-  new Stage(box, {
-    still: 0,
-    render: (time) => {
-      const i = Math.floor(time / 1.5) % WORDS.length
-      if (i === shown) return
-      shown = i
-      const [lang, word] = WORDS[i]
-      current?.classList.replace('is-in', 'is-out')
-      const old = current
-      old?.addEventListener('animationend', () => old.remove(), { once: true })
-      current = h(`<span class="langs-word is-in" lang="${lang}" dir="${lang === 'ar' || lang === 'fa' ? 'rtl' : 'ltr'}">${esc(word)}</span>`)
-      box.prepend(current)
-      setText(code, lang)
-    },
-  })
+  return () => paintLabels()
 }
 
 function initTray() {
@@ -235,31 +237,64 @@ function initTray() {
   return translate
 }
 
-function initNotify() {
-  const box = document.getElementById('notify')
+/** Torrent file selection (BtSelectionDialog, BtFileSelector): untick what you don't need, then start. */
+const FILES = [
+  ['bbb_sunflower_2160p_60fps_normal.mp4', 642 * MB],
+  ['bbb_sunflower_1080p_60fps_normal.mp4', 355.9 * MB],
+  ['bbb_sunflower_1080p_30fps_normal.mp4', 263.4 * MB],
+  ['poster.jpg', 1.2 * MB],
+]
+/** When each file is unticked during the loop (null: stays selected). */
+const UNTICK = [null, 1.3, 2.1, null]
+const PICK_LOOP = 7
+
+function initPick() {
+  const box = document.getElementById('pick')
+  box.classList.add('rbw')
   box.innerHTML = `
-    <div class="notify-card">
-      <img src="assets/img/logo.svg" alt="" width="36" height="36" />
-      <div><b data-k="native.doneTitle"></b><span data-v="body"></span></div>
+    <div class="pick-win">
+      <div class="pick-head"><b data-k="ui.selectFiles"></b>${ic('close-outline')}</div>
+      <div class="pick-name">Big Buck Bunny 4K</div>
+      <div class="pick-table">
+        <div class="pick-row pick-th"><i class="pick-box">${ic('checkmark-outline')}</i><span data-k="ui.fileNo"></span><span data-k="ui.fileName"></span><span data-k="ui.fileSize"></span></div>
+        ${FILES.map(
+          ([name, size], i) =>
+            `<div class="pick-row" data-i="${i}"><i class="pick-box">${ic('checkmark-outline')}</i><span>${i + 1}</span><span class="pick-file">${esc(name)}</span><span>${bytes(size)}</span></div>`,
+        ).join('')}
+      </div>
+      <div class="pick-foot">
+        <span class="pick-sum"><b class="mono" data-v="count"></b><em>—</em><b class="mono" data-v="size"></b></span>
+        <span class="pick-btns"><i data-k="ui.chooseLater"></i><i class="is-primary" data-k="ui.startDownload"></i></span>
+      </div>
     </div>`
-  const card = box.querySelector('.notify-card')
-  const titleEl = card.querySelector('b')
-  const bodyEl = card.querySelector('[data-v="body"]')
-  const translate = () => {
-    setText(titleEl, t('native.doneTitle'))
-    setText(bodyEl, fmt(t('native.doneBody'), { name: 'blender-4.5.3-linux-x64.tar.xz' }))
-  }
+  const rows = [...box.querySelectorAll('.pick-row[data-i]')]
+  const all = box.querySelector('.pick-th')
+  const count = box.querySelector('[data-v="count"]')
+  const size = box.querySelector('[data-v="size"]')
+  const start = box.querySelector('.is-primary')
+  const labels = [...box.querySelectorAll('[data-k]')]
+  const translate = () => labels.forEach((el) => setText(el, t(el.dataset.k)))
   translate()
-  let state = ''
   new Stage(box, {
-    still: 2,
-    loop: 6,
+    still: 3,
+    loop: PICK_LOOP,
     render: (time) => {
-      const next = time > 0.4 && time < 4.8 ? 'is-in' : time >= 4.8 ? 'is-out' : ''
-      if (next === state) return
-      card.classList.remove('is-in', 'is-out')
-      if (next) card.classList.add(next)
-      state = next
+      let n = 0
+      let bytesOn = 0
+      rows.forEach((row, i) => {
+        const on = UNTICK[i] == null || time < UNTICK[i]
+        setClass(row, 'is-off', !on)
+        setClass(row, 'is-hot', UNTICK[i] != null && time > UNTICK[i] - 0.35 && time < UNTICK[i] + 0.25)
+        if (on) {
+          n++
+          bytesOn += FILES[i][1]
+        }
+      })
+      setClass(all, 'is-some', n < FILES.length)
+      setText(count, `${n}/${FILES.length}`)
+      setText(size, bytes(bytesOn))
+      setClass(start, 'is-press', time > 3.1 && time < 3.4)
+      setClass(box, 'is-sent', time > 3.4 && time < PICK_LOOP - 0.4)
     },
   })
   return translate
@@ -284,18 +319,8 @@ function initCode() {
 
 export function initCraft() {
   const translators = []
-  initSchemes().then((fn) => translators.push(fn))
-  initShots()
-  initLangs()
-  translators.push(initTray(), initNotify())
+  initStudio().then((fn) => translators.push(fn))
+  translators.push(initTray(), initPick())
   initCode()
-  // Spotlight that follows the pointer on each tile.
-  document.querySelectorAll('.tile').forEach((tile) =>
-    tile.addEventListener('pointermove', (e) => {
-      const r = tile.getBoundingClientRect()
-      tile.style.setProperty('--mx', `${e.clientX - r.left}px`)
-      tile.style.setProperty('--my', `${e.clientY - r.top}px`)
-    }),
-  )
   return { translate: () => translators.forEach((fn) => fn()) }
 }
