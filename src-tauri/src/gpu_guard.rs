@@ -11,9 +11,11 @@ use std::io::Write;
 #[cfg(target_os = "linux")]
 const SELF_SET_MARKER: &str = "_DESKTOP_WEBKIT_RENDERING_SELF_SET";
 
-pub const WEBKIT_DISABLE_DMABUF_RENDERER: &str = "WEBKIT_DISABLE_DMABUF_RENDERER";
+#[cfg(target_os = "linux")]
+const WEBKIT_DISABLE_DMABUF_RENDERER: &str = "WEBKIT_DISABLE_DMABUF_RENDERER";
 
-pub const WEBKIT_DISABLE_COMPOSITING_MODE: &str = "WEBKIT_DISABLE_COMPOSITING_MODE";
+#[cfg(target_os = "linux")]
+const WEBKIT_DISABLE_COMPOSITING_MODE: &str = "WEBKIT_DISABLE_COMPOSITING_MODE";
 
 #[cfg(target_os = "linux")]
 fn data_dir() -> Option<std::path::PathBuf> {
@@ -58,57 +60,99 @@ fn disable_webkit_hardware_rendering_with_marker() {
     }
 }
 
-#[cfg(any(target_os = "linux", test))]
-fn env_truthy(name: &str) -> bool {
-    std::env::var(name)
-        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-        .unwrap_or(false)
-}
-
 #[cfg(target_os = "linux")]
-pub fn pre_flight() -> bool {
-    if std::env::var(SELF_SET_MARKER).is_ok() {
+pub fn pre_flight() {
+    if std::env::var_os(SELF_SET_MARKER).is_some() {
         unsafe {
             std::env::remove_var(SELF_SET_MARKER);
             std::env::remove_var(WEBKIT_DISABLE_DMABUF_RENDERER);
             std::env::remove_var(WEBKIT_DISABLE_COMPOSITING_MODE);
         }
         guard_log("gpu_guard: cleared inherited env vars from relaunch");
-    } else if std::env::var(WEBKIT_DISABLE_DMABUF_RENDERER).is_ok()
-        || std::env::var(WEBKIT_DISABLE_COMPOSITING_MODE).is_ok()
+    } else if std::env::var_os(WEBKIT_DISABLE_DMABUF_RENDERER).is_some()
+        || std::env::var_os(WEBKIT_DISABLE_COMPOSITING_MODE).is_some()
     {
-        let dmabuf_disabled = env_truthy(WEBKIT_DISABLE_DMABUF_RENDERER);
-        let compositing_disabled = env_truthy(WEBKIT_DISABLE_COMPOSITING_MODE);
         guard_log(&format!(
-            "gpu_guard: external WebKitGTK rendering override dmabuf_disabled={dmabuf_disabled} compositing_disabled={compositing_disabled}"
+            "gpu_guard: external rendering overrides {WEBKIT_DISABLE_DMABUF_RENDERER}={:?} {WEBKIT_DISABLE_COMPOSITING_MODE}={:?}",
+            std::env::var_os(WEBKIT_DISABLE_DMABUF_RENDERER),
+            std::env::var_os(WEBKIT_DISABLE_COMPOSITING_MODE),
         ));
-        return dmabuf_disabled || compositing_disabled;
+        return;
     }
 
     if data_dir().is_some_and(|dir| read_software_rendering_from_config(&dir)) {
         disable_webkit_hardware_rendering_with_marker();
         guard_log("gpu_guard: explicit software rendering fallback");
-        true
     } else {
         guard_log("gpu_guard: using WebKitGTK rendering defaults");
-        false
     }
 }
 
 #[cfg(not(target_os = "linux"))]
-pub fn pre_flight() -> bool {
-    false
+pub fn pre_flight() {}
+
+#[cfg(target_os = "linux")]
+async fn hardware_acceleration_policy(app: &tauri::AppHandle) -> Result<String, String> {
+    use tauri::Manager;
+    use webkit2gtk::{SettingsExt, WebViewExt};
+
+    // Inspect the existing WebView on its UI thread; never recreate a hidden one.
+    let window = app
+        .get_webview_window("main")
+        .ok_or("The main WebView is not available")?;
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    window
+        .with_webview(move |webview| {
+            let policy = webview
+                .inner()
+                .settings()
+                .map(|settings| format!("{:?}", settings.hardware_acceleration_policy()))
+                .ok_or("WebKitGTK settings are not available");
+            let _ = sender.send(policy);
+        })
+        .map_err(|error| format!("Failed to inspect the WebView: {error}"))?;
+    tokio::time::timeout(std::time::Duration::from_secs(2), receiver)
+        .await
+        .map_err(|_| "Timed out reading the WebKitGTK policy")?
+        .map_err(|_| "The WebView closed before its policy could be read")?
+        .map_err(str::to_string)
 }
 
-pub fn is_hardware_rendering_enabled() -> bool {
-    #[cfg(any(target_os = "linux", test))]
-    {
-        !env_truthy(WEBKIT_DISABLE_DMABUF_RENDERER) && !env_truthy(WEBKIT_DISABLE_COMPOSITING_MODE)
-    }
-    #[cfg(all(not(target_os = "linux"), not(test)))]
-    {
-        false
-    }
+#[cfg(target_os = "linux")]
+pub async fn diagnostic_snapshot(app: &tauri::AppHandle) -> serde_json::Value {
+    let environment =
+        |name| std::env::var_os(name).map(|value| value.to_string_lossy().into_owned());
+    let dmabuf = environment(WEBKIT_DISABLE_DMABUF_RENDERER);
+    let compositing = environment(WEBKIT_DISABLE_COMPOSITING_MODE);
+    let disable_override_source = if std::env::var_os(SELF_SET_MARKER).is_some() {
+        "software_rendering_preference"
+    } else if dmabuf.is_some() || compositing.is_some() {
+        "environment"
+    } else {
+        "none"
+    };
+    let version = tauri::webview_version();
+    let policy = hardware_acceleration_policy(app).await;
+    // A native policy describes allowed behavior, not proof of active GPU rendering.
+    serde_json::json!({
+        "webkitgtk_version": version.as_ref().ok(),
+        "version_error": version.err().map(|error| error.to_string()),
+        "hardware_acceleration_policy": policy.as_ref().ok(),
+        "policy_error": policy.as_ref().err(),
+        "disable_override_source": disable_override_source,
+        "environment": {
+            "WEBKIT_DISABLE_DMABUF_RENDERER": dmabuf,
+            "WEBKIT_DISABLE_COMPOSITING_MODE": compositing,
+            "WEBKIT_USE_SKIA_FOR_COMPOSITION": environment("WEBKIT_USE_SKIA_FOR_COMPOSITION"),
+            "GDK_BACKEND": environment("GDK_BACKEND"),
+            "XDG_SESSION_TYPE": environment("XDG_SESSION_TYPE"),
+        },
+    })
+}
+
+#[cfg(not(target_os = "linux"))]
+pub async fn diagnostic_snapshot(_app: &tauri::AppHandle) -> serde_json::Value {
+    serde_json::Value::Null
 }
 
 #[cfg(test)]

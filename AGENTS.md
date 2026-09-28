@@ -95,7 +95,7 @@ src-tauri/
 │   │   ├── power.rs            # Sleep prevention and power guard service
 │   │   ├── stat.rs             # Global stat polling, Dock badge, Dock progress bar (custom NSProgressIndicator)
 │   │   └── speed.rs            # Speed limit scheduler (time-of-day limits)
-│   ├── gpu_guard.rs            # GPU compatibility detection and WebView renderer fallback
+│   ├── gpu_guard.rs            # Explicit Linux rendering fallback and native diagnostics
 │   ├── database/               # Single native SQLite owner: history, credentials, receipts
 │   ├── i18n.rs                 # Native locale negotiation and rust-i18n message access
 │   ├── error.rs                # AppError enum (Store, Engine, Io, NotFound, Updater, Upnp)

@@ -163,6 +163,7 @@ pub(crate) async fn runtime_snapshot(app: &tauri::AppHandle, raw_config: Option<
     let preferences = raw_config.and_then(|value| value.get("preferences"));
     let native_messaging = crate::native_messaging::diagnostic_snapshot(app).await;
     let protocol_handlers = crate::commands::protocol::protocol_diagnostics(app).await;
+    let rendering = crate::gpu_guard::diagnostic_snapshot(app).await;
     serde_json::json!({
         "schema_version": crate::log_policy::LOG_SCHEMA_VERSION,
         "exported_at": chrono::Local::now().to_rfc3339(),
@@ -186,12 +187,7 @@ pub(crate) async fn runtime_snapshot(app: &tauri::AppHandle, raw_config: Option<
             "bt_session": bt_session,
             "supervisor": supervisor,
         },
-        "rendering": {
-            "webkit_dmabuf_disabled": std::env::var(crate::gpu_guard::WEBKIT_DISABLE_DMABUF_RENDERER).unwrap_or_default(),
-            "webkit_compositing_disabled": std::env::var(crate::gpu_guard::WEBKIT_DISABLE_COMPOSITING_MODE).unwrap_or_default(),
-            "hardware_acceleration_enabled": crate::gpu_guard::is_hardware_rendering_enabled(),
-            "xdg_session_type": std::env::var("XDG_SESSION_TYPE").unwrap_or_default(),
-        },
+        "rendering": rendering,
         "configuration": raw_config.map(sanitize_config_snapshot),
         "native_messaging": native_messaging,
         "protocol_handlers": protocol_handlers,

@@ -234,5 +234,8 @@ separate process group. Development builds do not register installed-app identit
 
 Linux uses WebKitGTK defaults. `softwareRendering` explicitly enables a diagnostic
 fallback; externally supplied rendering environment variables remain authoritative.
+Linux diagnostics report the runtime WebKitGTK version, the existing WebView's native
+hardware acceleration policy, and rendering overrides. A policy is not proof of GPU
+use. An unavailable WebView or policy read failure is reported without creating a window.
 Updates retain Tauri's selected Update object and verified bytes. Cancellation can
 retry that selection, and installation needs no second metadata request.
