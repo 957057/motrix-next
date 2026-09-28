@@ -1,0 +1,30 @@
+{
+  "name": "rayburst-film",
+  "private": true,
+  "description": "Code-rendered promo film and soundtrack for Rayburst",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "setup": "pnpm exec playwright install chromium && node scripts/fetch-fonts.mjs",
+    "fonts": "node scripts/fetch-fonts.mjs",
+    "audio": "python3 audio/soundtrack.py --stems",
+    "audio:win": "python audio/soundtrack.py --stems",
+    "preview": "node scripts/serve.mjs",
+    "lint": "node scripts/lint.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "check": "node scripts/lint.mjs && node scripts/smoke.mjs",
+    "stills": "node scripts/render.mjs --stills --lang all",
+    "draft": "node scripts/render.mjs --draft",
+    "render": "node scripts/render.mjs --lang en",
+    "render:zh": "node scripts/render.mjs --lang zh-CN",
+    "render:all": "node scripts/render.mjs --lang all",
+    "render:4k": "node scripts/render.mjs --lang all --scale 2"
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "playwright": "^1.55.0"
+  },
+  "packageManager": "pnpm@11.5.2"
+}

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rayburst Promo</title>
+    <style>
+      @font-face {
+        font-family: 'Inter Var';
+        src: url('./assets/fonts/InterVariable.woff2') format('woff2');
+        font-weight: 100 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'JetBrains Mono';
+        src: url('./assets/fonts/JetBrainsMono-VF.ttf') format('truetype');
+        font-weight: 100 800;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Noto Sans SC';
+        src:
+          url('./assets/fonts/NotoSansSC-VF.ttf') format('truetype'),
+          local('Noto Sans CJK SC'),
+          local('Source Han Sans SC');
+        font-weight: 100 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Noto Sans JP';
+        src:
+          url('./assets/fonts/NotoSansJP-VF.ttf') format('truetype'),
+          local('Noto Sans CJK JP');
+        font-weight: 100 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Noto Sans KR';
+        src:
+          url('./assets/fonts/NotoSansKR-VF.ttf') format('truetype'),
+          local('Noto Sans CJK KR');
+        font-weight: 100 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Noto Sans Arabic';
+        src: url('./assets/fonts/NotoSansArabic-VF.ttf') format('truetype');
+        font-weight: 100 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Noto Sans Devanagari';
+        src: url('./assets/fonts/NotoSansDevanagari-VF.ttf') format('truetype');
+        font-weight: 100 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Noto Sans Thai';
+        src: url('./assets/fonts/NotoSansThai-VF.ttf') format('truetype');
+        font-weight: 100 900;
+        font-display: block;
+      }
+      :root {
+        color-scheme: dark;
+        --bg: #07050d;
+        --panel: #15111f;
+        --text: #ede6fa;
+        --dim: #a99cc7;
+        --accent: #b17cec;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          13px/1.4 'Inter Var',
+          system-ui,
+          sans-serif;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+      #stage {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        place-items: center;
+        padding: 12px;
+      }
+      #film {
+        max-width: 100%;
+        max-height: 100%;
+        aspect-ratio: 16 / 9;
+        width: auto;
+        height: 100%;
+        background: #000;
+        box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
+      }
+      #bar {
+        padding: 10px 16px 14px;
+        background: var(--panel);
+        display: grid;
+        gap: 8px;
+      }
+      #row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      button,
+      select {
+        background: #221b31;
+        color: var(--text);
+        border: 1px solid #3a3150;
+        border-radius: 8px;
+        padding: 6px 12px;
+        font: inherit;
+        cursor: pointer;
+      }
+      button.on {
+        background: var(--accent);
+        color: #1a0d2e;
+        border-color: var(--accent);
+      }
+      #time {
+        font-variant-numeric: tabular-nums;
+        color: var(--dim);
+        margin-left: auto;
+      }
+      #note {
+        color: #ffb869;
+      }
+      #scrubwrap {
+        position: relative;
+        padding-top: 22px;
+      }
+      #scrub {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+      #marks button {
+        position: absolute;
+        top: 0;
+        padding: 1px 6px;
+        font-size: 11px;
+        border-radius: 5px;
+        transform: translateX(-1px);
+      }
+      #error {
+        white-space: pre-wrap;
+        color: #ff8a9a;
+        padding: 0 16px;
+      }
+      body.render #bar,
+      body.render #error {
+        display: none;
+      }
+      body.render {
+        overflow: hidden;
+      }
+      body.render #stage {
+        padding: 0;
+        display: block;
+      }
+      body.render #film {
+        width: auto;
+        height: auto;
+        max-width: none;
+        max-height: none;
+        box-shadow: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage"><canvas id="film" width="1920" height="1080"></canvas></div>
+    <div id="error"></div>
+    <div id="bar">
+      <div id="scrubwrap">
+        <div id="marks"></div>
+        <input id="scrub" type="range" min="0" max="66" step="0.0167" value="0" />
+      </div>
+      <div id="row">
+        <button id="play">Play</button>
+        <button id="blur" title="Motion blur when paused (M)">Motion blur</button>
+        <button id="loop" title="Loop current section (L)">Loop section</button>
+        <select id="lang" title="Language"></select>
+        <span id="note"></span>
+        <span id="time">0.00s</span>
+      </div>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
