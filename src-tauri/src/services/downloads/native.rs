@@ -8,12 +8,8 @@ pub(super) async fn prepare(
     uris: &[String],
     options: &mut serde_json::Value,
 ) -> Result<Option<String>, AppError> {
-    if options
-        .get("out")
-        .and_then(serde_json::Value::as_str)
-        .is_some_and(|name| name.contains('\0'))
-    {
-        return Err(AppError::Aria2("Output names cannot contain NUL".into()));
+    if let Some(name) = options.get("out").and_then(serde_json::Value::as_str) {
+        super::validate_filename(name)?;
     }
     if uris.iter().any(|uri| {
         uri.trim_start()

@@ -225,6 +225,13 @@ function normalizeScalarValues(config: Record<string, unknown>, repairs: string[
   if (config.customColorScheme !== customColorScheme) repairs.push('customColorScheme')
   config.customColorScheme = customColorScheme
   repairEnum(config, 'updateChannel', UPDATE_CHANNELS, DEFAULT_APP_CONFIG.updateChannel, repairs)
+  repairEnum(
+    config,
+    'extensionDownloadBehavior',
+    ['confirm', 'background', 'show'],
+    DEFAULT_APP_CONFIG.extensionDownloadBehavior,
+    repairs,
+  )
   repairEnum(config, 'logLevel', APP_LOG_LEVELS, DEFAULT_APP_CONFIG.logLevel, repairs)
   repairEnum(config, 'aria2LogLevel', ARIA2_LOG_LEVELS, DEFAULT_APP_CONFIG.aria2LogLevel, repairs)
   repairEnum(config, 'fileAllocation', FILE_ALLOCATION_OPTIONS, DEFAULT_APP_CONFIG.fileAllocation, repairs)

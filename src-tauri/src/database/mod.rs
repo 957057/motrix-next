@@ -1,6 +1,7 @@
 //! Process-owned SQLite storage. No database lifecycle depends on a WebView.
 mod credentials;
 mod history;
+mod rename;
 mod submissions;
 use crate::error::AppError;
 pub use credentials::HttpAuthCredential;
@@ -10,7 +11,7 @@ use std::{path::Path, sync::Arc};
 pub use submissions::SubmissionState;
 use tokio::sync::{MappedMutexGuard, Mutex, MutexGuard};
 
-pub const SCHEMA_VERSION: u32 = 4;
+pub const SCHEMA_VERSION: u32 = 5;
 // Connection is Send but not Sync; one owner serializes access and transactions.
 pub struct Database {
     conn: Mutex<Option<Connection>>,
@@ -49,7 +50,7 @@ impl Database {
             std::fs::create_dir_all(parent)?;
         }
         let mut conn = Connection::open(path)?;
-        conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=5000; PRAGMA foreign_keys=ON;")?;
+        conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=5000; PRAGMA foreign_keys=ON;")?;
         let version: u32 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
         if version > SCHEMA_VERSION {
             return Err(AppError::Database("Unsupported database schema".into()));
@@ -59,6 +60,7 @@ impl Database {
         transaction.prepare("SELECT gid, added_at, meta FROM download_history LIMIT 0")?;
         transaction.pragma_update(None, "user_version", SCHEMA_VERSION)?;
         transaction.commit()?;
+        Self::recover_file_renames(&mut conn)?;
         Ok(Self {
             conn: Mutex::new(Some(conn)),
         })

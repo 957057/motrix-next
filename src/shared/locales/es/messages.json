@@ -387,9 +387,6 @@
     "recommended-limit": "Recomendado ≤ {value}",
     "high-bt-peers-reason": "Demasiados nodos aumentan el consumo de memoria",
     "engine-section": "Motor de descarga Aria2 Next",
-    "hardware-rendering": "Aceleración por hardware de WebKitGTK",
-    "hardware-rendering-hint": "Activarla puede mejorar el rendimiento de renderizado de la interfaz, pero algunas GPU, controladores o entornos de escritorio pueden hacer que WebKitGTK falle",
-    "hardware-rendering-restart-confirm": "Cambiar la aceleración por hardware de WebKitGTK requiere reiniciar la aplicación. Si la aplicación no puede iniciarse después de activarla, edite config.json manualmente y establezca preferences.hardwareRendering en false.",
     "engine-state-path": "Directorio de estado del motor",
     "reset-engine-state": "Restablecer estado del motor",
     "reset-engine-state-confirm": "Se eliminarán todas las tareas de descarga del motor y se borrará el archivo de caché de tareas. El historial de descargas completadas no se verá afectado.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Una regla por línea, por ejemplo *://*.example.com/logs/*",
     "file-category-invalid-regex": "Regla regex no válida en la línea {line}",
     "file-category-invalid-url-rule-too-long": "La regla URL de la línea {line} es demasiado larga",
-    "auto-submit-from-extension": "Omitir confirmación para descargas de la extensión",
-    "silent-auto-submit-from-extension": "No enfocar la ventana principal al recibir descargas",
     "extension-api-port": "Puerto de API de extensión",
     "extension-api-secret-tip": "Introduzca esta clave en la configuración de la extensión del navegador para autenticarse",
     "extension-api-secret": "Clave secreta de API de extensión",
@@ -595,7 +590,14 @@
     "remember-save-location": "Recordar la última ubicación",
     "stream-max-range-size": "Tamaño máximo del rango HTTP",
     "stream-max-range-size-hint": "0 significa sin límite. Use K, M o G, por ejemplo 5M.",
-    "proxy-import-unsupported": "Revise las excepciones no compatibles antes de guardar: {rules}"
+    "proxy-import-unsupported": "Revise las excepciones no compatibles antes de guardar: {rules}",
+    "extension-download-behavior": "Descargas de la extensión",
+    "extension-behavior-confirm": "Confirmar antes de descargar",
+    "extension-behavior-background": "Descargar en segundo plano",
+    "extension-behavior-show": "Descargar y mostrar tareas",
+    "software-rendering": "Renderizado por software de WebKitGTK",
+    "software-rendering-hint": "Solo para diagnosticar problemas gráficos en Linux.",
+    "software-rendering-restart-confirm": "Reinicia para aplicar el cambio de renderizado."
   },
   "task": {
     "scope-all": "Todas",
@@ -896,7 +898,8 @@
     "dir-no-saved": "No hay carpetas guardadas",
     "create": "Crear",
     "more-actions": "Más acciones",
-    "file-inaccessible": "Archivo inaccesible"
+    "file-inaccessible": "Archivo inaccesible",
+    "resolve-filename": "Consultar nombre del archivo"
   },
   "media": {
     "probing": "Analizando el contenido",

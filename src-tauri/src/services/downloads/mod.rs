@@ -14,6 +14,35 @@ use tokio::sync::Mutex;
 #[derive(Default)]
 pub struct SubmissionGate(Mutex<()>);
 
+/// The desktop filename field never grants permission to select a directory.
+pub fn validate_filename(name: &str) -> Result<(), AppError> {
+    if name.is_empty() {
+        return Ok(());
+    }
+    let stem = name
+        .split('.')
+        .next()
+        .unwrap_or_default()
+        .to_ascii_uppercase();
+    let reserved = matches!(stem.as_str(), "CON" | "PRN" | "AUX" | "NUL")
+        || (stem.len() == 4
+            && (stem.starts_with("COM") || stem.starts_with("LPT"))
+            && matches!(stem.as_bytes()[3], b'1'..=b'9'));
+    if name == "."
+        || name == ".."
+        || reserved
+        || name.ends_with(['.', ' '])
+        || name
+            .chars()
+            .any(|ch| ch.is_control() || "\\/:<>\"|?*".contains(ch))
+    {
+        return Err(AppError::InvalidInput(
+            "Enter a filename without a path or reserved characters".into(),
+        ));
+    }
+    Ok(())
+}
+
 pub async fn dispatch(app: &AppHandle, request: AddRequest) -> Result<AddResponse, AppError> {
     if request.id.is_empty()
         || request.id.len() > 128
@@ -60,7 +89,7 @@ pub async fn dispatch(app: &AppHandle, request: AddRequest) -> Result<AddRespons
     }
     // Torrent files need native metainfo inspection and a file-selection dialog.
     if record.state == SubmissionState::Pending
-        && prefs.auto_submit_from_extension
+        && prefs.extension_download_behavior != preferences::ExtensionDownloadBehavior::Confirm
         && !parsed
             .as_ref()
             .is_some_and(|url| url.path().to_ascii_lowercase().ends_with(".torrent"))
@@ -73,17 +102,13 @@ pub async fn dispatch(app: &AppHandle, request: AddRequest) -> Result<AddRespons
             Some(&request.id),
         )
         .await?;
-        if !prefs.silent_auto_submit_from_extension {
-            if prefs.new_task_show_downloading {
-                super::frontend_action::dispatch_frontend_action(
-                    app,
-                    super::frontend_action::FrontendActionChannel::TrayMenuAction,
-                    super::frontend_action::FrontendActionKind::ShowDownloads,
-                    "http-api",
-                );
-            } else {
-                crate::tray::request_main_window(app, "http-api", true);
-            }
+        if prefs.extension_download_behavior == preferences::ExtensionDownloadBehavior::Show {
+            super::frontend_action::dispatch_frontend_action(
+                app,
+                super::frontend_action::FrontendActionChannel::TrayMenuAction,
+                super::frontend_action::FrontendActionKind::ShowDownloads,
+                "http-api",
+            );
         }
         return Ok(AddResponse {
             id: request.id,

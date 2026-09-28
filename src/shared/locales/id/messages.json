@@ -387,9 +387,6 @@
     "recommended-limit": "Disarankan ≤ {value}",
     "high-bt-peers-reason": "Terlalu banyak node meningkatkan penggunaan memori",
     "engine-section": "Mesin Unduh Aria2 Next",
-    "hardware-rendering": "Akselerasi Perangkat Keras WebKitGTK",
-    "hardware-rendering-hint": "Mengaktifkannya dapat meningkatkan performa rendering antarmuka, tetapi beberapa GPU, driver, atau lingkungan desktop dapat membuat WebKitGTK crash",
-    "hardware-rendering-restart-confirm": "Mengubah akselerasi perangkat keras WebKitGTK memerlukan restart aplikasi. Jika aplikasi tidak dapat dimulai setelah diaktifkan, edit config.json secara manual dan setel preferences.hardwareRendering ke false.",
     "engine-state-path": "Direktori Status Mesin",
     "reset-engine-state": "Atur Ulang Status Mesin",
     "reset-engine-state-confirm": "Semua tugas unduhan akan dihapus dari mesin dan file cache tugas akan dihapus. Riwayat unduhan yang sudah selesai tidak akan terpengaruh.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Satu aturan per baris, misalnya *://*.example.com/logs/*",
     "file-category-invalid-regex": "Aturan regex tidak valid pada baris {line}",
     "file-category-invalid-url-rule-too-long": "Aturan URL pada baris {line} terlalu panjang",
-    "auto-submit-from-extension": "Lewati konfirmasi untuk unduhan ekstensi",
-    "silent-auto-submit-from-extension": "Jangan fokuskan jendela utama saat menerima unduhan",
     "extension-api-port": "Port API Ekstensi",
     "extension-api-secret-tip": "Masukkan kunci ini di pengaturan ekstensi browser untuk autentikasi",
     "extension-api-secret": "Kunci API Ekstensi",
@@ -595,7 +590,14 @@
     "remember-save-location": "Ingat lokasi penyimpanan terakhir",
     "stream-max-range-size": "Ukuran rentang HTTP maksimum",
     "stream-max-range-size-hint": "0 berarti tanpa batas. Gunakan K, M, atau G, misalnya 5M.",
-    "proxy-import-unsupported": "Periksa aturan pengecualian yang tidak didukung sebelum menyimpan: {rules}"
+    "proxy-import-unsupported": "Periksa aturan pengecualian yang tidak didukung sebelum menyimpan: {rules}",
+    "extension-download-behavior": "Unduhan ekstensi",
+    "extension-behavior-confirm": "Konfirmasi sebelum mengunduh",
+    "extension-behavior-background": "Unduh di latar belakang",
+    "extension-behavior-show": "Unduh dan tampilkan tugas",
+    "software-rendering": "Perenderan perangkat lunak WebKitGTK",
+    "software-rendering-hint": "Hanya untuk mendiagnosis masalah grafis Linux.",
+    "software-rendering-restart-confirm": "Mulai ulang untuk menerapkan perubahan perenderan."
   },
   "task": {
     "scope-all": "Semua",
@@ -896,7 +898,8 @@
     "dir-no-saved": "Tidak ada folder tersimpan",
     "create": "Buat",
     "more-actions": "Tindakan lainnya",
-    "file-inaccessible": "Berkas tidak dapat diakses"
+    "file-inaccessible": "Berkas tidak dapat diakses",
+    "resolve-filename": "Cari nama berkas"
   },
   "media": {
     "probing": "Memeriksa media",

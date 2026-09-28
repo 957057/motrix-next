@@ -387,9 +387,6 @@
     "recommended-limit": "Consigliato ≤ {value}",
     "high-bt-peers-reason": "Troppi nodi aumentano il consumo di memoria",
     "engine-section": "Motore di download Aria2 Next",
-    "hardware-rendering": "Accelerazione hardware WebKitGTK",
-    "hardware-rendering-hint": "Attivarla può migliorare le prestazioni di rendering dell’interfaccia, ma alcune GPU, driver o ambienti desktop possono causare il crash di WebKitGTK",
-    "hardware-rendering-restart-confirm": "La modifica dell’accelerazione hardware WebKitGTK richiede il riavvio dell’app. Se l’app non si avvia dopo l’attivazione, modifica manualmente config.json e imposta preferences.hardwareRendering su false.",
     "engine-state-path": "Directory dello stato del motore",
     "reset-engine-state": "Reimposta stato del motore",
     "reset-engine-state-confirm": "Tutte le attività di download verranno rimosse dal motore e il file cache delle attività verrà eliminato. La cronologia dei download completati non sarà interessata.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Una regola per riga, ad esempio *://*.example.com/logs/*",
     "file-category-invalid-regex": "Regola regex non valida alla riga {line}",
     "file-category-invalid-url-rule-too-long": "La regola URL alla riga {line} è troppo lunga",
-    "auto-submit-from-extension": "Salta la conferma per i download dell'estensione",
-    "silent-auto-submit-from-extension": "Non attivare la finestra principale alla ricezione dei download",
     "extension-api-port": "Porta API estensione",
     "extension-api-secret-tip": "Inserisci questa chiave nelle impostazioni dell'estensione del browser per l'autenticazione.",
     "extension-api-secret": "Chiave segreta API estensione",
@@ -595,7 +590,14 @@
     "remember-save-location": "Ricorda l'ultima cartella",
     "stream-max-range-size": "Dimensione massima intervallo HTTP",
     "stream-max-range-size-hint": "0 indica nessun limite. Usa K, M o G, ad esempio 5M.",
-    "proxy-import-unsupported": "Controlla le eccezioni non supportate prima di salvare: {rules}"
+    "proxy-import-unsupported": "Controlla le eccezioni non supportate prima di salvare: {rules}",
+    "extension-download-behavior": "Download dell’estensione",
+    "extension-behavior-confirm": "Conferma prima di scaricare",
+    "extension-behavior-background": "Scarica in background",
+    "extension-behavior-show": "Scarica e mostra le attività",
+    "software-rendering": "Rendering software WebKitGTK",
+    "software-rendering-hint": "Solo per diagnosticare problemi grafici su Linux.",
+    "software-rendering-restart-confirm": "Riavvia per applicare la modifica al rendering."
   },
   "task": {
     "scope-all": "Tutte",
@@ -896,7 +898,8 @@
     "dir-no-saved": "Nessuna cartella salvata",
     "create": "Crea",
     "more-actions": "Altre azioni",
-    "file-inaccessible": "File non accessibile"
+    "file-inaccessible": "File non accessibile",
+    "resolve-filename": "Rileva nome del file"
   },
   "media": {
     "probing": "Analisi del contenuto",

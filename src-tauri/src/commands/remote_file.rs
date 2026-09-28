@@ -1,5 +1,118 @@
 //! Fetch small remote torrent files for native metainfo inspection.
 use crate::error::AppError;
+use std::collections::HashMap;
+use std::sync::Mutex;
+use tauri::Manager;
+
+#[derive(Default)]
+pub struct FilenameProbeState(Mutex<HashMap<String, tokio::sync::oneshot::Sender<()>>>);
+
+#[tauri::command]
+pub fn cancel_filename_probe(
+    state: tauri::State<'_, FilenameProbeState>,
+    id: String,
+) -> Result<(), AppError> {
+    if let Some(cancel) = state
+        .0
+        .lock()
+        .map_err(|error| AppError::Io(error.to_string()))?
+        .remove(&id)
+    {
+        let _ = cancel.send(());
+    }
+    Ok(())
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FilenameProbeRequest {
+    id: String,
+    url: String,
+    proxy: Option<String>,
+    referer: Option<String>,
+    cookie: Option<String>,
+    user_agent: Option<String>,
+    request_headers: Vec<RemoteRequestHeader>,
+}
+
+/// Inspect response headers only; the engine remains the filename authority.
+#[tauri::command]
+pub async fn resolve_remote_filename(
+    app: tauri::AppHandle,
+    request: FilenameProbeRequest,
+) -> Result<String, AppError> {
+    let FilenameProbeRequest {
+        id,
+        url,
+        proxy,
+        referer,
+        cookie,
+        user_agent,
+        request_headers,
+    } = request;
+    let url = url::Url::parse(&url).map_err(|error| AppError::InvalidInput(error.to_string()))?;
+    if !matches!(url.scheme(), "http" | "https") {
+        return Err(AppError::InvalidInput(
+            "Filename lookup requires an HTTP URL".into(),
+        ));
+    }
+    let state = app.state::<FilenameProbeState>();
+    let (cancel, cancelled) = tokio::sync::oneshot::channel();
+    {
+        let mut probes = state
+            .0
+            .lock()
+            .map_err(|error| AppError::Io(error.to_string()))?;
+        if probes.len() >= 4 || probes.contains_key(&id) {
+            return Err(AppError::Conflict(
+                "A filename lookup is already running".into(),
+            ));
+        }
+        probes.insert(id.clone(), cancel);
+    }
+    let lookup = async {
+        let builder = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(10))
+            .redirect(reqwest::redirect::Policy::limited(5));
+        let client = super::http_client::apply_explicit_proxy(builder, &proxy, "filename_lookup")
+            .build()
+            .map_err(|error| AppError::Io(error.to_string()))?;
+        let response = apply_remote_request_headers(
+            client.get(url),
+            referer.as_deref(),
+            cookie.as_deref(),
+            user_agent.as_deref(),
+            &request_headers,
+        )
+        .send()
+        .await
+        .and_then(reqwest::Response::error_for_status)
+        .map_err(|error| {
+            AppError::Io(format!("Filename lookup failed: {}", error.without_url()))
+        })?;
+        let disposition = response
+            .headers()
+            .get(reqwest::header::CONTENT_DISPOSITION)
+            .map(|value| value.as_bytes().to_vec())
+            .unwrap_or_default();
+        let final_url = response.url().to_string();
+        drop(response);
+        app.state::<crate::services::tasks::TaskServiceState>()
+            .0
+            .resolve_filename(&final_url, disposition)
+            .await
+    };
+    let result = tokio::select! {
+        value = lookup => value,
+        _ = cancelled => Err(AppError::Conflict("Filename lookup cancelled".into())),
+    };
+    state
+        .0
+        .lock()
+        .map_err(|error| AppError::Io(error.to_string()))?
+        .remove(&id);
+    result
+}
 
 const MAX_TORRENT_SIZE: usize = 16 * 1024 * 1024;
 

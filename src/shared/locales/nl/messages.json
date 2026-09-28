@@ -387,9 +387,6 @@
     "recommended-limit": "Aanbevolen ≤ {value}",
     "high-bt-peers-reason": "Te veel knooppunten verhoogt het geheugenverbruik",
     "engine-section": "Aria2 Next-downloadengine",
-    "hardware-rendering": "WebKitGTK-hardwareversnelling",
-    "hardware-rendering-hint": "Inschakelen kan de renderprestaties van de interface verbeteren, maar sommige GPU’s, stuurprogramma’s of desktopomgevingen kunnen WebKitGTK laten crashen",
-    "hardware-rendering-restart-confirm": "Het wijzigen van WebKitGTK-hardwareversnelling vereist een herstart van de app. Als de app na inschakelen niet kan starten, bewerk config.json handmatig en zet preferences.hardwareRendering op false.",
     "engine-state-path": "Map voor enginestatus",
     "reset-engine-state": "Engine-status resetten",
     "reset-engine-state-confirm": "Alle downloadtaken worden uit de engine verwijderd en het taakcachebestand wordt gewist. De geschiedenis van voltooide downloads wordt niet beïnvloed.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Eén regel per regel, bijvoorbeeld *://*.example.com/logs/*",
     "file-category-invalid-regex": "Ongeldige regex-regel op regel {line}",
     "file-category-invalid-url-rule-too-long": "URL-regel op regel {line} is te lang",
-    "auto-submit-from-extension": "Bevestiging voor extensiedownloads overslaan",
-    "silent-auto-submit-from-extension": "Hoofdvenster niet focussen bij ontvangen downloads",
     "extension-api-port": "Extensie API-poort",
     "extension-api-secret-tip": "Voer deze sleutel in bij de instellingen van de browserextensie voor authenticatie",
     "extension-api-secret": "API-sleutel extensie",
@@ -595,7 +590,14 @@
     "remember-save-location": "Laatste opslaglocatie onthouden",
     "stream-max-range-size": "Maximale HTTP-bereikgrootte",
     "stream-max-range-size-hint": "0 betekent onbeperkt. Gebruik K, M of G, bijvoorbeeld 5M.",
-    "proxy-import-unsupported": "Controleer niet-ondersteunde uitzonderingen vóór het opslaan: {rules}"
+    "proxy-import-unsupported": "Controleer niet-ondersteunde uitzonderingen vóór het opslaan: {rules}",
+    "extension-download-behavior": "Downloads van de extensie",
+    "extension-behavior-confirm": "Bevestigen vóór downloaden",
+    "extension-behavior-background": "Op de achtergrond downloaden",
+    "extension-behavior-show": "Downloaden en taken tonen",
+    "software-rendering": "WebKitGTK-softwarerendering",
+    "software-rendering-hint": "Alleen voor het onderzoeken van grafische problemen op Linux.",
+    "software-rendering-restart-confirm": "Herstart om de renderingwijziging toe te passen."
   },
   "task": {
     "scope-all": "Alle",
@@ -896,7 +898,8 @@
     "dir-no-saved": "Geen opgeslagen mappen",
     "create": "Aanmaken",
     "more-actions": "Meer acties",
-    "file-inaccessible": "Bestand niet toegankelijk"
+    "file-inaccessible": "Bestand niet toegankelijk",
+    "resolve-filename": "Bestandsnaam opvragen"
   },
   "media": {
     "probing": "Media onderzoeken",

@@ -387,9 +387,6 @@
     "recommended-limit": "แนะนำ ≤ {value}",
     "high-bt-peers-reason": "โหนดมากเกินเพิ่มการใช้หน่วยความจำ",
     "engine-section": "เอนจินดาวน์โหลด Aria2 Next",
-    "hardware-rendering": "การเร่งความเร็วฮาร์ดแวร์ WebKitGTK",
-    "hardware-rendering-hint": "การเปิดใช้งานอาจช่วยเพิ่มประสิทธิภาพการเรนเดอร์ UI แต่ GPU ไดรเวอร์ หรือเดสก์ท็อปบางแบบอาจทำให้ WebKitGTK แครช",
-    "hardware-rendering-restart-confirm": "การเปลี่ยนการเร่งความเร็วฮาร์ดแวร์ WebKitGTK ต้องรีสตาร์ตแอป หากแอปเริ่มไม่ได้หลังเปิดใช้งาน ให้แก้ไข config.json ด้วยตนเองและตั้ง preferences.hardwareRendering เป็น false",
     "engine-state-path": "ไดเรกทอรีสถานะเอนจิน",
     "reset-engine-state": "รีเซ็ตสถานะเอนจิน",
     "reset-engine-state-confirm": "งานดาวน์โหลดทั้งหมดจะถูกลบออกจากเอนจินและไฟล์แคชงานจะถูกลบ ประวัติการดาวน์โหลดที่เสร็จสิ้นแล้วจะไม่ได้รับผลกระทบ",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "หนึ่งกฎต่อหนึ่งบรรทัด เช่น *://*.example.com/logs/*",
     "file-category-invalid-regex": "กฎ regex ในบรรทัด {line} ไม่ถูกต้อง",
     "file-category-invalid-url-rule-too-long": "กฎ URL ในบรรทัด {line} ยาวเกินไป",
-    "auto-submit-from-extension": "ข้ามการยืนยันสำหรับการดาวน์โหลดจากส่วนขยาย",
-    "silent-auto-submit-from-extension": "ไม่โฟกัสหน้าต่างหลักเมื่อรับการดาวน์โหลด",
     "extension-api-port": "พอร์ต API ส่วนขยาย",
     "extension-api-secret-tip": "ป้อนคีย์นี้ในการตั้งค่าส่วนขยายเบราว์เซอร์เพื่อยืนยันตัวตน",
     "extension-api-secret": "คีย์ลับ API ของส่วนขยาย",
@@ -595,7 +590,14 @@
     "remember-save-location": "จำตำแหน่งบันทึกล่าสุด",
     "stream-max-range-size": "ขนาดช่วง HTTP สูงสุด",
     "stream-max-range-size-hint": "0 หมายถึงไม่จำกัด ใช้ K, M หรือ G เช่น 5M",
-    "proxy-import-unsupported": "ตรวจสอบกฎยกเว้นที่ไม่รองรับก่อนบันทึก: {rules}"
+    "proxy-import-unsupported": "ตรวจสอบกฎยกเว้นที่ไม่รองรับก่อนบันทึก: {rules}",
+    "extension-download-behavior": "การดาวน์โหลดจากส่วนขยาย",
+    "extension-behavior-confirm": "ยืนยันก่อนดาวน์โหลด",
+    "extension-behavior-background": "ดาวน์โหลดเบื้องหลัง",
+    "extension-behavior-show": "ดาวน์โหลดและแสดงงาน",
+    "software-rendering": "การเรนเดอร์ด้วยซอฟต์แวร์ WebKitGTK",
+    "software-rendering-hint": "ใช้เพื่อวินิจฉัยปัญหากราฟิกบน Linux เท่านั้น",
+    "software-rendering-restart-confirm": "เริ่มใหม่เพื่อใช้การเปลี่ยนแปลงการเรนเดอร์"
   },
   "task": {
     "scope-all": "ทั้งหมด",
@@ -896,7 +898,8 @@
     "dir-no-saved": "ไม่มีโฟลเดอร์ที่บันทึกไว้",
     "create": "สร้าง",
     "more-actions": "การดำเนินการเพิ่มเติม",
-    "file-inaccessible": "ไม่สามารถเข้าถึงไฟล์"
+    "file-inaccessible": "ไม่สามารถเข้าถึงไฟล์",
+    "resolve-filename": "ค้นหาชื่อไฟล์"
   },
   "media": {
     "probing": "กำลังตรวจสอบสื่อ",

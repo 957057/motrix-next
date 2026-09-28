@@ -387,9 +387,6 @@
     "recommended-limit": "Recommended ≤ {value}",
     "high-bt-peers-reason": "बहुत अधिक peers memory consumption बढ़ाते हैं",
     "engine-section": "Aria2 Next download engine",
-    "hardware-rendering": "WebKitGTK hardware acceleration",
-    "hardware-rendering-hint": "इसे चालू करने से UI rendering performance बेहतर हो सकती है, लेकिन कुछ GPU, drivers या desktop environments WebKitGTK को crash कर सकते हैं",
-    "hardware-rendering-restart-confirm": "WebKitGTK hardware acceleration बदलने के लिए app restart जरूरी है। Enable करने के बाद app start न हो तो config.json को manually edit करें और preferences.hardwareRendering को false set करें।",
     "engine-state-path": "इंजन स्थिति निर्देशिका",
     "reset-engine-state": "इंजन स्थिति रीसेट करें",
     "reset-engine-state-confirm": "यह download engine से सभी download tasks हटाएगा और task cache साफ करेगा। Completed download history प्रभावित नहीं होगी।",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "हर पंक्ति में एक नियम, जैसे *://*.example.com/logs/*",
     "file-category-invalid-regex": "लाइन {line} पर अमान्य regex नियम",
     "file-category-invalid-url-rule-too-long": "लाइन {line} पर URL नियम बहुत लंबा है",
-    "auto-submit-from-extension": "Extension downloads के लिए confirmation छोड़ें",
-    "silent-auto-submit-from-extension": "Downloads receive करते समय main window focus न करें",
     "extension-api-port": "Extension API Port",
     "extension-api-secret-tip": "Authenticate करने के लिए यह secret browser extension settings में दर्ज करें।",
     "extension-api-secret": "Extension API Secret",
@@ -595,7 +590,14 @@
     "remember-save-location": "पिछला सहेजने का स्थान याद रखें",
     "stream-max-range-size": "अधिकतम HTTP रेंज आकार",
     "stream-max-range-size-hint": "0 का अर्थ असीमित है। K, M या G इस्तेमाल करें, जैसे 5M।",
-    "proxy-import-unsupported": "सहेजने से पहले असमर्थित बायपास नियम जाँचें: {rules}"
+    "proxy-import-unsupported": "सहेजने से पहले असमर्थित बायपास नियम जाँचें: {rules}",
+    "extension-download-behavior": "एक्सटेंशन डाउनलोड",
+    "extension-behavior-confirm": "डाउनलोड से पहले पुष्टि करें",
+    "extension-behavior-background": "पृष्ठभूमि में डाउनलोड करें",
+    "extension-behavior-show": "डाउनलोड करें और कार्य दिखाएँ",
+    "software-rendering": "WebKitGTK सॉफ़्टवेयर रेंडरिंग",
+    "software-rendering-hint": "केवल Linux की ग्राफ़िक्स समस्याओं के निदान के लिए।",
+    "software-rendering-restart-confirm": "रेंडरिंग बदलाव लागू करने के लिए पुनः आरंभ करें।"
   },
   "task": {
     "scope-all": "सभी",
@@ -896,7 +898,8 @@
     "dir-no-saved": "कोई सहेजा गया फ़ोल्डर नहीं",
     "create": "बनाएँ",
     "more-actions": "और कार्रवाइयाँ",
-    "file-inaccessible": "फ़ाइल उपलब्ध नहीं है"
+    "file-inaccessible": "फ़ाइल उपलब्ध नहीं है",
+    "resolve-filename": "फ़ाइल का नाम खोजें"
   },
   "media": {
     "probing": "मीडिया की जाँच जारी",

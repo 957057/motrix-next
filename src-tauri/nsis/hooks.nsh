@@ -53,6 +53,7 @@
   WriteRegStr SHCTX "Software\${BUNDLEID}\Capabilities" "ApplicationIcon" '"$INSTDIR\${MAINBINARYNAME}.exe",0'
   WriteRegStr SHCTX "Software\RegisteredApplications" "${BUNDLEID}" "Software\${BUNDLEID}\Capabilities"
   !insertmacro RAYBURST_REGISTER_CANDIDATE torrent .torrent FileAssociations
+  WriteRegStr SHCTX "Software\Classes\.torrent\OpenWithProgids" "${BUNDLEID}.torrent" ""
   !insertmacro RAYBURST_REGISTER_CANDIDATE magnet magnet URLAssociations
   !insertmacro RAYBURST_REGISTER_CANDIDATE ed2k ed2k URLAssociations
   !insertmacro RAYBURST_REGISTER_CANDIDATE thunder thunder URLAssociations
@@ -93,6 +94,7 @@
   ReadRegStr $R0 ${hive} "Software\Classes\${BUNDLEID}.${suffix}\shell\open\command" ""
   ${If} $R0 == '"$INSTDIR\${MAINBINARYNAME}.exe" "%1"'
     !if "${suffix}" == "torrent"
+      DeleteRegValue ${hive} "Software\Classes\.torrent\OpenWithProgids" "${BUNDLEID}.torrent"
       ReadRegStr $R1 ${hive} "Software\Classes\.torrent" ""
       ${If} $R1 == "${BUNDLEID}.torrent"
         DeleteRegValue ${hive} "Software\Classes\.torrent" ""

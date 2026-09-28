@@ -387,9 +387,6 @@
     "recommended-limit": "Рекомендовано ≤ {value}",
     "high-bt-peers-reason": "Забагато вузлів збільшує споживання пам'яті",
     "engine-section": "Рушій завантаження Aria2 Next",
-    "hardware-rendering": "Апаратне прискорення WebKitGTK",
-    "hardware-rendering-hint": "Увімкнення може покращити продуктивність рендерингу інтерфейсу, але деякі GPU, драйвери або середовища стільниці можуть спричинити збій WebKitGTK",
-    "hardware-rendering-restart-confirm": "Зміна апаратного прискорення WebKitGTK потребує перезапуску застосунку. Якщо застосунок не запускається після ввімкнення, вручну відредагуйте config.json і встановіть preferences.hardwareRendering у false.",
     "engine-state-path": "Каталог стану рушія",
     "reset-engine-state": "Скинути стан рушія",
     "reset-engine-state-confirm": "Усі завдання завантаження буде видалено з рушія, файл кешу завдань буде очищено. Історія завершених завантажень не постраждає.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Одне правило в рядку, наприклад *://*.example.com/logs/*",
     "file-category-invalid-regex": "Недійсне regex-правило в рядку {line}",
     "file-category-invalid-url-rule-too-long": "URL-правило в рядку {line} задовге",
-    "auto-submit-from-extension": "Пропускати підтвердження для завантажень розширення",
-    "silent-auto-submit-from-extension": "Не фокусувати головне вікно під час отримання завантажень",
     "extension-api-port": "Порт API розширення",
     "extension-api-secret-tip": "Введіть цей ключ у налаштуваннях розширення браузера для автентифікації",
     "extension-api-secret": "Секретний ключ API розширення",
@@ -595,7 +590,14 @@
     "remember-save-location": "Запам’ятовувати останню папку",
     "stream-max-range-size": "Максимальний розмір діапазону HTTP",
     "stream-max-range-size-hint": "0 — без обмежень. Доступні K, M і G, наприклад 5M.",
-    "proxy-import-unsupported": "Перевірте непідтримувані винятки перед збереженням: {rules}"
+    "proxy-import-unsupported": "Перевірте непідтримувані винятки перед збереженням: {rules}",
+    "extension-download-behavior": "Завантаження з розширення",
+    "extension-behavior-confirm": "Підтверджувати перед завантаженням",
+    "extension-behavior-background": "Завантажувати у фоні",
+    "extension-behavior-show": "Завантажувати й показувати завдання",
+    "software-rendering": "Програмний рендеринг WebKitGTK",
+    "software-rendering-hint": "Лише для діагностики графічних проблем у Linux.",
+    "software-rendering-restart-confirm": "Перезапустіть для застосування зміни рендерингу."
   },
   "task": {
     "scope-all": "Усі",
@@ -896,7 +898,8 @@
     "dir-no-saved": "Немає збережених тек",
     "create": "Створити",
     "more-actions": "Інші дії",
-    "file-inaccessible": "Файл недоступний"
+    "file-inaccessible": "Файл недоступний",
+    "resolve-filename": "Визначити назву файлу"
   },
   "media": {
     "probing": "Аналіз медіа",

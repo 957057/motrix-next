@@ -387,9 +387,6 @@
     "recommended-limit": "Recommandé ≤ {value}",
     "high-bt-peers-reason": "Trop de pairs augmente la consommation mémoire",
     "engine-section": "Moteur de téléchargement Aria2 Next",
-    "hardware-rendering": "Accélération matérielle WebKitGTK",
-    "hardware-rendering-hint": "L’activer peut améliorer les performances de rendu de l’interface, mais certains GPU, pilotes ou environnements de bureau peuvent faire planter WebKitGTK",
-    "hardware-rendering-restart-confirm": "Modifier l’accélération matérielle WebKitGTK nécessite un redémarrage de l’application. Si l’application ne démarre plus après l’activation, modifiez config.json manuellement et définissez preferences.hardwareRendering sur false.",
     "engine-state-path": "Dossier d’état du moteur",
     "reset-engine-state": "Réinitialiser l’état du moteur",
     "reset-engine-state-confirm": "Toutes les tâches de téléchargement seront supprimées du moteur et le fichier de session sera effacé. L'historique des téléchargements terminés ne sera pas affecté.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Une règle par ligne, par exemple *://*.example.com/logs/*",
     "file-category-invalid-regex": "Règle regex invalide à la ligne {line}",
     "file-category-invalid-url-rule-too-long": "La règle URL à la ligne {line} est trop longue",
-    "auto-submit-from-extension": "Ignorer la confirmation pour les téléchargements de l'extension",
-    "silent-auto-submit-from-extension": "Ne pas activer la fenêtre principale à la réception de téléchargements",
     "extension-api-port": "Port API de l'extension",
     "extension-api-secret-tip": "Saisissez cette clé dans les paramètres de l'extension du navigateur pour l'authentification.",
     "extension-api-secret": "Clé secrète API de l'extension",
@@ -595,7 +590,14 @@
     "remember-save-location": "Mémoriser le dernier dossier",
     "stream-max-range-size": "Taille maximale des plages HTTP",
     "stream-max-range-size-hint": "0 signifie sans limite. Utilisez K, M ou G, par exemple 5M.",
-    "proxy-import-unsupported": "Vérifiez les exceptions non prises en charge avant de sauvegarder : {rules}"
+    "proxy-import-unsupported": "Vérifiez les exceptions non prises en charge avant de sauvegarder : {rules}",
+    "extension-download-behavior": "Téléchargements de l’extension",
+    "extension-behavior-confirm": "Confirmer avant de télécharger",
+    "extension-behavior-background": "Télécharger en arrière-plan",
+    "extension-behavior-show": "Télécharger et afficher les tâches",
+    "software-rendering": "Rendu logiciel de WebKitGTK",
+    "software-rendering-hint": "Uniquement pour diagnostiquer les problèmes graphiques sous Linux.",
+    "software-rendering-restart-confirm": "Redémarrez pour appliquer le changement de rendu."
   },
   "task": {
     "scope-all": "Toutes",
@@ -896,7 +898,8 @@
     "dir-no-saved": "Aucun dossier enregistré",
     "create": "Créer",
     "more-actions": "Plus d’actions",
-    "file-inaccessible": "Fichier inaccessible"
+    "file-inaccessible": "Fichier inaccessible",
+    "resolve-filename": "Rechercher le nom du fichier"
   },
   "media": {
     "probing": "Analyse du média",

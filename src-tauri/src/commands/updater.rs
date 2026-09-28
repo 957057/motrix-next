@@ -26,20 +26,6 @@ pub struct UpdateMetadata {
     pub is_rollback: bool,
 }
 
-/// Outcome of a download_update command.
-#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub enum DownloadUpdateStatus {
-    Downloaded,
-    NoUpdate,
-}
-
-/// Structured result returned to the frontend after checking/downloading.
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
-pub struct DownloadUpdateResult {
-    pub status: DownloadUpdateStatus,
-}
-
 /// Progress event emitted to the frontend during update download.
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "event", content = "data")]
@@ -87,33 +73,23 @@ impl UpdateCancelState {
     }
 }
 
-/// A downloaded update package pinned to the version it was downloaded for.
-///
-/// `downloaded_version` is captured from `Update::version` at download time so
-/// that `apply_update` can detect if the remote channel drifted between download
-/// and install.  Without this, a version-B `Update` object could be paired with
-/// version-A bytes, causing install() to fail and discard the cached package.
+/// Keep Tauri's verified artifact and installation metadata together.
 pub struct DownloadedPackage {
-    pub downloaded_version: String,
-    pub bytes: Vec<u8>,
+    update: tauri_plugin_updater::Update,
+    bytes: Vec<u8>,
 }
 
-/// Holds the downloaded update package between `download_update` and `apply_update`.
-///
-/// `download_update` stores the verified package here; `apply_update` takes it
-/// out, stops the engine, and installs.  This decouples downloading (aria2 stays
-/// alive) from installation (aria2 must be stopped).
-///
-/// **Important**: `install(bytes)` consumes `Vec<u8>` by value.  If installation
-/// fails, the bytes are unrecoverable without a full re-download — this is a
-/// Tauri API limitation, not a design oversight.
 pub struct DownloadedUpdate {
+    download: Mutex<()>,
+    selected: Mutex<Option<SelectedUpdate>>,
     package: Mutex<Option<DownloadedPackage>>,
 }
 
 impl DownloadedUpdate {
     pub fn new() -> Self {
         Self {
+            download: Mutex::new(()),
+            selected: Mutex::new(None),
             package: Mutex::new(None),
         }
     }
@@ -181,6 +157,7 @@ impl CandidateVersion {
     }
 }
 
+#[derive(Clone)]
 struct SelectedUpdate {
     channel: ReleaseChannel,
     requested_policy: UpdatePolicy,
@@ -273,9 +250,7 @@ fn redact_proxy_for_log(proxy: &Option<String>) -> String {
 
 /// Constructs a configured `Updater` ready to call `.check()`.
 ///
-/// Centralises endpoint resolution, proxy configuration, and the
-/// version comparator so that `check_for_update`, `download_update`,
-/// and `apply_update` share a single code-path.
+/// Resolve endpoint, proxy and version policy once per update check.
 ///
 /// Proxy is applied via `UpdaterBuilder::proxy()` (per-request, thread-safe)
 /// rather than mutating process-level environment variables.
@@ -334,7 +309,12 @@ async fn check_release_channel(
     build_updater(app, channel, proxy)?
         .check()
         .await
-        .map_err(|e| AppError::Updater(e.to_string()))
+        .map_err(|e| {
+            AppError::Updater(format!(
+                "Update metadata ({}) failed: {e}",
+                channel.as_str()
+            ))
+        })
 }
 
 async fn resolve_update(
@@ -409,9 +389,9 @@ pub async fn check_for_update(
     let requested_policy = UpdatePolicy::from_input(&channel);
     let selected = resolve_update(&app, requested_policy, &proxy).await?;
 
-    Ok(match selected {
+    let metadata = match &selected {
         Some(selected) => {
-            let u = selected.update;
+            let u = &selected.update;
             log::info!(
                 "updater:check result=found version={} channel={} requested={}",
                 u.version,
@@ -431,10 +411,12 @@ pub async fn check_for_update(
             log::info!("updater:check result=up-to-date");
             None
         }
-    })
+    };
+    *app.state::<Arc<DownloadedUpdate>>().selected.lock().await = selected;
+    Ok(metadata)
 }
 
-/// Downloads the latest update on the specified channel WITHOUT installing.
+/// Download the selected update without another metadata request or installation.
 ///
 /// The Aria2 Next engine keeps running during download — user tasks are unaffected.
 /// Downloaded bytes are stored in `DownloadedUpdate` shared state for later
@@ -443,30 +425,22 @@ pub async fn check_for_update(
 /// Emits `update-progress` events to the frontend with download progress.
 /// The download can be cancelled by calling `cancel_update`.
 #[tauri::command]
-pub async fn download_update(
-    app: AppHandle,
-    channel: String,
-    proxy: Option<String>,
-) -> Result<DownloadUpdateResult, AppError> {
-    log::info!(
-        "updater:download channel={channel} proxy={}",
-        redact_proxy_for_log(&proxy)
-    );
+pub async fn download_update(app: AppHandle, version: String) -> Result<(), AppError> {
+    let state = app.state::<Arc<DownloadedUpdate>>();
+    let _download = state
+        .download
+        .try_lock()
+        .map_err(|_| AppError::Conflict("An update download is already running".into()))?;
     let cancel_state = app.state::<Arc<UpdateCancelState>>();
     cancel_state.reset();
-
-    let requested_policy = UpdatePolicy::from_input(&channel);
-    let selected = resolve_update(&app, requested_policy, &proxy).await?;
-
-    let selected = match selected {
-        Some(selected) => selected,
-        None => {
-            log::info!("updater:download result=no-update");
-            return Ok(DownloadUpdateResult {
-                status: DownloadUpdateStatus::NoUpdate,
-            });
-        }
-    };
+    let selected = app
+        .state::<Arc<DownloadedUpdate>>()
+        .selected
+        .lock()
+        .await
+        .clone()
+        .filter(|selected| selected.update.version == version)
+        .ok_or_else(|| AppError::Updater("Check for updates again before downloading".into()))?;
     let update = selected.update;
 
     // ── Download only (Aria2 Next stays alive) ───────────────────────────
@@ -509,7 +483,7 @@ pub async fn download_update(
                 log::warn!("updater:download cancelled by user");
                 return Err(AppError::Updater("Update cancelled by user".into()));
             }
-            result.map_err(|e| AppError::Updater(e.to_string()))?
+            result.map_err(|e| AppError::Updater(format!("Update download or signature verification failed: {e}")))?
         }
         _ = cancel_state.notify.notified() => {
             log::warn!("updater:download cancelled by user (via notify)");
@@ -517,12 +491,11 @@ pub async fn download_update(
         }
     };
 
-    // Store downloaded package (version + bytes) for later installation.
-    // The version is pinned here so apply_update can detect channel drift.
+    // Installation must not depend on a second network request.
     let dl_state = app.state::<Arc<DownloadedUpdate>>();
     let byte_count = bytes.len();
     *dl_state.package.lock().await = Some(DownloadedPackage {
-        downloaded_version: update.version.clone(),
+        update: update.clone(),
         bytes,
     });
     log::info!(
@@ -537,9 +510,7 @@ pub async fn download_update(
         let _ = app.emit("update-progress", UpdateProgressEvent::Finished);
     }
 
-    Ok(DownloadUpdateResult {
-        status: DownloadUpdateStatus::Downloaded,
-    })
+    Ok(())
 }
 
 /// Installs a previously downloaded update.
@@ -551,48 +522,12 @@ pub async fn download_update(
 /// The caller (frontend) should invoke this only after `download_update`
 /// succeeds and the user confirms installation.
 #[tauri::command]
-pub async fn apply_update(
-    app: AppHandle,
-    channel: String,
-    proxy: Option<String>,
-) -> Result<(), AppError> {
-    log::info!(
-        "updater:apply channel={channel} proxy={}",
-        redact_proxy_for_log(&proxy)
-    );
-    // Re-check the update to obtain the Update object for installation.
-    // This MUST happen before take() — if check() fails (network flap,
-    // JSON changed between download and install), the already-downloaded
-    // bytes remain in shared state and the user can retry without
-    // re-downloading.
-    let requested_policy = UpdatePolicy::from_input(&channel);
-    let selected = resolve_update(&app, requested_policy, &proxy)
-        .await?
-        .ok_or_else(|| AppError::Updater("Update no longer available".into()))?;
-    let update = selected.update;
-
+pub async fn apply_update(app: AppHandle) -> Result<(), AppError> {
     let dl_state = app.state::<Arc<DownloadedUpdate>>();
-    let pkg_guard = dl_state.package.lock().await;
-    let cached = pkg_guard
-        .as_ref()
-        .ok_or_else(|| AppError::Updater("No downloaded update available".into()))?;
-
-    // Version-drift guard: if the remote channel moved to a different version
-    // since download, reject and preserve the cached package for retry.
-    if update.version != cached.downloaded_version {
-        log::warn!(
-            "updater:apply version drift: downloaded={} remote={}",
-            cached.downloaded_version,
-            update.version
-        );
-        let cached_ver = cached.downloaded_version.clone();
-        return Err(AppError::Updater(format!(
-            "Downloaded v{cached_ver} but channel now points to v{}; please re-download",
-            update.version
-        )));
+    let mut package = dl_state.package.lock().await;
+    if package.is_none() {
+        return Err(AppError::Updater("No downloaded update available".into()));
     }
-    drop(pkg_guard); // release lock before engine stop
-
     // ── Phase 1: Stop Aria2 Next engine BEFORE installation ─────────────
     // On Windows, NSIS cannot overwrite a running .exe binary.
     // On macOS/Linux this prevents session file corruption.
@@ -608,13 +543,11 @@ pub async fn apply_update(
         .await?;
     log::info!("updater:apply phase=engine-stopped");
 
-    let cached = dl_state
-        .package
-        .lock()
-        .await
-        .take()
+    let cached = package
+        .as_ref()
         .ok_or_else(|| AppError::Updater("No downloaded update available".into()))?;
-    let bytes = cached.bytes;
+    let update = &cached.update;
+    let bytes = &cached.bytes;
 
     // ── Phase 2: Install (NSIS / tar.gz replacement) ────────────────
     // On install failure, restore download functionality through the sole
@@ -630,8 +563,11 @@ pub async fn apply_update(
             .map_err(|engine_error| {
                 AppError::Updater(format!("{e}; engine recovery also failed: {engine_error}"))
             })?;
-        return Err(AppError::Updater(e.to_string()));
+        return Err(AppError::Updater(format!(
+            "Update installation failed: {e}"
+        )));
     }
+    *package = None;
     log::info!("updater:apply phase=installed");
 
     // macOS: flush icon cache after OTA bundle replacement.

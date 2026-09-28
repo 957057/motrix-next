@@ -9,6 +9,7 @@ import { useTaskStore } from '@/stores/task'
 import { usePreferenceStore } from '@/stores/preference'
 import { usePreferenceNumericValidation } from '@/composables/usePreferenceNumericValidation'
 import { useHttpAuthStore } from '@/stores/httpAuth'
+import { useFilenamePreview } from '@/composables/useFilenamePreview'
 import { ADD_TASK_TYPE } from '@shared/constants'
 import { detectResource } from '@shared/utils'
 import {
@@ -169,6 +170,11 @@ const firstRegularUri = computed(
       .split(/\r?\n/)
       .map((uri) => uri.trim())
       .find((uri) => uri && !isMagnetUri(uri)) ?? '',
+)
+const { filename, resolvingFilename, canResolveFilename, resolveFilename } = useFilenamePreview(
+  form,
+  () => props.show,
+  (text) => message.warning(text),
 )
 const matchedUserAgentRule = computed(() =>
   findMatchingUserAgentRule({
@@ -437,10 +443,22 @@ onMounted(async () => {
 // use a flag that the batch.length watcher sets synchronously whenever it writes
 // to form.uris — the flag survives the drain and is visible after the await.
 let batchDidWrite = false
+// Keep receipt ownership even after editing/removing URLs or replacing their metadata.
+const draftRequestIds = new Set<string>()
+function rememberRequests(items: BatchItem[]) {
+  for (const item of items) {
+    const id = item.browserContext?.requestId
+    if (id) draftRequestIds.add(id)
+  }
+}
 
 watch(
   () => props.show,
-  async (visible) => {
+  async (visible, _, onCleanup) => {
+    let current = true
+    onCleanup(() => {
+      current = false
+    })
     if (!visible) {
       batchDidWrite = false
       return
@@ -448,8 +466,10 @@ watch(
     selectedBatchIndex.value = 0
 
     if (hasBatch.value) {
+      rememberRequests(batch.value)
       // Resolve file-based items
       await localResolveUnresolvedItems()
+      if (!current) return
       // Flush URI batch items into the editable textarea via normalized merge
       const uriItems = batch.value.filter((i) => i.kind === 'uri')
       if (uriItems.length > 0) {
@@ -457,9 +477,10 @@ watch(
           form.value.uris,
           uriItems.map((i) => i.payload),
         )
-        form.value.uriRequestContexts = Object.fromEntries(
-          uriItems.flatMap((i) => (i.browserContext ? [[i.payload, i.browserContext]] : [])),
-        )
+        form.value.uriRequestContexts = {
+          ...form.value.uriRequestContexts,
+          ...Object.fromEntries(uriItems.flatMap((i) => (i.browserContext ? [[i.payload, i.browserContext]] : []))),
+        }
         appStore.pendingBatch = batch.value.filter((i) => i.kind !== 'uri')
       }
       // Auto-switch to Torrent tab when file items are present
@@ -477,6 +498,7 @@ watch(
       try {
         const { readText } = await import('@tauri-apps/plugin-clipboard-manager')
         const text = await readText()
+        if (!current) return
         // Re-check: a deep-link/extension batch may have arrived and been
         // processed (and drained) during the async readText() gap.
         // `hasBatch` is unreliable here because batchWatcher drains
@@ -493,24 +515,25 @@ watch(
 )
 
 // Watch for new batch items added while dialog is already open (drag-drop, deep link).
-// Replace (not merge) the textarea — batch content takes priority over any clipboard
-// auto-fill that the show watcher may have already written.
+// Merge incoming requests without dropping the current draft or its receipts.
 watch(
   () => batch.value.length,
   async (newLen, oldLen) => {
     if (!props.show || newLen <= oldLen) return
     // Snapshot newly arrived items before any drain/resolve mutates the batch.
+    rememberRequests(batch.value)
     const newlyArrived = batch.value.slice(oldLen)
     const uriItems = batch.value.filter((i) => i.kind === 'uri')
     if (uriItems.length > 0) {
       batchDidWrite = true
       form.value.uris = mergeRawUriLines(
-        '',
+        form.value.uris,
         uriItems.map((i) => i.payload),
       )
-      form.value.uriRequestContexts = Object.fromEntries(
-        uriItems.flatMap((i) => (i.browserContext ? [[i.payload, i.browserContext]] : [])),
-      )
+      form.value.uriRequestContexts = {
+        ...form.value.uriRequestContexts,
+        ...Object.fromEntries(uriItems.flatMap((i) => (i.browserContext ? [[i.payload, i.browserContext]] : []))),
+      }
       syncPendingExternalMetadata()
       appStore.pendingBatch = batch.value.filter((i) => i.kind !== 'uri')
     }
@@ -596,9 +619,12 @@ async function removeBatchItem(item: BatchItem) {
 async function handleClose(userDismiss = true) {
   if (submitting.value && userDismiss) return
   {
-    const ids = new Set(
-      batch.value.flatMap((item) => (item.browserContext?.requestId ? [item.browserContext.requestId] : [])),
-    )
+    const ids = new Set<string>(draftRequestIds)
+    for (const id of [
+      ...batch.value.map((item) => item.browserContext),
+      ...Object.values(form.value.uriRequestContexts ?? {}),
+    ].flatMap((context) => (context?.requestId ? [context.requestId] : [])))
+      ids.add(id)
     try {
       await Promise.all([...ids].map((id) => invoke('cancel_download_request', { id })))
     } catch (error) {
@@ -606,6 +632,7 @@ async function handleClose(userDismiss = true) {
       return
     }
   }
+  draftRequestIds.clear()
   emit('close')
   Object.assign(form.value, {
     uris: '',
@@ -861,7 +888,12 @@ async function handleSubmit() {
         <!-- ── Download settings: always visible ──────────────── -->
         <div class="download-settings">
           <NFormItem :label="t('task.task-out') + ':'">
-            <NInput v-model:value="form.out" :placeholder="t('task.task-out-tips')" :autofocus="false" />
+            <NInputGroup>
+              <NInput v-model:value="filename" :placeholder="t('task.task-out-tips')" :autofocus="false" />
+              <NButton :disabled="!canResolveFilename" :loading="resolvingFilename" @click="resolveFilename">{{
+                t('task.resolve-filename')
+              }}</NButton>
+            </NInputGroup>
           </NFormItem>
           <NFormItem
             :label="t('task.task-connections') + ':'"

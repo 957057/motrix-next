@@ -387,9 +387,6 @@
     "recommended-limit": "권장 ≤ {value}",
     "high-bt-peers-reason": "피어가 너무 많으면 메모리 소비가 증가합니다",
     "engine-section": "Aria2 Next 다운로드 엔진",
-    "hardware-rendering": "WebKitGTK 하드웨어 가속",
-    "hardware-rendering-hint": "활성화하면 UI 렌더링 성능이 향상될 수 있지만 일부 GPU, 드라이버 또는 데스크톱 환경에서는 WebKitGTK가 충돌할 수 있습니다",
-    "hardware-rendering-restart-confirm": "WebKitGTK 하드웨어 가속을 변경하려면 앱을 다시 시작해야 합니다. 활성화한 뒤 앱이 시작되지 않으면 config.json을 직접 편집하고 preferences.hardwareRendering을 false로 설정하세요.",
     "engine-state-path": "엔진 상태 디렉터리",
     "reset-engine-state": "엔진 상태 초기화",
     "reset-engine-state-confirm": "모든 다운로드 작업이 엔진에서 제거되고 작업 캐시 파일이 삭제됩니다. 완료된 다운로드 기록에는 영향을 미치지 않습니다.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "한 줄에 규칙 하나, 예: *://*.example.com/logs/*",
     "file-category-invalid-regex": "{line}번째 줄의 정규식 규칙이 올바르지 않습니다",
     "file-category-invalid-url-rule-too-long": "{line}번째 줄의 URL 규칙이 너무 깁니다",
-    "auto-submit-from-extension": "확장 프로그램 다운로드 확인 건너뛰기",
-    "silent-auto-submit-from-extension": "다운로드를 받을 때 기본 창에 포커스하지 않기",
     "extension-api-port": "확장 프로그램 API 포트",
     "extension-api-secret-tip": "인증을 위해 브라우저 확장 프로그램 설정에 이 비밀키를 입력하세요",
     "extension-api-secret": "확장 프로그램 API 비밀키",
@@ -595,7 +590,14 @@
     "remember-save-location": "마지막 저장 위치 기억",
     "stream-max-range-size": "HTTP 범위 최대 크기",
     "stream-max-range-size-hint": "0은 무제한입니다. K, M, G를 사용할 수 있습니다(예: 5M).",
-    "proxy-import-unsupported": "저장하기 전에 지원되지 않는 예외 규칙을 확인하세요: {rules}"
+    "proxy-import-unsupported": "저장하기 전에 지원되지 않는 예외 규칙을 확인하세요: {rules}",
+    "extension-download-behavior": "확장 프로그램 다운로드",
+    "extension-behavior-confirm": "다운로드 전 확인",
+    "extension-behavior-background": "백그라운드에서 다운로드",
+    "extension-behavior-show": "다운로드하고 작업 표시",
+    "software-rendering": "WebKitGTK 소프트웨어 렌더링",
+    "software-rendering-hint": "Linux 그래픽 문제 진단에만 사용하세요.",
+    "software-rendering-restart-confirm": "렌더링 변경을 적용하려면 다시 시작하세요."
   },
   "task": {
     "scope-all": "전체",
@@ -896,7 +898,8 @@
     "dir-no-saved": "저장된 폴더 없음",
     "create": "만들기",
     "more-actions": "추가 작업",
-    "file-inaccessible": "파일에 접근할 수 없음"
+    "file-inaccessible": "파일에 접근할 수 없음",
+    "resolve-filename": "파일 이름 조회"
   },
   "media": {
     "probing": "미디어 분석 중",

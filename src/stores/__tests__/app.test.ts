@@ -222,7 +222,7 @@ describe('useAppStore', () => {
   describe('handleDeepLinkUrls', () => {
     beforeEach(async () => {
       const { usePreferenceStore } = await import('@/stores/preference')
-      usePreferenceStore().config.autoSubmitFromExtension = false
+      usePreferenceStore().config.extensionDownloadBehavior = 'confirm'
     })
 
     it('treats remote .torrent URLs as torrent tasks', () => {
@@ -290,9 +290,9 @@ describe('useAppStore', () => {
     })
   })
 
-  // ── autoSubmitFromExtension ───────────────────────────────────────
+  // ── Extension download behavior ───────────────────────────────────
 
-  describe('autoSubmitFromExtension', () => {
+  describe('extensionDownloadBehavior', () => {
     beforeEach(async () => {
       const { usePreferenceStore } = await import('@/stores/preference')
       usePreferenceStore().recordHistoryDirectory = vi.fn()
@@ -306,7 +306,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
       const onStart = vi.fn()
       store.setExternalInputStartHandler(onStart)
       submitManualUrisMock.mockResolvedValueOnce({
@@ -328,7 +328,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
 
       await store.handleExternalInputs([browserInput('magnet:?xt=urn:btih:abc123')])
 
@@ -340,7 +340,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
 
       await store.handleExternalInputs([
         browserInput('ed2k://|file|Ubuntu%2026.04.iso|123456789|0123456789abcdef0123456789abcdef|/'),
@@ -354,7 +354,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = false
+      prefStore.config.extensionDownloadBehavior = 'confirm'
 
       await store.handleExternalInputs([browserInput('https://example.com/file.zip')])
 
@@ -366,7 +366,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
 
       await store.handleExternalInputs([browserInput('https://example.com/linux.torrent')])
 
@@ -382,7 +382,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
 
       await store.handleExternalInputs([browserInput('magnet:?xt=urn:btih:abc123')])
       await new Promise((resolve) => setTimeout(resolve, 0))
@@ -395,7 +395,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
 
       await store.handleExternalInputs([
         browserInput('https://example.com/file.zip'),
@@ -412,7 +412,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
 
       await store.handleExternalInputs([
         browserInput('https://example.com/a.zip'),
@@ -427,7 +427,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
 
       await store.handleExternalInputs([browserInput('https://example.com/file.zip', 'https://example.com')])
 
@@ -440,7 +440,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
 
       await store.handleExternalInputs([
         browserInput('https://cdn.quark.cn/file.zip', 'https://pan.quark.cn', 'auth=secret'),
@@ -455,7 +455,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
       prefStore.config.userAgent = 'ConfiguredUA/1.0'
 
       await store.handleExternalInputs([
@@ -483,7 +483,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
       prefStore.config.userAgent = 'ConfiguredUA/1.0'
 
       await store.handleExternalInputs([
@@ -502,7 +502,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = false
+      prefStore.config.extensionDownloadBehavior = 'confirm'
 
       await store.handleExternalInputs([
         {
@@ -526,7 +526,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
 
       // Regular deep links (not rayburst://) should always go to dialog
       store.handleDeepLinkUrls(['https://example.com/file.zip'])
@@ -539,7 +539,7 @@ describe('useAppStore', () => {
       const store = useAppStore()
       const { usePreferenceStore } = await import('@/stores/preference')
       const prefStore = usePreferenceStore()
-      prefStore.config.autoSubmitFromExtension = true
+      prefStore.config.extensionDownloadBehavior = 'show'
       const onError = vi.fn()
       submitManualUrisMock.mockRejectedValueOnce({ Aria2: 'aria2 RPC error [1]: Unsupported URI scheme' })
 

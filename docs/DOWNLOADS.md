@@ -22,6 +22,17 @@ browser HTTP submissions run in Rust without requiring a mounted WebView.
 
 ## Output names
 
+The editable name is one basename: native submission rejects paths, separators,
+reserved names and control characters. The save directory remains a separate input.
+The dialog displays browser metadata or the URL name without making it an explicit
+override. Its lookup button requests HTTP response headers with cancellation and a
+10-second timeout, then calls the engine's `aria2.resolveFilename`; it creates no task.
+
+Completed, inactive single files can be renamed from task details. Native exclusive
+rename preserves existing destination files. A SQLite intent records filesystem work
+before it starts and reconciles an interrupted history update at startup. Active and
+seeding tasks retain engine ownership and cannot be renamed through this operation.
+
 For a new ordinary HTTP task, the engine applies this precedence:
 
 1. An explicit user `out` or an already persisted output path.
@@ -205,3 +216,23 @@ global option updates and task options. libcurl performs host/IP/CIDR matching.
 Newlines, commas and system-list semicolons separate entries. Trailing numeric
 IPv4 wildcards become CIDR networks. System import reports unsupported expressions
 for review before saving; `<local>` is not treated as an alias for localhost.
+
+## Extension behavior
+
+`extensionDownloadBehavior` selects `confirm`, `background`, or `show`. Native
+dispatch applies that one policy; manual-task navigation stays independent. Closing
+a confirmation finalizes every owned request ID, including URLs removed from the form.
+
+## Platform integration
+
+Windows installation registers the private `rayburst` scheme and advertises public
+protocol/file candidates. It does not select defaults for magnet, ED2K, thunder or
+torrent files. Existing user choices remain theirs; public defaults use OS settings.
+The native messaging launcher starts the paired executable outside the browser's
+Windows job with closed standard streams. macOS uses LaunchServices; Linux keeps a
+separate process group. Development builds do not register installed-app identities.
+
+Linux uses WebKitGTK defaults. `softwareRendering` explicitly enables a diagnostic
+fallback; externally supplied rendering environment variables remain authoritative.
+Updates retain Tauri's selected Update object and verified bytes. Cancellation can
+retry that selection, and installation needs no second metadata request.

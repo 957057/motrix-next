@@ -387,9 +387,6 @@
     "recommended-limit": "推薦 ≤ {value}",
     "high-bt-peers-reason": "過多節點連線會顯著增加記憶體消耗",
     "engine-section": "Aria2 Next 下載引擎",
-    "hardware-rendering": "WebKitGTK 硬體加速",
-    "hardware-rendering-hint": "開啟後可能提升介面渲染效能，但部分顯卡、驅動程式或桌面環境可能導致 WebKitGTK 崩潰",
-    "hardware-rendering-restart-confirm": "WebKitGTK 硬體加速變更需要重新啟動應用程式。若開啟後無法啟動，請手動編輯 config.json，將 preferences.hardwareRendering 改為 false。",
     "engine-state-path": "引擎狀態目錄",
     "reset-engine-state": "重設引擎狀態",
     "reset-engine-state-confirm": "將從引擎中移除所有下載任務並清空任務快取。已完成的下載紀錄不受影響。",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "每行一條規則，例如 *://*.example.com/logs/*",
     "file-category-invalid-regex": "第 {line} 行正則規則無效",
     "file-category-invalid-url-rule-too-long": "第 {line} 行 URL 規則過長",
-    "auto-submit-from-extension": "擴充下載略過確認",
-    "silent-auto-submit-from-extension": "擴充功能下載時保持視窗隱藏",
     "extension-api-port": "擴充 API 連接埠",
     "extension-api-secret-tip": "在瀏覽器擴充功能設定中輸入此金鑰以進行身份驗證",
     "extension-api-secret": "擴充功能 API 金鑰",
@@ -595,7 +590,14 @@
     "remember-save-location": "記住上次儲存位置",
     "stream-max-range-size": "HTTP 區段大小上限",
     "stream-max-range-size-hint": "0 表示不限。支援 K、M、G，例如 5M。",
-    "proxy-import-unsupported": "儲存前請檢查不支援的略過規則：{rules}"
+    "proxy-import-unsupported": "儲存前請檢查不支援的略過規則：{rules}",
+    "extension-download-behavior": "擴充功能下載行為",
+    "extension-behavior-confirm": "下載前確認",
+    "extension-behavior-background": "背景下載",
+    "extension-behavior-show": "下載並顯示工作",
+    "software-rendering": "WebKitGTK 軟體算繪",
+    "software-rendering-hint": "僅用於排查 Linux 圖形問題。",
+    "software-rendering-restart-confirm": "重新啟動以套用算繪設定。"
   },
   "task": {
     "scope-all": "全部",
@@ -896,7 +898,8 @@
     "dir-no-saved": "沒有已儲存目錄",
     "create": "新增",
     "more-actions": "更多操作",
-    "file-inaccessible": "無法存取檔案"
+    "file-inaccessible": "無法存取檔案",
+    "resolve-filename": "取得檔案名稱"
   },
   "media": {
     "probing": "正在探測媒體",

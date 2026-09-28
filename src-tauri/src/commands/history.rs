@@ -1,7 +1,47 @@
 //! History commands backed by process-owned SQLite storage.
 use crate::database::{DatabaseState, HistoryPage, HistoryPageInput, HistoryRecord};
 use crate::error::AppError;
+use tauri::Manager;
 use tauri::State;
+
+#[tauri::command]
+pub async fn rename_completed_file(
+    app: tauri::AppHandle,
+    gid: String,
+    name: String,
+) -> Result<(), AppError> {
+    crate::services::downloads::validate_filename(&name)?;
+    let database = &app.state::<DatabaseState>().0;
+    // Never discard the engine's terminal result before history owns it.
+    if database.get_record(&gid).await?.is_none() {
+        return Err(AppError::Conflict(
+            "Download history is not ready yet".into(),
+        ));
+    }
+    let engine = app.state::<crate::services::tasks::TaskServiceState>();
+    let _mutation = engine.0.mutation.lock().await;
+    if let Some(task) = engine
+        .0
+        .tell_task_snapshot(true)
+        .await?
+        .iter()
+        .find(|task| task.gid == gid)
+    {
+        if task.status != "complete" || task.seeder.as_deref() == Some("true") {
+            return Err(AppError::Conflict(
+                "Finish the task before renaming its file".into(),
+            ));
+        }
+        engine.0.remove_download_result(&gid).await?;
+        engine.0.tasks.mark_deleted(&gid);
+    }
+    app.state::<DatabaseState>()
+        .0
+        .rename_completed_file(&gid, &name)
+        .await?;
+    crate::services::tasks::notify_changed(&app, &gid);
+    Ok(())
+}
 
 /// Add or update a history record (upsert by GID).
 #[tauri::command]

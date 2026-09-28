@@ -387,9 +387,6 @@
     "recommended-limit": "推奨 ≤ {value}",
     "high-bt-peers-reason": "ピア過多はメモリ消費量を増加させます",
     "engine-section": "Aria2 Next ダウンロードエンジン",
-    "hardware-rendering": "WebKitGTK ハードウェアアクセラレーション",
-    "hardware-rendering-hint": "有効にすると UI の描画性能が向上する場合がありますが、一部の GPU、ドライバー、デスクトップ環境では WebKitGTK がクラッシュする可能性があります",
-    "hardware-rendering-restart-confirm": "WebKitGTK ハードウェアアクセラレーションの変更にはアプリの再起動が必要です。有効化後にアプリを起動できない場合は、config.json を手動で編集し、preferences.hardwareRendering を false に設定してください。",
     "engine-state-path": "エンジン状態ディレクトリ",
     "reset-engine-state": "エンジン状態をリセット",
     "reset-engine-state-confirm": "すべてのダウンロードタスクがエンジンから削除され、タスクキャッシュファイルが消去されます。完了済みダウンロードの履歴は影響を受けません。",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "1 行に 1 つのルール。例: *://*.example.com/logs/*",
     "file-category-invalid-regex": "{line} 行目の正規表現ルールが無効です",
     "file-category-invalid-url-rule-too-long": "{line} 行目の URL ルールが長すぎます",
-    "auto-submit-from-extension": "拡張機能からのダウンロード確認をスキップ",
-    "silent-auto-submit-from-extension": "ダウンロード受信時にメインウィンドウへフォーカスしない",
     "extension-api-port": "拡張機能 API ポート",
     "extension-api-secret-tip": "認証のためにブラウザ拡張機能の設定にこのシークレットを入力してください",
     "extension-api-secret": "拡張機能 API シークレット",
@@ -595,7 +590,14 @@
     "remember-save-location": "前回の保存先を記憶",
     "stream-max-range-size": "HTTP 範囲の最大サイズ",
     "stream-max-range-size-hint": "0 は無制限です。K、M、G を使用できます（例：5M）。",
-    "proxy-import-unsupported": "保存前に未対応の除外ルールを確認してください：{rules}"
+    "proxy-import-unsupported": "保存前に未対応の除外ルールを確認してください：{rules}",
+    "extension-download-behavior": "拡張機能からのダウンロード",
+    "extension-behavior-confirm": "ダウンロード前に確認",
+    "extension-behavior-background": "バックグラウンドでダウンロード",
+    "extension-behavior-show": "ダウンロードしてタスクを表示",
+    "software-rendering": "WebKitGTK ソフトウェアレンダリング",
+    "software-rendering-hint": "Linux のグラフィックス問題の診断時のみ使用してください。",
+    "software-rendering-restart-confirm": "レンダリング設定を適用するには再起動してください。"
   },
   "task": {
     "scope-all": "すべて",
@@ -896,7 +898,8 @@
     "dir-no-saved": "保存済みフォルダはありません",
     "create": "作成",
     "more-actions": "その他の操作",
-    "file-inaccessible": "ファイルにアクセスできません"
+    "file-inaccessible": "ファイルにアクセスできません",
+    "resolve-filename": "ファイル名を取得"
   },
   "media": {
     "probing": "メディアを解析中",

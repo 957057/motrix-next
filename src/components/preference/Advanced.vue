@@ -201,10 +201,10 @@ const { form, isDirty, handleSave, handleReset, resetSnapshot } = usePreferenceF
     }
 
     // WebKitGTK rendering variables are read at process startup.
-    if (changed.hardwareRendering !== undefined && changed.hardwareRendering !== prevConfig.hardwareRendering) {
+    if (changed.softwareRendering !== undefined && changed.softwareRendering !== prevConfig.softwareRendering) {
       dialog.info({
         title: t('preferences.restart-required'),
-        content: t('preferences.hardware-rendering-restart-confirm'),
+        content: t('preferences.software-rendering-restart-confirm'),
         positiveText: t('preferences.restart-now'),
         negativeText: t('preferences.engine-restart-later'),
         maskClosable: false,
@@ -350,14 +350,17 @@ onMounted(async () => {
     <div class="preference-form-scroll">
       <NForm label-placement="left" label-align="left" label-width="260px" size="small" class="form-preference">
         <NDivider title-placement="left">{{ t('preferences.extension-section') }}</NDivider>
-        <NFormItem :label="t('preferences.auto-submit-from-extension')">
-          <NSwitch v-model:value="form.autoSubmitFromExtension" />
+        <NFormItem :label="t('preferences.extension-download-behavior')">
+          <NSelect
+            v-model:value="form.extensionDownloadBehavior"
+            class="pref-control-md"
+            :options="[
+              { value: 'confirm', label: t('preferences.extension-behavior-confirm') },
+              { value: 'background', label: t('preferences.extension-behavior-background') },
+              { value: 'show', label: t('preferences.extension-behavior-show') },
+            ]"
+          />
         </NFormItem>
-        <NCollapseTransition :show="form.autoSubmitFromExtension" class="collapse-indent">
-          <NFormItem :label="t('preferences.silent-auto-submit-from-extension')">
-            <NSwitch v-model:value="form.silentAutoSubmitFromExtension" />
-          </NFormItem>
-        </NCollapseTransition>
         <NFormItem
           :label="t('preferences.extension-api-port')"
           v-bind="configFieldProps('extensionApiPort', form.extensionApiPort)"
@@ -577,11 +580,11 @@ onMounted(async () => {
         <NFormItem v-if="isLinux">
           <template #label>
             <PreferenceHintLabel
-              :label="t('preferences.hardware-rendering')"
-              :hint="t('preferences.hardware-rendering-hint')"
+              :label="t('preferences.software-rendering')"
+              :hint="t('preferences.software-rendering-hint')"
             />
           </template>
-          <NSwitch v-model:value="form.hardwareRendering" />
+          <NSwitch v-model:value="form.softwareRendering" />
         </NFormItem>
         <NFormItem :label="t('preferences.history-section')">
           <NSpace>

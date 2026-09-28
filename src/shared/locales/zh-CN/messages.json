@@ -387,9 +387,6 @@
     "recommended-limit": "推荐 ≤ {value}",
     "high-bt-peers-reason": "过多节点连接会显著增加内存消耗",
     "engine-section": "Aria2 Next 下载引擎",
-    "hardware-rendering": "WebKitGTK 硬件加速",
-    "hardware-rendering-hint": "开启后可能提升界面渲染性能，但部分显卡、驱动或桌面环境可能导致 WebKitGTK 崩溃",
-    "hardware-rendering-restart-confirm": "WebKitGTK 硬件加速变更需要重启应用。若开启后无法启动，请手动编辑 config.json，将 preferences.hardwareRendering 改为 false。",
     "engine-state-path": "引擎状态目录",
     "reset-engine-state": "重置引擎状态",
     "reset-engine-state-confirm": "将从引擎中移除所有下载任务并清空任务缓存。已完成的下载历史不受影响。",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "每行一条规则，例如 *://*.example.com/logs/*",
     "file-category-invalid-regex": "第 {line} 行正则规则无效",
     "file-category-invalid-url-rule-too-long": "第 {line} 行 URL 规则过长",
-    "auto-submit-from-extension": "扩展下载跳过确认",
-    "silent-auto-submit-from-extension": "扩展下载时保持窗口隐藏",
     "extension-api-port": "扩展 API 端口",
     "extension-api-secret-tip": "在浏览器扩展设置中输入此密钥以进行身份验证",
     "extension-api-secret": "扩展 API 密钥",
@@ -595,7 +590,14 @@
     "remember-save-location": "记住上次保存位置",
     "stream-max-range-size": "HTTP 分段大小上限",
     "stream-max-range-size-hint": "0 表示不限。支持 K、M、G，例如 5M。",
-    "proxy-import-unsupported": "保存前请检查不支持的绕过规则：{rules}"
+    "proxy-import-unsupported": "保存前请检查不支持的绕过规则：{rules}",
+    "extension-download-behavior": "扩展下载行为",
+    "extension-behavior-confirm": "下载前确认",
+    "extension-behavior-background": "后台下载",
+    "extension-behavior-show": "下载并显示任务",
+    "software-rendering": "WebKitGTK 软件渲染",
+    "software-rendering-hint": "仅用于排查 Linux 图形问题。",
+    "software-rendering-restart-confirm": "重启以应用渲染设置。"
   },
   "task": {
     "scope-all": "全部",
@@ -896,7 +898,8 @@
     "dir-no-saved": "没有已保存目录",
     "create": "新建",
     "more-actions": "更多操作",
-    "file-inaccessible": "文件无法访问"
+    "file-inaccessible": "文件无法访问",
+    "resolve-filename": "获取文件名"
   },
   "media": {
     "probing": "正在探测媒体",

@@ -387,9 +387,6 @@
     "recommended-limit": "Рекомендовано ≤ {value}",
     "high-bt-peers-reason": "Слишком много узлов увеличивают потребление памяти",
     "engine-section": "Движок загрузки Aria2 Next",
-    "hardware-rendering": "Аппаратное ускорение WebKitGTK",
-    "hardware-rendering-hint": "Включение может повысить производительность отрисовки интерфейса, но некоторые GPU, драйверы или рабочие среды могут вызывать сбой WebKitGTK",
-    "hardware-rendering-restart-confirm": "Изменение аппаратного ускорения WebKitGTK требует перезапуска приложения. Если приложение не запускается после включения, вручную отредактируйте config.json и задайте preferences.hardwareRendering значение false.",
     "engine-state-path": "Каталог состояния движка",
     "reset-engine-state": "Сбросить состояние движка",
     "reset-engine-state-confirm": "Все задачи загрузки будут удалены из движка, файл кэша задач будет очищен. История завершённых загрузок не будет затронута.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Одно правило на строку, например *://*.example.com/logs/*",
     "file-category-invalid-regex": "Недопустимое regex-правило в строке {line}",
     "file-category-invalid-url-rule-too-long": "URL-правило в строке {line} слишком длинное",
-    "auto-submit-from-extension": "Пропускать подтверждение для загрузок расширения",
-    "silent-auto-submit-from-extension": "Не переводить фокус на главное окно при получении загрузок",
     "extension-api-port": "Порт API расширения",
     "extension-api-secret-tip": "Введите этот ключ в настройках расширения браузера для аутентификации",
     "extension-api-secret": "Секретный ключ API расширения",
@@ -595,7 +590,14 @@
     "remember-save-location": "Запоминать последнюю папку",
     "stream-max-range-size": "Максимальный размер диапазона HTTP",
     "stream-max-range-size-hint": "0 — без ограничений. Допустимы K, M и G, например 5M.",
-    "proxy-import-unsupported": "Проверьте неподдерживаемые исключения перед сохранением: {rules}"
+    "proxy-import-unsupported": "Проверьте неподдерживаемые исключения перед сохранением: {rules}",
+    "extension-download-behavior": "Загрузки из расширения",
+    "extension-behavior-confirm": "Подтверждать перед загрузкой",
+    "extension-behavior-background": "Загружать в фоне",
+    "extension-behavior-show": "Загружать и показывать задачи",
+    "software-rendering": "Программный рендеринг WebKitGTK",
+    "software-rendering-hint": "Только для диагностики графических проблем в Linux.",
+    "software-rendering-restart-confirm": "Перезапустите приложение для применения изменения."
   },
   "task": {
     "scope-all": "Все",
@@ -896,7 +898,8 @@
     "dir-no-saved": "Нет сохраненных папок",
     "create": "Создать",
     "more-actions": "Другие действия",
-    "file-inaccessible": "Файл недоступен"
+    "file-inaccessible": "Файл недоступен",
+    "resolve-filename": "Определить имя файла"
   },
   "media": {
     "probing": "Анализ медиа",

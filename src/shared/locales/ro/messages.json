@@ -387,9 +387,6 @@
     "recommended-limit": "Recomandat ≤ {value}",
     "high-bt-peers-reason": "Prea multe noduri cresc consumul de memorie",
     "engine-section": "Motor de descărcare Aria2 Next",
-    "hardware-rendering": "Accelerare hardware WebKitGTK",
-    "hardware-rendering-hint": "Activarea poate îmbunătăți performanța de randare a interfeței, dar unele GPU-uri, drivere sau medii desktop pot cauza blocarea WebKitGTK",
-    "hardware-rendering-restart-confirm": "Schimbarea accelerării hardware WebKitGTK necesită repornirea aplicației. Dacă aplicația nu poate porni după activare, editați manual config.json și setați preferences.hardwareRendering la false.",
     "engine-state-path": "Directorul stării motorului",
     "reset-engine-state": "Resetează starea motorului",
     "reset-engine-state-confirm": "Toate sarcinile de descărcare vor fi eliminate din motor și fișierul cache al sarcinilor va fi șters. Istoricul descărcărilor finalizate nu va fi afectat.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "O regulă pe linie, de exemplu *://*.example.com/logs/*",
     "file-category-invalid-regex": "Regulă regex nevalidă pe linia {line}",
     "file-category-invalid-url-rule-too-long": "Regula URL de pe linia {line} este prea lungă",
-    "auto-submit-from-extension": "Omite confirmarea pentru descărcările extensiei",
-    "silent-auto-submit-from-extension": "Nu focaliza fereastra principală la primirea descărcărilor",
     "extension-api-port": "Port API extensie",
     "extension-api-secret-tip": "Introduceți această cheie în setările extensiei browserului pentru autentificare",
     "extension-api-secret": "Cheie secretă API extensie",
@@ -595,7 +590,14 @@
     "remember-save-location": "Memorează ultima locație de salvare",
     "stream-max-range-size": "Dimensiunea maximă a intervalului HTTP",
     "stream-max-range-size-hint": "0 înseamnă nelimitat. Folosiți K, M sau G, de exemplu 5M.",
-    "proxy-import-unsupported": "Verificați excepțiile neacceptate înainte de salvare: {rules}"
+    "proxy-import-unsupported": "Verificați excepțiile neacceptate înainte de salvare: {rules}",
+    "extension-download-behavior": "Descărcări din extensie",
+    "extension-behavior-confirm": "Confirmă înainte de descărcare",
+    "extension-behavior-background": "Descarcă în fundal",
+    "extension-behavior-show": "Descarcă și afișează sarcinile",
+    "software-rendering": "Randare software WebKitGTK",
+    "software-rendering-hint": "Doar pentru diagnosticarea problemelor grafice pe Linux.",
+    "software-rendering-restart-confirm": "Repornește pentru a aplica modificarea randării."
   },
   "task": {
     "scope-all": "Toate",
@@ -896,7 +898,8 @@
     "dir-no-saved": "Nu există foldere salvate",
     "create": "Creează",
     "more-actions": "Mai multe acțiuni",
-    "file-inaccessible": "Fișier inaccesibil"
+    "file-inaccessible": "Fișier inaccesibil",
+    "resolve-filename": "Obține numele fișierului"
   },
   "media": {
     "probing": "Analizare conținut",

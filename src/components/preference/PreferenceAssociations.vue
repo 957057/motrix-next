@@ -147,7 +147,9 @@ onUnmounted(() => {
           {{ option.key === 'rayburst' ? t('preferences.association-repair') : t('preferences.association-set') }}
         </NButton>
         <NButton
-          v-if="isWindows && needsSettings.has(option.key) && status[option.key]?.state !== 'current'"
+          v-if="
+            isWindows && !developmentMode && (needsSettings.has(option.key) || status[option.key]?.state === 'current')
+          "
           size="small"
           secondary
           :disabled="busy"

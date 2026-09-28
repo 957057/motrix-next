@@ -7,6 +7,27 @@ use std::sync::{
     Arc,
 };
 
+#[test]
+fn filename_input_cannot_escape_the_selected_directory() {
+    for name in [
+        "../file",
+        "/Upload/file",
+        "C:\\file",
+        "C:file",
+        "file:stream",
+        "..",
+        "CON.txt",
+        "NUL",
+        "trailing.",
+        "bad\nname",
+    ] {
+        assert!(validate_filename(name).is_err(), "{name:?}");
+    }
+    for name in ["", "report final.zip", "文件.zip", "COM10.txt"] {
+        assert!(validate_filename(name).is_ok(), "{name:?}");
+    }
+}
+
 #[derive(Default)]
 struct Engine {
     tasks: Mutex<Vec<Aria2Task>>,

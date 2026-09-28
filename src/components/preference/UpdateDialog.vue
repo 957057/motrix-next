@@ -28,13 +28,11 @@ import {
   getActionLabel,
   getActionType,
   getActionTarget,
-  resolvePhaseAfterDownload,
   shouldAllowUpdateDialogClose,
   calcProgressPercent,
   bytesToMB,
   getUpdateProxy as resolveProxy,
   formatUpdateError,
-  type DownloadUpdateResult,
 } from '@/composables/useUpdateFlow'
 
 interface UpdateProgressStarted {
@@ -201,10 +199,10 @@ async function startDownload() {
   })
 
   try {
-    const result = await invoke<DownloadUpdateResult>('download_update', { channel: ch, proxy: getUpdateProxy() })
+    await invoke('download_update', { version: version.value })
     if (!downloadCancelled.value) {
-      phase.value = resolvePhaseAfterDownload(result.status)
-      logger.info('Updater', `download complete: status=${result.status}`)
+      phase.value = 'ready'
+      logger.info('Updater', 'download complete')
     }
   } catch (e) {
     if (!downloadCancelled.value) {
@@ -215,12 +213,12 @@ async function startDownload() {
   } finally {
     progressUnlisten?.()
     progressUnlisten = null
+    if (downloadCancelled.value) phase.value = 'available'
   }
 }
 
 function cancelDownload() {
   downloadCancelled.value = true
-  phase.value = 'available'
   logger.info('Updater', 'download cancelled by user')
   invoke('cancel_update').catch(() => {
     /* best-effort: Rust side may have already finished */
@@ -232,8 +230,8 @@ async function handleInstallAndRelaunch() {
   const ch = activeChannel.value
   logger.info('Updater', `applying update v${version.value} channel=${ch}`)
   try {
-    await invoke('apply_update', { channel: ch, proxy: getUpdateProxy() })
-    relaunch()
+    await invoke('apply_update')
+    await relaunch()
   } catch (e) {
     // Engine recovery is owned by the Rust supervisor. This block only
     // manages the update dialog state.

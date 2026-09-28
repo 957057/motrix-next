@@ -4523,6 +4523,7 @@ dependencies = [
  "igd-next",
  "ipnet",
  "keepawake",
+ "libc",
  "log",
  "maxminddb",
  "notify",

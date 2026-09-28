@@ -270,6 +270,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     app.manage(commands::bt_blocklist::BtPeerBlocklistUpdateState::new());
     app.manage(services::http_api::HttpApiState::new());
     app.manage(services::downloads::SubmissionGate::default());
+    app.manage(commands::FilenameProbeState::default());
     #[cfg(target_os = "linux")]
     app.manage(services::notification::LinuxNotificationRegistry::new());
     app.manage(services::deep_link::PendingDeepLinkState::new());
@@ -458,6 +459,13 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let geoip_state = commands::geoip::init_geoip(&app.handle().clone());
     app.manage(geoip_state);
 
+    #[cfg(any(windows, target_os = "linux"))]
+    {
+        let args = std::env::args().skip(1).collect::<Vec<_>>();
+        let inputs = services::deep_link::filter_external_input_args(&args);
+        services::deep_link::route_external_inputs(app.handle(), inputs, "startup");
+    }
+
     Ok(())
 }
 
@@ -544,26 +552,7 @@ fn handle_run_event(app: &tauri::AppHandle, event: tauri::RunEvent) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // ── Linux: GPU rendering guard ──────────────────────────────────
-    //
-    // WORKAROUND for WebKitGTK Bug #262607 (RESOLVED WONTFIX).
-    // <https://bugs.webkit.org/show_bug.cgi?id=262607>
-    //
-    // WebKitGTK hardware rendering can crash on various GPU, driver, and
-    // compositor combinations. DMA-BUF is the best-known failure path, but
-    // AppImage/Wayland systems can still hit GBM/DRI through accelerated
-    // compositing, so software mode disables both paths.
-    //
-    // Strategy:
-    // - Default: hardware rendering OFF (software compositing).
-    //   Safe for all GPUs, negligible perf difference for a download manager UI.
-    // - Users can opt in via Advanced → "WebKitGTK Hardware Acceleration".
-    // - If opting in crashes the app, edit config.json and set
-    //   preferences.hardwareRendering to false.
-    //
-    // SAFETY: `set_var` (called inside pre_flight) is unsafe since Rust 1.83.
-    // Safe here because it executes at the very start of `main()`, before
-    // Tauri's thread pool, the async runtime, or any plugin initialisation.
+    // Apply explicit Linux rendering overrides before any threads start.
     gpu_guard::pre_flight();
 
     let log_level = read_log_level();
@@ -716,6 +705,8 @@ pub fn run() {
             commands::set_default_protocol_client,
             commands::open_default_apps_settings,
             commands::fetch_remote_bytes,
+            commands::resolve_remote_filename,
+            commands::cancel_filename_probe,
             commands::get_system_proxy,
             commands::normalize_proxy_bypass,
             commands::lookup_peer_ips,
@@ -727,6 +718,7 @@ pub fn run() {
             commands::take_pending_external_inputs,
             commands::take_pending_frontend_actions,
             commands::history_get_record,
+            commands::rename_completed_file,
             commands::history_get_page,
             commands::history_remove_births,
             commands::database_schema_version,

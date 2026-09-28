@@ -387,9 +387,6 @@
     "recommended-limit": "Zalecane ≤ {value}",
     "high-bt-peers-reason": "Zbyt wiele węzłów zwiększa zużycie pamięci",
     "engine-section": "Silnik pobierania Aria2 Next",
-    "hardware-rendering": "Przyspieszenie sprzętowe WebKitGTK",
-    "hardware-rendering-hint": "Włączenie może poprawić wydajność renderowania interfejsu, ale niektóre GPU, sterowniki lub środowiska pulpitu mogą powodować awarię WebKitGTK",
-    "hardware-rendering-restart-confirm": "Zmiana przyspieszenia sprzętowego WebKitGTK wymaga ponownego uruchomienia aplikacji. Jeśli aplikacja nie uruchamia się po włączeniu, edytuj ręcznie config.json i ustaw preferences.hardwareRendering na false.",
     "engine-state-path": "Katalog stanu silnika",
     "reset-engine-state": "Zresetuj stan silnika",
     "reset-engine-state-confirm": "Wszystkie zadania pobierania zostaną usunięte z silnika, a plik pamięci podręcznej zadań zostanie skasowany. Historia ukończonych pobrań nie zostanie naruszona.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Jedna reguła w wierszu, np. *://*.example.com/logs/*",
     "file-category-invalid-regex": "Nieprawidłowa reguła regex w wierszu {line}",
     "file-category-invalid-url-rule-too-long": "Reguła URL w wierszu {line} jest za długa",
-    "auto-submit-from-extension": "Pomiń potwierdzenie pobrań z rozszerzenia",
-    "silent-auto-submit-from-extension": "Nie aktywuj głównego okna przy odbieraniu pobrań",
     "extension-api-port": "Port API rozszerzenia",
     "extension-api-secret-tip": "Wprowadź ten klucz w ustawieniach rozszerzenia przeglądarki w celu uwierzytelnienia",
     "extension-api-secret": "Klucz API rozszerzenia",
@@ -595,7 +590,14 @@
     "remember-save-location": "Pamiętaj ostatni folder zapisu",
     "stream-max-range-size": "Maksymalny rozmiar zakresu HTTP",
     "stream-max-range-size-hint": "0 oznacza brak limitu. Użyj K, M lub G, np. 5M.",
-    "proxy-import-unsupported": "Sprawdź nieobsługiwane wyjątki przed zapisaniem: {rules}"
+    "proxy-import-unsupported": "Sprawdź nieobsługiwane wyjątki przed zapisaniem: {rules}",
+    "extension-download-behavior": "Pobieranie z rozszerzenia",
+    "extension-behavior-confirm": "Potwierdzaj przed pobraniem",
+    "extension-behavior-background": "Pobieraj w tle",
+    "extension-behavior-show": "Pobieraj i wyświetlaj zadania",
+    "software-rendering": "Renderowanie programowe WebKitGTK",
+    "software-rendering-hint": "Tylko do diagnozowania problemów graficznych w systemie Linux.",
+    "software-rendering-restart-confirm": "Uruchom ponownie, aby zastosować zmianę renderowania."
   },
   "task": {
     "scope-all": "Wszystkie",
@@ -896,7 +898,8 @@
     "dir-no-saved": "Brak zapisanych folderów",
     "create": "Utwórz",
     "more-actions": "Więcej działań",
-    "file-inaccessible": "Plik niedostępny"
+    "file-inaccessible": "Plik niedostępny",
+    "resolve-filename": "Pobierz nazwę pliku"
   },
   "media": {
     "probing": "Analizowanie multimediów",

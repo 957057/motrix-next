@@ -279,8 +279,8 @@ export const DEFAULT_APP_CONFIG = {
   // ── Auto Update ───────────────────────────────────────────────
   autoCheckUpdate: true, // qBT checks every launch; security best practice
   autoCheckUpdateInterval: 0, // 0 means every frontend startup, including lightweight restores
-  /** Linux-only: DMA-BUF GPU rendering is opt-in for Wayland/WebKitGTK stability. */
-  hardwareRendering: false,
+  /** Linux-only: keep WebKitGTK defaults; software fallback is explicitly opt-in. */
+  softwareRendering: false,
   updateChannel: 'stable' as const,
   lastCheckUpdateTime: 0,
 
@@ -327,8 +327,7 @@ export const DEFAULT_APP_CONFIG = {
     scope: ['download', 'bittorrent', 'update-app', 'update-trackers'],
   },
   clipboard: { enable: true, http: true, sftp: true, magnet: true, ed2k: true, thunder: true, btHash: true },
-  autoSubmitFromExtension: true,
-  silentAutoSubmitFromExtension: true,
+  extensionDownloadBehavior: 'show' as const,
   userAgent:
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36',
   userAgentProfiles: [],

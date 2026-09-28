@@ -387,9 +387,6 @@
     "recommended-limit": "موصى به ≤ {value}",
     "high-bt-peers-reason": "كثرة العقد تزيد استهلاك الذاكرة",
     "engine-section": "محرك التنزيل Aria2 Next",
-    "hardware-rendering": "تسريع WebKitGTK العتادي",
-    "hardware-rendering-hint": "قد يؤدي تفعيله إلى تحسين أداء عرض الواجهة، لكن بعض البطاقات أو التعريفات أو بيئات سطح المكتب قد تسبب تعطل WebKitGTK",
-    "hardware-rendering-restart-confirm": "يتطلب تغيير تسريع WebKitGTK العتادي إعادة تشغيل التطبيق. إذا تعذر تشغيل التطبيق بعد تفعيله، فعدّل config.json يدويًا واجعل preferences.hardwareRendering تساوي false.",
     "engine-state-path": "دليل حالة المحرك",
     "reset-engine-state": "إعادة تعيين حالة المحرك",
     "reset-engine-state-confirm": "سيؤدي هذا إلى إزالة جميع مهام التنزيل من المحرك وحذف ملف ذاكرة التخزين المؤقت. لن تتأثر سجلات التنزيل المكتملة.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "قاعدة واحدة في كل سطر، مثل *://*.example.com/logs/*",
     "file-category-invalid-regex": "قاعدة regex غير صالحة في السطر {line}",
     "file-category-invalid-url-rule-too-long": "قاعدة URL في السطر {line} طويلة جداً",
-    "auto-submit-from-extension": "تخطي تأكيد تنزيلات الإضافة",
-    "silent-auto-submit-from-extension": "عدم تنشيط النافذة الرئيسية عند استلام تنزيل",
     "extension-api-port": "منفذ API للإضافة",
     "extension-api-secret-tip": "أدخل هذا المفتاح في إعدادات إضافة المتصفح للمصادقة",
     "extension-api-secret": "مفتاح API للإضافة",
@@ -595,7 +590,14 @@
     "remember-save-location": "تذكّر آخر موقع حفظ",
     "stream-max-range-size": "الحد الأقصى لحجم نطاق HTTP",
     "stream-max-range-size-hint": "0 يعني بلا حد. استخدم K أو M أو G، مثل 5M.",
-    "proxy-import-unsupported": "راجع قواعد التجاوز غير المدعومة قبل الحفظ: {rules}"
+    "proxy-import-unsupported": "راجع قواعد التجاوز غير المدعومة قبل الحفظ: {rules}",
+    "extension-download-behavior": "تنزيلات الإضافة",
+    "extension-behavior-confirm": "التأكيد قبل التنزيل",
+    "extension-behavior-background": "التنزيل في الخلفية",
+    "extension-behavior-show": "التنزيل وإظهار المهام",
+    "software-rendering": "العرض البرمجي لـ WebKitGTK",
+    "software-rendering-hint": "يُستخدم فقط لاستكشاف مشاكل الرسوميات في Linux.",
+    "software-rendering-restart-confirm": "أعد التشغيل لتطبيق تغيير العرض."
   },
   "task": {
     "scope-all": "الكل",
@@ -896,7 +898,8 @@
     "dir-no-saved": "لا توجد مجلدات محفوظة",
     "create": "إنشاء",
     "more-actions": "المزيد من الإجراءات",
-    "file-inaccessible": "الملف غير متاح"
+    "file-inaccessible": "الملف غير متاح",
+    "resolve-filename": "استعلام عن اسم الملف"
   },
   "media": {
     "probing": "جارٍ فحص الوسائط",

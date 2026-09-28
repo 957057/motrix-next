@@ -387,9 +387,6 @@
     "recommended-limit": "پیشنهادی ≤ {value}",
     "high-bt-peers-reason": "گره‌های زیاد حافظه بیشتری مصرف می‌کنند",
     "engine-section": "موتور دانلود Aria2 Next",
-    "hardware-rendering": "شتاب‌دهی سخت‌افزاری WebKitGTK",
-    "hardware-rendering-hint": "فعال‌سازی آن ممکن است عملکرد رندر رابط کاربری را بهتر کند، اما بعضی GPUها، درایورها یا محیط‌های دسکتاپ ممکن است باعث خرابی WebKitGTK شوند",
-    "hardware-rendering-restart-confirm": "تغییر شتاب‌دهی سخت‌افزاری WebKitGTK نیازمند راه‌اندازی مجدد برنامه است. اگر برنامه پس از فعال‌سازی اجرا نشد، config.json را دستی ویرایش کنید و preferences.hardwareRendering را روی false بگذارید.",
     "engine-state-path": "پوشه وضعیت موتور",
     "reset-engine-state": "بازنشانی وضعیت موتور",
     "reset-engine-state-confirm": "تمام وظایف دانلود از موتور حذف شده و فایل حافظه پنهان وظایف پاک می‌شود. تاریخچه دانلودهای تکمیل‌شده تحت تأثیر قرار نمی‌گیرد.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "هر خط یک قانون، مثلا *://*.example.com/logs/*",
     "file-category-invalid-regex": "قانون regex در خط {line} نامعتبر است",
     "file-category-invalid-url-rule-too-long": "قانون URL در خط {line} بیش از حد طولانی است",
-    "auto-submit-from-extension": "رد کردن تأیید دانلودهای افزونه",
-    "silent-auto-submit-from-extension": "هنگام دریافت دانلود، پنجره اصلی فعال نشود",
     "extension-api-port": "پورت API افزونه",
     "extension-api-secret-tip": "این کلید را در تنظیمات افزونه مرورگر برای احراز هویت وارد کنید",
     "extension-api-secret": "کلید API افزونه",
@@ -595,7 +590,14 @@
     "remember-save-location": "به‌خاطرسپردن آخرین محل ذخیره",
     "stream-max-range-size": "حداکثر اندازه بازه HTTP",
     "stream-max-range-size-hint": "0 یعنی نامحدود. از K، M یا G استفاده کنید، مانند 5M.",
-    "proxy-import-unsupported": "پیش از ذخیره، استثناهای پشتیبانی‌نشده را بررسی کنید: {rules}"
+    "proxy-import-unsupported": "پیش از ذخیره، استثناهای پشتیبانی‌نشده را بررسی کنید: {rules}",
+    "extension-download-behavior": "دانلودهای افزونه",
+    "extension-behavior-confirm": "تأیید پیش از دانلود",
+    "extension-behavior-background": "دانلود در پس‌زمینه",
+    "extension-behavior-show": "دانلود و نمایش کارها",
+    "software-rendering": "رندر نرم‌افزاری WebKitGTK",
+    "software-rendering-hint": "فقط برای عیب‌یابی مشکلات گرافیکی Linux استفاده شود.",
+    "software-rendering-restart-confirm": "برای اعمال تغییر رندر، برنامه را دوباره راه‌اندازی کنید."
   },
   "task": {
     "scope-all": "همه",
@@ -896,7 +898,8 @@
     "dir-no-saved": "پوشه ذخیره‌شده‌ای وجود ندارد",
     "create": "ایجاد",
     "more-actions": "عملیات بیشتر",
-    "file-inaccessible": "فایل در دسترس نیست"
+    "file-inaccessible": "فایل در دسترس نیست",
+    "resolve-filename": "دریافت نام فایل"
   },
   "media": {
     "probing": "در حال بررسی رسانه",

@@ -1,15 +1,10 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "bundle": {
-    "fileAssociations": [
-      {
-        "ext": ["torrent"],
-        "name": "dev.aninsomniacy.rayburst.torrent",
-        "mimeType": "application/x-bittorrent",
-        "description": "BitTorrent File",
-        "role": "Viewer"
-      }
-    ]
+    "fileAssociations": []
+  },
+  "plugins": {
+    "deep-link": { "desktop": { "schemes": ["rayburst"] } }
   },
   "app": {
     "windows": [

@@ -302,7 +302,7 @@ export const useAppStore = defineStore('app', () => {
     const context = buildExternalContext(input)
 
     const preferenceStore = usePreferenceStore()
-    const autoSubmit = preferenceStore.config.autoSubmitFromExtension
+    const autoSubmit = preferenceStore.config.extensionDownloadBehavior !== 'confirm'
     logger.debug('ExternalInput.new', 'external_input_received', {
       url: summarizeExternalInput(downloadUrl),
       kind,

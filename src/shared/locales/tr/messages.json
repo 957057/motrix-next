@@ -387,9 +387,6 @@
     "recommended-limit": "Önerilen ≤ {value}",
     "high-bt-peers-reason": "Çok fazla düğüm bellek tüketimini artırır",
     "engine-section": "Aria2 Next İndirme Motoru",
-    "hardware-rendering": "WebKitGTK Donanım Hızlandırma",
-    "hardware-rendering-hint": "Etkinleştirmek arayüz işleme performansını artırabilir, ancak bazı GPU’lar, sürücüler veya masaüstü ortamları WebKitGTK’nin çökmesine neden olabilir",
-    "hardware-rendering-restart-confirm": "WebKitGTK donanım hızlandırmasını değiştirmek uygulamanın yeniden başlatılmasını gerektirir. Etkinleştirdikten sonra uygulama başlayamazsa config.json dosyasını elle düzenleyin ve preferences.hardwareRendering değerini false yapın.",
     "engine-state-path": "Motor Durumu Dizini",
     "reset-engine-state": "Motor Durumunu Sıfırla",
     "reset-engine-state-confirm": "Tüm indirme görevleri motordan kaldırılacak ve görev önbellek dosyası silinecektir. Tamamlanan indirme geçmişi etkilenmeyecektir.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Her satıra bir kural, örneğin *://*.example.com/logs/*",
     "file-category-invalid-regex": "{line}. satırda geçersiz regex kuralı",
     "file-category-invalid-url-rule-too-long": "{line}. satırdaki URL kuralı çok uzun",
-    "auto-submit-from-extension": "Uzantı indirmelerinde onayı atla",
-    "silent-auto-submit-from-extension": "İndirmeler alınırken ana pencereye odaklanma",
     "extension-api-port": "Uzantı API Portu",
     "extension-api-secret-tip": "Kimlik doğrulaması için bu anahtarı tarayıcı eklentisi ayarlarına girin",
     "extension-api-secret": "Eklenti API Anahtarı",
@@ -595,7 +590,14 @@
     "remember-save-location": "Son kayıt konumunu hatırla",
     "stream-max-range-size": "En büyük HTTP aralığı boyutu",
     "stream-max-range-size-hint": "0 sınırsızdır. K, M veya G kullanın, örneğin 5M.",
-    "proxy-import-unsupported": "Kaydetmeden önce desteklenmeyen istisnaları gözden geçirin: {rules}"
+    "proxy-import-unsupported": "Kaydetmeden önce desteklenmeyen istisnaları gözden geçirin: {rules}",
+    "extension-download-behavior": "Uzantı indirmeleri",
+    "extension-behavior-confirm": "İndirmeden önce onayla",
+    "extension-behavior-background": "Arka planda indir",
+    "extension-behavior-show": "İndir ve görevleri göster",
+    "software-rendering": "WebKitGTK yazılım ile işleme",
+    "software-rendering-hint": "Yalnızca Linux grafik sorunlarını teşhis etmek için kullanın.",
+    "software-rendering-restart-confirm": "İşleme değişikliğini uygulamak için yeniden başlatın."
   },
   "task": {
     "scope-all": "Tümü",
@@ -896,7 +898,8 @@
     "dir-no-saved": "Kayıtlı klasör yok",
     "create": "Oluştur",
     "more-actions": "Diğer işlemler",
-    "file-inaccessible": "Dosyaya erişilemiyor"
+    "file-inaccessible": "Dosyaya erişilemiyor",
+    "resolve-filename": "Dosya adını öğren"
   },
   "media": {
     "probing": "Medya inceleniyor",

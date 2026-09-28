@@ -63,51 +63,27 @@ fn activate() -> std::io::Result<()> {
 
 #[cfg(windows)]
 fn activate_windows(application: &std::path::Path) -> std::io::Result<()> {
-    use std::os::windows::ffi::OsStrExt;
-    use windows_sys::Win32::{
-        System::Com::{
-            CoInitializeEx, CoUninitialize, COINIT_APARTMENTTHREADED, COINIT_DISABLE_OLE1DDE,
-        },
-        UI::{
-            Shell::{ShellExecuteExW, SEE_MASK_FLAG_NO_UI, SEE_MASK_NOASYNC, SHELLEXECUTEINFOW},
-            WindowsAndMessaging::SW_SHOWNORMAL,
-        },
+    use std::os::windows::process::CommandExt;
+    use std::process::{Command, Stdio};
+    use windows_sys::Win32::System::Threading::{
+        CREATE_BREAKAWAY_FROM_JOB, CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW,
     };
+
     if !application.is_file() {
         return Err(std::io::Error::new(
             std::io::ErrorKind::NotFound,
             "The paired Rayburst executable is missing",
         ));
     }
-    let file: Vec<u16> = application
-        .as_os_str()
-        .encode_wide()
-        .chain(Some(0))
-        .collect();
-    // SAFETY: This one-shot host owns the thread; all Shell strings outlive the call.
-    unsafe {
-        let result = CoInitializeEx(
-            std::ptr::null(),
-            (COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) as u32,
-        );
-        if result < 0 {
-            return Err(std::io::Error::other(format!(
-                "COM initialization failed: 0x{result:08x}"
-            )));
-        }
-        let mut info: SHELLEXECUTEINFOW = std::mem::zeroed();
-        info.cbSize = std::mem::size_of::<SHELLEXECUTEINFOW>() as u32;
-        info.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC;
-        info.lpFile = file.as_ptr();
-        info.nShow = SW_SHOWNORMAL;
-        let result = if ShellExecuteExW(&mut info) == 0 {
-            Err(std::io::Error::last_os_error())
-        } else {
-            Ok(())
-        };
-        CoUninitialize();
-        result
-    }
+    // Firefox terminates the native host's job after the one-shot response.
+    // Rayburst must outlive that job and must not inherit the messaging pipes.
+    Command::new(application)
+        .creation_flags(CREATE_BREAKAWAY_FROM_JOB | CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()?;
+    Ok(())
 }
 
 fn main() -> ExitCode {

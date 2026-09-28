@@ -387,9 +387,6 @@
     "recommended-limit": "Προτεινόμενο ≤ {value}",
     "high-bt-peers-reason": "Πολλοί κόμβοι αυξάνουν τη χρήση μνήμης",
     "engine-section": "Μηχανή λήψης Aria2 Next",
-    "hardware-rendering": "Επιτάχυνση υλικού WebKitGTK",
-    "hardware-rendering-hint": "Η ενεργοποίηση μπορεί να βελτιώσει την απόδοση απεικόνισης της διεπαφής, αλλά ορισμένες GPU, οδηγοί ή περιβάλλοντα επιφάνειας εργασίας μπορεί να προκαλέσουν κατάρρευση του WebKitGTK",
-    "hardware-rendering-restart-confirm": "Η αλλαγή της επιτάχυνσης υλικού WebKitGTK απαιτεί επανεκκίνηση της εφαρμογής. Αν η εφαρμογή δεν μπορεί να ξεκινήσει μετά την ενεργοποίηση, επεξεργαστείτε χειροκίνητα το config.json και ορίστε το preferences.hardwareRendering σε false.",
     "engine-state-path": "Κατάλογος κατάστασης μηχανής",
     "reset-engine-state": "Επαναφορά κατάστασης μηχανής",
     "reset-engine-state-confirm": "Θα αφαιρεθούν όλες οι εργασίες λήψης από τη μηχανή και θα διαγραφεί το αρχείο προσωρινής μνήμης εργασιών. Το ιστορικό ολοκληρωμένων λήψεων δεν θα επηρεαστεί.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Ένας κανόνας ανά γραμμή, π.χ. *://*.example.com/logs/*",
     "file-category-invalid-regex": "Μη έγκυρος κανόνας regex στη γραμμή {line}",
     "file-category-invalid-url-rule-too-long": "Ο κανόνας URL στη γραμμή {line} είναι πολύ μεγάλος",
-    "auto-submit-from-extension": "Παράκαμψη επιβεβαίωσης για λήψεις επέκτασης",
-    "silent-auto-submit-from-extension": "Να μην ενεργοποιείται το κύριο παράθυρο κατά τη λήψη αιτήματος λήψης",
     "extension-api-port": "Θύρα API επέκτασης",
     "extension-api-secret-tip": "Εισαγάγετε αυτό το κλειδί στις ρυθμίσεις της επέκτασης του προγράμματος περιήγησης για έλεγχο ταυτότητας",
     "extension-api-secret": "Κλειδί API επέκτασης",
@@ -595,7 +590,14 @@
     "remember-save-location": "Απομνημόνευση τελευταίου φακέλου",
     "stream-max-range-size": "Μέγιστο μέγεθος εύρους HTTP",
     "stream-max-range-size-hint": "0 σημαίνει απεριόριστο. Χρησιμοποιήστε K, M ή G, π.χ. 5M.",
-    "proxy-import-unsupported": "Ελέγξτε τις μη υποστηριζόμενες εξαιρέσεις πριν από την αποθήκευση: {rules}"
+    "proxy-import-unsupported": "Ελέγξτε τις μη υποστηριζόμενες εξαιρέσεις πριν από την αποθήκευση: {rules}",
+    "extension-download-behavior": "Λήψεις επέκτασης",
+    "extension-behavior-confirm": "Επιβεβαίωση πριν από τη λήψη",
+    "extension-behavior-background": "Λήψη στο παρασκήνιο",
+    "extension-behavior-show": "Λήψη και εμφάνιση εργασιών",
+    "software-rendering": "Απόδοση WebKitGTK μέσω λογισμικού",
+    "software-rendering-hint": "Μόνο για διάγνωση προβλημάτων γραφικών στο Linux.",
+    "software-rendering-restart-confirm": "Επανεκκινήστε για εφαρμογή της αλλαγής απόδοσης."
   },
   "task": {
     "scope-all": "Όλα",
@@ -896,7 +898,8 @@
     "dir-no-saved": "Δεν υπάρχουν αποθηκευμένοι φάκελοι",
     "create": "Δημιουργία",
     "more-actions": "Περισσότερες ενέργειες",
-    "file-inaccessible": "Το αρχείο δεν είναι προσβάσιμο"
+    "file-inaccessible": "Το αρχείο δεν είναι προσβάσιμο",
+    "resolve-filename": "Αναζήτηση ονόματος αρχείου"
   },
   "media": {
     "probing": "Ανάλυση πολυμέσων",

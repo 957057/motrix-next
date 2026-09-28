@@ -65,6 +65,7 @@ import TaskDetailFiles from './detail/TaskDetailFiles.vue'
 import TaskDetailPeers from './detail/TaskDetailPeers.vue'
 import TaskDetailSources from './detail/TaskDetailSources.vue'
 import TaskDetailTrackers from './detail/TaskDetailTrackers.vue'
+import RenameCompletedFile from './detail/RenameCompletedFile.vue'
 import { forceBtRecheck } from '@/api/aria2'
 import { getErrorMessage } from '@shared/utils/errorMessage'
 import { formatSharingDuration, getBtLifecycleState } from '@/composables/useBtLifecycle'
@@ -391,6 +392,11 @@ const statusTagType = computed<TaskStatusTagType>(() => {
 function handleClose() {
   emit('close')
 }
+
+async function onFileRenamed() {
+  taskStore.hideTaskDetail()
+  await taskStore.fetchList()
+}
 </script>
 
 <template>
@@ -433,6 +439,7 @@ function handleClose() {
               >
                 <NDescriptionsItem :label="t('task.task-name') || 'Name'">
                   <CopyableValue :value="taskFullName" :label="copyLabel(t('task.task-name'), 'Name')" />
+                  <RenameCompletedFile :task="task" @renamed="onFileRenamed" />
                 </NDescriptionsItem>
                 <NDescriptionsItem v-if="task.dir" :label="t('task.task-dir') || 'Directory'">
                   <CopyableValue :value="task.dir" :label="copyLabel(t('task.task-dir'), 'Directory')" />

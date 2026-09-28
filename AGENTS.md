@@ -263,8 +263,8 @@ The CI creates this Release automatically if it doesn't exist, and uses `--clobb
 The Tauri JS `check()` API does **not** support runtime endpoint override. Channel switching is implemented via Rust commands:
 
 - `check_for_update(channel, proxy)` → dynamically builds updater with correct endpoint
-- `download_update(channel, proxy)` → downloads update binary, emits progress events
-- `apply_update(channel)` → stops engine, installs downloaded update
+- `download_update(version)` → downloads the selected native update, emits progress events
+- `apply_update()` → stops engine, installs downloaded update
 - `cancel_update()` → cancels in-progress download
 
 The user's channel preference is stored as `updateChannel` in the preference store.

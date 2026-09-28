@@ -66,6 +66,18 @@ impl TaskService {
     }
     // ── Public API ──────────────────────────────────────────────────
 
+    pub async fn resolve_filename(
+        &self,
+        url: &str,
+        disposition: Vec<u8>,
+    ) -> Result<String, AppError> {
+        self.call(
+            "resolveFilename",
+            vec![url.into(), serde_json::to_value(disposition)?],
+        )
+        .await
+    }
+
     pub async fn finish_media(&self, gid: &str) -> Result<String, AppError> {
         self.call("finishMedia", vec![gid.into()]).await
     }

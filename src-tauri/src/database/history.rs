@@ -277,7 +277,7 @@ impl Database {
     }
 
     /// Map a rusqlite Row to a HistoryRecord.
-    fn row_to_record(row: &rusqlite::Row) -> rusqlite::Result<HistoryRecord> {
+    pub(super) fn row_to_record(row: &rusqlite::Row) -> rusqlite::Result<HistoryRecord> {
         Ok(HistoryRecord {
             id: row.get("id")?,
             gid: row.get("gid")?,
@@ -315,7 +315,10 @@ mod tests {
             db.get_records(None).await.unwrap()[0].name,
             "literal%20.txt"
         );
-        assert_eq!(db.schema_version().await.unwrap(), 4);
+        assert_eq!(
+            db.schema_version().await.unwrap(),
+            super::super::SCHEMA_VERSION
+        );
     }
 
     #[tokio::test]

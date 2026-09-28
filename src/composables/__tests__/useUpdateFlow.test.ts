@@ -11,7 +11,6 @@ import {
   getActionLabel,
   getActionType,
   getActionTarget,
-  resolvePhaseAfterDownload,
   shouldAllowUpdateDialogClose,
   calcProgressPercent,
   bytesToMB,
@@ -93,18 +92,6 @@ describe('getActionTarget', () => {
     ['up-to-date', null],
   ])('phase "%s" → action "%s"', (phase, expected) => {
     expect(getActionTarget(phase)).toBe(expected)
-  })
-})
-
-// ── resolvePhaseAfterDownload ──────────────────────────────────────
-
-describe('resolvePhaseAfterDownload', () => {
-  it('returns ready when bytes were actually downloaded', () => {
-    expect(resolvePhaseAfterDownload('downloaded')).toBe('ready')
-  })
-
-  it('returns up-to-date when download command reports no update', () => {
-    expect(resolvePhaseAfterDownload('no-update')).toBe('up-to-date')
   })
 })
 

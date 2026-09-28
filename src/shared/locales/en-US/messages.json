@@ -387,9 +387,6 @@
     "recommended-limit": "Recommended ≤ {value}",
     "high-bt-peers-reason": "Too many peers increases memory consumption",
     "engine-section": "Aria2 Next Download Engine",
-    "hardware-rendering": "WebKitGTK Hardware Acceleration",
-    "hardware-rendering-hint": "Enabling it may improve UI rendering performance, but some GPUs, drivers, or desktop environments may cause WebKitGTK to crash",
-    "hardware-rendering-restart-confirm": "Changing WebKitGTK hardware acceleration requires an app restart. If the app cannot start after enabling it, edit config.json manually and set preferences.hardwareRendering to false.",
     "engine-state-path": "Engine State Directory",
     "reset-engine-state": "Reset Engine State",
     "reset-engine-state-confirm": "This will remove all download tasks from the engine and clear the task cache. Completed download history will not be affected.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "One rule per line, for example *://*.example.com/logs/*",
     "file-category-invalid-regex": "Invalid regex rule on line {line}",
     "file-category-invalid-url-rule-too-long": "URL rule on line {line} is too long",
-    "auto-submit-from-extension": "Skip confirmation for extension downloads",
-    "silent-auto-submit-from-extension": "Keep Window Hidden for Extension Downloads",
     "extension-api-port": "Extension API Port",
     "extension-api-secret-tip": "Enter this secret in the browser extension settings to authenticate",
     "extension-api-secret": "Extension API Secret",
@@ -595,7 +590,14 @@
     "remember-save-location": "Remember last save location",
     "stream-max-range-size": "Maximum HTTP range size",
     "stream-max-range-size-hint": "0 means unlimited. Use K, M or G, for example 5M.",
-    "proxy-import-unsupported": "Review unsupported bypass rules before saving: {rules}"
+    "proxy-import-unsupported": "Review unsupported bypass rules before saving: {rules}",
+    "extension-download-behavior": "Extension downloads",
+    "extension-behavior-confirm": "Confirm before downloading",
+    "extension-behavior-background": "Download in background",
+    "extension-behavior-show": "Download and show tasks",
+    "software-rendering": "WebKitGTK software rendering",
+    "software-rendering-hint": "Use only to troubleshoot Linux graphics problems.",
+    "software-rendering-restart-confirm": "Restart to apply the rendering change."
   },
   "task": {
     "scope-all": "All",
@@ -896,7 +898,8 @@
     "dir-no-saved": "No saved folders",
     "create": "Create",
     "more-actions": "More actions",
-    "file-inaccessible": "File unavailable"
+    "file-inaccessible": "File unavailable",
+    "resolve-filename": "Look up filename"
   },
   "media": {
     "probing": "Inspecting media",

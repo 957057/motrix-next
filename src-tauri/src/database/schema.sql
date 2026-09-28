@@ -45,3 +45,10 @@ CREATE TABLE IF NOT EXISTS download_submissions (
   state TEXT NOT NULL DEFAULT 'pending' CHECK(state IN ('pending','confirming','submitted','cancelled')),
   request TEXT
 );
+
+CREATE TABLE IF NOT EXISTS file_renames (
+    gid TEXT PRIMARY KEY REFERENCES download_history(gid) ON DELETE CASCADE,
+    old_path TEXT NOT NULL,
+    new_path TEXT NOT NULL,
+    name TEXT NOT NULL
+);

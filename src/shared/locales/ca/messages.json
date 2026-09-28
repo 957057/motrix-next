@@ -387,9 +387,6 @@
     "recommended-limit": "Recomanat ≤ {value}",
     "high-bt-peers-reason": "Massa nodes augmenten el consum de memòria",
     "engine-section": "Motor de descàrrega Aria2 Next",
-    "hardware-rendering": "Acceleració de maquinari WebKitGTK",
-    "hardware-rendering-hint": "Activar-ho pot millorar el rendiment de renderització de la interfície, però algunes GPU, controladors o entorns d’escriptori poden fer fallar WebKitGTK",
-    "hardware-rendering-restart-confirm": "Canviar l’acceleració de maquinari WebKitGTK requereix reiniciar l’aplicació. Si l’aplicació no pot iniciar-se després d’activar-la, editeu config.json manualment i establiu preferences.hardwareRendering a false.",
     "engine-state-path": "Directori d'estat del motor",
     "reset-engine-state": "Restableix l'estat del motor",
     "reset-engine-state-confirm": "S'eliminaran totes les tasques de descàrrega del motor i el fitxer de sessió. L'historial de descàrregues completades no es veurà afectat.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Una regla per línia, per exemple *://*.example.com/logs/*",
     "file-category-invalid-regex": "Regla regex no vàlida a la línia {line}",
     "file-category-invalid-url-rule-too-long": "La regla URL de la línia {line} és massa llarga",
-    "auto-submit-from-extension": "Omet la confirmació de baixades de l'extensió",
-    "silent-auto-submit-from-extension": "No activis la finestra principal en rebre una baixada",
     "extension-api-port": "Port de l'API de l'extensió",
     "extension-api-secret-tip": "Introduïu aquesta clau a la configuració de l'extensió del navegador per autenticar-vos.",
     "extension-api-secret": "Clau secreta de l'API de l'extensió",
@@ -595,7 +590,14 @@
     "remember-save-location": "Recorda la darrera ubicació",
     "stream-max-range-size": "Mida màxima del rang HTTP",
     "stream-max-range-size-hint": "0 vol dir sense límit. Feu servir K, M o G, per exemple 5M.",
-    "proxy-import-unsupported": "Reviseu les excepcions no compatibles abans de desar: {rules}"
+    "proxy-import-unsupported": "Reviseu les excepcions no compatibles abans de desar: {rules}",
+    "extension-download-behavior": "Baixades de l’extensió",
+    "extension-behavior-confirm": "Confirma abans de baixar",
+    "extension-behavior-background": "Baixa en segon pla",
+    "extension-behavior-show": "Baixa i mostra les tasques",
+    "software-rendering": "Renderització per programari de WebKitGTK",
+    "software-rendering-hint": "Només per diagnosticar problemes gràfics al Linux.",
+    "software-rendering-restart-confirm": "Reinicia per aplicar el canvi de renderització."
   },
   "task": {
     "scope-all": "Totes",
@@ -896,7 +898,8 @@
     "dir-no-saved": "No hi ha carpetes desades",
     "create": "Crea",
     "more-actions": "Més accions",
-    "file-inaccessible": "Fitxer inaccessible"
+    "file-inaccessible": "Fitxer inaccessible",
+    "resolve-filename": "Consulta el nom del fitxer"
   },
   "media": {
     "probing": "Analitzant el contingut",

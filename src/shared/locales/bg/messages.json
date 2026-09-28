@@ -387,9 +387,6 @@
     "recommended-limit": "Препоръчително ≤ {value}",
     "high-bt-peers-reason": "Много възли увеличават паметта",
     "engine-section": "Двигател за изтегляне Aria2 Next",
-    "hardware-rendering": "Хардуерно ускорение на WebKitGTK",
-    "hardware-rendering-hint": "Включването може да подобри производителността на интерфейса, но някои GPU, драйвери или среди на работния плот може да сринат WebKitGTK",
-    "hardware-rendering-restart-confirm": "Промяната на хардуерното ускорение на WebKitGTK изисква рестартиране на приложението. Ако приложението не може да стартира след включването му, редактирайте config.json ръчно и задайте preferences.hardwareRendering на false.",
     "engine-state-path": "Директория за състоянието на двигателя",
     "reset-engine-state": "Нулиране на състоянието на двигателя",
     "reset-engine-state-confirm": "Това ще премахне всички задачи за изтегляне от двигателя и ще изтрие кеш файла на задачите. Историята на завършените изтегляния няма да бъде засегната.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Едно правило на ред, например *://*.example.com/logs/*",
     "file-category-invalid-regex": "Невалидно regex правило на ред {line}",
     "file-category-invalid-url-rule-too-long": "URL правилото на ред {line} е твърде дълго",
-    "auto-submit-from-extension": "Пропускай потвърждението за изтегляния от разширението",
-    "silent-auto-submit-from-extension": "Не активирай главния прозорец при получаване на изтегляне",
     "extension-api-port": "Порт на API за разширението",
     "extension-api-secret-tip": "Въведете този ключ в настройките на разширението за удостоверяване",
     "extension-api-secret": "API ключ за разширение",
@@ -595,7 +590,14 @@
     "remember-save-location": "Запомняне на последната папка",
     "stream-max-range-size": "Максимален размер на HTTP диапазон",
     "stream-max-range-size-hint": "0 означава без ограничение. Използвайте K, M или G, например 5M.",
-    "proxy-import-unsupported": "Проверете неподдържаните изключения преди запазване: {rules}"
+    "proxy-import-unsupported": "Проверете неподдържаните изключения преди запазване: {rules}",
+    "extension-download-behavior": "Изтегляния от разширението",
+    "extension-behavior-confirm": "Потвърждение преди изтегляне",
+    "extension-behavior-background": "Изтегляне във фонов режим",
+    "extension-behavior-show": "Изтегляне и показване на задачите",
+    "software-rendering": "Софтуерно изобразяване на WebKitGTK",
+    "software-rendering-hint": "Само за диагностика на графични проблеми в Linux.",
+    "software-rendering-restart-confirm": "Рестартирайте, за да приложите промяната."
   },
   "task": {
     "scope-all": "Всички",
@@ -896,7 +898,8 @@
     "dir-no-saved": "Няма запазени папки",
     "create": "Създаване",
     "more-actions": "Още действия",
-    "file-inaccessible": "Файлът е недостъпен"
+    "file-inaccessible": "Файлът е недостъпен",
+    "resolve-filename": "Извличане на име на файл"
   },
   "media": {
     "probing": "Анализ на медията",

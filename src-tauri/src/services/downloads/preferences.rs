@@ -12,12 +12,7 @@ use tauri_plugin_store::StoreExt;
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub(super) struct Preferences {
-    #[serde(default = "enabled")]
-    pub auto_submit_from_extension: bool,
-    #[serde(default = "enabled")]
-    pub silent_auto_submit_from_extension: bool,
-    #[serde(default = "enabled")]
-    pub new_task_show_downloading: bool,
+    pub extension_download_behavior: ExtensionDownloadBehavior,
     dir: String,
     remember_save_location: bool,
     last_save_location: String,
@@ -27,8 +22,13 @@ pub(super) struct Preferences {
     user_agent_profiles: Vec<Profile>,
     user_agent_rules: Vec<Rule>,
 }
-fn enabled() -> bool {
-    true
+#[derive(Default, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub(super) enum ExtensionDownloadBehavior {
+    Confirm,
+    Background,
+    #[default]
+    Show,
 }
 #[derive(Deserialize)]
 struct Profile {

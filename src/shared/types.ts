@@ -497,21 +497,16 @@ export interface AppConfig {
   cookie: string
   proxy: ProxyConfig
   clipboard: ClipboardConfig
-  /** When true, extension-intercepted URI downloads bypass the AddTask dialog. */
-  autoSubmitFromExtension: boolean
-  /** When true, extension-intercepted BT tasks skip file selection and download every file. */
-  /** When true, auto-submitted extension downloads are handled in the
-   *  background without raising the main window. Only applies when
-   *  autoSubmitFromExtension is enabled. */
-  silentAutoSubmitFromExtension: boolean
+  /** One policy owns confirmation and window activation for extension downloads. */
+  extensionDownloadBehavior: 'confirm' | 'background' | 'show'
   trackerSource: string[]
   customTrackerUrls: string[]
   historyDirectories: string[]
   favoriteDirectories: string[]
   lastCheckUpdateTime: number
   lastSyncTrackerTime: number
-  /** Linux-only: opt into DMA-BUF GPU hardware rendering (default: false = software). */
-  hardwareRendering: boolean
+  /** Linux-only: explicitly opt into software rendering instead of WebKitGTK defaults. */
+  softwareRendering: boolean
   updateChannel: UpdateChannel
   runMode: string
   userAgent: string

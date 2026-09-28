@@ -10,12 +10,11 @@ export interface AdvancedForm {
   extensionApiPort: number
   extensionApiSecret: string
   allowRemoteAccess: boolean
-  autoSubmitFromExtension: boolean
-  silentAutoSubmitFromExtension: boolean
+  extensionDownloadBehavior: 'confirm' | 'background' | 'show'
   logLevel: AppConfig['logLevel']
   aria2LogLevel: AppConfig['aria2LogLevel']
   tempFilesDir: string
-  hardwareRendering: boolean
+  softwareRendering: boolean
   clipboardEnable: boolean
   clipboardHttp: boolean
   clipboardSftp: boolean
@@ -32,12 +31,11 @@ export function buildAdvancedForm(config: AppConfig): AdvancedForm {
     extensionApiPort: config.extensionApiPort,
     extensionApiSecret: config.extensionApiSecret,
     allowRemoteAccess: config.allowRemoteAccess,
-    autoSubmitFromExtension: config.autoSubmitFromExtension,
-    silentAutoSubmitFromExtension: config.silentAutoSubmitFromExtension,
+    extensionDownloadBehavior: config.extensionDownloadBehavior,
     logLevel: config.logLevel,
     aria2LogLevel: config.aria2LogLevel,
     tempFilesDir: config.tempFilesDir,
-    hardwareRendering: config.hardwareRendering,
+    softwareRendering: config.softwareRendering,
     clipboardEnable: config.clipboard.enable,
     clipboardHttp: config.clipboard.http,
     clipboardSftp: config.clipboard.sftp,

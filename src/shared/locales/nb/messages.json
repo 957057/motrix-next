@@ -387,9 +387,6 @@
     "recommended-limit": "Anbefalt ≤ {value}",
     "high-bt-peers-reason": "For mange noder øker minneforbruket",
     "engine-section": "Aria2 Next-nedlastingsmotor",
-    "hardware-rendering": "WebKitGTK maskinvareakselerasjon",
-    "hardware-rendering-hint": "Aktivering kan forbedre gjengivelsesytelsen i grensesnittet, men enkelte GPU-er, drivere eller skrivebordsmiljøer kan få WebKitGTK til å krasje",
-    "hardware-rendering-restart-confirm": "Endring av WebKitGTK maskinvareakselerasjon krever omstart av appen. Hvis appen ikke kan starte etter aktivering, rediger config.json manuelt og sett preferences.hardwareRendering til false.",
     "engine-state-path": "Mappe for motorstatus",
     "reset-engine-state": "Tilbakestill motorstatus",
     "reset-engine-state-confirm": "Alle nedlastingsoppgaver fjernes fra motoren og hurtigbufferfilen for oppgaver slettes. Historikk over fullførte nedlastinger påvirkes ikke.",
@@ -501,8 +498,6 @@
     "file-category-url-placeholder": "Én regel per linje, for eksempel *://*.example.com/logs/*",
     "file-category-invalid-regex": "Ugyldig regex-regel på linje {line}",
     "file-category-invalid-url-rule-too-long": "URL-regelen på linje {line} er for lang",
-    "auto-submit-from-extension": "Hopp over bekreftelse for utvidelsesnedlastinger",
-    "silent-auto-submit-from-extension": "Ikke fokuser hovedvinduet ved mottak av nedlastinger",
     "extension-api-port": "Utvidelse API-port",
     "extension-api-secret-tip": "Skriv inn denne nøkkelen i nettleserutvidelsens innstillinger for autentisering",
     "extension-api-secret": "API-nøkkel for utvidelse",
@@ -595,7 +590,14 @@
     "remember-save-location": "Husk siste lagringssted",
     "stream-max-range-size": "Maksimal HTTP-områdestørrelse",
     "stream-max-range-size-hint": "0 betyr ubegrenset. Bruk K, M eller G, for eksempel 5M.",
-    "proxy-import-unsupported": "Kontroller unntak som ikke støttes før lagring: {rules}"
+    "proxy-import-unsupported": "Kontroller unntak som ikke støttes før lagring: {rules}",
+    "extension-download-behavior": "Nedlastinger fra utvidelsen",
+    "extension-behavior-confirm": "Bekreft før nedlasting",
+    "extension-behavior-background": "Last ned i bakgrunnen",
+    "extension-behavior-show": "Last ned og vis oppgaver",
+    "software-rendering": "WebKitGTK-programvaregjengivelse",
+    "software-rendering-hint": "Kun for feilsøking av grafikkproblemer i Linux.",
+    "software-rendering-restart-confirm": "Start på nytt for å bruke endringen."
   },
   "task": {
     "scope-all": "Alle",
@@ -896,7 +898,8 @@
     "dir-no-saved": "Ingen lagrede mapper",
     "create": "Opprett",
     "more-actions": "Flere handlinger",
-    "file-inaccessible": "Filen er utilgjengelig"
+    "file-inaccessible": "Filen er utilgjengelig",
+    "resolve-filename": "Hent filnavn"
   },
   "media": {
     "probing": "Undersøker medier",
