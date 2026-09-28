@@ -42,11 +42,7 @@
   "d3.title": "Enregistrez le direct",
   "d3.sub": "Choisissez vos pistes et enregistrez HLS ou DASH directement en MP4 ou MKV",
   "connect.tagline": "Nous redéfinissons l’extension de navigateur complémentaire",
-  "connect.description": "La détection trouve les flux HLS et DASH et les fichiers multimédias sur n’importe quelle page, dans la fenêtre contextuelle, la barre latérale ou un espace de travail pleine page.",
-  "connect.handoff": "Les téléchargements du navigateur passent d’eux-mêmes à Rayburst. Définissez des règles par site et suivez chaque tâche depuis la fenêtre contextuelle.",
   "connect.preview": "Prévisualisez avant de télécharger, puis gardez uniquement les pistes vidéo, audio et sous-titres qui vous intéressent. Fonctionne avec l’application de bureau Rayburst.",
-  "connect.headA": "Repérez-le dans le navigateur",
-  "connect.headB": "Récupérez-le dans Rayburst",
   "connect.pageTitle": "Aurore sur le fjord · 4K",
   "connect.channel": "Archives des aurores boréales",
   "connect.add": "Ajouter à {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "Fin (0 : fin de la source)",
   "cx.cancel": "Annuler",
   "cx.download": "Télécharger",
-  "cx.submitted": "Téléchargement créé dans Rayburst."
+  "cx.submitted": "Téléchargement créé dans Rayburst.",
+  "film.watch": "Voir la vidéo",
+  "film.language": "Anglais",
+  "film.close": "Fermer la vidéo",
+  "film.help": "La vidéo ne se lance pas ? Vérifiez votre connexion.",
+  "film.youtube": "Regarder sur YouTube",
+  "error.description": "Cette page n’existe pas.",
+  "error.title": "Page introuvable"
 }

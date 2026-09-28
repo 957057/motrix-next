@@ -42,11 +42,7 @@
   "d3.title": "Grábalo en directo",
   "d3.sub": "Elige las pistas y guarda HLS o DASH directamente en MP4 o MKV",
   "connect.tagline": "Redefinimos la extensión complementaria del navegador",
-  "connect.description": "La detección encuentra transmisiones HLS y DASH y archivos multimedia en cualquier página, en la ventana emergente, la barra lateral o un espacio de trabajo a pantalla completa.",
-  "connect.handoff": "Las descargas del navegador pasan solas a Rayburst. Define reglas por sitio y sigue cada tarea desde la ventana emergente.",
   "connect.preview": "Previsualiza antes de descargar y quédate solo con las pistas de vídeo, audio y subtítulos que quieras. Funciona junto con la app de escritorio de Rayburst.",
-  "connect.headA": "Encuéntralo en el navegador",
-  "connect.headB": "Termínalo en Rayburst",
   "connect.pageTitle": "Aurora sobre el fiordo · 4K",
   "connect.channel": "Archivo de auroras boreales",
   "connect.add": "Añadir a {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "Fin (0: final de la fuente)",
   "cx.cancel": "Cancelar",
   "cx.download": "Descargar",
-  "cx.submitted": "Descarga creada en Rayburst."
+  "cx.submitted": "Descarga creada en Rayburst.",
+  "film.watch": "Ver el vídeo",
+  "film.language": "Inglés",
+  "film.close": "Cerrar vídeo",
+  "film.help": "¿No se reproduce el vídeo? Comprueba tu conexión.",
+  "film.youtube": "Ver en YouTube",
+  "error.description": "Esta página no existe.",
+  "error.title": "Página no encontrada"
 }

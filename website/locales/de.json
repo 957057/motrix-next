@@ -42,11 +42,7 @@
   "d3.title": "Live mitschneiden",
   "d3.sub": "Spuren wählen und HLS oder DASH direkt als MP4 oder MKV speichern",
   "connect.tagline": "Wir definieren die begleitende Browsererweiterung neu",
-  "connect.description": "Die Erkennung findet HLS- und DASH-Streams sowie Mediendateien auf jeder Seite – im Popup, in der Seitenleiste oder in einem ganzseitigen Arbeitsbereich.",
-  "connect.handoff": "Browser-Downloads gehen von selbst an Rayburst. Lege Regeln pro Website fest und verfolge jede Aufgabe im Popup.",
   "connect.preview": "Vor dem Download ansehen und nur die Video-, Audio- und Untertitelspuren behalten, die du willst. Funktioniert zusammen mit der Rayburst-Desktop-App.",
-  "connect.headA": "Im Browser entdecken",
-  "connect.headB": "In Rayburst ankommen",
   "connect.pageTitle": "Polarlicht über dem Fjord · 4K",
   "connect.channel": "Nordlicht-Archiv",
   "connect.add": "Zu {browser} hinzufügen",
@@ -191,5 +187,12 @@
   "cx.end": "Ende (0: Quellenende)",
   "cx.cancel": "Abbrechen",
   "cx.download": "Herunterladen",
-  "cx.submitted": "Download in Rayburst erstellt."
+  "cx.submitted": "Download in Rayburst erstellt.",
+  "film.watch": "Video ansehen",
+  "film.language": "Englisch",
+  "film.close": "Video schließen",
+  "film.help": "Das Video wird nicht abgespielt? Prüfe deine Verbindung.",
+  "film.youtube": "Auf YouTube ansehen",
+  "error.description": "Diese Seite existiert nicht.",
+  "error.title": "Seite nicht gefunden"
 }

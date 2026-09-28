@@ -173,10 +173,16 @@ export function initDownload() {
   const plats = document.getElementById('dl-plats')
   const assets = {}
   let arch = os === 'macOS' ? 'arm' : 'x86'
+  let widthAnimation = null
+  let primaryReady = false
 
   const main = () => PACKAGES.find((p) => p.os === os && p.arch === arch && p.kind === SYSTEMS[os].rows[0].kind)
 
   const paintPrimary = () => {
+    // Read the in-flight width before cancelling so rapid changes stay continuous.
+    const from = getComputedStyle(primary).width
+    widthAnimation?.cancel()
+    widthAnimation = null
     // The button says "Download"; the system, architecture and size sit on the small line.
     heroText.textContent = t('hero.download')
     primaryText.textContent = os ? t('hero.download') : t('dl.primary.fallback')
@@ -186,6 +192,14 @@ export function initDownload() {
     primary.href = asset?.browser_download_url || RELEASES
     const ext = SYSTEMS[os].rows[0].name
     primaryMeta.textContent = [os, SYSTEMS[os].arch[arch], ext, fileSize(asset?.size)].filter(Boolean).join(' · ')
+    const to = getComputedStyle(primary).width
+    if (primaryReady && !reducedMotion() && from !== to) {
+      widthAnimation = primary.animate([{ width: from }, { width: to }], {
+        duration: 350,
+        easing: getComputedStyle(primary).getPropertyValue('--ease-enter').trim(),
+      })
+    }
+    primaryReady = true
   }
 
   // Architecture switch under the main button (a sliding thumb marks the choice).

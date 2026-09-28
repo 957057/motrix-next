@@ -42,11 +42,7 @@
   "d3.title": "Neem het live op",
   "d3.sub": "Kies je sporen en sla HLS of DASH direct op als MP4 of MKV",
   "connect.tagline": "We geven de bijbehorende browserextensie een nieuwe betekenis",
-  "connect.description": "Detectie vindt HLS- en DASH-streams en mediabestanden op elke pagina, in de pop-up, de zijbalk of een werkruimte op volledige pagina.",
-  "connect.handoff": "Browserdownloads gaan vanzelf naar Rayburst. Stel regels per site in en volg elke taak vanuit de pop-up.",
   "connect.preview": "Bekijk vooraf en houd alleen de video-, audio- en ondertitelsporen die je wilt. Werkt samen met de Rayburst-desktopapp.",
-  "connect.headA": "Vind het in de browser",
-  "connect.headB": "Rond het af in Rayburst",
   "connect.pageTitle": "Noorderlicht boven het fjord · 4K",
   "connect.channel": "Noorderlichtarchief",
   "connect.add": "Toevoegen aan {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "Einde (0: broneinde)",
   "cx.cancel": "Annuleren",
   "cx.download": "Downloaden",
-  "cx.submitted": "Download aangemaakt in Rayburst."
+  "cx.submitted": "Download aangemaakt in Rayburst.",
+  "film.watch": "Bekijk de video",
+  "film.language": "Engels",
+  "film.close": "Video sluiten",
+  "film.help": "Wordt de video niet afgespeeld? Controleer je verbinding.",
+  "film.youtube": "Bekijken op YouTube",
+  "error.description": "Deze pagina bestaat niet.",
+  "error.title": "Pagina niet gevonden"
 }

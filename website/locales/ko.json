@@ -42,11 +42,7 @@
   "d3.title": "라이브를 그대로 녹화",
   "d3.sub": "트랙을 골라 HLS나 DASH를 MP4 또는 MKV로 바로 저장",
   "connect.tagline": "연동 브라우저 확장 프로그램을 새롭게 정의합니다",
-  "connect.description": "감지 기능이 어떤 페이지에서든 HLS·DASH 스트림과 미디어 파일을 찾아냅니다. 팝업, 사이드바, 전체 페이지 작업 공간 어디서든.",
-  "connect.handoff": "브라우저 다운로드는 알아서 Rayburst로 넘어갑니다. 사이트별 규칙을 정하고 모든 작업을 팝업에서 확인하세요.",
   "connect.preview": "다운로드 전에 미리 보고, 원하는 비디오·오디오·자막 트랙만 남기세요. Rayburst 데스크톱 앱과 함께 동작합니다.",
-  "connect.headA": "브라우저에서 찾고",
-  "connect.headB": "Rayburst에서 마무리",
   "connect.pageTitle": "피오르의 오로라 · 4K",
   "connect.channel": "북극광 아카이브",
   "connect.add": "{browser}에 추가",
@@ -191,5 +187,12 @@
   "cx.end": "끝 위치(0: 소스 끝)",
   "cx.cancel": "취소",
   "cx.download": "다운로드",
-  "cx.submitted": "Rayburst에 다운로드를 생성했습니다."
+  "cx.submitted": "Rayburst에 다운로드를 생성했습니다.",
+  "film.watch": "영상 보기",
+  "film.language": "영어",
+  "film.close": "영상 닫기",
+  "film.help": "영상이 재생되지 않나요? 연결을 확인하세요.",
+  "film.youtube": "YouTube에서 보기",
+  "error.description": "이 페이지는 존재하지 않습니다.",
+  "error.title": "페이지를 찾을 수 없습니다"
 }

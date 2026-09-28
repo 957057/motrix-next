@@ -88,7 +88,7 @@ function build(host) {
               <div class="pp-form"><div>
                 <div class="pp-field"><span data-k="cx.video"></span><span class="pp-select">2160p · 60 fps · hvc1${ic('chevron-down-outline')}</span></div>
                 <div class="pp-field"><span data-k="cx.audio"></span><span class="pp-select">en · AAC · 2.0${ic('chevron-down-outline')}</span></div>
-                <div class="pp-field"><span data-k="cx.subs"></span><span class="pp-select">English (en)${ic('chevron-down-outline')}</span></div>
+                <div class="pp-field"><span data-k="cx.subs"></span><span class="pp-select"><span data-k="film.language"></span> (en)${ic('chevron-down-outline')}</span></div>
                 <div class="pp-field"><span data-k="cx.format"></span><span class="pp-seg"><span data-f="mp4">MP4</span><span data-f="mkv">MKV</span></span></div>
                 <div class="pp-field"><span data-k="cx.start"></span><span class="pp-select">0</span></div>
                 <div class="pp-field"><span data-k="cx.end"></span><span class="pp-select">0</span></div>
@@ -177,8 +177,6 @@ export function initConnect() {
   const cursor = h(CURSOR_SVG)
   stage.append(cursor)
   const beam = ribbon(fx, '#a8b8ff')
-  const stepA = document.getElementById('cstep-a')
-  const stepB = document.getElementById('cstep-b')
   const appHost = document.getElementById('connect-app')
   // The window is never taller than the browser beside it, so the two read as a pair.
   const win = new AppWindow(appHost, { tr: t, height: 700, rows: 4, match: host.querySelector('.bw') })
@@ -276,8 +274,6 @@ export function initConnect() {
     const m = model(time, t)
     if (m.byId.media && time < T.arrive + 1) m.byId.media.focus = true
     win.update(m)
-    setClass(stepA, 'is-on', time < T.submitted)
-    setClass(stepB, 'is-on', time >= T.submitted)
     // Soft reset around the loop point: dim out, restart, brighten back.
     const dim = Math.max(prog(time, T.fadeOut, LOOP - T.fadeOut), 1 - prog(time, 0, 0.5))
     setStyle(appHost, 'opacity', (1 - 0.65 * clamp(dim)).toFixed(3))

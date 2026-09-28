@@ -42,11 +42,7 @@
   "d3.title": "Nagrywaj na żywo",
   "d3.sub": "Wybierz ścieżki i zapisz HLS lub DASH prosto do MP4 albo MKV",
   "connect.tagline": "Definiujemy na nowo towarzyszące rozszerzenie przeglądarki",
-  "connect.description": "Wykrywanie znajduje strumienie HLS i DASH oraz pliki multimedialne na każdej stronie, w wyskakującym okienku, na pasku bocznym albo w pełnoekranowym obszarze roboczym.",
-  "connect.handoff": "Pobrania z przeglądarki same trafiają do Rayburst. Ustaw reguły dla witryn i śledź każde zadanie z okienka.",
   "connect.preview": "Obejrzyj przed pobraniem i zostaw tylko te ścieżki wideo, audio i napisów, których chcesz. Działa razem z aplikacją Rayburst na komputer.",
-  "connect.headA": "Znajdź w przeglądarce",
-  "connect.headB": "Dokończ w Rayburst",
   "connect.pageTitle": "Zorza nad fiordem · 4K",
   "connect.channel": "Archiwum zorzy polarnej",
   "connect.add": "Dodaj do {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "Koniec (0: koniec źródła)",
   "cx.cancel": "Anuluj",
   "cx.download": "Pobierz",
-  "cx.submitted": "Utworzono pobieranie w Rayburst."
+  "cx.submitted": "Utworzono pobieranie w Rayburst.",
+  "film.watch": "Obejrzyj film",
+  "film.language": "Angielski",
+  "film.close": "Zamknij film",
+  "film.help": "Film się nie odtwarza? Sprawdź połączenie.",
+  "film.youtube": "Obejrzyj w YouTube",
+  "error.description": "Ta strona nie istnieje.",
+  "error.title": "Nie znaleziono strony"
 }

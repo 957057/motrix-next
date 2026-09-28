@@ -42,11 +42,7 @@
   "d3.title": "Canlı kaydedin",
   "d3.sub": "Parçaları seçin, HLS veya DASH’i doğrudan MP4 ya da MKV olarak kaydedin",
   "connect.tagline": "Tamamlayıcı tarayıcı uzantısını yeniden tanımlıyoruz",
-  "connect.description": "Algılama, her sayfadaki HLS ve DASH akışlarını ve medya dosyalarını bulur: açılır pencerede, kenar çubuğunda ya da tam sayfa çalışma alanında.",
-  "connect.handoff": "Tarayıcı indirmeleri kendiliğinden Rayburst’e geçer. Site başına kurallar koyun, her görevi açılır pencereden takip edin.",
   "connect.preview": "İndirmeden önce önizleyin, yalnızca istediğiniz video, ses ve altyazı parçalarını tutun. Rayburst masaüstü uygulamasıyla birlikte çalışır.",
-  "connect.headA": "Tarayıcıda bulun",
-  "connect.headB": "Rayburst’te tamamlayın",
   "connect.pageTitle": "Fiyort üzerinde kutup ışıkları · 4K",
   "connect.channel": "Kuzey Işıkları Arşivi",
   "connect.add": "{browser} tarayıcısına ekle",
@@ -191,5 +187,12 @@
   "cx.end": "Bitiş (0: kaynağın sonu)",
   "cx.cancel": "İptal",
   "cx.download": "İndir",
-  "cx.submitted": "Rayburst içinde indirme oluşturuldu."
+  "cx.submitted": "Rayburst içinde indirme oluşturuldu.",
+  "film.watch": "Videoyu izle",
+  "film.language": "İngilizce",
+  "film.close": "Videoyu kapat",
+  "film.help": "Video oynatılmıyor mu? Bağlantınızı kontrol edin.",
+  "film.youtube": "YouTube’da izle",
+  "error.description": "Bu sayfa mevcut değil.",
+  "error.title": "Sayfa bulunamadı"
 }

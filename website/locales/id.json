@@ -42,11 +42,7 @@
   "d3.title": "Rekam siaran langsung",
   "d3.sub": "Pilih trek lalu simpan HLS atau DASH langsung ke MP4 atau MKV",
   "connect.tagline": "Mendefinisikan ulang ekstensi peramban pendamping",
-  "connect.description": "Deteksi menemukan aliran HLS dan DASH serta file media di halaman mana pun, di popup, bilah samping, atau ruang kerja satu halaman penuh.",
-  "connect.handoff": "Unduhan peramban berpindah ke Rayburst dengan sendirinya. Atur aturan per situs dan pantau setiap tugas dari popup.",
   "connect.preview": "Pratinjau sebelum mengunduh, lalu simpan hanya trek video, audio, dan subtitel yang Anda mau. Bekerja bersama aplikasi desktop Rayburst.",
-  "connect.headA": "Temukan di peramban",
-  "connect.headB": "Selesaikan di Rayburst",
   "connect.pageTitle": "Aurora di atas fjord · 4K",
   "connect.channel": "Arsip Cahaya Utara",
   "connect.add": "Tambahkan ke {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "Akhir (0: akhir sumber)",
   "cx.cancel": "Batal",
   "cx.download": "Unduh",
-  "cx.submitted": "Unduhan dibuat di Rayburst."
+  "cx.submitted": "Unduhan dibuat di Rayburst.",
+  "film.watch": "Tonton video",
+  "film.language": "Bahasa Inggris",
+  "film.close": "Tutup video",
+  "film.help": "Video tidak diputar? Periksa koneksi Anda.",
+  "film.youtube": "Tonton di YouTube",
+  "error.description": "Halaman ini tidak ada.",
+  "error.title": "Halaman tidak ditemukan"
 }

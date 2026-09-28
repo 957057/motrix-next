@@ -42,11 +42,7 @@
   "d3.title": "Enregistreu-ho en directe",
   "d3.sub": "Trieu les pistes i deseu HLS o DASH directament en MP4 o MKV",
   "connect.tagline": "Redefinim l’extensió complementària del navegador",
-  "connect.description": "La detecció troba fluxos HLS i DASH i fitxers multimèdia a qualsevol pàgina, a la finestra emergent, a la barra lateral o en un espai de treball a pàgina completa.",
-  "connect.handoff": "Les descàrregues del navegador passen soles a Rayburst. Definiu regles per lloc i seguiu cada tasca des de la finestra emergent.",
   "connect.preview": "Previsualitzeu abans de baixar i quedeu-vos només amb les pistes de vídeo, àudio i subtítols que vulgueu. Funciona juntament amb l’aplicació d’escriptori de Rayburst.",
-  "connect.headA": "Trobeu-ho al navegador",
-  "connect.headB": "Acabeu-ho a Rayburst",
   "connect.pageTitle": "Aurora sobre el fiord · 4K",
   "connect.channel": "Arxiu de les aurores boreals",
   "connect.add": "Afegeix a {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "Final (0: final de la font)",
   "cx.cancel": "Cancel·la",
   "cx.download": "Baixa",
-  "cx.submitted": "Baixada creada a Rayburst."
+  "cx.submitted": "Baixada creada a Rayburst.",
+  "film.watch": "Mira el vídeo",
+  "film.language": "Anglès",
+  "film.close": "Tanca el vídeo",
+  "film.help": "El vídeo no es reprodueix? Comprova la connexió.",
+  "film.youtube": "Mira’l a YouTube",
+  "error.description": "Aquesta pàgina no existeix.",
+  "error.title": "Pàgina no trobada"
 }

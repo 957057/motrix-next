@@ -42,11 +42,7 @@
   "d3.title": "Ghi lại trực tiếp",
   "d3.sub": "Chọn rãnh và lưu HLS hoặc DASH thẳng thành MP4 hay MKV",
   "connect.tagline": "Định nghĩa lại tiện ích trình duyệt đồng hành",
-  "connect.description": "Tính năng phát hiện tìm luồng HLS, DASH và tệp đa phương tiện trên mọi trang, trong cửa sổ bật lên, thanh bên hoặc không gian làm việc toàn trang.",
-  "connect.handoff": "Lượt tải trong trình duyệt tự chuyển sang Rayburst. Đặt quy tắc theo từng trang và theo dõi mọi tác vụ từ cửa sổ bật lên.",
   "connect.preview": "Xem trước khi tải, rồi chỉ giữ lại rãnh video, âm thanh và phụ đề bạn muốn. Hoạt động cùng ứng dụng Rayburst trên máy tính.",
-  "connect.headA": "Tìm thấy trong trình duyệt",
-  "connect.headB": "Hoàn tất trong Rayburst",
   "connect.pageTitle": "Cực quang trên vịnh hẹp · 4K",
   "connect.channel": "Kho lưu trữ Bắc cực quang",
   "connect.add": "Thêm vào {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "Kết thúc (0: cuối nguồn)",
   "cx.cancel": "Hủy",
   "cx.download": "Tải xuống",
-  "cx.submitted": "Đã tạo lượt tải trong Rayburst."
+  "cx.submitted": "Đã tạo lượt tải trong Rayburst.",
+  "film.watch": "Xem video",
+  "film.language": "Tiếng Anh",
+  "film.close": "Đóng video",
+  "film.help": "Video không phát? Hãy kiểm tra kết nối.",
+  "film.youtube": "Xem trên YouTube",
+  "error.description": "Trang này không tồn tại.",
+  "error.title": "Không tìm thấy trang"
 }

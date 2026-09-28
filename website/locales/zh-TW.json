@@ -42,11 +42,7 @@
   "d3.title": "直播，現場錄",
   "d3.sub": "挑好音訊與視訊軌，HLS、DASH 直接存成 MP4 或 MKV",
   "connect.tagline": "重新定義瀏覽器配套擴充功能",
-  "connect.description": "嗅探會找出網頁上的 HLS、DASH 串流和媒體檔案，彈出視窗、側邊欄、全頁工作區都能看。",
-  "connect.handoff": "瀏覽器裡的下載自動交給 Rayburst。可以依網站設定規則，在彈出視窗裡掌握每個任務。",
   "connect.preview": "下載前先預覽，只留下你要的視訊、音訊和字幕軌。需搭配 Rayburst 桌面應用程式使用。",
-  "connect.headA": "在瀏覽器裡發現",
-  "connect.headB": "在 Rayburst 裡完成",
   "connect.pageTitle": "峽灣極光 · 4K",
   "connect.channel": "北境極光檔案",
   "connect.add": "新增至 {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "終點（0 表示結尾）",
   "cx.cancel": "取消",
   "cx.download": "下載",
-  "cx.submitted": "已在 Rayburst 中建立下載。"
+  "cx.submitted": "已在 Rayburst 中建立下載。",
+  "film.watch": "觀看影片",
+  "film.language": "英語",
+  "film.close": "關閉影片",
+  "film.help": "影片無法播放？請檢查網路連線。",
+  "film.youtube": "在 YouTube 上觀看",
+  "error.description": "此頁面不存在。",
+  "error.title": "找不到頁面"
 }

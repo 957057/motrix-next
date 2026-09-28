@@ -241,7 +241,7 @@ function panelLive(el) {
   const card = new CardView(el.querySelector('.dcard'))
   const task = KINDS.live(-1.2, 2472)
   const pool = Array.from({ length: Math.ceil(SEG_LIFE / SEG_EVERY) + 2 }, () => {
-    const chip = h(`<span class="seg">${ic('film-outline')}<em></em></span>`)
+    const chip = h(`<span class="stream-segment">${ic('film-outline')}<em></em></span>`)
     chip.style.opacity = '0'
     lane.append(chip)
     return { chip, text: chip.querySelector('em') }

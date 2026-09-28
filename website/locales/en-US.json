@@ -42,11 +42,7 @@
   "d3.title": "Record it live",
   "d3.sub": "Pick your tracks and save HLS or DASH straight to MP4 or MKV",
   "connect.tagline": "Redefining the companion browser extension",
-  "connect.description": "Sniffer finds HLS and DASH streams and media files on any page, in the popup, the sidebar or a full-page workspace.",
-  "connect.handoff": "Browser downloads hand off to Rayburst on their own. Set rules per site and follow every task from the popup.",
   "connect.preview": "Preview before you download, then keep only the video, audio and subtitle tracks you want. Works together with the Rayburst desktop app.",
-  "connect.headA": "Spot it in the browser",
-  "connect.headB": "Land it in Rayburst",
   "connect.pageTitle": "Aurora over the fjord · 4K",
   "connect.channel": "Northern Lights Archive",
   "connect.add": "Add to {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "End (0: source end)",
   "cx.cancel": "Cancel",
   "cx.download": "Download",
-  "cx.submitted": "Download created in Rayburst."
+  "cx.submitted": "Download created in Rayburst.",
+  "film.watch": "Watch the film",
+  "film.language": "English",
+  "film.close": "Close video",
+  "film.help": "Video not playing? Check your connection.",
+  "film.youtube": "Watch on YouTube",
+  "error.description": "This page does not exist.",
+  "error.title": "Page not found"
 }

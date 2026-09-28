@@ -42,11 +42,7 @@
   "d3.title": "ライブを、そのまま録る",
   "d3.sub": "トラックを選んで、HLS や DASH を MP4 または MKV に直接保存",
   "connect.tagline": "連携ブラウザー拡張機能を再定義する",
-  "connect.description": "検出機能が、あらゆるページの HLS・DASH ストリームやメディアファイルを見つけます。ポップアップでも、サイドバーでも、全画面のワークスペースでも。",
-  "connect.handoff": "ブラウザのダウンロードは自動で Rayburst へ。サイトごとにルールを決めて、すべてのタスクをポップアップから見守れます。",
   "connect.preview": "ダウンロード前にプレビューして、必要な映像・音声・字幕トラックだけを残せます。Rayburst デスクトップアプリと連携して動作します。",
-  "connect.headA": "ブラウザで見つけて",
-  "connect.headB": "Rayburst で仕上げる",
   "connect.pageTitle": "フィヨルドのオーロラ · 4K",
   "connect.channel": "北極光アーカイブ",
   "connect.add": "{browser} に追加",
@@ -191,5 +187,12 @@
   "cx.end": "終了位置（0：末尾）",
   "cx.cancel": "キャンセル",
   "cx.download": "ダウンロード",
-  "cx.submitted": "Rayburst にダウンロードを作成しました。"
+  "cx.submitted": "Rayburst にダウンロードを作成しました。",
+  "film.watch": "動画を見る",
+  "film.language": "英語",
+  "film.close": "動画を閉じる",
+  "film.help": "動画が再生されない場合は、接続を確認してください。",
+  "film.youtube": "YouTube で見る",
+  "error.description": "このページは存在しません。",
+  "error.title": "ページが見つかりません"
 }

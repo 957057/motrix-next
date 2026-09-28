@@ -42,11 +42,7 @@
   "d3.title": "Rögzítse élőben",
   "d3.sub": "Válassza ki a sávokat, és mentse a HLS-t vagy DASH-t közvetlenül MP4-be vagy MKV-be",
   "connect.tagline": "Újradefiniáljuk a kiegészítő böngészőbővítményt",
-  "connect.description": "A felderítés bármely oldalon megtalálja a HLS- és DASH-streameket és a médiafájlokat: a felugró ablakban, az oldalsávon vagy egy teljes oldalas munkaterületen.",
-  "connect.handoff": "A böngészős letöltések maguktól a Rayburstbe kerülnek. Állítson be webhelyenkénti szabályokat, és kövessen minden feladatot a felugró ablakból.",
   "connect.preview": "Nézze meg letöltés előtt, és csak a kívánt videó-, hang- és feliratsávokat tartsa meg. A Rayburst asztali alkalmazással együtt működik.",
-  "connect.headA": "Találja meg a böngészőben",
-  "connect.headB": "Fejezze be a Rayburstben",
   "connect.pageTitle": "Sarki fény a fjord felett · 4K",
   "connect.channel": "Sarkifény-archívum",
   "connect.add": "Hozzáadás: {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "Vég (0: forrás vége)",
   "cx.cancel": "Mégse",
   "cx.download": "Letöltés",
-  "cx.submitted": "A letöltés létrejött a Rayburstben."
+  "cx.submitted": "A letöltés létrejött a Rayburstben.",
+  "film.watch": "Videó megtekintése",
+  "film.language": "Angol",
+  "film.close": "Videó bezárása",
+  "film.help": "Nem indul a videó? Ellenőrizze a kapcsolatot.",
+  "film.youtube": "Megtekintés a YouTube-on",
+  "error.description": "Ez az oldal nem létezik.",
+  "error.title": "Az oldal nem található"
 }

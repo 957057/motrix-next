@@ -244,9 +244,9 @@
               <span data-i18n="hero.github">GitHub</span>
             </a>
           </div>
-          <a class="film-card" id="film-open" href="https://www.youtube.com/watch?v=Qz4BaKhfT-M" lang="en" data-intro style="--d: 1.33s">
+          <a class="film-card" id="film-open" href="https://www.youtube.com/watch?v=Qz4BaKhfT-M" data-intro style="--d: 1.33s">
             <span class="film-thumb" aria-hidden="true"><img src="assets/img/film-cover.webp" alt="" width="384" height="216" /><i class="film-thumb-play"><svg class="ic"><use href="#i-play" /></svg></i></span>
-            <span class="film-text"><b>Watch the film</b><small class="mono film-meta" id="film-meta">1:06 · English</small></span>
+            <span class="film-text"><b data-i18n="film.watch">Watch the film</b><small class="mono film-meta" id="film-meta"><bdi>1:06</bdi> · <span data-i18n="film.language">English</span></small></span>
           </button>
           <div class="hero-meta" data-intro style="--d: 1.4s">
             <a class="stat" href="https://github.com/AnInsomniacy/rayburst/stargazers" target="_blank" rel="noopener">
@@ -379,22 +379,6 @@
             <div id="connect-browser"></div>
             <div class="connect-app"><div id="connect-app"></div></div>
             <svg class="stage-fx" id="connect-fx" aria-hidden="true"></svg>
-          </div>
-          <div class="connect-steps">
-            <div class="cstep" id="cstep-a" data-reveal>
-              <h3><i>1</i><span data-i18n="connect.headA">Spot it in the browser</span></h3>
-              <p data-i18n="connect.description">
-                Sniffer finds HLS and DASH streams and media files on any page, in the popup, the sidebar or a full-page
-                workspace.
-              </p>
-            </div>
-            <div class="cstep" id="cstep-b" data-reveal style="--i: 1">
-              <h3><i>2</i><span data-i18n="connect.headB">Land it in Rayburst</span></h3>
-              <p data-i18n="connect.handoff">
-                Browser downloads hand off to Rayburst on their own. Set rules per site and follow every task from the
-                popup.
-              </p>
-            </div>
           </div>
           <div class="connect-foot" data-reveal>
             <span data-i18n="connect.preview">
@@ -617,15 +601,15 @@
     </footer>
 
     <!-- ═══ Dialogs ═══ -->
-    <dialog class="overlay film" id="film" lang="en" dir="ltr" aria-label="Watch the film" closedby="any">
+    <dialog class="overlay film" id="film" data-i18n-aria-label="film.watch" aria-label="Watch the film" closedby="any">
       <div class="film-shell">
         <form method="dialog" class="film-close">
-          <button class="overlay-close" type="submit" aria-label="Close video" autofocus>
+          <button class="overlay-close" type="submit" data-i18n-aria-label="film.close" aria-label="Close video" autofocus>
             <svg class="ic" aria-hidden="true"><use href="#i-close-outline" /></svg>
           </button>
         </form>
         <div class="film-stage" id="film-stage"></div>
-        <p class="film-help">Video not playing? Check your connection or <a id="film-youtube" target="_blank" rel="noopener">watch on YouTube</a>.</p>
+        <p class="film-help"><span data-i18n="film.help">Video not playing? Check your connection.</span> <a id="film-youtube" target="_blank" rel="noopener" data-i18n="film.youtube">Watch on YouTube</a></p>
       </div>
     </dialog>
     <!-- English for labels created by JavaScript, used if the locale files cannot load. -->

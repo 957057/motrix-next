@@ -42,11 +42,7 @@
   "d3.title": "Registra la diretta",
   "d3.sub": "Scegli le tracce e salva HLS o DASH direttamente in MP4 o MKV",
   "connect.tagline": "Ridefiniamo l’estensione complementare del browser",
-  "connect.description": "Il rilevamento trova flussi HLS e DASH e file multimediali su qualsiasi pagina, nel popup, nella barra laterale o in uno spazio di lavoro a pagina intera.",
-  "connect.handoff": "I download del browser passano da soli a Rayburst. Imposta regole per sito e segui ogni attività dal popup.",
   "connect.preview": "Guarda un’anteprima prima di scaricare e tieni solo le tracce video, audio e sottotitoli che vuoi. Funziona insieme all’app desktop di Rayburst.",
-  "connect.headA": "Trovalo nel browser",
-  "connect.headB": "Portalo a termine in Rayburst",
   "connect.pageTitle": "Aurora sul fiordo · 4K",
   "connect.channel": "Archivio delle aurore boreali",
   "connect.add": "Aggiungi a {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "Fine (0: fine della sorgente)",
   "cx.cancel": "Annulla",
   "cx.download": "Scarica",
-  "cx.submitted": "Download creato in Rayburst."
+  "cx.submitted": "Download creato in Rayburst.",
+  "film.watch": "Guarda il video",
+  "film.language": "Inglese",
+  "film.close": "Chiudi il video",
+  "film.help": "Il video non parte? Controlla la connessione.",
+  "film.youtube": "Guarda su YouTube",
+  "error.description": "Questa pagina non esiste.",
+  "error.title": "Pagina non trovata"
 }

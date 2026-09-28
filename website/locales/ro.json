@@ -42,11 +42,7 @@
   "d3.title": "Înregistrați live",
   "d3.sub": "Alegeți pistele și salvați HLS sau DASH direct în MP4 sau MKV",
   "connect.tagline": "Redefinim extensia de browser complementară",
-  "connect.description": "Detectarea găsește fluxuri HLS și DASH și fișiere media pe orice pagină, în fereastra pop-up, în bara laterală sau într-un spațiu de lucru pe toată pagina.",
-  "connect.handoff": "Descărcările din browser trec singure în Rayburst. Setați reguli pe site și urmăriți fiecare sarcină din fereastra pop-up.",
   "connect.preview": "Previzualizați înainte de descărcare și păstrați doar pistele video, audio și de subtitrare dorite. Funcționează împreună cu aplicația desktop Rayburst.",
-  "connect.headA": "Găsiți-l în browser",
-  "connect.headB": "Terminați-l în Rayburst",
   "connect.pageTitle": "Aurora deasupra fiordului · 4K",
   "connect.channel": "Arhiva aurorei boreale",
   "connect.add": "Adăugați în {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "Sfârșit (0: sfârșitul sursei)",
   "cx.cancel": "Anulează",
   "cx.download": "Descarcă",
-  "cx.submitted": "Descărcare creată în Rayburst."
+  "cx.submitted": "Descărcare creată în Rayburst.",
+  "film.watch": "Urmărește videoclipul",
+  "film.language": "Engleză",
+  "film.close": "Închide videoclipul",
+  "film.help": "Videoclipul nu pornește? Verifică conexiunea.",
+  "film.youtube": "Urmărește pe YouTube",
+  "error.description": "Această pagină nu există.",
+  "error.title": "Pagina nu a fost găsită"
 }

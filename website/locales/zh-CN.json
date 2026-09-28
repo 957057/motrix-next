@@ -42,11 +42,7 @@
   "d3.title": "直播，现场录",
   "d3.sub": "挑好音视频轨，HLS、DASH 直接存成 MP4 或 MKV",
   "connect.tagline": "重新定义浏览器配套扩展",
-  "connect.description": "嗅探会找出网页上的 HLS、DASH 流和媒体文件，弹窗、侧边栏、全页工作区都能看。",
-  "connect.handoff": "浏览器里的下载自动交给 Rayburst。可以按站点设规则，在弹窗里盯住每个任务。",
   "connect.preview": "下载前先预览，只留下你要的视频、音频和字幕轨。需搭配 Rayburst 桌面应用使用。",
-  "connect.headA": "在浏览器里发现",
-  "connect.headB": "在 Rayburst 里完成",
   "connect.pageTitle": "峡湾极光 · 4K",
   "connect.channel": "北境极光档案",
   "connect.add": "添加到 {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "终点（0 表示末尾）",
   "cx.cancel": "取消",
   "cx.download": "下载",
-  "cx.submitted": "已在 Rayburst 中创建下载。"
+  "cx.submitted": "已在 Rayburst 中创建下载。",
+  "film.watch": "观看视频",
+  "film.language": "英语",
+  "film.close": "关闭视频",
+  "film.help": "视频无法播放？请检查网络连接。",
+  "film.youtube": "在 YouTube 上观看",
+  "error.description": "此页面不存在。",
+  "error.title": "找不到页面"
 }

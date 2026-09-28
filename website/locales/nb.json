@@ -42,11 +42,7 @@
   "d3.title": "Ta opp direkte",
   "d3.sub": "Velg spor og lagre HLS eller DASH rett som MP4 eller MKV",
   "connect.tagline": "Vi redefinerer den tilhørende nettleserutvidelsen",
-  "connect.description": "Oppdagingen finner HLS- og DASH-strømmer og mediefiler på enhver side, i hurtigvinduet, sidepanelet eller et arbeidsområde over hele siden.",
-  "connect.handoff": "Nettlesernedlastinger går av seg selv til Rayburst. Sett regler per nettsted og følg hver oppgave fra hurtigvinduet.",
   "connect.preview": "Forhåndsvis før du laster ned, og behold bare video-, lyd- og tekstingssporene du vil ha. Fungerer sammen med Rayburst-appen for datamaskin.",
-  "connect.headA": "Finn det i nettleseren",
-  "connect.headB": "Fullfør det i Rayburst",
   "connect.pageTitle": "Nordlys over fjorden · 4K",
   "connect.channel": "Nordlysarkivet",
   "connect.add": "Legg til i {browser}",
@@ -191,5 +187,12 @@
   "cx.end": "Slutt (0: kildens slutt)",
   "cx.cancel": "Avbryt",
   "cx.download": "Last ned",
-  "cx.submitted": "Nedlasting opprettet i Rayburst."
+  "cx.submitted": "Nedlasting opprettet i Rayburst.",
+  "film.watch": "Se videoen",
+  "film.language": "Engelsk",
+  "film.close": "Lukk videoen",
+  "film.help": "Spilles ikke videoen av? Sjekk tilkoblingen din.",
+  "film.youtube": "Se på YouTube",
+  "error.description": "Denne siden finnes ikke.",
+  "error.title": "Fant ikke siden"
 }

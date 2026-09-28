@@ -10,8 +10,9 @@
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const ROOT = new URL('..', import.meta.url).pathname
+const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const read = (p) => readFileSync(join(ROOT, p), 'utf8')
 const errors = []
 const warn = []
@@ -28,15 +29,16 @@ function walk(dir, ext) {
 }
 
 const html = read('index.html')
+const pages = html + '\n' + read('404.html')
 const css = read('assets/css/style.css')
 const scripts = walk('assets/js', '.js')
 const js = Object.fromEntries(scripts.map((p) => [p, read(p)]))
 
 // ── Keys in use ──────────────────────────────────────────────────────────
 const used = new Set()
-for (const m of html.matchAll(/data-i18n(?:-html|-alt|-aria-label|-title)?="([^"]+)"/g)) used.add(m[1])
+for (const m of pages.matchAll(/data-i18n(?:-html|-alt|-aria-label|-title)?="([^"]+)"/g)) used.add(m[1])
 for (const m of html.matchAll(/data-k="([^"]+)"/g)) used.add(m[1])
-const KEY = /['"`]((?:ui|cx|tray|ov|proto|connect|details|d[123]|craft|dl|hero|features|theme|a11y|nav|rebrand|engine|ctl|footer)\.[\w.]*\w)['"`]/g
+const KEY = /['"`]((?:film|error|ui|cx|tray|ov|proto|connect|details|d[123]|craft|dl|hero|features|theme|a11y|nav|rebrand|engine|ctl|footer)\.[\w.]*\w)['"`]/g
 for (const src of Object.values(js)) {
   for (const m of src.matchAll(KEY)) used.add(m[1])
   for (const m of src.matchAll(/data-k="([\w.]+)"/g)) used.add(m[1])
@@ -69,7 +71,7 @@ const norm = (s) =>
     .replace(/&amp;/g, '&')
     .replace(/\s+/g, ' ')
     .trim()
-for (const m of html.matchAll(/<(\w+)[^>]*\sdata-i18n="([^"]+)"[^>]*>([^<]*)<\/\1>/g)) {
+for (const m of pages.matchAll(/<(\w+)[^>]*\sdata-i18n="([^"]+)"[^>]*>([^<]*)<\/\1>/g)) {
   const [, , key, text] = m
   if (en[key] != null && norm(text) !== norm(en[key])) err(`index.html: English for "${key}" differs from en-US.json`)
 }
