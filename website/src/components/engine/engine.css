@@ -51,11 +51,20 @@
   color: var(--gold);
 }
 .engine-title {
+  display: flex;
+  align-items: center;
+  gap: 0.2em;
   margin: 0;
   font-size: clamp(48px, 7vw, 96px);
   line-height: 1;
   font-weight: 800;
   letter-spacing: -0.045em;
+}
+.engine-title img {
+  width: 0.84em;
+  height: 0.84em;
+  flex: none;
+  filter: drop-shadow(0 10px 24px rgba(227, 192, 122, 0.25));
 }
 .engine-title span {
   background: linear-gradient(180deg, #fff6e0 0%, #e3c07a 55%, #9c7a3c 100%);

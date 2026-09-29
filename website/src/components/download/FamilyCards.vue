@@ -10,6 +10,7 @@ import { useEngineBuilds } from '@/composables/useEngineBuilds'
 import { LINKS, STORES } from '@/links'
 import { vReveal, vSpotlight } from '@/motion/directives'
 import connectLogo from '@/assets/img/connect.svg'
+import engineLogo from '@/assets/img/aria2-next.webp'
 
 const { t } = useI18n()
 const builds = useEngineBuilds()
@@ -21,7 +22,7 @@ const yours = detectBrowser()
     <h3 v-reveal class="family-title">{{ t('dl.family') }}</h3>
     <div class="family-grid">
       <article v-reveal v-spotlight class="fam fam-engine">
-        <span class="fam-mark fam-glyph mono" aria-hidden="true">a2</span>
+        <img class="fam-mark" :src="engineLogo" alt="" width="44" height="44" />
         <h4>Aria2 Next</h4>
         <p>{{ t('dl.engineSub') }}</p>
         <div class="fam-row">
@@ -120,16 +121,6 @@ const yours = detectBrowser()
   width: 44px;
   height: 44px;
   margin-bottom: 18px;
-}
-.fam-glyph {
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #2a2112, #0d0b07);
-  border: 1px solid rgba(227, 192, 122, 0.35);
-  color: var(--gold);
-  font-size: 16px;
-  font-weight: 700;
 }
 .fam-heart {
   display: grid;

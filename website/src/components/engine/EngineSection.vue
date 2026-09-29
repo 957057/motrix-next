@@ -25,6 +25,7 @@ import { useScene } from '@/motion/useScene'
 import { fileSize } from '@/sim/format'
 import EngineLanes from './EngineLanes.vue'
 import { typedScript, TYPED_BY } from './script'
+import engineLogo from '@/assets/img/aria2-next.webp'
 
 const { t } = useI18n()
 const builds = useEngineBuilds()
@@ -42,7 +43,9 @@ const lines = computed(() => typedScript(time.value))
     <div class="wrap engine-grid">
       <div class="engine-copy">
         <span v-reveal class="eyebrow">{{ t('engine.over') }}</span>
-        <h2 v-reveal="1" class="engine-title"><span>Aria2 Next</span></h2>
+        <h2 v-reveal="1" class="engine-title">
+          <img :src="engineLogo" alt="" width="80" height="80" /><span>Aria2 Next</span>
+        </h2>
         <p v-reveal="2" class="engine-tag">{{ t('engine.tag') }}</p>
         <i18n-t v-reveal="3" keypath="engine.description" tag="p" scope="global">
           <template #aria2Next>
