@@ -3,8 +3,8 @@
 
 The product mock-ups on the website show the apps' own labels (the desktop
 app and the browser extension), verbatim, in every supported language. This
-script copies them into locales/<code>.json under the ui.*, cx.*, tray.* and
-scheme.* keys and leaves every other key untouched.
+script copies them into src/locales/<code>.json under the ui, cx, tray and
+scheme namespaces and leaves every other key untouched.
 
     python3 tools/sync-ui-strings.py            # write
     python3 tools/sync-ui-strings.py --check    # fail when a copy is stale
@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 
 SITE = Path(__file__).resolve().parent.parent
-LOCALES = SITE / "locales"
+LOCALES = SITE / "src" / "locales"
 
 APP = {
     "ui.tasks": "app.task-list",
@@ -115,11 +115,29 @@ def find_lab():
     sys.exit("Rayburst repositories not found; set RAYBURST_LAB")
 
 
+NAMESPACES = ("ui", "cx", "tray", "scheme")
+
+
 def dig(tree, dotted):
     node = tree
     for part in dotted.split("."):
         node = node.get(part) if isinstance(node, dict) else None
     return node
+
+
+def put(tree, dotted, value):
+    *parents, leaf = dotted.split(".")
+    for part in parents:
+        tree = tree.setdefault(part, {})
+    tree[leaf] = value
+
+
+def flatten(tree, prefix):
+    out = {}
+    for key, value in tree.items():
+        dotted = f"{prefix}.{key}"
+        out.update(flatten(value, dotted) if isinstance(value, dict) else {dotted: value})
+    return out
 
 
 def main():
@@ -142,13 +160,18 @@ def main():
             wanted[key] = cx[src]["message"]
         path = LOCALES / f"{code}.json"
         current = json.loads(path.read_text("utf-8")) if path.exists() else {}
-        if all(current.get(k) == v for k, v in wanted.items()):
+        if all(dig(current, k) == v for k, v in wanted.items()) and all(
+            isinstance(current.get(ns), dict) and set(flatten(current[ns], ns)) <= set(wanted) for ns in NAMESPACES
+        ):
             continue
         stale.append(code)
         if not check:
-            merged = {k: v for k, v in current.items() if not k.startswith(("ui.", "cx.", "tray.", "scheme.", "native."))}
-            merged.update(wanted)
-            path.write_text(json.dumps(merged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            # Rebuild the copied namespaces in place; every other key stays as it is.
+            for ns in NAMESPACES:
+                current[ns] = {}
+            for key, value in wanted.items():
+                put(current, key, value)
+            path.write_text(json.dumps(current, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     if check and stale:
         sys.exit("Interface strings out of date: " + ", ".join(stale))
     print(("checked" if check else "synced") + f" {len(APP) + len(CONNECT)} interface strings in {len(CODES)} locales"

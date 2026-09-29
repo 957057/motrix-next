@@ -1,0 +1,200 @@
+/* Download: the main button, platform cards and packages. */
+.get {
+  padding-bottom: clamp(80px, 10vw, 140px);
+}
+.get-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(24px, 4vw, 48px) 0 clamp(40px, 6vw, 64px);
+  text-align: center;
+  isolation: isolate;
+}
+.get-logo {
+  width: clamp(80px, 9vw, 104px);
+  height: auto;
+  margin-bottom: 28px;
+  filter: drop-shadow(0 16px 44px rgba(123, 62, 209, 0.6));
+}
+.get-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 40px;
+}
+.get-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 18px;
+  margin: 4px 0 0;
+  color: var(--text-3);
+  font-size: 14px;
+}
+.get-meta b {
+  color: var(--text-2);
+  font-weight: 600;
+}
+.get-meta b:empty {
+  display: none;
+}
+.get-meta a {
+  transition: color 0.2s;
+}
+.get-meta a:hover {
+  color: var(--accent);
+}
+
+/* One card per system; the visitor's own is lit. */
+.plats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.plat {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  transition:
+    border-color 0.3s,
+    transform 0.45s var(--ease-enter),
+    box-shadow 0.45s var(--ease-enter);
+}
+.plat:hover {
+  border-color: var(--line-2);
+  transform: translateY(-3px);
+  box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.5);
+}
+.plat.is-yours {
+  border-color: color-mix(in srgb, var(--accent-2) 55%, transparent);
+  background:
+    radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--accent-2) 14%, transparent), transparent 70%),
+    var(--card);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-2) 10%, transparent);
+}
+.plat header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.plat header .ic {
+  font-size: 24px;
+  color: var(--text-2);
+}
+.plat.is-yours header .ic {
+  color: var(--accent);
+}
+.plat h4 {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: -0.015em;
+}
+.plat-badge {
+  margin-inline-start: auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-2) 20%, transparent);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 650;
+}
+.pkg-rows {
+  display: grid;
+  gap: 12px;
+}
+.pkg-row {
+  display: grid;
+  gap: 8px;
+}
+.pkg-name {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.pkg-name b {
+  font: 600 14px var(--mono);
+}
+.pkg-name small {
+  color: var(--text-3);
+  font-size: 13px;
+}
+.pkg-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.pkg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line-2);
+  font-size: 14px;
+  font-weight: 550;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    color 0.2s,
+    transform 0.3s var(--ease-enter);
+}
+.pkg .ic {
+  font-size: 15px;
+  color: var(--text-3);
+  transition:
+    color 0.2s,
+    transform 0.35s var(--ease-spring);
+}
+.pkg:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent-2) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent-2) 55%, transparent);
+}
+.pkg:hover .ic {
+  color: var(--accent);
+  transform: translateY(2px);
+}
+.pkg:active {
+  transform: scale(0.97);
+}
+.plat-help {
+  margin: auto 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--text-3);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.plat-help span {
+  color: var(--text-2);
+}
+.plat-help code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  font-size: 12px;
+}
+.get-note {
+  margin: 20px 0 0;
+  color: var(--text-3);
+  font-size: 14px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .plats {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+    margin-inline: auto;
+  }
+}

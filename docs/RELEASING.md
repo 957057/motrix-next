@@ -99,8 +99,8 @@ submitting to stores and platform acceptance are separate actions.
 ## Website
 
 Cloudflare Pages serves `https://rayburst.pages.dev` from this repository's `main`
-branch. Use the `website` root directory, `.` output directory, no framework preset,
-and `exit 0` build command. Set `SKIP_DEPENDENCY_INSTALL=1`.
+branch. Use the `website` root directory, `pnpm build` build command, `dist` output
+directory and no framework preset.
 
 Include only `website/*` in build watch paths, leave exclusions empty, and disable
 preview branch deployments. Cloudflare bypasses path filtering for pushes with no

@@ -1,0 +1,180 @@
+/* Torrent file selection (BtSelectionDialog). */
+.pick {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(80% 80% at 100% 0%, color-mix(in srgb, var(--accent-2) 22%, transparent), transparent 70%),
+    color-mix(in srgb, var(--bg) 60%, var(--card));
+  font: 400 12px/1.3 var(--font);
+}
+.pick-win {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--w-main);
+  color: var(--w-text);
+  box-shadow:
+    0 0 0 1px var(--w-border),
+    0 20px 50px -24px rgba(0, 0, 0, 0.6);
+  transition:
+    opacity 0.45s var(--ease-enter),
+    transform 0.55s var(--ease-enter);
+}
+/* After Start Download the dialog closes, then the loop brings it back. */
+.pick.is-sent .pick-win {
+  opacity: 0;
+  transform: translateY(8px) scale(0.95);
+  transition:
+    opacity 0.3s var(--ease-exit),
+    transform 0.3s var(--ease-exit);
+}
+.pick-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 3px;
+  font-size: 13px;
+}
+.pick-head .ic {
+  font-size: 14px;
+  color: var(--w-dim);
+}
+.pick-name {
+  overflow: hidden;
+  padding: 0 12px 8px;
+  color: var(--w-dim);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pick-table {
+  border-block: 1px solid var(--w-ov);
+}
+.pick-row {
+  display: grid;
+  grid-template-columns: 14px 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  height: 25px;
+  padding: 0 12px;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+}
+.pick-row + .pick-row {
+  border-top: 1px solid color-mix(in srgb, var(--w-ov) 55%, transparent);
+}
+.pick-th {
+  background: color-mix(in srgb, var(--w-text) 4%, transparent);
+  color: var(--w-dim);
+  font-size: 11px;
+}
+.pick-row > span:last-child {
+  color: var(--w-dim);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+.pick-file {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pick-row.is-off {
+  color: var(--w-dim);
+}
+.pick-row.is-hot {
+  background: color-mix(in srgb, var(--w-primary) 14%, transparent);
+}
+.pick-box {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--w-primary);
+  color: var(--w-on-primary);
+  font-size: 10px;
+  transition:
+    background-color 0.25s,
+    box-shadow 0.25s;
+}
+.pick-box .ic {
+  transition:
+    transform 0.35s var(--ease-spring),
+    opacity 0.2s;
+}
+.pick-row.is-off .pick-box {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--w-outline);
+}
+.pick-row.is-off .pick-box .ic,
+.pick-th.is-some .pick-box .ic {
+  opacity: 0;
+  transform: scale(0.4);
+}
+/* Header box: a dash when only some files are selected. */
+.pick-th .pick-box::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.pick-th.is-some .pick-box::after {
+  opacity: 1;
+}
+.pick-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+}
+.pick-sum {
+  display: inline-flex;
+  gap: 6px;
+  color: var(--w-dim);
+  white-space: nowrap;
+}
+.pick-sum b {
+  color: var(--w-text);
+  font-weight: 600;
+}
+.pick-sum em {
+  font-style: normal;
+}
+.pick-btns {
+  display: inline-flex;
+  gap: 6px;
+  min-width: 0;
+}
+.pick-btns i {
+  overflow: hidden;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--w-ov);
+  font-size: 11px;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pick-btns .is-primary {
+  border-color: transparent;
+  background: var(--w-primary);
+  color: var(--w-on-primary);
+  transition:
+    transform 0.2s var(--ease-enter),
+    filter 0.2s;
+}
+.pick-btns .is-primary.is-press {
+  transform: scale(0.93);
+  filter: brightness(1.12);
+}

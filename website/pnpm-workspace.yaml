@@ -1,0 +1,4 @@
+# The website is its own workspace root, independent of the desktop app.
+allowBuilds:
+  esbuild: true
+  vue-demi: false

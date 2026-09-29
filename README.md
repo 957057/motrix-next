@@ -256,7 +256,7 @@ rayburst/
 │   └── binaries/               #   Aria2 Next sidecar binaries (6 platforms)
 ├── scripts/                    # bump-version.sh, release.sh
 ├── .github/workflows/          # CI (ci.yml) + Release (release.yml)
-└── website/                    # Static website (HTML, CSS and JavaScript)
+└── website/                    # Website (Vue 3, TypeScript, Vite, GSAP)
 ```
 
 ## Contributing

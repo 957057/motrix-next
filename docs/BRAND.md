@@ -40,7 +40,7 @@ The approved Simplified Chinese slogan is “重新定义开源下载器”
 Use its Traditional Chinese equivalent for zh-TW. Preserve the approved English
 slogan in English interfaces, README banners and promotional artwork.
 
-The website remains a standalone HTML, CSS and JavaScript site. Its light and dark
+The website is a standalone Vue project in `website/`. Its light and dark
 colors use the desktop's default palette; the SVG logos retain their original colors.
 Website artwork copies come from `public/logo.svg`, Rayburst Connect's
 `public/icon/icon.svg`, and the screenshots in `docs/media/`.

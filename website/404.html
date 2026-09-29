@@ -4,99 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
-    <base href="/" />
-    <title data-i18n="error.title">Page not found</title>
-    <link rel="icon" type="image/svg+xml" href="/assets/img/logo.svg" />
+    <title>Page not found</title>
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <style>
-      @font-face {
-        font-family: 'Inter';
-        src: url('/assets/fonts/InterVariable.woff2') format('woff2');
-        font-weight: 100 900;
-        font-display: swap;
-      }
-      :root {
+      html {
+        background: #0b0910;
         color-scheme: dark;
-        --bg: #0b0910;
-        --text: #f2edf9;
-        --text-2: #bdb3cd;
-        --glow: rgba(123, 62, 209, 0.42);
       }
       @media (prefers-color-scheme: light) {
-        :root {
+        html {
+          background: #fbf8fd;
           color-scheme: light;
-          --bg: #fbf8fd;
-          --text: #1b1520;
-          --text-2: #4f4758;
-          --glow: rgba(158, 116, 213, 0.3);
-        }
-      }
-      body {
-        display: grid;
-        place-items: center;
-        min-height: 100svh;
-        margin: 0;
-        padding: 24px;
-        box-sizing: border-box;
-        background:
-          radial-gradient(50% 45% at 50% 30%, var(--glow), transparent 70%),
-          var(--bg);
-        color: var(--text);
-        font: 16px/1.6 'Inter', system-ui, sans-serif;
-        text-align: center;
-      }
-      img {
-        width: 72px;
-        height: 72px;
-        margin: 0 auto 28px;
-        filter: drop-shadow(0 12px 36px rgba(123, 62, 209, 0.5));
-        animation: rise 0.9s cubic-bezier(0.33, 1, 0.68, 1) both;
-      }
-      h1 {
-        margin: 0;
-        font-size: clamp(56px, 12vw, 120px);
-        line-height: 1;
-        font-weight: 800;
-        letter-spacing: -0.05em;
-        animation: rise 0.9s 0.1s cubic-bezier(0.33, 1, 0.68, 1) both;
-      }
-      p {
-        margin: 14px 0 32px;
-        color: var(--text-2);
-        animation: rise 0.9s 0.2s cubic-bezier(0.33, 1, 0.68, 1) both;
-      }
-      a {
-        display: inline-flex;
-        align-items: center;
-        height: 48px;
-        padding: 0 24px;
-        border-radius: 999px;
-        background: linear-gradient(135deg, #9b62df, #7b3ed1 60%, #682bbc);
-        color: #fff;
-        font-weight: 600;
-        text-decoration: none;
-        box-shadow: 0 10px 30px -8px rgba(123, 62, 209, 0.7);
-        animation: rise 0.9s 0.3s cubic-bezier(0.33, 1, 0.68, 1) both;
-      }
-      @keyframes rise {
-        from {
-          opacity: 0;
-          transform: translateY(16px);
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        * {
-          animation: none !important;
         }
       }
     </style>
   </head>
   <body>
-    <main>
-      <img src="/assets/img/logo.svg" alt="" width="72" height="72" />
-      <h1>404</h1>
-      <p data-i18n="error.description">This page does not exist.</p>
-      <a href="/">Rayburst</a>
-    </main>
-    <script type="module" src="/assets/js/i18n.js"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/not-found.ts"></script>
   </body>
 </html>
